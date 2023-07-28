@@ -59,7 +59,7 @@ export class ObsidianTask implements TaskProperties {
         this.sectionID = '';
         this.labels = [];
         this.completed = false;
-        this.parent = undefined;
+        this.parent = null;
         this.children = [];
         this.due = null;
         this.filePath = '';
@@ -76,14 +76,17 @@ export class ObsidianTask implements TaskProperties {
         
         return markdownLine;
     }
+    
     static fromMarkdownLine(markdownLine: string) {
         let task: ObsidianTask = new ObsidianTask();
         let regex = /<span class="([^"]*)" style="display:none;">([^<]*)<\/span>/g;
         let match;
     
+        let parsedValues: any = {};
+    
         if (markdownLine.startsWith("- [")) {
-            task.completed = markdownLine[3] === "x";
-            task.content = markdownLine.slice(markdownLine.indexOf("]") + 2);
+            parsedValues.completed = markdownLine[3] === "x";
+            parsedValues.content = markdownLine.slice(markdownLine.indexOf("]") + 2);
         }
         
         while (match = regex.exec(markdownLine)) {
@@ -92,16 +95,18 @@ export class ObsidianTask implements TaskProperties {
             
             // Explicitly assert the type of the key
             const taskKey = key as keyof ObsidianTask;
-    
-            // Only assign the value if the key exists on ObsidianTask
+        
+            // Only assign the value if the key exists on ObsidianTask and parse it with correct type
             if (taskKey in task) {
-                task[taskKey] = JSON.parse(value);
+                parsedValues[taskKey] = JSON.parse(value);
             }
         }
+    
+        // Now assign the parsedValues object to the task
+        Object.assign(task, parsedValues);
         
         return task;
     }
-
 
 }
 
