@@ -11,13 +11,11 @@ export declare const DueDate: import("runtypes").Intersect<[Record<{
 
 export type DueDate = Static<typeof DueDate>;
 
-export type ID = string;
 export type ProjectID = string;
 export type SectionID = string;
 export type Priority = number;
 
 export interface TaskProperties {
-    id: ID;
     content: string;
     priority: Priority;
     description: string;
@@ -35,7 +33,6 @@ export interface TaskProperties {
 }
 
 export class ObsidianTask implements TaskProperties {
-    public id: ID;
     public content: string;
     public priority: Priority;
     public description: string;
@@ -50,6 +47,8 @@ export class ObsidianTask implements TaskProperties {
 
     public due: DueDate;
     public filePath: string;
+
+
 
 }
 

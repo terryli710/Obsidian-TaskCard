@@ -4,7 +4,7 @@
   "description": "Task formatter with card view.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest",
     "prettier-format": "prettier --config .prettierrc 'src/**/*.ts' --write"
   },
   "repository": {
@@ -23,6 +23,10 @@
   },
   "homepage": "https://github.com/terryli710/Obsidian-TaskCard#readme",
   "devDependencies": {
+    "@babel/core": "^7.22.9",
+    "@babel/preset-env": "^7.22.9",
+    "@types/jest": "^29.5.3",
+    "babel-jest": "^29.6.2",
     "builtin-modules": "^3.3.0",
     "jest": "^29.6.2",
     "obsidian": "latest",
