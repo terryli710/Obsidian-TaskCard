@@ -1,0 +1,39 @@
+{
+  "name": "obsidian-taskcard",
+  "version": "1.0.0",
+  "description": "Task formatter with card view.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prettier-format": "prettier --config .prettierrc 'src/**/*.ts' --write"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/terryli710/Obsidian-TaskCard.git"
+  },
+  "keywords": [
+    "obsidian",
+    "svelte",
+    "typescript"
+  ],
+  "author": "Terry Li",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/terryli710/Obsidian-TaskCard/issues"
+  },
+  "homepage": "https://github.com/terryli710/Obsidian-TaskCard#readme",
+  "devDependencies": {
+    "builtin-modules": "^3.3.0",
+    "jest": "^29.6.2",
+    "obsidian": "latest",
+    "prettier": "^3.0.0",
+    "svelte": "^4.1.1",
+    "typescript": "^5.1.6"
+  },
+  "dependencies": {
+    "obsidian": "latest",
+    "runtypes": "^6.7.0",
+    "svelte": "^4.1.1",
+    "typescript": "^5.1.6"
+  }
+}
