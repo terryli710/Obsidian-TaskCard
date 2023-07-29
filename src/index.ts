@@ -1,5 +1,6 @@
 import { App, Plugin, PluginManifest } from "obsidian";
 import type { TaskCardSettings } from "./settings";
+import { EmojiPostProcessor } from "./renderer/injector";
 
 
 export default class TaskCardPlugin extends Plugin {
@@ -10,6 +11,6 @@ export default class TaskCardPlugin extends Plugin {
     }
 
     async onload() {
-        
+        this.registerMarkdownPostProcessor(EmojiPostProcessor)
     }
 }
