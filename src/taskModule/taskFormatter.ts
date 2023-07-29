@@ -1,7 +1,1 @@
-
-
-export class taskFormatter {
-    
-}
-
-
+export class taskFormatter {}
