@@ -1,4 +1,4 @@
-import {
+import type {
   Boolean,
   Number as NumberRunType,
   String,
