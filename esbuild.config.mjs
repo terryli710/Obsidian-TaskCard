@@ -9,6 +9,7 @@ const options = {
   entryPoints: ["src/index.ts"],
   bundle: true,
   outfile: "main.js",
+  platform: "node",
   plugins: [
     esbuildSvelte({
       compilerOptions: { css: true },
