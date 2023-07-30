@@ -1,10 +1,11 @@
-
 import esbuild from "esbuild";
 import esbuildSvelte from "esbuild-svelte";
 import sveltePreprocess from "svelte-preprocess";
+import process from "process";
 
-esbuild
-.build({
+const prod = (process.env.NODE_ENV === 'production');
+
+const options = {
   entryPoints: ["src/index.ts"],
   bundle: true,
   outfile: "main.js",
@@ -18,6 +19,18 @@ esbuild
     'process.env.NODE_ENV': `"${process.env.NODE_ENV}"`,
   },
   external: ['obsidian'],
-  minify: process.env.NODE_ENV === 'production',
-})
-.catch(() => process.exit(1));
+  minify: prod,
+  sourcemap: prod ? false : "inline",
+  logLevel: "info",
+};
+
+(async () => {
+  const context = await esbuild.context(options);
+
+  if (prod) {
+    await context.rebuild();
+    process.exit(0);
+  } else {
+    await context.watch();
+  }
+})().catch(() => process.exit(1));
