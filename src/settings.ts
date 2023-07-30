@@ -1,4 +1,5 @@
-import { Writable, writable } from 'svelte/store';
+import { writable } from 'svelte/store';
+import type { Writable } from 'svelte/store';
 
 export interface TaskCardSettings {
   syncSetting: any; // Todoist account info + other possible synced platforms
