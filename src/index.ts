@@ -2,7 +2,7 @@ import { App, Plugin } from 'obsidian';
 import type { PluginManifest } from 'obsidian';
 import type { TaskCardSettings } from './settings';
 import { DefaultSettings, SettingsTab } from './settings';
-import { EmojiPostProcessor } from './renderer/injector';
+import { EmojiPostProcessor, TaskCardPostProcessor } from './renderer/injector';
 import { logger } from './log';
 
 export default class TaskCardPlugin extends Plugin {
@@ -17,9 +17,9 @@ export default class TaskCardPlugin extends Plugin {
   }
 
   async onload() {
-    this.registerMarkdownPostProcessor(EmojiPostProcessor);
-    logger.info('Plugin loaded.');
-    console.log('Plugin loaded.');
     this.addSettingTab(new SettingsTab(this.app, this));
+    this.registerMarkdownPostProcessor(EmojiPostProcessor);
+    this.registerMarkdownPostProcessor(TaskCardPostProcessor);
+    logger.info('Plugin loaded.');
   }
 }
