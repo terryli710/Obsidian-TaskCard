@@ -71,13 +71,13 @@ export class TaskCard extends MarkdownRenderChild {
     const filePath = this.taskEl.querySelector('.file-path')?.textContent;
 
     const taskCardEl = this.containerEl.createEl('div', {cls: 'task-card'});
-    taskCardEl.createEl('div', {cls: 'task-card-priority', text: `Priority: ${priority}`});
+    taskCardEl.createEl('div', {cls: 'task-card-priority', text: `${priority}`});
     taskCardEl.createEl('div', {cls: 'task-card-description', text: description});
-    taskCardEl.createEl('div', {cls: 'task-card-order', text: `Order: ${order}`});
+    taskCardEl.createEl('div', {cls: 'task-card-order', text: `${order}`});
     taskCardEl.createEl('div', {cls: 'task-card-project-id', text: `Project ID: ${projectId}`});
     taskCardEl.createEl('div', {cls: 'task-card-section-id', text: `Section ID: ${sectionId}`});
-    taskCardEl.createEl('div', {cls: 'task-card-labels', text: `Labels: ${labels}`});
-    taskCardEl.createEl('div', {cls: 'task-card-completed', text: `Completed: ${completed}`});
+    taskCardEl.createEl('div', {cls: 'task-card-labels', text: `${labels}`});
+    // taskCardEl.createEl('div', {cls: 'task-card-completed', text: `Completed: ${completed}`});
     taskCardEl.createEl('div', {cls: 'task-card-due', text: `Due: ${due}`});
     taskCardEl.createEl('div', {cls: 'task-card-file-path', text: `File Path: ${filePath}`});
   }
@@ -94,13 +94,8 @@ export const TaskCardPostProcessor: MarkdownPostProcessor = async function (
   for (let i = 0; i < taskItems.length; i++) {
     const taskItem = taskItems.item(i) as HTMLElement;
 
-    // If the task item contains "This is a dummy task", log it and process it.
-    if (taskItem.innerHTML.includes("This is a dummy task")) {
-      logger.debug(`Task item HTML: ${taskItem.innerHTML}`);
-      
-      const taskMarkdown = taskItem.textContent;
-      const task = ObsidianTask.fromMarkdownLine(taskMarkdown);
-      ctx.addChild(new TaskCard(taskItem, task));
-    }
+    const taskMarkdown = taskItem.textContent;
+    const task = ObsidianTask.fromMarkdownLine(taskMarkdown);
+    ctx.addChild(new TaskCard(taskItem, task));
   }
 };

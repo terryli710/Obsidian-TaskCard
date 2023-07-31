@@ -1,45 +1,71 @@
-.card {
-    padding: 20px;
-    background-color: #f5f5f5;
-    border-radius: 10px;
-    box-shadow: 0 0 5px rgba(0,0,0,0.3);
-    margin: 10px;
-    display: flex;
-    align-items: center;
-    font-family: Arial, sans-serif;
-  }
-  
-  .task-checkbox {
-    font-size: 1.3em;
-    margin-right: 15px;
-    cursor: pointer;
-  }
-  
-  .task-content {
-    flex-grow: 1;
-  }
-  
-  .task-title {
-    font-size: 1.2em;
-    font-weight: bold;
-  }
-  
-  .task-description {
-    color: gray;
-    font-size: 0.9em;
-    margin-top: 5px;
-  }
-  
-  .task-labels {
-    display: flex;
-    flex-wrap: wrap;
-    margin-top: 10px;
-  }
-  
-  .task-label {
-    background-color: #ddd;
-    border-radius: 3px;
-    padding: 2px 5px;
-    font-size: 0.8em;
-    margin-right: 5px;
-  }
+:root {
+  --task-card-priority-color: #ff4500;
+  --task-card-description-color: #808080;
+  --task-card-order-color: #2e8b57;
+  --task-card-project-id-color: #0000cd;
+  --task-card-section-id-color: #8b4513;
+  --task-card-labels-color: #9400d3;
+  --task-card-completed-color: #008000;
+  --task-card-due-color: #ff0000;
+  --task-card-file-path-color: #000000;
+}
+
+.task-card {
+  background-color: #3b3838;
+  border-radius: 10px;
+  padding: 20px;
+  margin: 10px 0;
+  box-shadow: 0 0 10px rgba(4, 4, 4, 0.817);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-family: Arial, sans-serif;
+  white-space: normal; /* makes the content wrap */
+}
+
+.task-card-priority::before {
+  content: '🔢 ';
+  color: var(--task-card-priority-color);
+}
+
+.task-card-description {
+  color: var(--task-card-description-color);
+  font-size: 0.8em;
+  display: inline;
+  margin-left: 28px; /* gives some margin to the left */
+}
+
+.task-card-order::before {
+  content: '📅 ';
+  color: var(--task-card-order-color);
+}
+
+.task-card-project-id::before {
+  content: '📂 ';
+  color: var(--task-card-project-id-color);
+}
+
+.task-card-section-id::before {
+  content: '📑 ';
+  color: var(--task-card-section-id-color);
+}
+
+.task-card-labels::before {
+  content: '🏷️ ';
+  color: var(--task-card-labels-color);
+}
+
+.task-card-completed::before {
+  content: '✅ ';
+  color: var(--task-card-completed-color);
+}
+
+.task-card-due::before {
+  content: '⏰ ';
+  color: var(--task-card-due-color);
+}
+
+.task-card-file-path::before {
+  content: '📄 ';
+  color: var(--task-card-file-path-color);
+}
