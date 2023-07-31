@@ -1,93 +1,28 @@
-import type {
-  MarkdownPostProcessor,
-  MarkdownPostProcessorContext
+import {
+  MarkdownRenderChild,
+  type MarkdownPostProcessor,
+  type MarkdownPostProcessorContext
 } from 'obsidian';
-import { MarkdownRenderChild } from 'obsidian';
+import TaskCard from '../ui/TaskCard.svelte';
 import { logger } from '../log';
+import type { SvelteComponent } from 'svelte';
 
-export class Emoji extends MarkdownRenderChild {
-  static ALL_EMOJIS: Record<string, string> = {
-    ':+1:': '👍',
-    ':sunglasses:': '😎',
-    ':smile:': '😄'
-  };
 
-  text: string;
-
-  constructor(containerEl: HTMLElement, text: string) {
-    super(containerEl);
-
-    this.text = text;
-  }
-
-  onload() {
-    const emojiEl = this.containerEl.createSpan({
-      text: Emoji.ALL_EMOJIS[this.text] ?? this.text
-    });
-    this.containerEl.replaceWith(emojiEl);
-  }
-}
-
-export const EmojiPostProcessor: MarkdownPostProcessor = async function (
-  el: HTMLElement,
-  ctx: MarkdownPostProcessorContext
-): Promise<void> {
-  const codeblocks = el.querySelectorAll('code');
-
-  for (let index = 0; index < codeblocks.length; index++) {
-    const codeblock = codeblocks.item(index);
-    const text = codeblock.textContent.trim();
-    const isEmoji = text[0] === ':' && text[text.length - 1] === ':';
-    if (isEmoji) {
-      ctx.addChild(new Emoji(codeblock, text));
-    }
-  }
-};
-
-import { ObsidianTask } from '../taskModule/task';
-export class TaskCard extends MarkdownRenderChild {
+class SvelteAdapter extends MarkdownRenderChild {
   taskEl: HTMLElement;
-  task: ObsidianTask;
+  svelteComponent: SvelteComponent; // You might want to replace 'any' with the actual Svelte component type
 
-  constructor(taskEl: HTMLElement, task: ObsidianTask) {
+  constructor(taskEl: HTMLElement) {
     super(taskEl);
-
     this.taskEl = taskEl;
-    this.task = task;
   }
 
   onload() {
-    const content = JSON.parse(this.taskEl.querySelector('.content')?.textContent || '');
-    const priority = this.taskEl.querySelector('.priority')?.textContent;
-    const description = this.taskEl.querySelector('.description')?.textContent;
-    const order = this.taskEl.querySelector('.order')?.textContent;
-    const projectId = this.taskEl.querySelector('.project-id')?.textContent;
-    const sectionId = this.taskEl.querySelector('.section-id')?.textContent;
-    const labels = this.taskEl.querySelector('.labels')?.textContent;
-    const completed = this.taskEl.querySelector('.completed')?.textContent;
-    const parent = this.taskEl.querySelector('.parent')?.textContent;
-    const children = this.taskEl.querySelector('.children')?.textContent;
-    const due = this.taskEl.querySelector('.due')?.textContent;
-    const filePath = this.taskEl.querySelector('.file-path')?.textContent;
+    this.svelteComponent = new TaskCard({ target: this.containerEl, props: { taskEl: this.taskEl } });
+  }
 
-    const taskCardEl = this.containerEl.createEl('div', {cls: 'obsidian-taskcard'});
-
-    // Create the first line
-    const firstLineEl = taskCardEl.createEl('div', {cls: 'task-card-first-line'});
-    firstLineEl.createEl('input', {type: 'checkbox', cls: 'task-card-checkbox'});
-    firstLineEl.createEl('span', {cls: 'task-card-content', text: content});
-    
-    taskCardEl.createEl('div', {cls: 'task-card-priority', text: `${priority}`});
-    taskCardEl.createEl('div', {cls: 'task-card-description', text: description});
-    taskCardEl.createEl('div', {cls: 'task-card-order', text: `${order}`});
-    taskCardEl.createEl('div', {cls: 'task-card-project-id', text: `Project ID: ${projectId}`});
-    taskCardEl.createEl('div', {cls: 'task-card-section-id', text: `Section ID: ${sectionId}`});
-    taskCardEl.createEl('div', {cls: 'task-card-labels', text: `${labels}`});
-    // taskCardEl.createEl('div', {cls: 'task-card-completed', text: `Completed: ${completed}`});
-    taskCardEl.createEl('div', {cls: 'task-card-due', text: `Due: ${due}`});
-    taskCardEl.createEl('div', {cls: 'task-card-file-path', text: `File Path: ${filePath}`});
-
-    this.taskEl.replaceWith(taskCardEl);
+  onunload() {
+    this.svelteComponent.$destroy();
   }
 }
 
@@ -102,8 +37,6 @@ export const TaskCardPostProcessor: MarkdownPostProcessor = async function (
   for (let i = 0; i < taskItems.length; i++) {
     const taskItem = taskItems[i] as HTMLElement;
     logger.debug(`taskItem: ${taskItem.innerHTML}`);
-    const taskMarkdown = taskItem.textContent;
-    const task = ObsidianTask.fromMarkdownLine(taskMarkdown);
-    ctx.addChild(new TaskCard(taskItem, task));
+    ctx.addChild(new SvelteAdapter(taskItem));
   }
 };

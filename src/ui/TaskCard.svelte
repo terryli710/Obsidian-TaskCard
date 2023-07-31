@@ -1,29 +1,33 @@
 <script>
-    export let task = {
-      content: 'Task content',
-      description: 'Task description',
-      labels: ['label1', 'label2'],
-      completed: false,
-    };
+  export let taskEl;
+  // export let task;
   
-    function toggleComplete() {
-      task.completed = !task.completed;
-    }
-  </script>
-  
-  <div class="card">
-    <div class="task-checkbox" on:click={toggleComplete}>
-      {task.completed ? '[x]' : '[ ]'}
-    </div>
-    <div class="task-content">
-      <div class="task-title">{task.content}</div>
-      {#if task.description}
-        <div class="task-description">{task.description}</div>
-      {/if}
-      <div class="task-labels">
-        {#each task.labels as label}
-          <span class="task-label">#{label}</span>
-        {/each}
-      </div>
-    </div>
+  let content = JSON.parse(taskEl.querySelector('.content')?.textContent || '');
+  let priority = taskEl.querySelector('.priority')?.textContent;
+  let description = taskEl.querySelector('.description')?.textContent;
+  let order = taskEl.querySelector('.order')?.textContent;
+  let projectId = taskEl.querySelector('.project-id')?.textContent;
+  let sectionId = taskEl.querySelector('.section-id')?.textContent;
+  let labels = taskEl.querySelector('.labels')?.textContent;
+  let completed = taskEl.querySelector('.completed')?.textContent;
+  let parent = taskEl.querySelector('.parent')?.textContent;
+  let children = taskEl.querySelector('.children')?.textContent;
+  let due = taskEl.querySelector('.due')?.textContent;
+  let filePath = taskEl.querySelector('.file-path')?.textContent;
+</script>
+
+<div class="obsidian-taskcard">
+  <div class="task-card-first-line">
+    <input type="checkbox" class="task-card-checkbox">
+    <span class="task-card-content">{content}</span>
   </div>
+  
+  <div class="task-card-priority">{priority}</div>
+  <div class="task-card-description">{description}</div>
+  <div class="task-card-order">{order}</div>
+  <div class="task-card-project-id">Project ID: {projectId}</div>
+  <div class="task-card-section-id">Section ID: {sectionId}</div>
+  <div class="task-card-labels">{labels}</div>
+  <div class="task-card-due">Due: {due}</div>
+  <div class="task-card-file-path">File Path: {filePath}</div>
+</div>
