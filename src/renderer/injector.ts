@@ -57,7 +57,7 @@ export class TaskCard extends MarkdownRenderChild {
   }
 
   onload() {
-    const content = this.taskEl.querySelector('.content')?.textContent;
+    const content = JSON.parse(this.taskEl.querySelector('.content')?.textContent || '');
     const priority = this.taskEl.querySelector('.priority')?.textContent;
     const description = this.taskEl.querySelector('.description')?.textContent;
     const order = this.taskEl.querySelector('.order')?.textContent;
@@ -76,6 +76,7 @@ export class TaskCard extends MarkdownRenderChild {
     const firstLineEl = taskCardEl.createEl('div', {cls: 'task-card-first-line'});
     firstLineEl.createEl('input', {type: 'checkbox', cls: 'task-card-checkbox'});
     firstLineEl.createEl('span', {cls: 'task-card-content', text: content});
+    
     taskCardEl.createEl('div', {cls: 'task-card-priority', text: `${priority}`});
     taskCardEl.createEl('div', {cls: 'task-card-description', text: description});
     taskCardEl.createEl('div', {cls: 'task-card-order', text: `${order}`});
