@@ -10,7 +10,7 @@
   --task-card-file-path-color: #000000;
 }
 
-.task-card {
+.obsidian-taskcard {
   background-color: #3b3838;
   border-radius: 10px;
   padding: 20px;

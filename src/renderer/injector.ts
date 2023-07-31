@@ -70,7 +70,12 @@ export class TaskCard extends MarkdownRenderChild {
     const due = this.taskEl.querySelector('.due')?.textContent;
     const filePath = this.taskEl.querySelector('.file-path')?.textContent;
 
-    const taskCardEl = this.containerEl.createEl('div', {cls: 'task-card'});
+    const taskCardEl = this.containerEl.createEl('div', {cls: 'obsidian-taskcard'});
+
+    // Create the first line
+    const firstLineEl = taskCardEl.createEl('div', {cls: 'task-card-first-line'});
+    firstLineEl.createEl('input', {type: 'checkbox', cls: 'task-card-checkbox'});
+    firstLineEl.createEl('span', {cls: 'task-card-content', text: content});
     taskCardEl.createEl('div', {cls: 'task-card-priority', text: `${priority}`});
     taskCardEl.createEl('div', {cls: 'task-card-description', text: description});
     taskCardEl.createEl('div', {cls: 'task-card-order', text: `${order}`});
@@ -80,6 +85,8 @@ export class TaskCard extends MarkdownRenderChild {
     // taskCardEl.createEl('div', {cls: 'task-card-completed', text: `Completed: ${completed}`});
     taskCardEl.createEl('div', {cls: 'task-card-due', text: `Due: ${due}`});
     taskCardEl.createEl('div', {cls: 'task-card-file-path', text: `File Path: ${filePath}`});
+
+    this.taskEl.replaceWith(taskCardEl);
   }
 }
 
@@ -89,8 +96,7 @@ export const TaskCardPostProcessor: MarkdownPostProcessor = async function (
   ctx: MarkdownPostProcessorContext
 ): Promise<void> {
   // Select all task list items in the element.
-  const taskItems = Array.from(el.querySelectorAll('.task-list-item'))
-    .filter(item => item.querySelector('span[style="display:none;"]'));
+  const taskItems = Array.from(el.querySelectorAll('.obsidian-taskcard'));
 
   for (let i = 0; i < taskItems.length; i++) {
     const taskItem = taskItems[i] as HTMLElement;
