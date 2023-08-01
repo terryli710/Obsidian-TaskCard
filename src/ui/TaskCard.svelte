@@ -9,6 +9,7 @@
 
   let content = parseQuery('content');
   let priority = parseQuery('priority');
+  let priorityClass = `priority${priority}`;
   let description = parseQuery('description');
   let order = parseQuery('order');
   let project = JSON.parse(parseQuery('project', '{}'));
@@ -23,8 +24,6 @@
   let due = parseQuery('due');
   let filePath = parseQuery('file-path');
 
-  logger.debug(`project: ${JSON.stringify(project)}`);
-
 
   taskEl.innerHTML = ""; // this component replaces the innerHTML
   // NOTE: the outerHTML is the div of .obsidian-taskcard
@@ -33,7 +32,7 @@
 
 <div class="task-card-first-line">
   <div class="task-card-content">
-    <input type="checkbox" class="task-card-checkbox" class:priority={priority}>
+    <input type="checkbox" class={`task-card-checkbox ${priorityClass}`}>
     <span>{content}</span>
   </div>
   <div class="task-card-project">
@@ -42,7 +41,6 @@
 </div>
 
 <div class="task-card-description">{description}</div>
-<div class="task-card-order">{order}</div>
 <div class="task-card-section-id">{sectionId}</div>
 <div class="task-card-labels">
   {#each labels as label}
