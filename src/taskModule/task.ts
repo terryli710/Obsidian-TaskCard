@@ -2,13 +2,13 @@ import type {
   Boolean,
   Number as NumberRunType,
   String,
-  Array,
   Record,
   Static,
   Partial,
   Literal,
   Union
 } from 'runtypes';
+import { Array } from 'runtypes';
 import { camelToKebab, kebabToCamel } from '../utils/stringCaseConverter';
 
 export declare const DueDate: import('runtypes').Intersect<
@@ -33,7 +33,10 @@ export declare const DueDate: import('runtypes').Intersect<
 
 export type DueDate = Static<typeof DueDate>;
 
-export type ProjectID = string;
+export type Project = {
+  id: string;
+  name: string;
+}
 export type SectionID = string;
 export type Priority = 1 | 2 | 3 | 4;
 export type Order = number;
@@ -43,7 +46,7 @@ export interface TaskProperties {
   priority: Priority;
   description: string;
   order: Order;
-  projectID: ProjectID;
+  project: Project;
   sectionID: SectionID;
   labels: string[];
   completed: boolean;
@@ -60,7 +63,7 @@ export class ObsidianTask implements TaskProperties {
   public priority: Priority;
   public description: string;
   public order: Order;
-  public projectID: ProjectID;
+  public project: Project;
   public sectionID: SectionID;
   public labels: string[];
   public completed: boolean;
@@ -76,7 +79,7 @@ export class ObsidianTask implements TaskProperties {
     this.priority = 1;
     this.description = '';
     this.order = 0;
-    this.projectID = '';
+    this.project = { id: '', name: '' };
     this.sectionID = '';
     this.labels = [];
     this.completed = false;
@@ -87,13 +90,15 @@ export class ObsidianTask implements TaskProperties {
   }
   toMarkdownLine(): string {
     let markdownLine = `- [${this.completed ? 'x' : ' '}] ${this.content}`;
-
+    
     for (let key in this) {
       if (this[key] !== null && this[key] !== undefined) {
         let kebabCaseKey = camelToKebab(key);
-        markdownLine += `<span class="${kebabCaseKey}" style="display:none;">${JSON.stringify(
-          this[key]
-        )}</span>`;
+        if(typeof this[key] === 'object' && !(this[key] instanceof Array)) {
+          markdownLine += `<span class="${kebabCaseKey}" style="display:none;">${JSON.stringify(this[key])}</span>`;
+        } else {
+          markdownLine += `<span class="${kebabCaseKey}" style="display:none;">${this[key]}</span>`;
+        }
       }
     }
 
@@ -121,7 +126,11 @@ export class ObsidianTask implements TaskProperties {
 
       // Only assign the value if the key exists on ObsidianTask and parse it with correct type
       if (taskKey in task) {
-        parsedValues[taskKey] = JSON.parse(value);
+        try {
+          parsedValues[taskKey] = JSON.parse(value);
+        } catch (e) {
+          parsedValues[taskKey] = value;
+        }
       }
     }
 

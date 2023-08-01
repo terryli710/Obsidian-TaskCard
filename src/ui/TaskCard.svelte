@@ -9,7 +9,7 @@
   let priority = parseQuery('priority');
   let description = parseQuery('description');
   let order = parseQuery('order');
-  let projectId = parseQuery('project-id');
+  let project = parseQuery('project-id');
   let sectionId = parseQuery('section-id');
   let labels = parseQuery('labels', '[]');
   let completed = parseQuery('completed');
