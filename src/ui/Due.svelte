@@ -50,14 +50,3 @@
 <div class="task-card-due">
   {dueDisplay}
 </div>
-
-<style>
-    .task-card-due {
-        display: inline-block;
-        padding: 2px 10px;
-        border-radius: 15px;
-        border: 1px solid gray;
-        width: auto;
-        font-size: 0.8em;
-    }
-</style>

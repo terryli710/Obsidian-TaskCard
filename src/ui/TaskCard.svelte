@@ -16,7 +16,7 @@
   let project = JSON.parse(parseQuery('project', '{}'));
   let projectName = project.name
   let projectId = project.id
-  let projectColor = null; // TODO: find a way to get.
+  let projectColor = "#49dbbb";
   let sectionId = parseQuery('section-id');
   let labels = parseQuery('labels', '[]');
   let completed = parseQuery('completed');
@@ -42,10 +42,12 @@
 </div>
 
 <div class="task-card-description">{description}</div>
-<!-- <div class="task-card-section-id">{sectionId}</div> -->
-<div class="task-card-labels">
-  {#each labels as label}
-    <a href="#{label}" class="tag" target="_blank" rel="noopener">#{label}</a>{#if label !== labels[labels.length - 1]}, {/if}
-  {/each}
+<div class="task-card-due-labels">
+  <Due {due} />
+  <div class="task-card-due-labels-separator">|</div>
+  <div class="task-card-labels">
+    {#each labels as label}
+      <a href="#{label}" class="tag" target="_blank" rel="noopener">#{label}</a>{#if label !== labels[labels.length - 1]}, {/if}
+    {/each}
+  </div>
 </div>
-<Due {due} />
