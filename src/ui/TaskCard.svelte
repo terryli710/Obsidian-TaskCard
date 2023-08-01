@@ -24,16 +24,19 @@
 </script>
 
 <div class="task-card-first-line">
-  <input type="checkbox" class="task-card-checkbox" class:priority={priority}>
-  <span class="task-card-content">{content}</span>
+  <div class="task-card-content">
+    <input type="checkbox" class="task-card-checkbox" class:priority={priority}>
+    <span>{content}</span>
+  </div>
   <div class="task-card-project-id"><a href="#">{projectId}</a></div>
 </div>
 
 <div class="task-card-description">{description}</div>
 <div class="task-card-order">{order}</div>
 <div class="task-card-section-id">{sectionId}</div>
-{#each labels as label}
-  <span class="task-card-labels">#{label}</span>
-{/each}
+<div class="task-card-labels">
+  {#each labels as label}
+    <a href="#">#{label}</a>{#if label !== labels[labels.length - 1]}, {/if}
+  {/each}
+</div>
 <div class="task-card-due">Due: {due}</div>
-

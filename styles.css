@@ -76,3 +76,19 @@
 .task-card-checkbox.priority2 { color: #ffa500; }
 .task-card-checkbox.priority3 { color: #ffff00; }
 .task-card-checkbox.priority4 { color: #008000; }
+
+.task-card-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.task-card-labels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.task-card-labels a {
+  text-decoration: none;
+}
