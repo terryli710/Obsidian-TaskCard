@@ -1,5 +1,6 @@
 <script>
-    import { logger } from "../log";
+  import { logger } from "../log";
+  import Due from './Due.svelte';
 
   export let taskEl;
 
@@ -21,7 +22,7 @@
   let completed = parseQuery('completed');
   let parent = parseQuery('parent');
   let children = parseQuery('children');
-  let due = parseQuery('due');
+  let due = JSON.parse(parseQuery('due', '{}'));
   let filePath = parseQuery('file-path');
 
 
@@ -41,10 +42,10 @@
 </div>
 
 <div class="task-card-description">{description}</div>
-<div class="task-card-section-id">{sectionId}</div>
+<!-- <div class="task-card-section-id">{sectionId}</div> -->
 <div class="task-card-labels">
   {#each labels as label}
     <a href="#{label}" class="tag" target="_blank" rel="noopener">#{label}</a>{#if label !== labels[labels.length - 1]}, {/if}
   {/each}
 </div>
-<div class="task-card-due">Due: {due}</div>
+<Due {due} />

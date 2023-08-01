@@ -4,7 +4,6 @@
   --task-card-order-color: #2e8b57;
   --task-card-section-id-color: #8b4513;
   --task-card-completed-color: #008000;
-  --task-card-due-color: #ff0000;
   --task-card-file-path-color: #000000;
 }
 
@@ -20,6 +19,7 @@
   font-family: Arial, sans-serif;
   white-space: normal;
   position: relative;
+  align-items: flex-start;
 }
 
 .task-card-first-line {
@@ -58,11 +58,6 @@
 .task-card-section-id::before {
   content: '📑 ';
   color: var(--task-card-section-id-color);
-}
-
-.task-card-due::before {
-  content: '⏰ ';
-  color: var(--task-card-due-color);
 }
 
 .task-card-file-path {

@@ -2,12 +2,13 @@
 # Display
 - UI design:
   - color design
-  - using default UI?
-  - 
+- Displaying the Due:
+  - shape;
+  - what to display;
+- Adjust with width;
+- Single line and multi line mode
 
 # Parsing and Formatting
 - Formatting task
 - Task parsing
-- How to show the due date?
-- How to consider width?
 - 

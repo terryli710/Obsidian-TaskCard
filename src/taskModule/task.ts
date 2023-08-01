@@ -1,35 +1,21 @@
-import type {
-  Boolean,
-  Number as NumberRunType,
-  String,
-  Record,
-  Static,
-  Partial,
-  Literal,
-  Union
-} from 'runtypes';
-import { Array } from 'runtypes';
+import type { Static } from 'runtypes';
+import { Record, Union, String, Literal, Boolean, Partial } from 'runtypes';
 import { camelToKebab, kebabToCamel } from '../utils/stringCaseConverter';
 
-export declare const DueDate: import('runtypes').Intersect<
-  [
-    Record<
-      {
-        isRecurring: Boolean;
-        string: String;
-        date: String;
-      },
-      false
-    >,
-    Partial<
-      {
-        datetime: Union<[String, Literal<null>]>;
-        timezone: Union<[String, Literal<null>]>;
-      },
-      false
-    >
-  ]
->;
+
+export const DateOnly = String.withConstraint(s => /^\d{4}-\d{2}-\d{2}$/.test(s));
+export const TimeOnly = String.withConstraint(s => /^\d{2}:\d{2}$/.test(s));
+
+export const DueDate = Record({
+  isRecurring: Boolean,
+  date: DateOnly,
+  time: Union(TimeOnly, Literal(null)),
+}).And(
+  Partial({
+    string: String,
+    timezone: Union(String, Literal(null))
+  })
+);
 
 export type DueDate = Static<typeof DueDate>;
 
