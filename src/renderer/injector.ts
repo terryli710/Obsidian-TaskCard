@@ -10,8 +10,8 @@ import type { SvelteComponent } from 'svelte';
 
 class SvelteAdapter extends MarkdownRenderChild {
   taskEl: HTMLElement;
-  svelteComponent: SvelteComponent; // You might want to replace 'any' with the actual Svelte component type
-
+  svelteComponent: SvelteComponent;
+  
   constructor(taskEl: HTMLElement) {
     super(taskEl);
     this.taskEl = taskEl;
