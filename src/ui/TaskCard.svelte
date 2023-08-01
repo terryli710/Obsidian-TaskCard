@@ -1,6 +1,7 @@
 <script>
   import { logger } from "../log";
   import Due from './Due.svelte';
+    import Project from "./Project.svelte";
 
   export let taskEl;
 
@@ -14,9 +15,6 @@
   let description = parseQuery('description');
   let order = parseQuery('order');
   let project = JSON.parse(parseQuery('project', '{}'));
-  let projectName = project.name
-  let projectId = project.id
-  let projectColor = "#49dbbb";
   let sectionId = parseQuery('section-id');
   let labels = parseQuery('labels', '[]');
   let completed = parseQuery('completed');
@@ -36,9 +34,7 @@
     <input type="checkbox" class={`task-card-checkbox ${priorityClass}`}>
     <span>{content}</span>
   </div>
-  <div class="task-card-project">
-    <a href="#{projectName}" class="tag" target="_blank" rel="noopener">{projectName}</a>
-  </div>
+  <Project {project} />
 </div>
 
 <div class="task-card-description">{description}</div>

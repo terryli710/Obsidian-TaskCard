@@ -33,14 +33,19 @@
   top: 10px;
   right: 10px;
   font-size: 0.75em;
+  display: flex;
+  align-items: center;
 }
 
-.task-card-project a {
-  text-decoration: none;
+.task-card-project .tag {
+  margin-right: 5px;
 }
 
-.task-card-priority::before {
-  content: '🔢 ';
+.project-color {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
 }
 
 .task-card-description {
