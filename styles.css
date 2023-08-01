@@ -1,6 +1,6 @@
 :root {
   --task-card-priority-color: #ff4500;
-  --task-card-description-color: #808080;
+  --task-card-description-color: #a2a2a2c2;
   --task-card-order-color: #2e8b57;
   --task-card-section-id-color: #8b4513;
   --task-card-completed-color: #008000;
@@ -8,7 +8,7 @@
 }
 
 .obsidian-taskcard {
-  background-color: #3b3838;
+  background-color: hsla(0, 0%, 18%, 0.235); /* TODO: change with the theme */
   border-radius: 10px;
   padding: 10px 10px 10px 15px; /* top, right, bottom, left */
   margin: 5px 0;
@@ -50,11 +50,6 @@
   margin-left: 30px;
 }
 
-/* .task-card-order::before {
-  content: '📅 ';
-  color: var(--task-card-order-color);
-} */
-
 .task-card-section-id::before {
   content: '📑 ';
   color: var(--task-card-section-id-color);
@@ -82,4 +77,25 @@
 
 .task-card-labels a {
   text-decoration: none;
+}
+
+.task-card-due {
+  display: inline-block;
+  padding: 1px 10px;
+  border-radius: 15px;
+  border: 0.75px solid gray;
+  width: auto;
+  font-size: 0.8em;
+  font-family: "Arial Light", sans-serif;
+  font-weight: lighter;
+}
+
+.task-card-due-labels {
+  display: flex;
+  align-items: center;
+}
+
+.task-card-due-labels-separator {
+  margin: 0 4px;
+  color: var(--task-card-description-color);
 }
