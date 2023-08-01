@@ -83,12 +83,6 @@
   gap: 10px;
 }
 
-.task-card-labels {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-}
-
 .task-card-labels a {
   text-decoration: none;
 }

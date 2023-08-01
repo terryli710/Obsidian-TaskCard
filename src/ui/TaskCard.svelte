@@ -36,7 +36,7 @@
 <div class="task-card-section-id">{sectionId}</div>
 <div class="task-card-labels">
   {#each labels as label}
-    <a href="#">#{label}</a>{#if label !== labels[labels.length - 1]}, {/if}
+    <a href="#{label}" class="tag" target="_blank" rel="noopener">#{label}</a>{#if label !== labels[labels.length - 1]}, {/if}
   {/each}
 </div>
 <div class="task-card-due">Due: {due}</div>
