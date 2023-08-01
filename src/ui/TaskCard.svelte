@@ -1,9 +1,19 @@
 <script>
   import { logger } from "../log";
   import Due from './Due.svelte';
-    import Project from "./Project.svelte";
+  import { onMount, tick } from 'svelte';
+  import Project from "./Project.svelte";
 
   export let taskEl;
+
+  let checkboxElement;
+  let descriptionElement;
+
+  onMount(async () => {
+    // await tick();
+    // descriptionElement.style.marginLeft = `${checkboxElement.offsetWidth}px`;
+    descriptionElement.style.marginLeft = `40px`;
+  });
 
   function parseQuery(queryName, defaultValue = "") {
     return JSON.parse(taskEl.querySelector(`.${queryName}`)?.textContent || defaultValue);
@@ -30,20 +40,20 @@
 </script>
 
 <div class="task-card-first-line">
-  <div class="task-card-content">
-    <input type="checkbox" class={`task-card-checkbox ${priorityClass}`}>
+  <div class="task-card-content-container">
+    <input type="checkbox" class={`task-card-checkbox ${priorityClass}`} bind:this={checkboxElement}>
     <span>{content}</span>
   </div>
   <Project {project} />
 </div>
 
-<div class="task-card-description">{description}</div>
+<div class="task-card-description" bind:this={descriptionElement}>{description}</div>
 <div class="task-card-due-labels">
   <Due {due} />
   <div class="task-card-due-labels-separator">|</div>
   <div class="task-card-labels">
     {#each labels as label}
-      <a href="#{label}" class="tag" target="_blank" rel="noopener">#{label}</a>{#if label !== labels[labels.length - 1]}, {/if}
+      <a href="#{label}" class="tag" target="_blank" rel="noopener">#{label}</a>{#if label !== labels[labels.length - 1]}{" "}{/if}
     {/each}
   </div>
 </div>

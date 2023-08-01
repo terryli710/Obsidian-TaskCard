@@ -26,15 +26,21 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.task-card-content-container {
+  display: flex;
+  align-items: center;
+  flex-grow: 1;
 }
 
 .task-card-project {
-  position: absolute;
-  top: 10px;
-  right: 10px;
   font-size: 0.75em;
   display: flex;
   align-items: center;
+  flex-shrink: 0;
 }
 
 .task-card-project .tag {
@@ -52,16 +58,6 @@
   color: var(--task-card-description-color);
   font-size: 0.8em;
   display: inline;
-  margin-left: 30px;
-}
-
-.task-card-section-id::before {
-  content: '📑 ';
-  color: var(--task-card-section-id-color);
-}
-
-.task-card-file-path {
-  color: var(--task-card-file-path-color);
 }
 
 .task-card-checkbox {
@@ -69,10 +65,18 @@
 }
 
 /* Apply color to checkbox based on priority */
-.task-card-checkbox.priority1 { border-color: #ff0000; }
-.task-card-checkbox.priority2 { border-color: #ffa500; }
-.task-card-checkbox.priority3 { border-color: #ffff00; }
-.task-card-checkbox.priority4 { border-color: #008000; }
+.task-card-checkbox.priority1 {
+  border-color: #ff0000;
+}
+.task-card-checkbox.priority2 {
+  border-color: #ffa500;
+}
+.task-card-checkbox.priority3 {
+  border-color: #ffff00;
+}
+.task-card-checkbox.priority4 {
+  border-color: #008000;
+}
 
 .task-card-content {
   display: flex;
@@ -91,13 +95,15 @@
   border: 0.75px solid gray;
   width: auto;
   font-size: 0.8em;
-  font-family: "Arial Light", sans-serif;
+  font-family: 'Arial Light', sans-serif;
   font-weight: lighter;
+  white-space: nowrap;
 }
 
 .task-card-due-labels {
   display: flex;
   align-items: center;
+  overflow: hidden;
 }
 
 .task-card-due-labels-separator {
