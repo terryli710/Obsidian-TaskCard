@@ -2,7 +2,6 @@
   --task-card-priority-color: #ff4500;
   --task-card-description-color: #808080;
   --task-card-order-color: #2e8b57;
-  --task-card-project-id-color: #0000cd;
   --task-card-section-id-color: #8b4513;
   --task-card-completed-color: #008000;
   --task-card-due-color: #ff0000;
@@ -12,12 +11,12 @@
 .obsidian-taskcard {
   background-color: #3b3838;
   border-radius: 10px;
-  padding: 20px;
-  margin: 10px 0;
-  box-shadow: 0 0 10px rgba(4, 4, 4, 0.817);
+  padding: 10px 10px 10px 15px; /* top, right, bottom, left */
+  margin: 5px 0;
+  box-shadow: 0 0 5px rgba(4, 4, 4, 0.817);
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 5px;
   font-family: Arial, sans-serif;
   white-space: normal;
   position: relative;
@@ -29,15 +28,14 @@
   justify-content: space-between;
 }
 
-.task-card-project-id {
+.task-card-project {
   position: absolute;
-  top: 5px;
-  right: 5px;
-  font-size: 0.8em;
+  top: 10px;
+  right: 10px;
+  font-size: 0.75em;
 }
 
-.task-card-project-id a {
-  color: var(--task-card-project-id-color);
+.task-card-project a {
   text-decoration: none;
 }
 
@@ -49,7 +47,7 @@
   color: var(--task-card-description-color);
   font-size: 0.8em;
   display: inline;
-  margin-left: 28px;
+  margin-left: 30px;
 }
 
 .task-card-order::before {

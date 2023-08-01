@@ -1,4 +1,6 @@
 <script>
+    import { logger } from "../log";
+
   export let taskEl;
 
   function parseQuery(queryName, defaultValue = "") {
@@ -9,7 +11,10 @@
   let priority = parseQuery('priority');
   let description = parseQuery('description');
   let order = parseQuery('order');
-  let project = parseQuery('project-id');
+  let project = JSON.parse(parseQuery('project', '{}'));
+  let projectName = project.name
+  let projectId = project.id
+  let projectColor = null; // TODO: find a way to get.
   let sectionId = parseQuery('section-id');
   let labels = parseQuery('labels', '[]');
   let completed = parseQuery('completed');
@@ -17,6 +22,9 @@
   let children = parseQuery('children');
   let due = parseQuery('due');
   let filePath = parseQuery('file-path');
+
+  logger.debug(`project: ${JSON.stringify(project)}`);
+
 
   taskEl.innerHTML = ""; // this component replaces the innerHTML
   // NOTE: the outerHTML is the div of .obsidian-taskcard
@@ -28,7 +36,9 @@
     <input type="checkbox" class="task-card-checkbox" class:priority={priority}>
     <span>{content}</span>
   </div>
-  <div class="task-card-project-id"><a href="#">{projectId}</a></div>
+  <div class="task-card-project">
+    <a href="#{projectName}" class="tag" target="_blank" rel="noopener">{projectName}</a>
+  </div>
 </div>
 
 <div class="task-card-description">{description}</div>
