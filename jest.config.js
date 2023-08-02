@@ -1,6 +1,6 @@
 module.exports = {
     preset: 'ts-jest/presets/js-with-ts',
-    testEnvironment: 'node',
+    testEnvironment: 'jest-environment-node',
     verbose: true,
     transform: {
         '^.+\\.svelte$': 'svelte-jester',
@@ -12,4 +12,5 @@ module.exports = {
     testPathIgnorePatterns: ['node_modules'],
     transformIgnorePatterns: ['node_modules'],
     clearMocks: true,
+    extensionsToTreatAsEsm: ['.ts'],
 };

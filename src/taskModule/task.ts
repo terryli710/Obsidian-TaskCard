@@ -1,6 +1,8 @@
 import type { Static } from 'runtypes';
-import { Record, Union, String, Literal, Boolean, Partial } from 'runtypes';
+import { Record, Union, String, Literal, Boolean } from 'runtypes';
+import { Partial as rtPartial } from 'runtypes';
 import { camelToKebab, kebabToCamel } from '../utils/stringCaseConverter';
+import { toArray, toBoolean } from '../utils/typeConversion';
 
 
 export const DateOnly = String.withConstraint(s => /^\d{4}-\d{2}-\d{2}$/.test(s));
@@ -11,7 +13,7 @@ export const DueDate = Record({
   date: DateOnly,
   time: Union(TimeOnly, Literal(null)),
 }).And(
-  Partial({
+  rtPartial({
     string: String,
     timezone: Union(String, Literal(null))
   })
@@ -106,16 +108,23 @@ export class ObsidianTask implements TaskProperties {
     while ((match = regex.exec(markdownLine))) {
       let key = kebabToCamel(match[1]);
       let value = match[2];
-
+  
       // Explicitly assert the type of the key
       const taskKey = key as keyof ObsidianTask;
-
+  
       // Only assign the value if the key exists on ObsidianTask and parse it with correct type
       if (taskKey in task) {
         try {
-          parsedValues[taskKey] = JSON.parse(value);
+          // Assuming that the arrays are in JSON format
+          if (Array.isArray(task[taskKey])) {
+            parsedValues[taskKey] = toArray(value);
+          } else if (typeof task[taskKey] === 'boolean') {
+            parsedValues[taskKey] = toBoolean(value);
+          } else {
+            parsedValues[taskKey] = JSON.parse(value);
+          }
         } catch (e) {
-          parsedValues[taskKey] = value;
+          console.error(`Failed to convert value for key ${taskKey}: ${e.message}`);
         }
       }
     }
