@@ -1,9 +1,13 @@
+import { logger } from "../log";
 
 
 export function toArray(value: string): string[] {
+    if (!value) return [];
     try {
-      // Assuming that the array is in JSON format
-      return JSON.parse(value);
+      // If the value is single-quoted, replace with double quotes
+      const formattedValue = value.replace(/'/g, '\"');
+      logger.debug(`input: ${formattedValue}, output: ${JSON.stringify(formattedValue)}`);
+      return JSON.parse(formattedValue);
     } catch (e) {
       throw new Error(`Failed to convert string to array: ${value}`);
     }

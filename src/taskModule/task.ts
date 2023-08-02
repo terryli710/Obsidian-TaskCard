@@ -3,6 +3,8 @@ import { Record, Union, String, Literal, Boolean } from 'runtypes';
 import { Partial as rtPartial } from 'runtypes';
 import { camelToKebab, kebabToCamel } from '../utils/stringCaseConverter';
 import { toArray, toBoolean } from '../utils/typeConversion';
+import { logger } from '../log';
+import { parse } from 'svelte/compiler';
 
 
 export const DateOnly = String.withConstraint(s => /^\d{4}-\d{2}-\d{2}$/.test(s));
@@ -82,7 +84,7 @@ export class ObsidianTask implements TaskProperties {
     for (let key in this) {
       if (this[key] !== null && this[key] !== undefined) {
         let kebabCaseKey = camelToKebab(key);
-        if(typeof this[key] === 'object' && !(this[key] instanceof Array)) {
+        if(typeof this[key] === 'object') {
           markdownLine += `<span class="${kebabCaseKey}" style="display:none;">${JSON.stringify(this[key])}</span>`;
         } else {
           markdownLine += `<span class="${kebabCaseKey}" style="display:none;">${this[key]}</span>`;
@@ -100,9 +102,9 @@ export class ObsidianTask implements TaskProperties {
 
     let parsedValues: any = {};
 
-    if (markdownLine.startsWith('- [')) {
+    if (markdownLine.startsWith('- [')) { // TODO: consider indentation 
       parsedValues.completed = markdownLine[3] === 'x';
-      parsedValues.content = markdownLine.slice(markdownLine.indexOf(']') + 2);
+      parsedValues.content = markdownLine.slice(markdownLine.indexOf(']') + 2, markdownLine.indexOf('<'));
     }
 
     while ((match = regex.exec(markdownLine))) {
@@ -120,6 +122,8 @@ export class ObsidianTask implements TaskProperties {
             parsedValues[taskKey] = toArray(value);
           } else if (typeof task[taskKey] === 'boolean') {
             parsedValues[taskKey] = toBoolean(value);
+          } else if (typeof task[taskKey] === 'string') {
+            parsedValues[taskKey] = value;
           } else {
             parsedValues[taskKey] = JSON.parse(value);
           }

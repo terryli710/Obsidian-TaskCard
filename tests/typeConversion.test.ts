@@ -9,6 +9,12 @@ describe('toArray function', () => {
       const result = toArray(value);
       expect(result).toEqual(["item1", "item2", "item3"]);
     });
+
+    test('should cover single quote array', () => {
+      const value = "['item1', 'item2', 'item3']";
+      const result = toArray(value);
+      expect(result).toEqual(["item1", "item2", "item3"]);
+    });
   
     test('should throw an error for invalid JSON', () => {
       const value = 'not a valid JSON string';

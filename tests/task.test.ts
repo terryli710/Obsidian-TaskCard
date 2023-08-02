@@ -6,7 +6,7 @@ describe('ObsidianTask', () => {
         // Create a new ObsidianTask instance
         const originalTask = new ObsidianTask();
         originalTask.content = 'Test task';
-        originalTask.priority = 1;
+        originalTask.priority = 2;
         originalTask.description = 'Test description';
         originalTask.order = 0;
         originalTask.project = { id: 'test-id', name: 'test-name' };
