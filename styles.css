@@ -59,6 +59,7 @@
   grid-column: 2;
   grid-row: 2;
   font-size: 0.8em;
+  color: var(--color-base-50);
 }
 
 .project-color {
