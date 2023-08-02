@@ -19,6 +19,7 @@
   white-space: normal;
   position: relative;
   align-items: flex-start;
+  box-shadow: 0px 0px 20px var(--color-base-25);
 }
 
 .task-card-first-line {
