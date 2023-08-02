@@ -13,7 +13,7 @@
   onMount(async () => {
     // await tick();
     // descriptionElement.style.marginLeft = `${checkboxElement.offsetWidth}px`;
-    descriptionElement.style.marginLeft = `40px`;
+    descriptionElement.style.marginLeft = `40px`; // TODO: debug
   });
 
   function parseQuery(queryName, defaultValue = "") {
@@ -36,14 +36,6 @@
 
 
   taskEl.innerHTML = ""; // this component replaces the innerHTML
-  // NOTE: the outerHTML is the div of .obsidian-taskcard
-
-  const style = getComputedStyle(document.body);
-  const color = style.getPropertyValue('--background-secondary').trim();
-  const darkenColor = darkenHexColor(color);
-  logger.debug(`color: ${color}`);
-  logger.debug(`darkenColor: ${darkenColor}`);
-
 </script>
 
 <div class="task-card-first-line">

@@ -47,5 +47,10 @@ describe("Color Conversion Utilities", () => {
             const hex = darkenHexColor("#GGGGGG", 0.5);
             expect(hex).toEqual("#GGGGGG");
         });
+
+        it("another test case for darken color", () => {
+            const hex = darkenHexColor("#F6F6F6", 0.2);
+            expect(hex).toEqual("#c4c4c4");
+        });
     });
 });

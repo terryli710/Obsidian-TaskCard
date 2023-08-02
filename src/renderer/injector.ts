@@ -33,12 +33,15 @@ export const TaskCardPostProcessor: MarkdownPostProcessor = async function (
   ctx: MarkdownPostProcessorContext
 ): Promise<void> {
   // Select all task list items in the element.
-  const taskItems = Array.from(el.querySelectorAll('.obsidian-taskcard'));
+  const taskCards = Array.from(el.querySelectorAll('.obsidian-taskcard'));
 
+  const taskItems: HTMLElement[] = [];
+  for (const taskCard of taskCards) { taskItems.push(taskCard.parentElement); }
+
+  // print the first task's parent element
   for (let i = 0; i < taskItems.length; i++) {
     const taskItem = taskItems[i] as HTMLElement;
     logger.debug(`taskItem: ${taskItem.innerHTML}`);
     ctx.addChild(new SvelteAdapter(taskItem));
-    taskCardStyleFinalizer(taskItem);
   }
 };
