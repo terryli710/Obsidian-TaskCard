@@ -7,14 +7,14 @@
 
   export let taskEl;
 
-  let checkboxElement;
-  let descriptionElement;
+  // let checkboxElement;
+  // let descriptionElement;
 
-  onMount(async () => {
-    // await tick();
-    // descriptionElement.style.marginLeft = `${checkboxElement.offsetWidth}px`;
-    descriptionElement.style.marginLeft = `40px`; // TODO: debug
-  });
+  // onMount(async () => {
+  //   // await tick();
+  //   // descriptionElement.style.marginLeft = `${checkboxElement.offsetWidth}px`;
+  //   descriptionElement.style.marginLeft = `40px`; // TODO: debug
+  // });
 
   function parseQuery(queryName, defaultValue = "") {
     return JSON.parse(taskEl.querySelector(`.${queryName}`)?.textContent || defaultValue);
@@ -38,15 +38,20 @@
   taskEl.innerHTML = ""; // this component replaces the innerHTML
 </script>
 
-<div class="task-card-first-line">
-  <div class="task-card-content-container">
-    <input type="checkbox" class={`task-card-checkbox ${priorityClass}`} bind:this={checkboxElement}>
-    <span>{content}</span>
+<div class="task-card-major-block">
+  <div class="task-card-checkbox-wrapper">
+    <input type="checkbox" class={`task-card-checkbox ${priorityClass}`}>
   </div>
-  <Project {project} />
+  <div class="task-card-content-project-line">
+    <div class="task-card-content">{content}</div>
+    <div class="task-card-project">
+      <Project {project} />
+    </div>
+  </div>
+  <div class="task-card-description">{description}</div>
 </div>
 
-<div class="task-card-description" bind:this={descriptionElement}>{description}</div>
+
 <div class="task-card-due-labels">
   <Due {due} />
   <div class="task-card-due-labels-separator">|</div>

@@ -18,29 +18,47 @@
   box-shadow: 0px 0px 20px var(--color-base-25);
 }
 
-.task-card-first-line {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
+.task-card-major-block {
+  display: grid;
+  grid-template-columns: auto 1fr; /* Checkbox takes only the space it needs, rest for content and description */
+  grid-template-rows: auto auto; /* Two rows for content and description */
   width: 100%;
 }
 
-.task-card-content-container {
+.task-card-checkbox-wrapper {
+  grid-column: 1;
+  grid-row: 1;
   display: flex;
   align-items: center;
-  flex-grow: 1;
+  margin-right: 4px;
+}
+
+.task-card-content-project-line {
+  grid-column: 2;
+  grid-row: 1;
+  display: flex;
+  flex-wrap: wrap; /* Allows content to wrap to the next line */
+  justify-content: space-between; /* Aligns content left, project right */
+  align-items: center; /* Centers items vertically */
+}
+
+.task-card-content {
+  flex-grow: 1; /* Takes all available space except what project needs */
+  white-space: pre-wrap; /* Allows content to wrap within its container */
 }
 
 .task-card-project {
-  font-size: 0.75em;
+  flex-shrink: 0; /* Ensures that the project won't shrink */
+  white-space: nowrap; /* Ensures that the project text won't wrap */
   display: flex;
   align-items: center;
-  flex-shrink: 0;
+  font-size: 0.8em;
 }
 
-.task-card-project .tag {
-  margin-right: 5px;
+.task-card-description {
+  grid-column: 2;
+  grid-row: 2;
+  font-size: 0.8em;
 }
 
 .project-color {
@@ -48,11 +66,6 @@
   width: 10px;
   height: 10px;
   border-radius: 50%;
-}
-
-.task-card-description {
-  font-size: 0.8em;
-  display: inline;
 }
 
 .task-card-checkbox {
@@ -68,12 +81,6 @@
 }
 .task-card-checkbox.priority3 {
   border-color: #36A41D;
-}
-
-.task-card-content {
-  display: flex;
-  align-items: center;
-  gap: 3px;
 }
 
 .task-card-labels a {
