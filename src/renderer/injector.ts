@@ -3,23 +3,22 @@ import {
   type MarkdownPostProcessor,
   type MarkdownPostProcessorContext
 } from 'obsidian';
-import TaskCard from '../ui/TaskCard.svelte';
 import { logger } from '../log';
 import type { SvelteComponent } from 'svelte';
-import { taskCardStyleFinalizer } from '../ui/taskCardStyle';
+import TaskItem from '../ui/TaskItem.svelte';
 
 
 class SvelteAdapter extends MarkdownRenderChild {
-  taskEl: HTMLElement;
+  taskItemEl: HTMLElement;
   svelteComponent: SvelteComponent;
   
-  constructor(taskEl: HTMLElement) {
-    super(taskEl);
-    this.taskEl = taskEl;
+  constructor(taskItemEl: HTMLElement) {
+    super(taskItemEl);
+    this.taskItemEl = taskItemEl;
   }
 
   onload() {
-    this.svelteComponent = new TaskCard({ target: this.taskEl, props: { taskEl: this.taskEl } });
+    this.svelteComponent = new TaskItem({ target: this.taskItemEl, props: { taskItemEl: this.taskItemEl } });
   }
 
   onunload() {

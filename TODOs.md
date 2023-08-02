@@ -1,8 +1,8 @@
 
 # Display
-- Adjust with width;
 - Single line and multi line mode
-- Project color generation
+- rerendering when change theme;
+- 
 
 # Parsing and Formatting
 - Formatting task

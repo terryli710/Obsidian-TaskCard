@@ -8,6 +8,8 @@ import { logger } from './log';
 export default class TaskCardPlugin extends Plugin {
   public settings: TaskCardSettings;
   // TODO: more properties
+
+  
   constructor(app: App, pluginManifest: PluginManifest) {
     super(app, pluginManifest);
     DefaultSettings.subscribe((settings) => {
@@ -18,7 +20,9 @@ export default class TaskCardPlugin extends Plugin {
 
   async onload() {
     this.addSettingTab(new SettingsTab(this.app, this));
-    this.registerMarkdownPostProcessor(TaskCardPostProcessor);
+    const taskItemPostProcessor = this.registerMarkdownPostProcessor(TaskCardPostProcessor);
+    
+    
     logger.info('Plugin loaded.');
   }
 }

@@ -3,7 +3,7 @@
   import Due from './Due.svelte';
   import { onMount, tick } from 'svelte';
   import Project from "./Project.svelte";
-    import { darkenHexColor } from "../utils/colorConverter";
+  import { darkenHexColor } from "../utils/colorConverter";
 
   export let taskEl;
 
