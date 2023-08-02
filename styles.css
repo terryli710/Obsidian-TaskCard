@@ -84,9 +84,35 @@
   border-color: #36A41D;
 }
 
+.task-card-attribute-bottom-bar {
+  display: flex;
+  align-items: center;
+  overflow: hidden; /* Hide the overflow */
+  width: 100%;
+}
+
+
+.task-card-attribute-separator {
+  flex-shrink: 0; /* Prevents shrinking */
+  margin: 0 4px;
+  color: var(--color-base-50);
+}
+
+.task-card-labels {
+  display: flex;
+  flex-wrap: nowrap; /* Prevents wrapping */
+  overflow: hidden; /* Truncates any labels that don't fit */
+  white-space: nowrap; /* Keeps labels on a single line */
+}
+
 .task-card-labels a {
   text-decoration: none;
+  flex-shrink: 0; /* Prevents individual labels from shrinking */
 }
+
+.more-labels-symbol {
+  display: inline-block;
+  }
 
 .task-card-due {
   display: inline-block;
@@ -98,15 +124,4 @@
   font-family: 'Arial Light', sans-serif;
   font-weight: lighter;
   white-space: nowrap;
-}
-
-.task-card-attribute-bottom-bar {
-  display: flex;
-  align-items: center;
-  overflow: hidden;
-}
-
-.task-card-attribute-separator {
-  margin: 0 4px;
-  color: var(--color-base-50);
 }

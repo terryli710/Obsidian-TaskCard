@@ -15,6 +15,7 @@
     const formatDate = () => {
       let currentDate = new Date();
       let dueDate = new Date(due.date);
+
   
       if(due.time){
         dueDate = new Date(`${due.date}T${due.time}`);
@@ -27,6 +28,13 @@
   
       let month = dueDate.toLocaleString('default', { month: 'short' });
       let date = dueDate.getDate();
+
+      // If the due date and current date years are different, include the year in the return value
+      if (dueDate.getFullYear() !== currentDate.getFullYear()) {
+        let year = dueDate.getFullYear();
+        return `${month} ${date}, ${year}`;
+      }
+      
       return `${month} ${date}`;
     };
   

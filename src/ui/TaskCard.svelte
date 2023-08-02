@@ -5,15 +5,6 @@
 
   export let taskEl;
 
-  // let checkboxElement;
-  // let descriptionElement;
-
-  // onMount(async () => {
-  //   // await tick();
-  //   // descriptionElement.style.marginLeft = `${checkboxElement.offsetWidth}px`;
-  //   descriptionElement.style.marginLeft = `40px`; // TODO: debug
-  // });
-
   function parseQuery(queryName, defaultValue = "") {
     return JSON.parse(taskEl.querySelector(`.${queryName}`)?.textContent || defaultValue);
   }
