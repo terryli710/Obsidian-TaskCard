@@ -3,6 +3,7 @@
   import Due from './Due.svelte';
   import { onMount, tick } from 'svelte';
   import Project from "./Project.svelte";
+    import { darkenHexColor } from "../utils/colorConverter";
 
   export let taskEl;
 
@@ -36,6 +37,12 @@
 
   taskEl.innerHTML = ""; // this component replaces the innerHTML
   // NOTE: the outerHTML is the div of .obsidian-taskcard
+
+  const style = getComputedStyle(document.body);
+  const color = style.getPropertyValue('--background-secondary').trim();
+  const darkenColor = darkenHexColor(color);
+  logger.debug(`color: ${color}`);
+  logger.debug(`darkenColor: ${darkenColor}`);
 
 </script>
 

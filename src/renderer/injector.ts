@@ -6,6 +6,7 @@ import {
 import TaskCard from '../ui/TaskCard.svelte';
 import { logger } from '../log';
 import type { SvelteComponent } from 'svelte';
+import { taskCardStyleFinalizer } from '../ui/taskCardStyle';
 
 
 class SvelteAdapter extends MarkdownRenderChild {
@@ -38,5 +39,6 @@ export const TaskCardPostProcessor: MarkdownPostProcessor = async function (
     const taskItem = taskItems[i] as HTMLElement;
     logger.debug(`taskItem: ${taskItem.innerHTML}`);
     ctx.addChild(new SvelteAdapter(taskItem));
+    taskCardStyleFinalizer(taskItem);
   }
 };

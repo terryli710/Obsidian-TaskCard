@@ -1,18 +1,17 @@
 :root {
   --task-card-priority-color: #ff4500;
-  --task-card-description-color: #a2a2a2c2;
   --task-card-order-color: #2e8b57;
   --task-card-section-id-color: #8b4513;
   --task-card-completed-color: #008000;
   --task-card-file-path-color: #000000;
 }
 
+
 .obsidian-taskcard {
-  background-color: hsla(0, 0%, 18%, 0.235); /* TODO: change with the theme */
+  background-color: var(--background-secondary);
   border-radius: 10px;
   padding: 10px 10px 10px 15px; /* top, right, bottom, left */
   margin: 5px 0;
-  box-shadow: 0 0 5px rgba(4, 4, 4, 0.817);
   display: flex;
   flex-direction: column;
   gap: 5px;
@@ -55,7 +54,6 @@
 }
 
 .task-card-description {
-  color: var(--task-card-description-color);
   font-size: 0.8em;
   display: inline;
 }
