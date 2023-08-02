@@ -1,8 +1,4 @@
 :root {
-  --task-card-priority-color: #ff4500;
-  --task-card-order-color: #2e8b57;
-  --task-card-section-id-color: #8b4513;
-  --task-card-completed-color: #008000;
   --task-card-file-path-color: #000000;
 }
 
@@ -65,16 +61,13 @@
 
 /* Apply color to checkbox based on priority */
 .task-card-checkbox.priority1 {
-  border-color: #ff0000;
+  border-color: #EE3939;
 }
 .task-card-checkbox.priority2 {
-  border-color: #ffa500;
+  border-color: #FFB300;
 }
 .task-card-checkbox.priority3 {
-  border-color: #ffff00;
-}
-.task-card-checkbox.priority4 {
-  border-color: #008000;
+  border-color: #36A41D;
 }
 
 .task-card-content {
