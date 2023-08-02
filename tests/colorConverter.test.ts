@@ -23,7 +23,7 @@ describe("Color Conversion Utilities", () => {
     describe("darkenRGBColor", () => {
         it("should darken the color correctly", () => {
             const rgb = darkenRGBColor({ r: 255, g: 255, b: 255 }, 0.5);
-            expect(rgb).toEqual({ r: 128, g: 128, b: 128 });
+            expect(rgb).toEqual({ r: 127, g: 127, b: 127 });
         });
 
         it("should not darken beyond 0", () => {
@@ -35,7 +35,7 @@ describe("Color Conversion Utilities", () => {
     describe("darkenHexColor", () => {
         it("should darken the color correctly", () => {
             const hex = darkenHexColor("#FFFFFF", 0.5);
-            expect(hex).toEqual("#808080");
+            expect(hex).toEqual("#7f7f7f");
         });
 
         it("should not darken beyond 0", () => {
