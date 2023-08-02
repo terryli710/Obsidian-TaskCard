@@ -100,13 +100,13 @@
   white-space: nowrap;
 }
 
-.task-card-due-labels {
+.task-card-attribute-bottom-bar {
   display: flex;
   align-items: center;
   overflow: hidden;
 }
 
-.task-card-due-labels-separator {
+.task-card-attribute-separator {
   margin: 0 4px;
-  color: var(--task-card-description-color);
+  color: var(--color-base-50);
 }

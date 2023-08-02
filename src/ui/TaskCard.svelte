@@ -1,9 +1,7 @@
 <script>
-  import { logger } from "../log";
   import Due from './Due.svelte';
-  import { onMount, tick } from 'svelte';
   import Project from "./Project.svelte";
-  import { darkenHexColor } from "../utils/colorConverter";
+  import Labels from "./Labels.svelte";
 
   export let taskEl;
 
@@ -52,12 +50,8 @@
 </div>
 
 
-<div class="task-card-due-labels">
+<div class="task-card-attribute-bottom-bar">
   <Due {due} />
-  <div class="task-card-due-labels-separator">|</div>
-  <div class="task-card-labels">
-    {#each labels as label}
-      <a href="#{label}" class="tag" target="_blank" rel="noopener">#{label}</a>{#if label !== labels[labels.length - 1]}{" "}{/if}
-    {/each}
-  </div>
+  <div class="task-card-attribute-separator"> | </div>
+  <Labels {labels} />
 </div>
