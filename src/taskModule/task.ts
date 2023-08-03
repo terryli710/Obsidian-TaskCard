@@ -3,8 +3,6 @@ import { Record, Union, String, Literal, Boolean } from 'runtypes';
 import { Partial as rtPartial } from 'runtypes';
 import { camelToKebab, kebabToCamel } from '../utils/stringCaseConverter';
 import { toArray, toBoolean } from '../utils/typeConversion';
-import { logger } from '../log';
-import { parse } from 'svelte/compiler';
 
 
 export const DateOnly = String.withConstraint(s => /^\d{4}-\d{2}-\d{2}$/.test(s));

@@ -1,7 +1,8 @@
 <script>
     import { getContext } from "svelte";
     import { logger } from "../log";
-    
+    import { displayDate } from "../utils/dateTimeFormatter"
+
     export let due = {
       isRecurring: false,
       date: null,
@@ -10,50 +11,16 @@
       timezone: null
     };
   
-    let dueDisplay;
-  
-    const formatDate = () => {
-      let currentDate = new Date();
-      let dueDate = new Date(due.date);
+    let dueDisplay = "";
 
-  
-      if(due.time){
-        dueDate = new Date(`${due.date}T${due.time}`);
-      }
-      let daysDiff = Math.floor((dueDate - currentDate) / (1000 * 60 * 60 * 24));
-      
-      if (daysDiff === 0) return 'Today';
-      if (daysDiff === 1) return 'Tomorrow';
-      if (daysDiff === -1) return 'Yesterday';
-  
-      let month = dueDate.toLocaleString('default', { month: 'short' });
-      let date = dueDate.getDate();
-
-      // If the due date and current date years are different, include the year in the return value
-      if (dueDate.getFullYear() !== currentDate.getFullYear()) {
-        let year = dueDate.getFullYear();
-        return `${month} ${date}, ${year}`;
-      }
-      
-      return `${month} ${date}`;
-    };
-  
-    const formatTime = () => {
-      if(due.time){
-        let [hours, minutes] = due.time.split(":");
-        return `${parseInt(hours) % 12 || 12}:${minutes} ${parseInt(hours) >= 12 ? 'PM' : 'AM'}`;
-      }
-      return null;
-    };
-  
     $: {
-      let datePart = formatDate();
-      let timePart = formatTime();
+      let datePart = formatDate(due.date);
+      let timePart = formatTime(due.time);
       logger.debug(`Due: ${datePart} ${timePart}`);
       dueDisplay = timePart ? `${datePart}, ${timePart}` : datePart;
     }
+  </script>
   
-</script>
 
 <div class="task-card-due">
   {dueDisplay}
