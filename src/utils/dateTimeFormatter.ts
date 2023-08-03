@@ -43,7 +43,7 @@ export function displayDate(date: string): string {
     return `${month} ${datePart}`;
 }
 
-export function formatTime(time: string): string {
+export function displayTime(time: string): string {
     // the date string is local time.
     try { TimeOnly.check(time); } catch (e) {  return time; }
     try {

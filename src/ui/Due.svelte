@@ -1,7 +1,7 @@
 <script>
     import { getContext } from "svelte";
     import { logger } from "../log";
-    import { displayDate } from "../utils/dateTimeFormatter"
+    import { displayDate, displayTime } from "../utils/dateTimeFormatter"
 
     export let due = {
       isRecurring: false,
@@ -14,8 +14,8 @@
     let dueDisplay = "";
 
     $: {
-      let datePart = formatDate(due.date);
-      let timePart = formatTime(due.time);
+      let datePart = displayDate(due.date);
+      let timePart = displayTime(due.time);
       logger.debug(`Due: ${datePart} ${timePart}`);
       dueDisplay = timePart ? `${datePart}, ${timePart}` : datePart;
     }
