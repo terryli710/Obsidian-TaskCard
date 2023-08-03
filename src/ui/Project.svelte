@@ -1,10 +1,11 @@
 <script>
+    import { stringToColor } from "../utils/colorConverter";
     export let project = {
         name : string,
         id : string
     };
     export let mode = "multi-line";
-    export let projectColor = "#49dbbb"; // TODO find the project color
+    export let projectColor = stringToColor(project.name);
   </script>
   
   {#if mode === "single-line"}
