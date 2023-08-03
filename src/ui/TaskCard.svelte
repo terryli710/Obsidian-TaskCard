@@ -44,6 +44,7 @@
     </div>
   </div>
 {:else}
+<!-- mode = multi-line -->
   <div class="task-card-major-block">
     <div class="task-card-checkbox-wrapper">
       <input type="checkbox" class={`task-card-checkbox ${priorityClass}`}>

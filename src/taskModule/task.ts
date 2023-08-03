@@ -3,6 +3,7 @@ import { Record, Union, String, Literal, Boolean } from 'runtypes';
 import { Partial as rtPartial } from 'runtypes';
 import { camelToKebab, kebabToCamel } from '../utils/stringCaseConverter';
 import { toArray, toBoolean } from '../utils/typeConversion';
+import { v4 as uuidv4 } from 'uuid';
 
 
 export const DateOnly = String.withConstraint(s => /^\d{4}-\d{2}-\d{2}$/.test(s));
@@ -47,6 +48,7 @@ export interface TaskProperties {
 }
 
 export class ObsidianTask implements TaskProperties {
+  public id: string;
   public content: string;
   public priority: Priority;
   public description: string;
@@ -63,6 +65,7 @@ export class ObsidianTask implements TaskProperties {
   public filePath: string;
 
   constructor() {
+    this.id = uuidv4();
     this.content = '';
     this.priority = 1;
     this.description = '';

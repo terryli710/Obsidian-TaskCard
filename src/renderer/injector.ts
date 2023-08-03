@@ -6,12 +6,13 @@ import {
 import { logger } from '../log';
 import type { SvelteComponent } from 'svelte';
 import TaskItem from '../ui/TaskItem.svelte';
-import { get } from 'svelte/store';
+
+export type TaskMode = 'single-line' | 'multi-line';
 
 class SvelteAdapter extends MarkdownRenderChild {
   taskItemEl: HTMLElement;
   svelteComponent: SvelteComponent;
-  mode: string = 'single-line';
+  mode: TaskMode = 'multi-line';
   
   constructor(taskItemEl: HTMLElement) {
     super(taskItemEl);
@@ -19,14 +20,8 @@ class SvelteAdapter extends MarkdownRenderChild {
   }
 
   handleAction = () => {
-    // switch between single-line and multi-line
-    if (this.mode === 'multi-line') {
-      logger.debug('Switching to single-line mode');
-      this.mode = 'single-line';
-    } else {
-      logger.debug('Switching to multi-line mode');
-      this.mode = 'multi-line';
-    }
+    // switch to multi line
+    this.mode = 'multi-line';
 
     // Update the mode prop in the Svelte component
     this.svelteComponent.$set({ mode: this.mode });

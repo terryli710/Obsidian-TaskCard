@@ -3,23 +3,40 @@
 }
 
 .obsidian-taskcard {
-  background-color: var(--background-secondary);
-  border-radius: 10px;
-  border: 0.5px solid #ffffff00; /* Consolidated border properties */
-  padding: 8px 8px 8px 15px; /* top, right, bottom, left */
-  margin: 5px 0;
-  display: flex;
+  background-color: var(--background-primary);
+  color: var(--text-normal);
+  font-size: var(--font-ui-medium);
+  font-weight: var(--input-font-weight);
+  border-radius: var(--radius-l);
+  border: var(--border-width) solid var(--background-modifier-border);
+  padding: 4px 8px 4px 15px;
+  height: var(--input-height);
+  margin: 1px 0;
+  display: inline-flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 3px;
   font-family: Arial, sans-serif;
   white-space: normal;
-  position: relative;
-  align-items: flex-start;
-  box-shadow: 0px 0px 10px var(--color-base-25);
+  outline: none;
+  align-items: center;
+  box-shadow: 0px 0px 5px var(--color-base-25);
   text-align: inherit; /* Aligns text as in a regular div */
   width: 100%;
   height: 100%;
 }
+
+.obsidian-taskcard.mode-single-line {
+  cursor: var(--cursor-link);
+}
+
+.obsidian-taskcard.mode-single-line:not(:empty):hover {
+  background-color: var(--background-modifier-hover);
+}
+
+.obsidian-taskcard.mode-single-line:not(:empty):active:hover {
+  background-color: var(--background-modifier-active-hover);
+}
+
 
 .task-card-single-line {
   display: flex;

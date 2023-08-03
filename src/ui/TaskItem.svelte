@@ -6,8 +6,6 @@
     export let mode = "single-line";
     const taskEl = taskItemEl.querySelector('.obsidian-taskcard');
 
-    logger.debug(`taskItemEl.innerHTML: ${taskItemEl.innerHTML}`);
-
     // don't display the original task element content
     taskEl.style.display = "none";
 
@@ -15,11 +13,11 @@
 
 
 {#if mode === "single-line"}
-    <button class="obsidian-taskcard task-list-item">
+    <div class="obsidian-taskcard task-list-item mode-single-line">
         <TaskCard {taskEl} {mode}/>
-    </button>
+    </div>
 {:else}
-    <button class="obsidian-taskcard task-list-item">
+    <div class="obsidian-taskcard task-list-item mode-multi-line">
         <TaskCard {taskEl} {mode}/>
-    </button>
+    </div>
 {/if}
