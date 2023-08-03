@@ -30,10 +30,14 @@
 
 {#if mode === "single-line"}
   <div class="task-card-single-line">
-    <input type="checkbox" class={`task-card-checkbox ${priorityClass}`}>
-    <div class="task-card-content">{content}</div>
-    <Due {due} />
-    <Project {project} mode={mode}/>
+    <div class="task-card-single-line-left-container">
+      <input type="checkbox" class={`task-card-checkbox ${priorityClass}`}>
+      <div class="task-card-content">{content}</div>
+    </div>
+    <div class="task-card-single-line-right-container">
+      <Due {due} />
+      <Project {project} mode={mode}/>
+    </div>
   </div>
 {:else}
   <div class="task-card-major-block">

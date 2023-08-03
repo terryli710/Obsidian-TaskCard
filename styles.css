@@ -21,6 +21,22 @@
 .task-card-single-line {
   display: flex;
   flex-direction: row;
+  align-items: center;
+  justify-content: space-between; /* Align the two main containers */
+  width: 100%;
+}
+
+.task-card-single-line-left-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center; /* Vertically center the checkbox and content */
+  flex-grow: 1; /* Take up all available space */
+}
+
+.task-card-single-line-right-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center; /* Vertically center the children */
 }
 
 .task-card-major-block {
@@ -72,6 +88,7 @@
   width: 10px;
   height: 10px;
   border-radius: 50%;
+  margin: 3px;
 }
 
 .task-card-checkbox {
