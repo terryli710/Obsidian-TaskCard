@@ -8,8 +8,25 @@
     const taskEl = taskItemEl.querySelector('.obsidian-taskcard');
 
     taskItemEl.innerHTML = "";
+
+
+    function handleAction() {
+        mode = "multi-line";
+    }
+
+    function handleKeydown(event) {
+        // Respond to the Enter or Space key
+        if (event.key === 'Enter' || event.key === ' ') {
+            handleAction();
+            event.preventDefault(); // Prevent the default action for the Space key
+        }
+    }
 </script>
 
-<div class="obsidian-taskcard task-list-item">
-<TaskCard {taskEl} mode={mode} />
-</div>
+<button 
+    class="obsidian-taskcard task-list-item" 
+    on:click={handleAction} 
+    on:keydown={handleKeydown}
+>
+    <TaskCard {taskEl} mode={mode} />
+</button>
