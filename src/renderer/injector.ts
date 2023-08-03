@@ -8,11 +8,10 @@ import type { SvelteComponent } from 'svelte';
 import TaskItem from '../ui/TaskItem.svelte';
 import { get } from 'svelte/store';
 
-import { modeStore } from "./store";
-
 class SvelteAdapter extends MarkdownRenderChild {
   taskItemEl: HTMLElement;
   svelteComponent: SvelteComponent;
+  mode: string = 'multi-line';
   
   constructor(taskItemEl: HTMLElement) {
     super(taskItemEl);
@@ -20,15 +19,17 @@ class SvelteAdapter extends MarkdownRenderChild {
   }
 
   handleAction = () => {
-    // get the current value of the mode from the store
-    const currMode = get(modeStore);
-  
-    // switch between single-line and multi-line mode
-    if (currMode === "single-line") {
-      modeStore.set("multi-line");
+    // switch between single-line and multi-line
+    if (this.mode === 'multi-line') {
+      logger.debug('Switching to single-line mode');
+      this.mode = 'single-line';
     } else {
-      modeStore.set("single-line");
+      logger.debug('Switching to single-line mode');
+      this.mode = 'multi-line';
     }
+
+    // Update the mode prop in the Svelte component
+    this.svelteComponent.$set({ mode: this.mode });
   }
 
   handleKeydown = (event: KeyboardEvent) => {
@@ -47,6 +48,7 @@ class SvelteAdapter extends MarkdownRenderChild {
       target: this.taskItemEl,
       props: {
         taskItemEl: this.taskItemEl,
+        mode: this.mode
       }
     });
   }

@@ -3,10 +3,9 @@
   import Project from "./Project.svelte";
   import Labels from "./Labels.svelte";
   import Description from './Description.svelte';
-  import { modeStore } from '../renderer/store';
 
   export let taskEl;
-  $: mode = $modeStore;
+  export let mode = "multi-line";
 
   function parseQuery(queryName, defaultValue = "") {
     return JSON.parse(taskEl.querySelector(`.${queryName}`)?.textContent || defaultValue);
