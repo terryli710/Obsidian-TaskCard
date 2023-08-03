@@ -18,7 +18,13 @@ class SvelteAdapter extends MarkdownRenderChild {
   }
 
   onload() {
-    this.svelteComponent = new TaskItem({ target: this.taskItemEl, props: { taskItemEl: this.taskItemEl } });
+    this.svelteComponent = new TaskItem({ 
+      target: this.taskItemEl, 
+      props: { 
+        taskItemEl: this.taskItemEl,
+        mode: "single-line"
+      } 
+    });
   }
 
   onunload() {

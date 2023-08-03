@@ -5,6 +5,7 @@
   import Description from './Description.svelte';
 
   export let taskEl;
+  export let mode = "multi-line";
 
   function parseQuery(queryName, defaultValue = "") {
     return JSON.parse(taskEl.querySelector(`.${queryName}`)?.textContent || defaultValue);
@@ -27,22 +28,30 @@
   taskEl.innerHTML = ""; // this component replaces the innerHTML
 </script>
 
-<div class="task-card-major-block">
-  <div class="task-card-checkbox-wrapper">
+{#if mode === "single-line"}
+  <div class="task-card-single-line">
     <input type="checkbox" class={`task-card-checkbox ${priorityClass}`}>
-  </div>
-  <div class="task-card-content-project-line">
     <div class="task-card-content">{content}</div>
-    <div class="task-card-project">
-      <Project {project} />
-    </div>
+    <Due {due} />
+    <Project {project} mode={mode}/>
   </div>
-  <Description {description} />
-</div>
+{:else}
+  <div class="task-card-major-block">
+    <div class="task-card-checkbox-wrapper">
+      <input type="checkbox" class={`task-card-checkbox ${priorityClass}`}>
+    </div>
+    <div class="task-card-content-project-line">
+      <div class="task-card-content">{content}</div>
+      <div class="task-card-project">
+        <Project {project} />
+      </div>
+    </div>
+    <Description {description} />
+  </div>
 
-
-<div class="task-card-attribute-bottom-bar">
-  <Due {due} />
-  <div class="task-card-attribute-separator"> | </div>
-  <Labels {labels} />
-</div>
+  <div class="task-card-attribute-bottom-bar">
+    <Due {due} />
+    <div class="task-card-attribute-separator"> | </div>
+    <Labels {labels} />
+  </div>
+{/if}

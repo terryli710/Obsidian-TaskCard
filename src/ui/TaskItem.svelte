@@ -4,11 +4,12 @@
     import TaskCard from "./TaskCard.svelte";
   
     export let taskItemEl;
+    export let mode = "multi-line";
     const taskEl = taskItemEl.querySelector('.obsidian-taskcard');
 
     taskItemEl.innerHTML = "";
 </script>
 
 <div class="obsidian-taskcard task-list-item">
-<TaskCard {taskEl} />
+<TaskCard {taskEl} mode={mode} />
 </div>

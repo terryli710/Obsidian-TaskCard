@@ -18,6 +18,11 @@
   box-shadow: 0px 0px 20px var(--color-base-25);
 }
 
+.task-card-single-line {
+  display: flex;
+  flex-direction: row;
+}
+
 .task-card-major-block {
   display: grid;
   grid-template-columns: auto 1fr; /* Checkbox takes only the space it needs, rest for content and description */
