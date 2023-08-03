@@ -1,8 +1,8 @@
 
 # Display
 - Single line and multi line mode
-- rerendering when change theme;
-- 
+- multi-line description
+- too many labels: hide labels.
 
 # Parsing and Formatting
 - Formatting task

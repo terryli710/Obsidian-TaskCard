@@ -2,6 +2,7 @@
   import Due from './Due.svelte';
   import Project from "./Project.svelte";
   import Labels from "./Labels.svelte";
+  import Description from './Description.svelte';
 
   export let taskEl;
 
@@ -23,7 +24,6 @@
   let due = JSON.parse(parseQuery('due', '{}'));
   let filePath = parseQuery('file-path');
 
-
   taskEl.innerHTML = ""; // this component replaces the innerHTML
 </script>
 
@@ -37,7 +37,7 @@
       <Project {project} />
     </div>
   </div>
-  <div class="task-card-description">{description}</div>
+  <Description {description} />
 </div>
 
 
