@@ -11,7 +11,7 @@ import { get } from 'svelte/store';
 class SvelteAdapter extends MarkdownRenderChild {
   taskItemEl: HTMLElement;
   svelteComponent: SvelteComponent;
-  mode: string = 'multi-line';
+  mode: string = 'single-line';
   
   constructor(taskItemEl: HTMLElement) {
     super(taskItemEl);
@@ -24,7 +24,7 @@ class SvelteAdapter extends MarkdownRenderChild {
       logger.debug('Switching to single-line mode');
       this.mode = 'single-line';
     } else {
-      logger.debug('Switching to single-line mode');
+      logger.debug('Switching to multi-line mode');
       this.mode = 'multi-line';
     }
 
@@ -51,6 +51,7 @@ class SvelteAdapter extends MarkdownRenderChild {
         mode: this.mode
       }
     });
+
   }
 
   onunload() {
@@ -72,7 +73,6 @@ export const TaskCardPostProcessor: MarkdownPostProcessor = async function (
   // print the first task's parent element
   for (let i = 0; i < taskItems.length; i++) {
     const taskItem = taskItems[i] as HTMLElement;
-    logger.debug(`taskItem: ${taskItem.innerHTML}`);
     ctx.addChild(new SvelteAdapter(taskItem));
   }
 };

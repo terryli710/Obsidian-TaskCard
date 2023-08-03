@@ -3,12 +3,17 @@
   import Project from "./Project.svelte";
   import Labels from "./Labels.svelte";
   import Description from './Description.svelte';
+    import { logger } from '../log';
 
   export let taskEl;
   export let mode = "multi-line";
 
   function parseQuery(queryName, defaultValue = "") {
-    return JSON.parse(taskEl.querySelector(`.${queryName}`)?.textContent || defaultValue);
+    try {
+      return JSON.parse(taskEl.querySelector(`.${queryName}`)?.textContent || defaultValue)
+    } catch (e) {
+      logger.warn(`Failed to parse ${queryName}: ${e}`);
+    }
   }
 
   let content = parseQuery('content');
@@ -25,7 +30,6 @@
   let due = JSON.parse(parseQuery('due', '{}'));
   let filePath = parseQuery('file-path');
 
-  taskEl.innerHTML = ""; // this component replaces the innerHTML
 </script>
 
 {#if mode === "single-line"}
