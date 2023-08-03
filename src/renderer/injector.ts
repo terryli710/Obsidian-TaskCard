@@ -6,7 +6,9 @@ import {
 import { logger } from '../log';
 import type { SvelteComponent } from 'svelte';
 import TaskItem from '../ui/TaskItem.svelte';
+import { get } from 'svelte/store';
 
+import { modeStore } from "./store";
 
 class SvelteAdapter extends MarkdownRenderChild {
   taskItemEl: HTMLElement;
@@ -17,13 +19,35 @@ class SvelteAdapter extends MarkdownRenderChild {
     this.taskItemEl = taskItemEl;
   }
 
+  handleAction = () => {
+    // get the current value of the mode from the store
+    const currMode = get(modeStore);
+  
+    // switch between single-line and multi-line mode
+    if (currMode === "single-line") {
+      modeStore.set("multi-line");
+    } else {
+      modeStore.set("single-line");
+    }
+  }
+
+  handleKeydown = (event: KeyboardEvent) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      this.handleAction();
+      event.preventDefault(); // Prevent the default action for the Space key
+    }
+  }
+
   onload() {
-    this.svelteComponent = new TaskItem({ 
-      target: this.taskItemEl, 
-      props: { 
+    // Assuming registerDomEvent can be used to register DOM events
+    this.registerDomEvent(this.taskItemEl, 'click', this.handleAction);
+    this.registerDomEvent(this.taskItemEl, 'keydown', this.handleKeydown);
+
+    this.svelteComponent = new TaskItem({
+      target: this.taskItemEl,
+      props: {
         taskItemEl: this.taskItemEl,
-        mode: "single-line"
-      } 
+      }
     });
   }
 

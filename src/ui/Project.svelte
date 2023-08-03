@@ -1,10 +1,12 @@
 <script>
     import { stringToColor } from "../utils/colorConverter";
+    import { modeStore } from "../renderer/store";
+    $: mode = $modeStore;
+    
     export let project = {
         name : string,
         id : string
     };
-    export let mode = "multi-line";
     export let projectColor = stringToColor(project.name);
   </script>
   

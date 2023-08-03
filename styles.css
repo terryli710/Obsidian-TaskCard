@@ -6,9 +6,7 @@
 .obsidian-taskcard {
   background-color: var(--background-secondary);
   border-radius: 10px;
-  border-color: #00000000;
-  border-style: solid;
-  border-width: 1px;
+  border: 1px solid #00000000; /* Consolidated border properties */
   padding: 8px 8px 8px 15px; /* top, right, bottom, left */
   margin: 5px 0;
   display: flex;
@@ -19,9 +17,14 @@
   position: relative;
   align-items: flex-start;
   box-shadow: 0px 0px 10px var(--color-base-25);
+  cursor: pointer; /* Adds the click hand cursor */
+  outline: none; /* Optionally remove the focus outline */
+  text-align: inherit; /* Aligns text as in a regular div */
+  overflow: visible; /* Ensures inner content is not clipped */
+  width: 100%;
 }
 
-.obsidian-taskcard:not(:empty):hover {
+button.obsidian-taskcard:not(:empty):hover {
   background-color: var(--background-modifier-hover);
   border-color: var(--background-modifier-border-hover);
   border-style: solid;

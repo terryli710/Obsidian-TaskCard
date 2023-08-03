@@ -19,4 +19,7 @@
 
 # Project handling
 - Handle project + color;
-- 
+
+
+# BUG
+- multi-line mode task card expanding
