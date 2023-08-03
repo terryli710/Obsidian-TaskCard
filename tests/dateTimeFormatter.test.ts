@@ -1,5 +1,5 @@
 import { logger } from '../src/log';
-import { displayDate, formatTime, isSameWeek, isToday, isTomorrow, isYesterday } from '../src/utils/dateTimeFormatter';
+import { displayDate, displayTime, isSameWeek, isToday, isTomorrow, isYesterday } from '../src/utils/dateTimeFormatter';
 
 
 describe('displayDate', () => {
@@ -116,25 +116,25 @@ describe('isSameWeek', () => {
 });
 
 
-describe('formatTime', () => {
+describe('displayTime', () => {
   test('should return undefined when time is undefined', () => {
-    expect(formatTime(undefined)).toBe(undefined);
+    expect(displayTime(undefined)).toBe(undefined);
   });
 
   test('should convert midnight to 12:00 AM', () => {
-    expect(formatTime('00:00')).toBe('12:00 AM');
+    expect(displayTime('00:00')).toBe('12:00 AM');
   });
 
   test('should convert noon to 12:00 PM', () => {
-    expect(formatTime('12:00')).toBe('12:00 PM');
+    expect(displayTime('12:00')).toBe('12:00 PM');
   });
 
   test('should correctly format morning time', () => {
-    expect(formatTime('09:30')).toBe('9:30 AM');
+    expect(displayTime('09:30')).toBe('9:30 AM');
   });
 
   test('should correctly format afternoon time', () => {
-    expect(formatTime('15:45')).toBe('3:45 PM');
+    expect(displayTime('15:45')).toBe('3:45 PM');
   });
 
   // You might also want to test for invalid input
@@ -142,7 +142,7 @@ describe('formatTime', () => {
     // Behavior here is not defined by the given function, so you'll need to decide what is expected.
     // It could be to return null, or the original string, or something else.
     // Here's an example expecting the original string:
-    expect(formatTime('invalid-input')).toBe('invalid-input');
+    expect(displayTime('invalid-input')).toBe('invalid-input');
   });
 });
 
