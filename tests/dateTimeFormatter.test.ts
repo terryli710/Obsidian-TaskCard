@@ -117,8 +117,8 @@ describe('isSameWeek', () => {
 
 
 describe('formatTime', () => {
-  test('should return null when time is undefined', () => {
-    expect(formatTime(undefined)).toBe(null);
+  test('should return undefined when time is undefined', () => {
+    expect(formatTime(undefined)).toBe(undefined);
   });
 
   test('should convert midnight to 12:00 AM', () => {
@@ -142,7 +142,7 @@ describe('formatTime', () => {
     // Behavior here is not defined by the given function, so you'll need to decide what is expected.
     // It could be to return null, or the original string, or something else.
     // Here's an example expecting the original string:
-    expect(formatTime('invalid-input')).toBe('NaN:invalid-input AM');
+    expect(formatTime('invalid-input')).toBe('invalid-input');
   });
 });
 

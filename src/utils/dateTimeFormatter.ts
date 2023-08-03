@@ -1,4 +1,4 @@
-import { DateOnly } from '../taskModule/task';
+import { DateOnly, TimeOnly } from '../taskModule/task';
 import { logger } from '../log';
 
 
@@ -45,11 +45,13 @@ export function displayDate(date: string): string {
 
 export function formatTime(time: string): string {
     // the date string is local time.
-    if (time) {
+    try { TimeOnly.check(time); } catch (e) {  return time; }
+    try {
         let [hours, minutes] = time.split(":");
         return `${parseInt(hours) % 12 || 12}:${minutes} ${parseInt(hours) >= 12 ? 'PM' : 'AM'}`;
+    } catch (e) {
+        return time;
     }
-    return null;
 }
 
 export function isYesterday(date: Date): boolean {
