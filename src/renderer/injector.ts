@@ -17,76 +17,66 @@ export class TaskItemSvelteAdapter extends MarkdownRenderChild {
   params: TaskItemParams = {
     mode: 'single-line'
   }
-  
+
   constructor(taskItemEl: HTMLElement) {
     super(taskItemEl);
     this.taskItemEl = taskItemEl;
   }
+  
+  setMode(mode: TaskMode) {
+    this.params = { ...this.params, mode };
+    this.svelteComponent.$set({ params: this.params });
 
-  switchToMultiLine = () => {
-    this.params = {
-      ... this.params,
-      mode: 'multi-line'
-    }
-    logger.debug(`in injector.ts: switch to multi line mode`);
-    // Update the mode prop in the Svelte component
-    this.svelteComponent.$set({ params : this.params });
-  }
-
-  switchToSingleLine = () => {
-    this.params = {
-      ... this.params,
-      mode: 'single-line'
-    }
-    logger.debug(`in injector.ts: switch to single line mode`);
-    // Update the mode prop in the Svelte component
-    this.svelteComponent.$set({ params : this.params });
-  }
-
-  // Method to handle the switchMode event
-  handleSwitchModeEvent = (event: CustomEvent) => {
-    const newMode = event.detail; // Assuming the new mode is passed directly as the event detail
-    logger.debug(`In injector.ts: switching to mode: ${newMode}`);
-    if (newMode === 'multi-line') {
-      this.switchToMultiLine();
-    } else if (newMode === 'single-line') {
-      this.switchToSingleLine();
+    if (mode === 'single-line') {
+      this.taskItemEl.addEventListener('click', this.handleSwitchMode);
+      this.taskItemEl.addEventListener('keydown', this.handleKeydown);
+      logger.debug('Switched to single line mode');
+    } else if (mode === 'multi-line') {
+      this.taskItemEl.removeEventListener('click', this.handleSwitchMode);
+      this.taskItemEl.removeEventListener('keydown', this.handleKeydown);
+      logger.debug('Switched to multi-line mode');
     } else {
-      logger.error(`Unknown mode: ${newMode}`);
+      logger.error(`Unknown mode: ${mode}`);
     }
-    logger.debug(`params => ${JSON.stringify(this.params)}`);
+  }
+
+  handleSwitchMode = (event: MouseEvent | KeyboardEvent) => {
+    this.setMode('multi-line');
+    if (event instanceof KeyboardEvent && (event.key === 'Enter' || event.key === ' ')) {
+      event.preventDefault();
+    }
   }
 
   handleKeydown = (event: KeyboardEvent) => {
     if (event.key === 'Enter' || event.key === ' ') {
-      this.switchToMultiLine();
-      event.preventDefault(); // Prevent the default action for the Space key
+      this.handleSwitchMode(event);
     }
   }
 
-  onload() {
-    // Assuming registerDomEvent can be used to register DOM events
-    this.registerDomEvent(this.taskItemEl, 'click', this.switchToMultiLine);
-    this.registerDomEvent(this.taskItemEl, 'keydown', this.handleKeydown);
+  handleCustomSwitchModeEvent = (event: CustomEvent) => {
+    const newMode = event.detail;
+    this.setMode(newMode);
+  }
 
+  onload() {
+    logger.debug(`taskItemEl: ${this.taskItemEl}`);
+    logger.debug(`params: ${JSON.stringify(this.params)}`);
     this.svelteComponent = new TaskItem({
       target: this.taskItemEl,
       props: {
         taskItemEl: this.taskItemEl,
         params: this.params,
-      }
+      },
     });
 
-    // Add the event listener
-    this.svelteComponent.$on('switchMode', this.switchToSingleLine);
+    this.svelteComponent.$on('switchMode', this.handleCustomSwitchModeEvent);
 
+    this.setMode(this.params.mode);
   }
 
   onunload() {
     this.svelteComponent.$destroy();
-
-    // Remove the event listener
-    this.svelteComponent.$off('switchMode', this.handleSwitchModeEvent);
+    this.svelteComponent.$off('switchMode', this.handleCustomSwitchModeEvent);
   }
 }
 
