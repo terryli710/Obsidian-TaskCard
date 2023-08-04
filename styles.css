@@ -129,10 +129,15 @@
 .task-card-attribute-bottom-bar {
   display: flex;
   align-items: center;
-  overflow: hidden; /* Hide the overflow */
   width: 100%;
 }
 
+.task-card-attribute-bottom-bar-left {
+  display: flex; /* Enables Flexbox for the left-aligned elements */
+  align-items: center;
+  overflow: hidden; /* Hide the overflow */
+  flex-grow: 1; /* Takes up remaining left space */
+}
 
 .task-card-attribute-separator {
   flex-shrink: 0; /* Prevents shrinking */
@@ -170,4 +175,24 @@
 
 .task-card-due:not(:empty):hover {
   background-color: var(--background-modifier-hover);
+}
+
+.task-card-icon {
+  vertical-align: middle;
+  align-self: center;
+  height: 10px;
+  width: 10px;
+}
+
+.task-card-collapse-button {
+  display: flex;           /* Use Flexbox layout */
+  align-items: center;     /* Center children vertically */
+  justify-content: center; /* Center children horizontally */
+  border: none;            /* Remove default border */
+  background: none;        /* Remove default background */
+  padding: 0;              /* Remove default padding */
+  cursor: pointer;         /* Change cursor to pointer on hover */
+  width: 30px;             /* Set width */
+  height: 30px;            /* Set height equal to width to create a square */
+  border-radius: 50%;
 }

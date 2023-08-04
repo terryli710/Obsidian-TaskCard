@@ -8,42 +8,50 @@ import type { SvelteComponent } from 'svelte';
 import TaskItem from '../ui/TaskItem.svelte';
 
 export type TaskMode = 'single-line' | 'multi-line';
-
-class SvelteAdapter extends MarkdownRenderChild {
+export type TaskItemParams = {
+  mode: TaskMode;
+}
+export class TaskItemSvelteAdapter extends MarkdownRenderChild {
   taskItemEl: HTMLElement;
   svelteComponent: SvelteComponent;
-  mode: TaskMode = 'multi-line';
+  params: TaskItemParams = {
+    mode: 'single-line'
+  }
   
   constructor(taskItemEl: HTMLElement) {
     super(taskItemEl);
     this.taskItemEl = taskItemEl;
   }
 
-  handleAction = () => {
-    // switch to multi line
-    this.mode = 'multi-line';
-
+  switchToMultiLine = () => {
+    this.params.mode = 'multi-line';
     // Update the mode prop in the Svelte component
-    this.svelteComponent.$set({ mode: this.mode });
+    this.svelteComponent.$set({ params : this.params });
+  }
+
+  switchToSingleLine = () => {
+    this.params.mode = 'single-line';
+    // Update the mode prop in the Svelte component
+    this.svelteComponent.$set({ params : this.params });
   }
 
   handleKeydown = (event: KeyboardEvent) => {
     if (event.key === 'Enter' || event.key === ' ') {
-      this.handleAction();
+      this.switchToMultiLine();
       event.preventDefault(); // Prevent the default action for the Space key
     }
   }
 
   onload() {
     // Assuming registerDomEvent can be used to register DOM events
-    this.registerDomEvent(this.taskItemEl, 'click', this.handleAction);
+    this.registerDomEvent(this.taskItemEl, 'click', this.switchToMultiLine);
     this.registerDomEvent(this.taskItemEl, 'keydown', this.handleKeydown);
 
     this.svelteComponent = new TaskItem({
       target: this.taskItemEl,
       props: {
         taskItemEl: this.taskItemEl,
-        mode: this.mode
+        params: this.params,
       }
     });
 
@@ -68,6 +76,6 @@ export const TaskCardPostProcessor: MarkdownPostProcessor = async function (
   // print the first task's parent element
   for (let i = 0; i < taskItems.length; i++) {
     const taskItem = taskItems[i] as HTMLElement;
-    ctx.addChild(new SvelteAdapter(taskItem));
+    ctx.addChild(new TaskItemSvelteAdapter(taskItem));
   }
 };
