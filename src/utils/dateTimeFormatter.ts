@@ -14,8 +14,6 @@ export function displayDate(date: string): string {
     
     const currentDate = new Date();
 
-    logger.debug(`in the function: inputDate: ${inputDate}, currentDate: ${currentDate}`);
-
     // Format the date as "Mon date" or "Mon date, year"
     let month = inputDate.toLocaleString('default', { month: 'short' });
     let datePart = inputDate.getDate();

@@ -21,8 +21,9 @@
 
     const dispatch = createEventDispatcher();
 
-    function switchMode(newMode) {
-      // Calling method on the adapter instance
+    function switchMode(event, newMode) {
+      event.stopPropagation();
+      logger.debug(`Switching mode to ${newMode}`);
       dispatch('switchMode', newMode);
     }
 
@@ -75,7 +76,7 @@
       <Labels {labels} />
     </div>
     <div class="task-card-attribute-bottom-bar-right">
-      <button class="task-card-collapse-button" on:click={() => switchMode('one-line')}>
+      <button class="task-card-collapse-button" on:click={(event) => switchMode(event, 'single-line')}>
         <Collapse class="task-card-icon" />
       </button>
     </div>

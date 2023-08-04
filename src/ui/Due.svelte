@@ -16,7 +16,6 @@
     $: {
       let datePart = displayDate(due.date);
       let timePart = displayTime(due.time);
-      logger.debug(`Due: ${datePart} ${timePart}`);
       dueDisplay = timePart ? `${datePart}, ${timePart}` : datePart;
     }
   </script>

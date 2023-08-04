@@ -8,7 +8,7 @@ import type { SvelteComponent } from 'svelte';
 import TaskItem from '../ui/TaskItem.svelte';
 
 export type TaskMode = 'single-line' | 'multi-line';
-export type TaskItemParams = {
+export interface TaskItemParams {
   mode: TaskMode;
 }
 export class TaskItemSvelteAdapter extends MarkdownRenderChild {
@@ -24,15 +24,37 @@ export class TaskItemSvelteAdapter extends MarkdownRenderChild {
   }
 
   switchToMultiLine = () => {
-    this.params.mode = 'multi-line';
+    this.params = {
+      ... this.params,
+      mode: 'multi-line'
+    }
+    logger.debug(`in injector.ts: switch to multi line mode`);
     // Update the mode prop in the Svelte component
     this.svelteComponent.$set({ params : this.params });
   }
 
   switchToSingleLine = () => {
-    this.params.mode = 'single-line';
+    this.params = {
+      ... this.params,
+      mode: 'single-line'
+    }
+    logger.debug(`in injector.ts: switch to single line mode`);
     // Update the mode prop in the Svelte component
     this.svelteComponent.$set({ params : this.params });
+  }
+
+  // Method to handle the switchMode event
+  handleSwitchModeEvent = (event: CustomEvent) => {
+    const newMode = event.detail; // Assuming the new mode is passed directly as the event detail
+    logger.debug(`In injector.ts: switching to mode: ${newMode}`);
+    if (newMode === 'multi-line') {
+      this.switchToMultiLine();
+    } else if (newMode === 'single-line') {
+      this.switchToSingleLine();
+    } else {
+      logger.error(`Unknown mode: ${newMode}`);
+    }
+    logger.debug(`params => ${JSON.stringify(this.params)}`);
   }
 
   handleKeydown = (event: KeyboardEvent) => {
@@ -55,10 +77,16 @@ export class TaskItemSvelteAdapter extends MarkdownRenderChild {
       }
     });
 
+    // Add the event listener
+    this.svelteComponent.$on('switchMode', this.switchToSingleLine);
+
   }
 
   onunload() {
     this.svelteComponent.$destroy();
+
+    // Remove the event listener
+    this.svelteComponent.$off('switchMode', this.handleSwitchModeEvent);
   }
 }
 
