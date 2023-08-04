@@ -1,5 +1,6 @@
 :root {
   --task-card-file-path-color: #000000;
+  --icon-size: 16px;
 }
 
 .obsidian-taskcard {
@@ -127,9 +128,11 @@
 }
 
 .task-card-attribute-bottom-bar {
-  display: flex;
-  align-items: center;
+  display: flex; /* Use Flexbox layout */
+  align-items: center; /* Center children vertically */
+  justify-content: space-between; /* Align the first 3 elements to the left and the button to the right */
   width: 100%;
+  flex-direction: row; /* Not necessary, as 'row' is the default value, but can be included for clarity */
 }
 
 .task-card-attribute-bottom-bar-left {
@@ -137,6 +140,11 @@
   align-items: center;
   overflow: hidden; /* Hide the overflow */
   flex-grow: 1; /* Takes up remaining left space */
+}
+
+.task-card-attribute-bottom-bar-right {
+  display: flex;
+  align-items: center;
 }
 
 .task-card-attribute-separator {
@@ -192,7 +200,7 @@
   background: none;        /* Remove default background */
   padding: 0;              /* Remove default padding */
   cursor: pointer;         /* Change cursor to pointer on hover */
-  width: 30px;             /* Set width */
-  height: 30px;            /* Set height equal to width to create a square */
+  width: var(--icon-size);
+  height: var(--icon-size);
   border-radius: 50%;
 }

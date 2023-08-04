@@ -74,8 +74,10 @@
       <div class="task-card-attribute-separator"> | </div>
       <Labels {labels} />
     </div>
-    <button class="task-card-collapse-button" on:click={() => switchMode('one-line')}>
-      <Collapse class="task-card-icon" />
-    </button>
+    <div class="task-card-attribute-bottom-bar-right">
+      <button class="task-card-collapse-button" on:click={() => switchMode('one-line')}>
+        <Collapse class="task-card-icon" />
+      </button>
+    </div>
   </div>
 {/if}
