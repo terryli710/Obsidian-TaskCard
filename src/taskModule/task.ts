@@ -31,6 +31,7 @@ export type Priority = 1 | 2 | 3 | 4;
 export type Order = number;
 
 export interface TaskProperties {
+  id: string;
   content: string;
   priority: Priority;
   description: string;
@@ -44,7 +45,8 @@ export interface TaskProperties {
   children: TaskProperties[];
 
   due?: DueDate | null;
-  filePath: string;
+  metadata?: { [key: string]: string | number };
+
 }
 
 export class ObsidianTask implements TaskProperties {
@@ -62,7 +64,7 @@ export class ObsidianTask implements TaskProperties {
   public children: ObsidianTask[];
 
   public due?: DueDate | null;
-  public filePath: string;
+  public metadata?: { [key: string]: string | number };
 
   constructor() {
     this.id = uuidv4();
@@ -77,12 +79,15 @@ export class ObsidianTask implements TaskProperties {
     this.parent = null;
     this.children = [];
     this.due = null;
-    this.filePath = '';
+    this.metadata = {};
   }
+
   toMarkdownLine(): string {
     let markdownLine = `- [${this.completed ? 'x' : ' '}] ${this.content}`;
-    
+    // completed and content have been converted to markdown, so exclude them
     for (let key in this) {
+      if (key === 'completed' || key === 'content') continue;
+
       if (this[key] !== null && this[key] !== undefined) {
         let kebabCaseKey = camelToKebab(key);
         if(typeof this[key] === 'object') {

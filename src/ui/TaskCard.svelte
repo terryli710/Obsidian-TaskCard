@@ -19,14 +19,6 @@
       }
     }
 
-    const dispatch = createEventDispatcher();
-
-    function switchMode(event, newMode) {
-      event.stopPropagation();
-      logger.debug(`Switching mode to ${newMode}`);
-      dispatch('switchMode', newMode);
-    }
-
     let content = parseQuery('content');
     let priority = parseQuery('priority');
     let priorityClass = `priority${priority}`;
@@ -41,12 +33,27 @@
     let due = JSON.parse(parseQuery('due', '{}'));
     let filePath = parseQuery('file-path');
 
+    const dispatch = createEventDispatcher();
+
+    function switchMode(event, newMode) {
+      event.stopPropagation();
+      logger.debug(`Switching mode to ${newMode}`);
+      dispatch('switchMode', newMode);
+    }
+
+    function handleCheckboxClick() {
+      completed = !completed;
+      // we may add other logics here.
+    }
+
+
+
 </script>
 
 {#if params.mode === "single-line"}
   <div class="task-card-single-line">
     <div class="task-card-single-line-left-container">
-      <input type="checkbox" class={`task-card-checkbox ${priorityClass}`}>
+      <input type="checkbox" class={`task-card-checkbox ${priorityClass}`} checked={completed} on:click|stopPropagation={handleCheckboxClick}>
       <div class="task-card-content">{content}</div>
     </div>
     <div class="task-card-single-line-right-container">
@@ -58,7 +65,7 @@
 <!-- mode = multi-line -->
   <div class="task-card-major-block">
     <div class="task-card-checkbox-wrapper">
-      <input type="checkbox" class={`task-card-checkbox ${priorityClass}`}>
+      <input type="checkbox" class={`task-card-checkbox ${priorityClass}`} checked={completed} on:click|stopPropagation={handleCheckboxClick}>
     </div>
     <div class="task-card-content-project-line">
       <div class="task-card-content">{content}</div>
