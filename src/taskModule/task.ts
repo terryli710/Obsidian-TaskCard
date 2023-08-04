@@ -82,25 +82,6 @@ export class ObsidianTask implements TaskProperties {
     this.metadata = {};
   }
 
-  toMarkdownLine(): string {
-    let markdownLine = `- [${this.completed ? 'x' : ' '}] ${this.content}`;
-    // completed and content have been converted to markdown, so exclude them
-    for (let key in this) {
-      if (key === 'completed' || key === 'content') continue;
-
-      if (this[key] !== null && this[key] !== undefined) {
-        let kebabCaseKey = camelToKebab(key);
-        if(typeof this[key] === 'object') {
-          markdownLine += `<span class="${kebabCaseKey}" style="display:none;">${JSON.stringify(this[key])}</span>`;
-        } else {
-          markdownLine += `<span class="${kebabCaseKey}" style="display:none;">${this[key]}</span>`;
-        }
-      }
-    }
-
-    return markdownLine;
-  }
-
   static fromMarkdownLine(markdownLine: string) {
     let task: ObsidianTask = new ObsidianTask();
     let regex = /<span class="([^"]*)" style="display:none;">([^<]*)<\/span>/g;

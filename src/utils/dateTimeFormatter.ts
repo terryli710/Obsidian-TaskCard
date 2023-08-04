@@ -1,7 +1,6 @@
 import { DateOnly, TimeOnly } from '../taskModule/task';
 import { logger } from '../log';
 
-
 export function displayDate(date: string): string {
     // the date string is local time.
     // if (!DateOnly.check(date)) return date;
@@ -90,5 +89,4 @@ export function isSameWeek(date: Date, weekStart: number = 0): boolean {
         && today.getMonth() === inputDate.getMonth()
         && today.getDate() === inputDate.getDate();
 }
-
 

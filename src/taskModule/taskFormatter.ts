@@ -1,24 +1,29 @@
-export class taskFormatter {}
 
 
-// format example:
-/**
- * <div class="obsidian-taskcard task-list-item"> 
- * <div style="display:flex;"> 
- *  <input type="checkbox"> 
- *  <span> This is a dummy task </span> 
- * </div> 
- *  <span class="content" style="display:none;">"This is a dummy task"</span> 
- *  <span class="priority" style="display:none;">2</span> 
- *  <span class="description" style="display:none;">"This is a description of the dummy task"</span> 
- *  <span class="order" style="display:none;">1</span> 
- *  <span class="project-id" style="display:none;">"project-123"</span> 
- *  <span class="section-id" style="display:none;">"section-456"</span> 
- *  <span class="labels" style="display:none;">["label1","label2"]</span> 
- *  <span class="completed" style="display:none;">false</span> 
- *  <span class="parent" style="display:none;">null</span> 
- *  <span class="children" style="display:none;">[]</span> 
- *  <span class="due" style="display:none;">"{\"isRecurring\":false,\"string\":\"2023-08-15\",\"date\":\"2023-08-15\",\"datetime\":null,\"timezone\":null}"</span> 
- *  <span class="file-path" style="display:none;">"/path/to/file"</span> 
- * </div>
- */
+
+import { camelToKebab } from '../utils/stringCaseConverter';
+import { ObsidianTask } from './task';
+
+export class taskFormatter {
+
+    static taskToMarkdown(task: ObsidianTask): string {
+        let markdownLine = `- [${task.completed ? 'x' : ' '}] ${task.content}`;
+    
+        // Iterate over keys in task, but exclude 'completed' and 'content'
+        for (let key in task) {
+            if (key === 'completed' || key === 'content') continue;
+    
+            if (task[key] !== null && task[key] !== undefined) {
+                let kebabCaseKey = camelToKebab(key);
+                if (typeof task[key] === 'object') {
+                markdownLine += ` <span class="${kebabCaseKey}" style="display:none;">${JSON.stringify(task[key])}</span>`;
+                } else {
+                markdownLine += ` <span class="${kebabCaseKey}" style="display:none;">${task[key]}</span>`;
+                }
+            }
+        }
+    
+        return markdownLine;
+    }
+}
+

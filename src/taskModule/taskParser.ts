@@ -1,6 +1,17 @@
-import { ObsidianTask, TaskProperties } from "./task";
+import { DueDate, ObsidianTask, TaskProperties } from "./task";
+import * as chrono from 'chrono-node';
 
 export class taskParser {
+    markdownStartingNotation: string;
+    markdownEndingNotation: string;
+
+    constructor(
+        markdownStartingNotation: string = '%%*',
+        markdownEndingNotation: string = '*%%',
+    ) {
+        this.markdownStartingNotation = markdownStartingNotation;
+        this.markdownEndingNotation = markdownEndingNotation;
+    }
 
     static parseTaskEl(taskEl: Element): ObsidianTask {
         function parseQuery(queryName: string, defaultValue: string = "") {
@@ -36,5 +47,57 @@ export class taskParser {
         task.metadata = parseQuery('metadata', '{}') as TaskProperties['metadata'];
     
         return task;
+    }
+
+    parseTaskMarkdown(taskMarkdown: string): ObsidianTask {
+      
+        const task = new ObsidianTask();
+
+        // Splitting the content and the attributes
+        const contentEndIndex = taskMarkdown.indexOf(this.markdownStartingNotation);
+        task.content = contentEndIndex !== -1
+            ? taskMarkdown.slice(0, contentEndIndex).trim()
+            : taskMarkdown.trim();
+        task.completed = task.content.startsWith("- [x]");
+
+        // Parsing attributes
+        const attributesString = taskMarkdown.slice(contentEndIndex);
+        const attributesPattern = new RegExp(`${this.markdownStartingNotation}(.*?)${this.markdownEndingNotation}`, 'g');
+        let match;
+
+        while ((match = attributesPattern.exec(attributesString)) !== null) {
+            const attributeString = match[1];
+            const [attributeName, attributeValue] = attributeString.split(':');
+
+            // Assigning attributes to the task based on the attribute name
+            switch (attributeName.trim()) {
+            case 'due':
+                task.due = this.parseDue(attributeValue); // Placeholder function for parsing 'due'
+                break;
+            case 'priority':
+                task.priority = parseInt(attributeValue.trim(), 10) as TaskProperties['priority'];
+                break;
+            // Add more cases for other attributes as needed
+            default:
+                console.warn(`Unknown attribute: ${attributeName}`);
+                break;
+            }
+        }
+
+        return task;
+    } // TODO: test the parsing functions
+
+    private parseDue(dueString: string): DueDate | null {
+        const parsedResult = chrono.parse(dueString)[0];
+        const ParsedComponent = parsedResult.start;
+        const isDateOnly = !ParsedComponent.isCertain('hour') && !ParsedComponent.isCertain('minute') && !ParsedComponent.isCertain('second');
+        const parsedDateTime: Date = ParsedComponent.date();
+        const parsedDate = `${parsedDateTime.getFullYear()}-${parsedDateTime.getMonth() + 1}-${parsedDateTime.getDate()}`;
+        const parsedTime = `${parsedDateTime.getHours()}:${parsedDateTime.getMinutes()}`;
+        if (isDateOnly) {
+            return { isRecurring: false, date: parsedDate } as DueDate;
+        } else {
+            return { isRecurring: true, date: parsedDate, time: parsedTime } as DueDate;
+        }
     }
 }
