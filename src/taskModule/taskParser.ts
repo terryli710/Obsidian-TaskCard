@@ -1,3 +1,6 @@
+
+
+
 import { DueDate, ObsidianTask, TaskProperties } from "./task";
 import * as chrono from 'chrono-node';
 
@@ -15,16 +18,16 @@ export class taskParser {
 
     static parseTaskEl(taskEl: Element): ObsidianTask {
         function parseQuery(queryName: string, defaultValue: string = "") {
-          try {
-            const embedElement = taskEl.querySelector(`.cm-html-embed > .${queryName}`);
-            if (embedElement) {
-              return JSON.parse(embedElement.textContent || defaultValue);
+            try {
+                const embedElement = taskEl.querySelector(`.cm-html-embed > .${queryName}`);
+                if (embedElement) {
+                    return JSON.parse(embedElement.textContent || defaultValue);
+                }
+                return JSON.parse(defaultValue);
+            } catch (e) {
+                console.warn(`Failed to parse ${queryName} (got): ${e}`);
+                return defaultValue;
             }
-            return JSON.parse(defaultValue);
-          } catch (e) {
-            console.warn(`Failed to parse ${queryName}: ${e}`);
-            return defaultValue;
-          }
         }
     
         const task = new ObsidianTask();
@@ -43,7 +46,7 @@ export class taskParser {
         task.parent = parseQuery('parent', 'null') as ObsidianTask['parent'] | null; 
         task.children = parseQuery('children', '[]') as ObsidianTask['children'] | []; 
 
-        task.due = parseQuery('due', '{}') as TaskProperties['due'] | null;
+        task.due = parseQuery('due', 'null') as TaskProperties['due'] | null;
         task.metadata = parseQuery('metadata', '{}') as TaskProperties['metadata'];
     
         return task;
@@ -85,7 +88,7 @@ export class taskParser {
         }
 
         return task;
-    } // TODO: test the parsing functions
+    }
 
     private parseDue(dueString: string): DueDate | null {
         const parsedResult = chrono.parse(dueString)[0];
