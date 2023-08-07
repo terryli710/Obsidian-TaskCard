@@ -9,18 +9,14 @@ import { v4 as uuidv4 } from 'uuid';
 export const DateOnly = String.withConstraint(s => /^\d{4}-\d{2}-\d{2}$/.test(s));
 export const TimeOnly = String.withConstraint(s => /^\d{2}:\d{2}$/.test(s));
 
-export const DueDate = Record({
-  isRecurring: Boolean,
-  date: DateOnly,
-  time: Union(TimeOnly, Literal(null)),
-}).And(
-  rtPartial({
-    string: String,
-    timezone: Union(String, Literal(null))
-  })
-);
 
-export type DueDate = Static<typeof DueDate>;
+export type DueDate = {
+  isRecurring: boolean;
+  date: Static<typeof DateOnly>;
+  time?: Static<typeof TimeOnly> | null;
+  string?: string;
+  timezone?: string | null;
+};
 
 export type Project = {
   id: string;
@@ -35,9 +31,9 @@ export interface TaskProperties {
   content: string;
   priority: Priority;
   description: string;
-  order: Order;
-  project: Project;
-  sectionID: SectionID;
+  order: Order | null;
+  project: Project | null;
+  sectionID: SectionID | null;
   labels: string[];
   completed: boolean;
 
@@ -52,11 +48,11 @@ export interface TaskProperties {
 export class ObsidianTask implements TaskProperties {
   public id: string;
   public content: string;
-  public priority: Priority;
+  public priority: Priority | null;
   public description: string;
-  public order: Order;
-  public project: Project;
-  public sectionID: SectionID;
+  public order: Order | null;
+  public project: Project | null;
+  public sectionID: SectionID | null;
   public labels: string[];
   public completed: boolean;
 

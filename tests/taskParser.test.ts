@@ -1,9 +1,28 @@
 
 import { taskParser } from "../src/taskModule/taskParser";
-import { ObsidianTask } from "../src/taskModule/task";
+import { ObsidianTask, DateOnly } from '../src/taskModule/task';
 import { JSDOM } from 'jsdom';
+import { logger } from "../src/log";
 
 describe('taskParser', () => {
+
+    let warnSpy, errorSpy, debugSpy, infoSpy;
+
+    beforeEach(() => {
+        warnSpy = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+        errorSpy = jest.spyOn(logger, 'error').mockImplementation(() => {});
+        debugSpy = jest.spyOn(logger, 'debug').mockImplementation(() => {});
+        infoSpy = jest.spyOn(logger, 'info').mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+        warnSpy.mockRestore();
+        errorSpy.mockRestore();
+        debugSpy.mockRestore();
+        infoSpy.mockRestore();
+    });
+
+    
     describe('parseTaskEl', () => {
         it('should parse a task element correctly', () => {
             // Create a test task element using the example task HTML structure
@@ -105,5 +124,179 @@ describe('taskParser', () => {
             // Assert that the parsed task matches the expected task object
             expect(parsedTask).toEqual(expectedTask);
         });
+        it('should parse a task element correctly', () => {
+            // Create a test task element using the example task HTML structure
+            const dom = new JSDOM();
+            const document = dom.window.document;
+
+            const taskElement = document.createElement('div');
+            taskElement.className = 'cm-active HyperMD-list-line HyperMD-list-line-1 HyperMD-task-line cm-line';
+            taskElement.setAttribute('data-task', ' ');
+            taskElement.style.textIndent = '-23px';
+            taskElement.style.paddingInlineStart = '27px';
+
+            const createImg = () => {
+            const img = document.createElement('img');
+            img.className = 'cm-widgetBuffer';
+            img.setAttribute('aria-hidden', 'true');
+            return img;
+            };
+
+            const createSpanWithEmbed = (className: string, content: string) => {
+            const span = document.createElement('span');
+            span.className = 'cm-html-embed';
+            span.tabIndex = -1;
+            span.contentEditable = 'false';
+            span.innerHTML = `<span style="display:none;" class="${className}">${content}</span>`;
+            return span;
+            };
+
+            const label = document.createElement('label');
+            label.className = 'task-list-label';
+            label.contentEditable = 'false';
+
+            const checkbox = document.createElement('input');
+            checkbox.className = 'task-list-item-checkbox';
+            checkbox.type = 'checkbox';
+            checkbox.setAttribute('data-task', 'x');
+
+            label.appendChild(checkbox);
+
+            const taskContentSpan = document.createElement('span');
+            taskContentSpan.className = 'cm-list-1';
+            taskContentSpan.textContent = ' An example task ';
+
+            taskElement.appendChild(createImg());
+            taskElement.appendChild(document.createElement('span'));
+            taskElement.appendChild(createImg());
+            taskElement.appendChild(createImg());
+            taskElement.appendChild(label);
+            taskElement.appendChild(createImg());
+            taskElement.appendChild(taskContentSpan);
+            taskElement.appendChild(createImg());
+            taskElement.appendChild(createSpanWithEmbed('priority', '2'));
+            taskElement.appendChild(createImg());
+            taskElement.appendChild(document.createElement('span'));
+            taskElement.appendChild(createImg());
+            taskElement.appendChild(createSpanWithEmbed('description', '"- A multi line description.\\n- the second line."'));
+            taskElement.appendChild(createImg());
+            taskElement.appendChild(document.createElement('span'));
+            taskElement.appendChild(createImg());
+            taskElement.appendChild(createSpanWithEmbed('order', '1'));
+            taskElement.appendChild(createImg());
+            taskElement.appendChild(document.createElement('span'));
+            taskElement.appendChild(createImg());
+            taskElement.appendChild(createSpanWithEmbed('due', '{"isRecurring":false, "string":"next monday", "date":"2023-02-15"}'));
+            taskElement.appendChild(createImg());
+            taskElement.appendChild(document.createElement('span'));
+            taskElement.appendChild(createImg());
+            taskElement.appendChild(createSpanWithEmbed('section-id', '"section-456"'));
+            taskElement.appendChild(createImg());
+            taskElement.appendChild(document.createElement('span'));
+            taskElement.appendChild(createImg());
+            taskElement.appendChild(createSpanWithEmbed('labels', '["label1","label2","label3","label4","label5"]'));
+            taskElement.appendChild(createImg());
+            taskElement.appendChild(document.createElement('span'));
+
+            // Expected task object
+            const expectedTask: ObsidianTask = {
+                id: '',
+                content: 'An example task',
+                priority: 2,
+                description: '- A multi line description.\n- the second line.',
+                order: 1,
+                project: null,
+                sectionID: 'section-456',
+                labels: ['label1', 'label2', 'label3', 'label4', 'label5'],
+                completed: true,
+                parent: null,
+                children: [],
+                due: {isRecurring: false, string:"next monday", date: "2023-02-15"},
+                metadata: {}
+                // Add other properties as needed
+            };
+
+            // Call the parseTaskEl method
+            const parsedTask = taskParser.parseTaskEl(taskElement);
+
+            // Assert that the parsed task matches the expected task object
+            expect(parsedTask).toEqual(expectedTask);
+        });
     });
+    describe('parseTaskMarkdown', () => {
+
+        // 1. Parsing a simple task without any attributes.
+        it('should parse a simple task without attributes correctly', () => {
+            const taskMarkdown = "- [ ] A simple task";
+            const parserInstance = new taskParser();
+            const parsedTask = parserInstance.parseTaskMarkdown(taskMarkdown);
+
+            const expectedTask: Partial<ObsidianTask> = {
+                content: "A simple task",
+                completed: false,
+            };
+
+            expect(parsedTask).toMatchObject(expectedTask);
+        });
+
+        // 2. Parsing a task with a completed checkbox.
+        it('should parse a task with a completed checkbox correctly', () => {
+            const taskMarkdown = "- [x] A completed task";
+            const parserInstance = new taskParser();
+            const parsedTask = parserInstance.parseTaskMarkdown(taskMarkdown);
+
+            const expectedTask: Partial<ObsidianTask> = {
+                content: "A completed task",
+                completed: true,
+            };
+
+            expect(parsedTask).toMatchObject(expectedTask);
+        });
+
+        // 3. Parsing a task with a `due` attribute.
+        it('should parse a task with a due attribute correctly', () => {
+            const taskMarkdown = "- [ ] Task with due date %%*due:2023-08-05*%%";
+            const parserInstance = new taskParser();
+            const parsedTask = parserInstance.parseTaskMarkdown(taskMarkdown);
+
+            const expectedTask: Partial<ObsidianTask> = {
+                content: "Task with due date",
+                completed: false,
+                due: {
+                    isRecurring: false,
+                    date: "2023-08-05",
+                    string: "2023-08-05"
+                }
+            };
+
+            expect(parsedTask).toMatchObject(expectedTask);
+        });
+
+        // 4. Parsing a task with a `priority` attribute.
+        it('should parse a task with a priority attribute correctly', () => {
+            const taskMarkdown = "- [ ] Priority task %%*priority:2*%%";
+            const parserInstance = new taskParser();
+            const parsedTask = parserInstance.parseTaskMarkdown(taskMarkdown);
+
+            const expectedTask: Partial<ObsidianTask> = {
+                content: "Priority task",
+                completed: false,
+                priority: 2
+            };
+
+            expect(parsedTask).toMatchObject(expectedTask);
+        });
+
+        // 5. Parsing a task with an unknown attribute.
+        it('should warn and skip unknown attributes', () => {
+            const taskMarkdown = "- [ ] Task with unknown attribute %%*unknown:hello*%%";
+            const parserInstance = new taskParser();
+            const parsedTask = parserInstance.parseTaskMarkdown(taskMarkdown);
+
+            expect(warnSpy).toHaveBeenCalledWith("Unknown attribute: unknown");
+
+        });
+    });
+
+
 });

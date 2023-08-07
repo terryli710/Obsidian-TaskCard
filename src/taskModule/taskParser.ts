@@ -1,6 +1,8 @@
 
 
 
+import { logger } from "../log";
+import { escapeRegExp } from "../utils/regexUtils";
 import { DueDate, ObsidianTask, TaskProperties } from "./task";
 import * as chrono from 'chrono-node';
 
@@ -36,7 +38,7 @@ export class taskParser {
         task.priority = parseQuery('priority', '1') as TaskProperties['priority'];
         task.description = parseQuery('description', '') as string;
         task.order = parseQuery('order', '0') as TaskProperties['order'];
-        task.project = parseQuery('project', '{}') as TaskProperties['project'];
+        task.project = parseQuery('project', 'null') as TaskProperties['project'];
         task.sectionID = parseQuery('section-id', '') as TaskProperties['sectionID'];
         task.labels = parseQuery('labels', '[]') as TaskProperties['labels'];
         const checkbox = taskEl.querySelector('.task-list-item-checkbox') as HTMLInputElement;
@@ -58,34 +60,52 @@ export class taskParser {
 
         // Splitting the content and the attributes
         const contentEndIndex = taskMarkdown.indexOf(this.markdownStartingNotation);
-        task.content = contentEndIndex !== -1
+        const markdownTaskContent = contentEndIndex !== -1
             ? taskMarkdown.slice(0, contentEndIndex).trim()
             : taskMarkdown.trim();
-        task.completed = task.content.startsWith("- [x]");
+
+        task.content = markdownTaskContent.slice(5).trim();
+        task.completed = markdownTaskContent.startsWith("- [x]");
 
         // Parsing attributes
         const attributesString = taskMarkdown.slice(contentEndIndex);
-        const attributesPattern = new RegExp(`${this.markdownStartingNotation}(.*?)${this.markdownEndingNotation}`, 'g');
-        let match;
+        const escapedStartingNotation = escapeRegExp(this.markdownStartingNotation);
+        const escapedEndingNotation = escapeRegExp(this.markdownEndingNotation);
+        const attributesPattern = new RegExp(`${escapedStartingNotation}(.*?)${escapedEndingNotation}`, 'g');
 
-        while ((match = attributesPattern.exec(attributesString)) !== null) {
+        const matches = [...attributesString.matchAll(attributesPattern)];
+        
+        for (const match of matches) {
             const attributeString = match[1];
-            const [attributeName, attributeValue] = attributeString.split(':');
-
+            const parts = attributeString.split(/\s*:\s*/);  // Splitting using `:` and allowing spaces around
+            const attributeName = parts[0];
+            const attributeValue = parts.length > 1 ? parts[1] : undefined;  // Check if there's a value present
+        
+            console.log('After splitting - Attribute:', attributeName, 'Value:', attributeValue); // Print parsed keys and values
+        
             // Assigning attributes to the task based on the attribute name
             switch (attributeName.trim()) {
-            case 'due':
-                task.due = this.parseDue(attributeValue); // Placeholder function for parsing 'due'
-                break;
-            case 'priority':
-                task.priority = parseInt(attributeValue.trim(), 10) as TaskProperties['priority'];
-                break;
-            // Add more cases for other attributes as needed
-            default:
-                console.warn(`Unknown attribute: ${attributeName}`);
-                break;
-            }
+                case 'due':
+                    if (!attributeValue) {
+                        logger.error('Due attribute found without a value.');
+                    }
+                    task.due = this.parseDue(attributeValue); 
+                    break;
+                case 'priority':
+                    if (!attributeValue) {
+                        logger.error('Priority attribute found without a value.');
+                    }
+                    task.priority = parseInt(attributeValue.trim(), 10) as TaskProperties['priority'];
+                    break;
+                // Add more cases for other attributes as needed
+                default:
+                    logger.warn(`Unknown attribute: ${attributeName}`);
+                    break;
+                }
         }
+
+        logger.info('Task parsed successfully.'); // Info level log indicating successful parsing
+
 
         return task;
     }
@@ -95,12 +115,12 @@ export class taskParser {
         const ParsedComponent = parsedResult.start;
         const isDateOnly = !ParsedComponent.isCertain('hour') && !ParsedComponent.isCertain('minute') && !ParsedComponent.isCertain('second');
         const parsedDateTime: Date = ParsedComponent.date();
-        const parsedDate = `${parsedDateTime.getFullYear()}-${parsedDateTime.getMonth() + 1}-${parsedDateTime.getDate()}`;
+        const parsedDate = `${parsedDateTime.getFullYear()}-${String(parsedDateTime.getMonth() + 1).padStart(2, '0')}-${String(parsedDateTime.getDate()).padStart(2, '0')}`;
         const parsedTime = `${parsedDateTime.getHours()}:${parsedDateTime.getMinutes()}`;
         if (isDateOnly) {
-            return { isRecurring: false, date: parsedDate } as DueDate;
+            return { isRecurring: false, date: parsedDate, string: dueString } as DueDate;
         } else {
-            return { isRecurring: true, date: parsedDate, time: parsedTime } as DueDate;
+            return { isRecurring: true, date: parsedDate, time: parsedTime, string: dueString } as DueDate;
         }
     }
 }
