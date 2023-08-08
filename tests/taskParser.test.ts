@@ -223,6 +223,8 @@ describe('taskParser', () => {
             expect(parsedTask).toEqual(expectedTask);
         });
     });
+
+
     describe('parseTaskMarkdown', () => {
 
         // 1. Parsing a simple task without any attributes.
@@ -296,6 +298,102 @@ describe('taskParser', () => {
             expect(warnSpy).toHaveBeenCalledWith("Unknown attribute: unknown");
 
         });
+
+        // 6. Parsing a task with a `description` attribute.
+        it('should parse a task with a description attribute correctly', () => {
+            const taskMarkdown = "- [ ] Task with description %%*description:A detailed description*%%";
+            const parserInstance = new taskParser();
+            const parsedTask = parserInstance.parseTaskMarkdown(taskMarkdown);
+
+            const expectedTask: Partial<ObsidianTask> = {
+                content: "Task with description",
+                description: "A detailed description"
+            };
+
+            expect(parsedTask).toMatchObject(expectedTask);
+        });
+
+        // 7. Parsing a task with an `order` attribute.
+        it('should parse a task with an order attribute correctly', () => {
+            const taskMarkdown = "- [ ] Ordered task %%*order:3*%%";
+            const parserInstance = new taskParser();
+            const parsedTask = parserInstance.parseTaskMarkdown(taskMarkdown);
+
+            const expectedTask: Partial<ObsidianTask> = {
+                content: "Ordered task",
+                order: 3
+            };
+
+            expect(parsedTask).toMatchObject(expectedTask);
+        });
+
+        // 8. Parsing a task with a `project` attribute.
+        it('should parse a task with a project attribute correctly', () => {
+            const taskMarkdown = "- [ ] Task for a project %%*project:{\"id\":\"1234\",\"name\":\"projectX\"}*%%";
+            const parserInstance = new taskParser();
+            const parsedTask = parserInstance.parseTaskMarkdown(taskMarkdown);
+
+            const expectedTask: Partial<ObsidianTask> = {
+                content: "Task for a project",
+                project: {
+                    id: "1234",
+                    name: "projectX"
+                }
+            };
+
+            expect(parsedTask).toMatchObject(expectedTask);
+        });
+
+        // 9. Parsing a task with a `sectionID` attribute.
+        it('should parse a task with a sectionID attribute correctly', () => {
+            const taskMarkdown = "- [ ] Task in a section %%*sectionID:abcd*%%";
+            const parserInstance = new taskParser();
+            const parsedTask = parserInstance.parseTaskMarkdown(taskMarkdown);
+
+            const expectedTask: Partial<ObsidianTask> = {
+                content: "Task in a section",
+                sectionID: "abcd"
+            };
+
+            expect(parsedTask).toMatchObject(expectedTask);
+        });
+
+        // 10. Parsing a task with `metadata` attribute.
+        it('should parse a task with metadata correctly', () => {
+            const taskMarkdown = "- [ ] Task with metadata %%*metadata:{\"key1\":\"value1\",\"key2\":42}*%%";
+            const parserInstance = new taskParser();
+            const parsedTask = parserInstance.parseTaskMarkdown(taskMarkdown);
+
+            const expectedTask: Partial<ObsidianTask> = {
+                content: "Task with metadata",
+                metadata: {
+                    key1: "value1",
+                    key2: 42
+                }
+            };
+
+            expect(parsedTask).toMatchObject(expectedTask);
+        });
+
+        // 11. Parsing a task with multiple attributes.
+        it('should parse a task with multiple attributes correctly', () => {
+            const taskMarkdown = "- [ ] Multi-attribute task %%*priority:2*%% %%*due:2023-09-01*%%";
+            const parserInstance = new taskParser();
+            const parsedTask = parserInstance.parseTaskMarkdown(taskMarkdown);
+
+            const expectedTask: Partial<ObsidianTask> = {
+                content: "Multi-attribute task",
+                priority: 2,
+                due: {
+                    isRecurring: false,
+                    date: "2023-09-01",
+                    string: "2023-09-01"
+                }
+            };
+
+            expect(parsedTask).toMatchObject(expectedTask);
+        });
+
     });
 
 

@@ -2,7 +2,9 @@
 
 
 import { logger } from "../log";
-import { escapeRegExp } from "../utils/regexUtils";
+import { escapeRegExp, extractTags } from "../utils/regexUtils";
+import { kebabToCamel } from "../utils/stringCaseConverter";
+import { toArray, toBoolean } from "../utils/typeConversion";
 import { DueDate, ObsidianTask, TaskProperties } from "./task";
 import * as chrono from 'chrono-node';
 
@@ -53,60 +55,95 @@ export class taskParser {
     
         return task;
     }
-
+    
     parseTaskMarkdown(taskMarkdown: string): ObsidianTask {
-        // parse the raw markdown to obtain the task
-        const task = new ObsidianTask();
-
+        const task: ObsidianTask = new ObsidianTask();
+    
         // Splitting the content and the attributes
         const contentEndIndex = taskMarkdown.indexOf(this.markdownStartingNotation);
         const markdownTaskContent = contentEndIndex !== -1
             ? taskMarkdown.slice(0, contentEndIndex).trim()
             : taskMarkdown.trim();
-
+    
         task.content = markdownTaskContent.slice(5).trim();
         task.completed = markdownTaskContent.startsWith("- [x]");
-
+    
+        // Extracting labels from the content line
+        const [contentLabels, remainingContent] = extractTags(task.content);
+        task.content = remainingContent;
+        task.labels = contentLabels;
+    
         // Parsing attributes
         const attributesString = taskMarkdown.slice(contentEndIndex);
         const escapedStartingNotation = escapeRegExp(this.markdownStartingNotation);
         const escapedEndingNotation = escapeRegExp(this.markdownEndingNotation);
         const attributesPattern = new RegExp(`${escapedStartingNotation}(.*?)${escapedEndingNotation}`, 'g');
-
+    
         const matches = [...attributesString.matchAll(attributesPattern)];
         
         for (const match of matches) {
             const attributeString = match[1];
-            const parts = attributeString.split(/\s*:\s*/);  // Splitting using `:` and allowing spaces around
-            const attributeName = parts[0];
-            const attributeValue = parts.length > 1 ? parts[1] : undefined;  // Check if there's a value present
-        
-            console.log('After splitting - Attribute:', attributeName, 'Value:', attributeValue); // Print parsed keys and values
-        
-            // Assigning attributes to the task based on the attribute name
-            switch (attributeName.trim()) {
+            const attributeName = kebabToCamel(attributeString.substring(0, attributeString.indexOf(':')).trim());
+            const attributeValue = attributeString.substring(attributeString.indexOf(':') + 1).trim();
+
+            // Explicitly assert the type of the key
+            const taskKey = attributeName as keyof ObsidianTask;
+
+            if (!(taskKey in task)) {
+                logger.warn(`Unknown attribute: ${attributeName}`);
+                continue;
+            }
+
+            switch (attributeName) {
                 case 'due':
                     if (!attributeValue) {
-                        logger.error('Due attribute found without a value.');
+                        logger.warn(`Failed to parse due attribute: ${attributeValue}`);
+                        task.due = null;
+                    } else {
+                        task.due = this.parseDue(attributeValue);
                     }
-                    task.due = this.parseDue(attributeValue); 
-                    break;
-                case 'priority':
-                    if (!attributeValue) {
-                        logger.error('Priority attribute found without a value.');
+                case 'project':
+                    try {
+                        const parsedProject = JSON.parse(attributeValue);
+                        task.project = {
+                            id: parsedProject.id || "",
+                            name: parsedProject.name || ""
+                        };
+                    } catch (e) {
+                        console.error(`Failed to parse project attribute: ${e.message}`);
                     }
-                    task.priority = parseInt(attributeValue.trim(), 10) as TaskProperties['priority'];
                     break;
-                // Add more cases for other attributes as needed
+                case 'metadata':
+                    try {
+                        task.metadata = JSON.parse(attributeValue);
+                    } catch (e) {
+                        console.error(`Failed to parse metadata attribute: ${e.message}`);
+                    }
+                    break;
                 default:
-                    logger.warn(`Unknown attribute: ${attributeName}`);
+                    // Explicitly assert the type of the key
+                    const taskKey = attributeName as keyof ObsidianTask;
+        
+                    // Only assign the value if the key exists on ObsidianTask and parse it with the correct type
+                    if (taskKey in task) {
+                        try {
+                            if (Array.isArray(task[taskKey])) {
+                                (task[taskKey] as any) = toArray(attributeValue);
+                            } else if (typeof task[taskKey] === 'boolean') {
+                                (task[taskKey] as any) = toBoolean(attributeValue);
+                            } else if (typeof task[taskKey] === 'string') {
+                                (task[taskKey] as any) = attributeValue;
+                            } else {
+                                (task[taskKey] as any) = JSON.parse(attributeValue);
+                            }
+                        } catch (e) {
+                            logger.error(`Failed to convert value for key ${taskKey}: ${e.message}`);
+                        }
+                    }
                     break;
-                }
+            }
         }
-
-        logger.info('Task parsed successfully.'); // Info level log indicating successful parsing
-
-
+    
         return task;
     }
 

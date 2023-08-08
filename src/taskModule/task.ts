@@ -77,48 +77,4 @@ export class ObsidianTask implements TaskProperties {
     this.due = null;
     this.metadata = {};
   }
-
-  static fromMarkdownLine(markdownLine: string) {
-    let task: ObsidianTask = new ObsidianTask();
-    let regex = /<span class="([^"]*)" style="display:none;">([^<]*)<\/span>/g;
-    let match;
-
-    let parsedValues: any = {};
-
-    if (markdownLine.startsWith('- [')) { // TODO: consider indentation 
-      parsedValues.completed = markdownLine[3] === 'x';
-      parsedValues.content = markdownLine.slice(markdownLine.indexOf(']') + 2, markdownLine.indexOf('<'));
-    }
-
-    while ((match = regex.exec(markdownLine))) {
-      let key = kebabToCamel(match[1]);
-      let value = match[2];
-  
-      // Explicitly assert the type of the key
-      const taskKey = key as keyof ObsidianTask;
-  
-      // Only assign the value if the key exists on ObsidianTask and parse it with correct type
-      if (taskKey in task) {
-        try {
-          // Assuming that the arrays are in JSON format
-          if (Array.isArray(task[taskKey])) {
-            parsedValues[taskKey] = toArray(value);
-          } else if (typeof task[taskKey] === 'boolean') {
-            parsedValues[taskKey] = toBoolean(value);
-          } else if (typeof task[taskKey] === 'string') {
-            parsedValues[taskKey] = value;
-          } else {
-            parsedValues[taskKey] = JSON.parse(value);
-          }
-        } catch (e) {
-          console.error(`Failed to convert value for key ${taskKey}: ${e.message}`);
-        }
-      }
-    }
-
-    // Now assign the parsedValues object to the task
-    Object.assign(task, parsedValues);
-
-    return task;
-  }
 }
