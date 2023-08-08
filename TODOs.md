@@ -7,12 +7,17 @@
 - click behavior
 
 # Parsing and Formatting
-
+- mostly done.
 
 # Task adding and editing and deletion
-- add task
-- edit attributes
-- delete task
+
+## Task Adding
+- Auto suggestions
+- 
+
+## Attribute Adding 
+
+## Task Deletion
 
 # Project handling
 - Handle project + color;
@@ -116,5 +121,5 @@
 - `OrigMD` -> `FormatMD` - `taskParser`(✓) + `taskFormatter`(✓)
 - `TaskEl` -> `RenderedEl` - `taskParser`(✓) + `TaskCard.svelte`(✓)
 - `FormatMD` - `taskValidator`(✓)
-- `OrigMD` - `taskValidator`
-- `OrigMD` - `taskMonitor`
+- `OrigMD` - `taskValidator`(✓)
+- `OrigMD` - `taskMonitor` -> should work with autosuggest... so later

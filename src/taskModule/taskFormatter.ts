@@ -6,9 +6,9 @@ import { ObsidianTask } from './task';
 
 export class taskFormatter {
 
-    static taskToMarkdown(task: ObsidianTask): string {
-        let markdownLine = `- [${task.completed ? 'x' : ' '}] ${task.content}`;
-    
+    static taskToMarkdown(task: ObsidianTask, indicatorTag: string = "TaskCard"): string {
+        let markdownLine = `- [${task.completed ? 'x' : ' '}] ${task.content} #{indicatorTag}`;
+        
         // Iterate over keys in task, but exclude 'completed' and 'content'
         for (let key in task) {
             if (key === 'completed' || key === 'content') continue;

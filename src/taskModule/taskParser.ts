@@ -57,6 +57,7 @@ export class taskParser {
     }
     
     parseTaskMarkdown(taskMarkdown: string): ObsidianTask {
+        // TODO: special parsing for project, and labels.
         const task: ObsidianTask = new ObsidianTask();
     
         // Splitting the content and the attributes

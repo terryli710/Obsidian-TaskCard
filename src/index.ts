@@ -4,6 +4,7 @@ import type { TaskCardSettings } from './settings';
 import { SettingStore, SettingsTab } from './settings';
 import { TaskCardPostProcessor } from './renderer/injector';
 import { logger } from './log';
+import AttributeSuggest from './autoSuggestions/AttributeSuggestions';
 
 export default class TaskCardPlugin extends Plugin {
   public settings: TaskCardSettings;
@@ -40,6 +41,7 @@ export default class TaskCardPlugin extends Plugin {
     await this.loadSettings();
     this.addSettingTab(new SettingsTab(this.app, this));
     const taskItemPostProcessor = this.registerMarkdownPostProcessor(TaskCardPostProcessor);
+    this.registerEditorSuggest(new AttributeSuggest(this.app));
     logger.info('Plugin loaded.');
   }
 }
