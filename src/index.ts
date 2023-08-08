@@ -18,11 +18,18 @@ export default class TaskCardPlugin extends Plugin {
     })
   }
 
+  async loadSettings() {
+    this.settings = Object.assign({}, DefaultSettings, await this.loadData());
+  }
+
+  async saveSettings() {
+    await this.saveData(this.settings);
+  }
+
   async onload() {
     this.addSettingTab(new SettingsTab(this.app, this));
     const taskItemPostProcessor = this.registerMarkdownPostProcessor(TaskCardPostProcessor);
-    
-    
+    await this.loadSettings();
     logger.info('Plugin loaded.');
   }
 }
