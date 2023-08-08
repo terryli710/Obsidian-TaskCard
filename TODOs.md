@@ -1,6 +1,5 @@
 
 # Display
-- Toggle multi vs. single line mode.
 - Debug no label, no due task.
 
 # Interaction
@@ -8,8 +7,6 @@
 - click behavior
 
 # Parsing and Formatting
-- Formatting task
-- Task parsing
 
 
 # Task adding and editing and deletion
@@ -119,5 +116,6 @@
 ## Format Transformations
 - `OrigMD` -> `FormatMD` - `taskParser`(✓) + `taskFormatter`(✓)
 - `TaskEl` -> `RenderedEl` - `taskParser`(✓) + `TaskCard.svelte`(✓)
-- `FormatMD` - `taskValidator`
+- `FormatMD` - `taskValidator`(✓)
 - `OrigMD` - `taskValidator`
+- `OrigMD` - `taskMonitor`
