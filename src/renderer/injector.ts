@@ -6,23 +6,40 @@ import {
 import { logger } from '../log';
 import type { SvelteComponent } from 'svelte';
 import TaskItem from '../ui/TaskItem.svelte';
+import { TaskCardSettings, SettingStore } from '../settings';
 
 export type TaskMode = 'single-line' | 'multi-line';
 export interface TaskItemParams {
   mode: TaskMode;
 }
+
 export class TaskItemSvelteAdapter extends MarkdownRenderChild {
   taskItemEl: HTMLElement;
   svelteComponent: SvelteComponent;
-  params: TaskItemParams = {
-    mode: 'single-line'
-  }
+  params: TaskItemParams;
 
-  constructor(taskItemEl: HTMLElement) {
+  unsubscribeFromStore: () => void;
+
+  constructor(taskItemEl: HTMLElement,) {
     super(taskItemEl);
     this.taskItemEl = taskItemEl;
+
+    // Set initial value
+    this.params = { mode: 'single-line' };
+
+    // Subscribe to SettingStore and update params.mode accordingly
+    this.unsubscribeFromStore = SettingStore.subscribe((settings: TaskCardSettings) => {
+      this.params.mode = settings.displaySettings.defaultMode;
+    });
   }
-  
+
+  // Ensure to unsubscribe from the store when the object is destroyed to prevent memory leaks
+  onDestroy() {
+    if (this.unsubscribeFromStore) {
+      this.unsubscribeFromStore();
+    }
+  }
+
   setMode(mode: TaskMode) {
     this.params = { ...this.params, mode };
     this.svelteComponent.$set({ params: this.params });

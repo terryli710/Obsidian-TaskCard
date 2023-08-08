@@ -55,7 +55,7 @@ export class taskParser {
     }
 
     parseTaskMarkdown(taskMarkdown: string): ObsidianTask {
-      
+        // parse the raw markdown to obtain the task
         const task = new ObsidianTask();
 
         // Splitting the content and the attributes

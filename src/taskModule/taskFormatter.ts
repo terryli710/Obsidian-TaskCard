@@ -22,7 +22,7 @@ export class taskFormatter {
                 }
             }
         }
-    
+        
         return markdownLine;
     }
 }
