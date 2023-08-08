@@ -25,11 +25,11 @@
 
 ## Original Markdown
 
-- A symbol to indicate that this task should be formatted. (#taskcard)
-- Should we open plugins to accept due and other attributes?
+- A symbol to indicate that this task should be formatted. (#TaskCard)
+
 
 ```markdown
-- [ ] An example task #taskcard #label1 #label2
+- [ ] An example task #label1 #label2 #TaskCard %%*priority:4*%% %%*description:"- A multi line description.\n- the second line."*%% %%*order:1*%% %%*project:{"id":"project-123", "name":"Project Name"}*%% %%*section-id:"section-456"*%% %%*parent:null*%% %%*children:[]*%% %%*due:"Aug 15, 2024"*%% %%*metadata:{"filePath":"/path/to/file"}*%%
 ```
 
 ## Formatted Markdown
@@ -37,7 +37,7 @@
 - A json field for arbitrary matadata saving
 
 ```markdown
-- [ ] An example task
+- [ ] An example task #TaskCard
 <span class="priority" style="display:none;">4</span> 
 <span class="description" style="display:none;">"- A multi line description.\n- the second line."</span> 
 <span class="order" style="display:none;">1</span> 
@@ -47,7 +47,6 @@
 <span class="parent" style="display:none;">null</span> 
 <span class="children" style="display:none;">[]</span> 
 <span class="due" style="display:none;">{"isRecurring":false,"string":"2023-08-15","date":"2024-08-15","datetime":null,"timezone":null}</span> 
-<span class="file-path" style="display:none;">"/path/to/file"</span>
 <span class="metadata" style="display:none;">{"filePath":"/path/to/file"}</span>
 ```
 

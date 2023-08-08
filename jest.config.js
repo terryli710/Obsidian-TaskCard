@@ -4,13 +4,15 @@ module.exports = {
     verbose: true,
     transform: {
         '^.+\\.svelte$': 'svelte-jester',
-        '^.+\\.js$': 'babel-jest',
-        '^.+\\.ts$': 'ts-jest',
-      },
+        '^.+\\.ts$': 'esbuild-jest',
+        '^.+\\.js$': 'esbuild-jest'
+    },
     moduleFileExtensions: ['js', 'svelte', 'ts'],
     setupFilesAfterEnv: ['@testing-library/jest-dom/extend-expect'],
     testPathIgnorePatterns: ['node_modules'],
-    transformIgnorePatterns: ['node_modules'],
+    transformIgnorePatterns: [
+      'node_modules/(?!(svelte)/)'  // This will make sure svelte is transformed but other node_modules are not.
+    ],
     clearMocks: true,
     extensionsToTreatAsEsm: ['.ts'],
 };
