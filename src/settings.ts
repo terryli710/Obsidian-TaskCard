@@ -8,12 +8,12 @@ export interface TaskCardSettings {
     markdownStartingNotation: string;
     markdownEndingNotation: string;
     indicatorTag: string;
-  }
+  };
   displaySettings: {
     defaultMode: string;
-  }
-  syncSetting: any; // Todoist account info + other possible synced platforms
-  // TODO: some setting values
+  };
+  userMetadata: any;
+  syncSettings: any; // Todoist account info + other possible synced platforms
 }
 
 export const DefaultSettings: TaskCardSettings = {
@@ -25,8 +25,9 @@ export const DefaultSettings: TaskCardSettings = {
   displaySettings: {
     defaultMode: 'single-line',
   },
-  syncSetting: {}
-}
+  userMetadata: {},
+  syncSettings: {},
+};
 
 export const SettingStore: Writable<TaskCardSettings> = writable<TaskCardSettings>(DefaultSettings);
 

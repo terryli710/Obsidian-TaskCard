@@ -3,7 +3,7 @@
 
 import { writable } from 'svelte/store';
 import { TaskValidator } from '../src/taskModule/taskValidator';  // Update this to the correct import path
-import { logger } from '../src/log';
+import { logger } from '../src/utils/log';
 
 describe('TaskValidator', () => {
     let mockSettingStore;

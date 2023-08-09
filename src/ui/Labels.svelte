@@ -1,7 +1,7 @@
 
 <script>
     import { onMount } from 'svelte';
-    import { logger } from '../log';
+    import { logger } from '../utils/log';
   
     export let labels;
   </script>

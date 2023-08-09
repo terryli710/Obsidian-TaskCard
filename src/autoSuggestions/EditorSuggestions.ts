@@ -11,7 +11,7 @@ import {
     MarkdownView,
     TFile,
   } from "obsidian";
-import { logger } from "../log";
+import { logger } from "../utils/log";
 import { SettingStore } from "../settings";
 import { SuggestInformation } from './index';
 import { AttributeSuggester } from "./Suggester";

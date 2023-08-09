@@ -2,7 +2,7 @@
 
 import { writable } from 'svelte/store';
 import { AttributeSuggester, matchByPosition, adjustEndPosition } from '../src/autoSuggestions/Suggester'; // Update the path
-import { logger } from '../src/log';
+import { logger } from '../src/utils/utils/log';
 
 
 describe('AttributeSuggester', () => {

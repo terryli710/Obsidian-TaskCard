@@ -3,7 +3,7 @@ import {
   type MarkdownPostProcessor,
   type MarkdownPostProcessorContext
 } from 'obsidian';
-import { logger } from '../log';
+import { logger } from '../utils/log';
 import type { SvelteComponent } from 'svelte';
 import TaskItem from '../ui/TaskItem.svelte';
 import { TaskCardSettings, SettingStore } from '../settings';
@@ -29,7 +29,7 @@ export class TaskItemSvelteAdapter extends MarkdownRenderChild {
 
     // Subscribe to SettingStore and update params.mode accordingly
     this.unsubscribeFromStore = SettingStore.subscribe((settings: TaskCardSettings) => {
-      this.params.mode = settings.displaySettings.defaultMode;
+      this.params.mode = settings.displaySettings.defaultMode as TaskMode;
     });
   }
 

@@ -4,7 +4,7 @@ import { EditorSuggestContext } from "obsidian";
 import { SuggestInformation } from ".";
 import { ObsidianTask } from "../taskModule/task";
 import { escapeRegExp } from "../utils/regexUtils";
-import { logger } from "../log";
+import { logger } from "../utils/log";
 
 
 export class AttributeSuggester {

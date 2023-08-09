@@ -1,4 +1,4 @@
-import { logger } from "../log";
+import { logger } from "../utils/log";
 import { SettingStore } from '../settings';
 import { escapeRegExp } from "../utils/regexUtils";
 

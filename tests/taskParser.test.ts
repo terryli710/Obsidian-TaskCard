@@ -2,7 +2,7 @@
 import { taskParser } from "../src/taskModule/taskParser";
 import { ObsidianTask, DateOnly } from '../src/taskModule/task';
 import { JSDOM } from 'jsdom';
-import { logger } from "../src/log";
+import { logger } from "../src/utils/log";
 
 describe('taskParser', () => {
 

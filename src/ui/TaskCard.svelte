@@ -4,7 +4,7 @@
     import Labels from "./Labels.svelte";
     import { TaskItemParams } from "../renderer/injector";
     import Description from './Description.svelte';
-    import { logger } from '../log';
+    import { logger } from '../utils/log';
     import { createEventDispatcher } from 'svelte';
     import Collapse from '../components/icons/Collapse.svelte';
 

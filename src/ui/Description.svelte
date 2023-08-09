@@ -1,6 +1,6 @@
 <script>
     import {marked} from 'marked';
-    import { logger } from "../log";
+    import { logger } from "../utils/log";
 
     export let description
     let descriptionMarkdown = marked(description);

@@ -1,6 +1,7 @@
 
 # Display
 - Debug no label, no due task.
+- css fully adapt to themes.
 
 # Interaction
 - hover behavior
@@ -12,15 +13,18 @@
 # Task adding and editing and deletion
 
 ## Task Adding
-- Auto suggestions
 - 
 
 ## Attribute Adding 
+- Auto suggestions
 
 ## Task Deletion
 
 # Project handling
 - Handle project + color;
+- Project selection when editing text;
+- Project color selection;
+- Project modification APIs;
 
 
 # BUGs

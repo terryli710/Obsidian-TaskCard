@@ -1,6 +1,6 @@
 <script>
     import { getContext } from "svelte";
-    import { logger } from "../log";
+    import { logger } from "../utils/log";
     import { displayDate, displayTime } from "../utils/dateTimeFormatter"
 
     export let due = {

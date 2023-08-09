@@ -1,6 +1,6 @@
 <script lang="ts">
     import { createEventDispatcher } from "svelte";
-    import { logger } from "../log";
+    import { logger } from "../utils/log";
     import { TaskItemParams } from "../renderer/injector";
     import TaskCard from "./TaskCard.svelte";
   
