@@ -4,6 +4,7 @@ import { EditorSuggestContext } from "obsidian";
 import { SuggestInformation } from ".";
 import { ObsidianTask } from "../taskModule/task";
 import { escapeRegExp } from "../utils/regexUtils";
+import { logger } from "../log";
 
 
 export class AttributeSuggester {
@@ -20,20 +21,18 @@ export class AttributeSuggester {
 
     buildSuggestions(lineText: string, cursorPos: number): SuggestInformation[] {
         let suggestions: SuggestInformation[] = [];
-        // add the attributes
-        suggestions.concat(this.getAttributeSuggestions(lineText, cursorPos));
-        // add the priority
-        suggestions.concat(this.getPrioritySuggestions(lineText, cursorPos));
-        // add the due
-        suggestions.concat(this.getDueSuggestions(lineText, cursorPos));
+        suggestions = suggestions.concat(this.getAttributeSuggestions(lineText, cursorPos));
+        suggestions = suggestions.concat(this.getPrioritySuggestions(lineText, cursorPos));
+        suggestions = suggestions.concat(this.getDueSuggestions(lineText, cursorPos));
         return suggestions;
     }
 
     getAttributeSuggestions(lineText: string, cursorPos: number): SuggestInformation[] {
         let suggestions: SuggestInformation[] = [];
 
-        const attributeRegex = new RegExp(`${this.startingNotation}\s?`, 'g');
+        const attributeRegex = new RegExp(`${this.startingNotation}\\s?`, 'g');
         const attributeMatch = matchByPosition(lineText, attributeRegex, cursorPos);
+        logger.debug(`attributeRegex: ${attributeRegex}, attributeMatch: ${attributeMatch}, lineText: ${lineText}, cursorPos: ${cursorPos}`);
         if (!attributeMatch) return suggestions; // No match
         const nonInputtableAttributes: string[] = ['id', 'children', 'parent', 'order', 'sectionID', 'completed']; // Add more attributes as needed
 
@@ -57,7 +56,7 @@ export class AttributeSuggester {
     getPrioritySuggestions(lineText: string, cursorPos: number): SuggestInformation[] {
         let suggestions: SuggestInformation[] = [];
 
-        const priorityRegex = new RegExp(`${this.startingNotation}\s?priority:\s?`, 'g');
+        const priorityRegex = new RegExp(`${this.startingNotation}\\s?priority:\\s?`, 'g');
         const priorityMatch = matchByPosition(lineText, priorityRegex, cursorPos);
         if (!priorityMatch) return suggestions; // No match
         const prioritySelections = ['1', '2', '3', '4'];
@@ -78,7 +77,7 @@ export class AttributeSuggester {
     getDueSuggestions(lineText: string, cursorPos: number): SuggestInformation[] {
         let suggestions: SuggestInformation[] = [];
 
-        const dueRegex = new RegExp(`${this.startingNotation}\s?due:\s?`, 'g');
+        const dueRegex = new RegExp(`${this.startingNotation}\\s?due:\\s?`, 'g');
         const dueMatch = matchByPosition(lineText, dueRegex, cursorPos);
         if (!dueMatch) return suggestions; // No match
         const dueStringSelections = [
@@ -104,6 +103,7 @@ export class AttributeSuggester {
                 cursorPosition: cursorPos + dueString.length + this.endingNotation.length
             }
         })
+        return suggestions;
     }
 
 }
@@ -114,9 +114,10 @@ export class AttributeSuggester {
  * Will return a result only if a match exists and the given position is part of it.
  */
 export function matchByPosition(s: string, r: RegExp, position: number): RegExpMatchArray | void {
-    const matches = s.matchAll(r);
+    const matches = [...s.matchAll(r)];
+    logger.debug(`matches: ${JSON.stringify(matches)}`);
     for (const match of matches) {
-        if (match?.index && match.index <= position && position <= match.index + match[0].length) return match;
+        if (match.index !== undefined && match.index <= position && position <= match.index + match[0].length) return match;
     }
 }
 
@@ -124,13 +125,13 @@ export function adjustEndPosition(remainLineText: string, endingNotation: string
     if (!remainLineText) return 0;
 
     for (let i = 1; i <= endingNotation.length; i++) {
-        const textAfterCursor = remainLineText.substring(remainLineText.length - i);
+        const textAfterCursor = remainLineText.substring(0, i);
         
         if (endingNotation.startsWith(textAfterCursor)) {
             // Check if it's followed by a space or end of line
-            const afterCheckEndPosChar = remainLineText.substring(remainLineText.length - i + 1);
+            const afterCheckEndPosChar = remainLineText.substring(i, i + 1);
             if (afterCheckEndPosChar === ' ' || afterCheckEndPosChar === '\n' || afterCheckEndPosChar === '') {
-                return i
+                return i;
             }
         }
     }
