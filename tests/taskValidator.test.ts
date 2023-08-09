@@ -14,8 +14,8 @@ describe('TaskValidator', () => {
         mockSettingStore = writable({
             parsingSettings: {
                 indicatorTag: 'TaskCard',
-                startingNotation: '%%*',
-                endingNotation: '*%%'
+                markdownStartingNotation: '%%*',
+                markdownEndingNotation: '*%%'
             }
         });
 

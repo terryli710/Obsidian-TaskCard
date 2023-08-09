@@ -1,3 +1,4 @@
+import { logger } from "../log";
 
 
 export function escapeRegExp(string: string) {

@@ -14,8 +14,8 @@ describe('AttributeSuggester', () => {
         mockSettingStore = writable({
             parsingSettings: {
                 indicatorTag: 'TaskCard',
-                startingNotation: '{{',
-                endingNotation: '}}'
+                markdownStartingNotation: '{{',
+                markdownEndingNotation: '}}'
             }
         });
         suggester = new AttributeSuggester(mockSettingStore);
@@ -43,7 +43,7 @@ describe('AttributeSuggester', () => {
 
     it('gets priority suggestions', () => {
         const lineText = "{{ priority: }}";
-        const cursorPos = 12;
+        const cursorPos = 13;
         const suggestions = suggester.getPrioritySuggestions(lineText, cursorPos);
         expect(suggestions).toHaveLength(4); // Assuming 4 priority suggestions are returned
     });
@@ -53,6 +53,27 @@ describe('AttributeSuggester', () => {
         const cursorPos = 8;
         const suggestions = suggester.getDueSuggestions(lineText, cursorPos);
         expect(suggestions).toHaveLength(12); // Assuming 12 due suggestions are returned
+    });
+
+    it('wont get attribute suggestions if cursor is not at the correct position', () => {
+        const lineText = "{{ priority: ";
+        const cursorPos = 13;
+        const suggestions = suggester.getAttributeSuggestions(lineText, cursorPos);
+        expect(suggestions).toHaveLength(0);
+    });
+
+    it('wont get priority suggestions if cursor is not at the correct position', () => {
+        const lineText = "{{ due: ";
+        const cursorPos = 6;
+        const suggestions = suggester.getDueSuggestions(lineText, cursorPos);
+        expect(suggestions).toHaveLength(0);
+    })
+
+    it('will replace the right amount of text', () => {
+        const lineText = "abc {{ priority: }}";
+        const cursorPos = 17;
+        const suggestions = suggester.getPrioritySuggestions(lineText, cursorPos);
+        expect(suggestions[0].replaceFrom).toBe(4);
     });
 });
 

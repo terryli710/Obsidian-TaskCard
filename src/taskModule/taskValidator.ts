@@ -1,5 +1,5 @@
 import { logger } from "../log";
-import { TaskCardSettings, SettingStore } from '../settings';
+import { SettingStore } from '../settings';
 import { escapeRegExp } from "../utils/regexUtils";
 
 export class TaskValidator {
@@ -13,8 +13,8 @@ export class TaskValidator {
         // Subscribe to the settings store
         settingsStore.subscribe(settings => {
             this.indicatorTag = escapeRegExp(settings.parsingSettings.indicatorTag);
-            this.startingNotation = escapeRegExp(settings.parsingSettings.startingNotation);
-            this.endingNotation = escapeRegExp(settings.parsingSettings.endingNotation);
+            this.startingNotation = escapeRegExp(settings.parsingSettings.markdownStartingNotation);
+            this.endingNotation = escapeRegExp(settings.parsingSettings.markdownEndingNotation);
         });
         this.unformattedMarkdownPattern = new RegExp(`^\\s*- \\[[\\s*+-x=]\\](.*)(${this.startingNotation}.*?${this.endingNotation})?`);
     }
@@ -30,9 +30,7 @@ export class TaskValidator {
 
     isValidFormattedTaskMarkdown(taskMarkdown: string): boolean {
         const match = TaskValidator.formattedMarkdownPattern.exec(taskMarkdown);
-        logger.debug(`isValidFormattedTaskMarkdown.taskMarkdown: ${taskMarkdown}`);
-        logger.debug(`isValidFormattedTaskMarkdown.match: ${match}`);
-        
+
         if (match && match[1]) {
             const contentWithoutAttributes = match[1].replace(this.getAttributePattern(), '').trim();
             return this.hasIndicatorTag(contentWithoutAttributes);

@@ -47,7 +47,6 @@ export default class AttributeSuggest extends EditorSuggest<SuggestInformation> 
         // TODO: return null if the plugin is not loaded
         const line = editor.getLine(cursor.line);
         if (!this.taskValidator.isValidUnformattedTaskMarkdown(line)) {return null;}
-        logger.debug(`is valid task markdown: ${line}`);
         return {
             start: { line: cursor.line, ch: 0 },
             end: {

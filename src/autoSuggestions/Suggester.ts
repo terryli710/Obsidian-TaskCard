@@ -14,8 +14,8 @@ export class AttributeSuggester {
     constructor(settingsStore: typeof SettingStore) {
         // Subscribe to the settings store
         settingsStore.subscribe(settings => {
-            this.startingNotation = escapeRegExp(settings.parsingSettings.startingNotation);
-            this.endingNotation = escapeRegExp(settings.parsingSettings.endingNotation);
+            this.startingNotation = settings.parsingSettings.markdownStartingNotation;
+            this.endingNotation = settings.parsingSettings.markdownEndingNotation;
         });
     }
 
@@ -30,11 +30,10 @@ export class AttributeSuggester {
     getAttributeSuggestions(lineText: string, cursorPos: number): SuggestInformation[] {
         let suggestions: SuggestInformation[] = [];
 
-        const attributeRegex = new RegExp(`${this.startingNotation}\\s?`, 'g');
+        const attributeRegex = new RegExp(`${escapeRegExp(this.startingNotation)}\\s?`, 'g');
         const attributeMatch = matchByPosition(lineText, attributeRegex, cursorPos);
-        logger.debug(`attributeRegex: ${attributeRegex}, attributeMatch: ${attributeMatch}, lineText: ${lineText}, cursorPos: ${cursorPos}`);
         if (!attributeMatch) return suggestions; // No match
-        const nonInputtableAttributes: string[] = ['id', 'children', 'parent', 'order', 'sectionID', 'completed']; // Add more attributes as needed
+        const nonInputtableAttributes: string[] = ['id', 'content', 'children', 'parent', 'order', 'sectionID', 'completed']; // Add more attributes as needed
 
         // Filter out the non-inputtable attributes
         const inputtableAttributes = Object.keys(new ObsidianTask()).filter(attr => !nonInputtableAttributes.includes(attr));
@@ -46,7 +45,7 @@ export class AttributeSuggester {
                 replaceText: `${this.startingNotation}${attr}: ${this.endingNotation}`,
                 replaceFrom: attributeMatch.index,
                 replaceTo: cursorPos + adjustedEndPosition,
-                cursorPosition: cursorPos + this.startingNotation.length + attr.length + 2
+                cursorPosition: attributeMatch.index + this.startingNotation.length + attr.length + 2
             }
         })
 
@@ -56,17 +55,18 @@ export class AttributeSuggester {
     getPrioritySuggestions(lineText: string, cursorPos: number): SuggestInformation[] {
         let suggestions: SuggestInformation[] = [];
 
-        const priorityRegex = new RegExp(`${this.startingNotation}\\s?priority:\\s?`, 'g');
+        const priorityRegex = new RegExp(`${escapeRegExp(this.startingNotation)}\\s?priority:\\s?${escapeRegExp(this.endingNotation)}`, 'g');
         const priorityMatch = matchByPosition(lineText, priorityRegex, cursorPos);
         if (!priorityMatch) return suggestions; // No match
         const prioritySelections = ['1', '2', '3', '4'];
         suggestions = prioritySelections.map(priority => {
+            const replaceText = `${this.startingNotation}priority: ${priority}${this.endingNotation}`;
             return {
                 displayText: priority,
-                replaceText: `${this.startingNotation}priority: ${priority}`,
+                replaceText: replaceText,
                 replaceFrom: priorityMatch.index,
-                replaceTo: cursorPos,
-                cursorPosition: cursorPos + priority.length + this.endingNotation.length
+                replaceTo: priorityMatch.index + priorityMatch[0].length,
+                cursorPosition: priorityMatch.index + replaceText.length
             }
         })
 
@@ -76,10 +76,11 @@ export class AttributeSuggester {
 
     getDueSuggestions(lineText: string, cursorPos: number): SuggestInformation[] {
         let suggestions: SuggestInformation[] = [];
-
-        const dueRegex = new RegExp(`${this.startingNotation}\\s?due:\\s?`, 'g');
+    
+        const dueRegex = new RegExp(`${escapeRegExp(this.startingNotation)}\\s?due:\\s?${escapeRegExp(this.endingNotation)}`, 'g');
         const dueMatch = matchByPosition(lineText, dueRegex, cursorPos);
         if (!dueMatch) return suggestions; // No match
+    
         const dueStringSelections = [
             'today',
             'tomorrow',
@@ -95,16 +96,19 @@ export class AttributeSuggester {
             'next year',
         ];
         suggestions = dueStringSelections.map(dueString => {
+            const replaceText = `${this.startingNotation}due: ${dueString}${this.endingNotation}`;
             return {
                 displayText: dueString,
-                replaceText: `${this.startingNotation}due: ${dueString}`,
+                replaceText: replaceText,
                 replaceFrom: dueMatch.index,
-                replaceTo: cursorPos,
-                cursorPosition: cursorPos + dueString.length + this.endingNotation.length
+                replaceTo: dueMatch.index + dueMatch[0].length,
+                cursorPosition: dueMatch.index + replaceText.length
             }
-        })
+        });
+    
         return suggestions;
     }
+    
 
 }
 
@@ -115,7 +119,6 @@ export class AttributeSuggester {
  */
 export function matchByPosition(s: string, r: RegExp, position: number): RegExpMatchArray | void {
     const matches = [...s.matchAll(r)];
-    logger.debug(`matches: ${JSON.stringify(matches)}`);
     for (const match of matches) {
         if (match.index !== undefined && match.index <= position && position <= match.index + match[0].length) return match;
     }

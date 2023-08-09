@@ -4,8 +4,14 @@ import type { Writable } from 'svelte/store';
 import TaskCardPlugin from './index';
 
 export interface TaskCardSettings {
-  parsingSettings: any;
-  displaySettings: any;
+  parsingSettings: {
+    markdownStartingNotation: string;
+    markdownEndingNotation: string;
+    indicatorTag: string;
+  }
+  displaySettings: {
+    defaultMode: string;
+  }
   syncSetting: any; // Todoist account info + other possible synced platforms
   // TODO: some setting values
 }
