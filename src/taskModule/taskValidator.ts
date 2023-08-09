@@ -1,31 +1,52 @@
-// validator checks if the input text is a valid task 
-
 import { logger } from "../log";
+import { TaskCardSettings, SettingStore } from '../settings';
+import { escapeRegExp } from "../utils/regexUtils";
 
 export class TaskValidator {
-    // Matches task starting with any number of spaces, followed by "- [any character]", and then any number of span tags
-    private static formattedMarkdownPattern = /^\s*- \[[^\]]\](.*?)(?: <span class="[^"]+" style="display:none;">.*?<\/span>)*$/;
-    private static unformattedMarkdownPattern = /^\s*- \[[^\]]\](.*)%%\*.*?\*%%/;
+    private static formattedMarkdownPattern = /^\s*- \[[^\]]\](.*?)(<span class="[^"]+" style="display:none;">.*?<\/span>)+$/;
+    private unformattedMarkdownPattern: RegExp;
+    private indicatorTag: string;
+    private startingNotation: string;
+    private endingNotation: string;
 
-    private static hasIndicatorTag(contentPart: string, indicatorTag: string): boolean {
-        const indicatorTagPattern = new RegExp(`#${indicatorTag}`);
+    constructor(settingsStore: typeof SettingStore) {
+        // Subscribe to the settings store
+        settingsStore.subscribe(settings => {
+            this.indicatorTag = escapeRegExp(settings.parsingSettings.indicatorTag);
+            this.startingNotation = escapeRegExp(settings.parsingSettings.startingNotation);
+            this.endingNotation = escapeRegExp(settings.parsingSettings.endingNotation);
+        });
+        this.unformattedMarkdownPattern = new RegExp(`^\\s*- \\[[\\s*+-x=]\\](.*)(${this.startingNotation}.*?${this.endingNotation})?`);
+    }
+
+    private hasIndicatorTag(contentPart: string): boolean {
+        const indicatorTagPattern = new RegExp(`#${this.indicatorTag}`);
         return indicatorTagPattern.test(contentPart);
     }
-    
-    static isValidFormattedTaskMarkdown(taskMarkdown: string, indicatorTag: string): boolean {
-        const match = this.formattedMarkdownPattern.exec(taskMarkdown);
-        logger.debug(`Matched: ${match}, indicatorTag: ${indicatorTag}`);
+
+    private getAttributePattern(): RegExp {
+        return new RegExp(`${this.startingNotation}.*?${this.endingNotation}`, 'g');
+    }
+
+    isValidFormattedTaskMarkdown(taskMarkdown: string): boolean {
+        const match = TaskValidator.formattedMarkdownPattern.exec(taskMarkdown);
+        logger.debug(`isValidFormattedTaskMarkdown.taskMarkdown: ${taskMarkdown}`);
+        logger.debug(`isValidFormattedTaskMarkdown.match: ${match}`);
+        
         if (match && match[1]) {
-            return this.hasIndicatorTag(match[1], indicatorTag);
+            const contentWithoutAttributes = match[1].replace(this.getAttributePattern(), '').trim();
+            return this.hasIndicatorTag(contentWithoutAttributes);
         }
         return false;
     }
-    
-    static isValidUnformattedTaskMarkdown(taskMarkdown: string, indicatorTag: string): boolean {
+
+    isValidUnformattedTaskMarkdown(taskMarkdown: string): boolean {
         const match = this.unformattedMarkdownPattern.exec(taskMarkdown);
         if (match && match[1]) {
-            return this.hasIndicatorTag(match[1], indicatorTag);
+            const contentWithoutAttributes = match[1].replace(this.getAttributePattern(), '').trim();
+            return this.hasIndicatorTag(contentWithoutAttributes);
         }
         return false;
     }
 }
+

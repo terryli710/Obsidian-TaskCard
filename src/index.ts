@@ -4,7 +4,7 @@ import type { TaskCardSettings } from './settings';
 import { SettingStore, SettingsTab } from './settings';
 import { TaskCardPostProcessor } from './renderer/injector';
 import { logger } from './log';
-import AttributeSuggest from './autoSuggestions/AttributeSuggestions';
+import AttributeSuggest from './autoSuggestions/EditorSuggestions';
 
 export default class TaskCardPlugin extends Plugin {
   public settings: TaskCardSettings;
