@@ -1,4 +1,4 @@
-import { logger } from "../log";
+import { logger } from "../utils/log";
 
 
 export function toArray(value: string): string[] {

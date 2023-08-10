@@ -16,3 +16,22 @@ export function extractTags(text: string): [string[], string] {
 
     return [matches, remainingText];
 }
+
+
+/**
+ * Get the starting index of a matching group within a given string.
+ *
+ * @param {string} text - The string to match against.
+ * @param {RegExp} regex - The regular expression containing the match groups.
+ * @param {number} groupIndex - The index of the desired match group.
+ * @returns {number|null} The index in the string where the desired match group starts, or null if not found.
+ */
+export function getGroupStartIndex(text: string, regex: RegExp, groupIndex: number): number | null {
+    const match = regex.exec(text);
+    if (match && match[groupIndex]) {
+        const fullMatchIndex = match.index;
+        return fullMatchIndex + match[0].indexOf(match[groupIndex]);
+    }
+    return null;
+}
+

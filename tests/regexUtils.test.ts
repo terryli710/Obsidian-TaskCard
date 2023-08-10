@@ -1,6 +1,6 @@
 
 
-import { escapeRegExp, extractTags } from '../src/utils/regexUtils';
+import { escapeRegExp, extractTags, getGroupStartIndex } from '../src/utils/regexUtils';
 
 describe('textUtils', () => {
     describe('escapeRegExp', () => {
@@ -60,6 +60,52 @@ describe('textUtils', () => {
             const [tags, content] = extractTags(text);
             expect(tags).toEqual(expectedTags);
             expect(content).toEqual(expectedContent);
+        });
+    });
+
+    describe('getGroupStartIndex', () => {
+        it('should return the correct index of the matching group', () => {
+            const text = "green red apple red";
+            const regex = /apple (red|green)/;
+            expect(getGroupStartIndex(text, regex, 1)).toBe(16);
+        });
+    
+        it('should handle multiple groups', () => {
+            const text = "apple green red";
+            const regex = /apple (green) (red)/;
+            expect(getGroupStartIndex(text, regex, 1)).toBe(6);
+            expect(getGroupStartIndex(text, regex, 2)).toBe(12);
+        });
+    
+        it('should return null when the group does not exist', () => {
+            const text = "apple green";
+            const regex = /apple (red|green)/;
+            expect(getGroupStartIndex(text, regex, 2)).toBeNull();
+        });
+    
+        it('should return null when there is no match', () => {
+            const text = "apple blue";
+            const regex = /apple (red|green)/;
+            expect(getGroupStartIndex(text, regex, 1)).toBeNull();
+        });
+    
+        it('should handle special characters in the group', () => {
+            const text = "apple $green$";
+            const regex = /apple (\$green\$)/;
+            expect(getGroupStartIndex(text, regex, 1)).toBe(6);
+        });
+    
+        it('should handle the start and end of the string', () => {
+            const text = "red apple green";
+            const regex = /^(red) apple (green)$/;
+            expect(getGroupStartIndex(text, regex, 1)).toBe(0);
+            expect(getGroupStartIndex(text, regex, 2)).toBe(10);
+        });
+
+        it('hard case with spaces', () => {
+            const text = "red apple green";
+            const regex = /apple(\s?)green/;
+            expect(getGroupStartIndex(text, regex, 1)).toBe(9);
         });
     });
 });

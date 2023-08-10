@@ -4,7 +4,7 @@
 import { SettingStore } from "../settings";
 import { SuggestInformation } from ".";
 import { ObsidianTask } from "../taskModule/task";
-import { escapeRegExp } from "../utils/regexUtils";
+import { escapeRegExp, getGroupStartIndex } from "../utils/regexUtils";
 import { logger } from "../utils/log";
 import { Project } from "../taskModule/project";
 
@@ -34,17 +34,25 @@ export class AttributeSuggester {
 
     getAttributeSuggestions(lineText: string, cursorPos: number): SuggestInformation[] {
         let suggestions: SuggestInformation[] = [];
-
-        const attributeRegex = new RegExp(`${escapeRegExp(this.startingNotation)}\\s?`, 'g');
+    
+        // Modify regex to capture the attribute query
+        const attributeRegex = new RegExp(`${escapeRegExp(this.startingNotation)}(\\s*[a-zA-Z]*)(?=:)?`, 'g');
         const attributeMatch = matchByPosition(lineText, attributeRegex, cursorPos);
         if (!attributeMatch) return suggestions; // No match
+    
+        // Get the attribute query from the captured group
+        const attributeQuery = attributeMatch[1].trim() || "";
+    
         const nonInputtableAttributes: string[] = ['id', 'content', 'children', 'parent', 'order', 'sectionID', 'completed', 'labels'];
-
+    
         // Filter out the non-inputtable attributes
         const inputtableAttributes = Object.keys(new ObsidianTask()).filter(attr => !nonInputtableAttributes.includes(attr));
-
+    
+        // Use the attributeQuery to filter the suggestions
+        const filteredAttributes = inputtableAttributes.filter(attr => attr.startsWith(attributeQuery));
+    
         const adjustedEndPosition = adjustEndPosition(lineText.substring(cursorPos), this.endingNotation);
-        suggestions = inputtableAttributes.map(attr => {
+        suggestions = filteredAttributes.map(attr => {
             return {
                 displayText: attr,
                 replaceText: `${this.startingNotation}${attr}: ${this.endingNotation}`,
@@ -53,14 +61,15 @@ export class AttributeSuggester {
                 cursorPosition: attributeMatch.index + this.startingNotation.length + attr.length + 2
             }
         })
-
+    
         return suggestions;
     }
+    
 
     getPrioritySuggestions(lineText: string, cursorPos: number): SuggestInformation[] {
         let suggestions: SuggestInformation[] = [];
 
-        const priorityRegex = new RegExp(`${escapeRegExp(this.startingNotation)}\\s?priority:\\s?${escapeRegExp(this.endingNotation)}`, 'g');
+        const priorityRegex = new RegExp(`${escapeRegExp(this.startingNotation)}\\s?priority:\\s*${escapeRegExp(this.endingNotation)}`, 'g');
         const priorityMatch = matchByPosition(lineText, priorityRegex, cursorPos);
         if (!priorityMatch) return suggestions; // No match
         const prioritySelections = ['1', '2', '3', '4'];
@@ -81,10 +90,18 @@ export class AttributeSuggester {
 
     getDueSuggestions(lineText: string, cursorPos: number): SuggestInformation[] {
         let suggestions: SuggestInformation[] = [];
-    
-        const dueRegex = new RegExp(`${escapeRegExp(this.startingNotation)}\\s?due:\\s?${escapeRegExp(this.endingNotation)}`, 'g');
-        const dueMatch = matchByPosition(lineText, dueRegex, cursorPos);
+        
+        // Modify regex to capture the due date query
+        const dueRegex = new RegExp(`${escapeRegExp(this.startingNotation)}\\s?due:(\\s*[0-9a-zA-Z\s-]*\\s*)${escapeRegExp(this.endingNotation)}`, 'g');
+        const dueMatch = matchByPositionAndGroup(lineText, dueRegex, cursorPos, 1);
         if (!dueMatch) return suggestions; // No match
+
+        logger.debug(`dueMatch: ${JSON.stringify(dueMatch)}`);
+    
+        // Get the due date query from the captured group
+        const dueQuery = (dueMatch[1] || "").trim();
+
+        logger.debug(`dueQuery: ${dueQuery}`);
     
         const dueStringSelections = [
             'today',
@@ -100,7 +117,11 @@ export class AttributeSuggester {
             'next month',
             'next year',
         ];
-        suggestions = dueStringSelections.map(dueString => {
+    
+        // Use the dueQuery to filter the suggestions
+        const filteredDueStrings = dueStringSelections.filter(dueString => dueString.toLowerCase().startsWith(dueQuery.toLowerCase()));
+    
+        suggestions = filteredDueStrings.map(dueString => {
             const replaceText = `${this.startingNotation}due: ${dueString}${this.endingNotation}`;
             return {
                 displayText: dueString,
@@ -110,20 +131,26 @@ export class AttributeSuggester {
                 cursorPosition: dueMatch.index + replaceText.length
             }
         });
-    
+        
         return suggestions;
     }
 
     getProjectSuggestions(lineText: string, cursorPos: number): SuggestInformation[] {
         let suggestions: SuggestInformation[] = [];
-        logger.debug(`projects: ${JSON.stringify(this.projects)}`);
-
-        const projectRegex = new RegExp(`${escapeRegExp(this.startingNotation)}\\s?project:\\s?${escapeRegExp(this.endingNotation)}`, 'g');
-        const projectMatch = matchByPosition(lineText, projectRegex, cursorPos);
+    
+        // Modify regex to capture the project name query
+        const projectRegex = new RegExp(`${escapeRegExp(this.startingNotation)}\\s?project:(\\s*[0-9a-zA-Z\s-]*\\s*)${escapeRegExp(this.endingNotation)}`, 'g');
+        const projectMatch = matchByPositionAndGroup(lineText, projectRegex, cursorPos, 1);
         if (!projectMatch) return suggestions; // No match
-        suggestions = this.projects.map(project => {
+    
+        // Get the project name query from the captured group
+        const projectQuery = (projectMatch[1] || "").trim();
+    
+        // Use the projectQuery to filter the suggestions
+        const filteredProjects = this.projects.filter(project => project.name.toLowerCase().startsWith(projectQuery.toLowerCase()));
+    
+        suggestions = filteredProjects.map(project => {
             const replaceText = `${this.startingNotation}project: ${project.name}${this.endingNotation}`;
-            logger.debug(`project: ${JSON.stringify(project)}`);
             return {
                 displayText: project.name,
                 replaceText: replaceText,
@@ -140,13 +167,11 @@ export class AttributeSuggester {
                     vertical-align: baseline;
                     float: right;
                     "></span>`
-
             }
-        })
+        });
+    
         return suggestions;
     }
-    
-
 }
 
 
@@ -160,6 +185,32 @@ export function matchByPosition(s: string, r: RegExp, position: number): RegExpM
         if (match.index !== undefined && match.index <= position && position <= match.index + match[0].length) return match;
     }
 }
+
+/**
+ * Matches a string with a regex according to a position (typically of a cursor).
+ * Will return a result only if a match exists and the given position is part of the desired matching group.
+ */
+export function matchByPositionAndGroup(s: string, r: RegExp, position: number, groupIndex: number): RegExpMatchArray | void {
+    console.log('Input string:', s);
+    console.log('Input regex:', r);
+    console.log('Input position:', position);
+    const matches = [...s.matchAll(r)];
+    console.log('matches:', JSON.stringify(matches));
+    
+    for (const match of matches) {
+        if (match.index !== undefined && match[groupIndex]) {
+            const groupStartPos = getGroupStartIndex(match[0], r, groupIndex) + match.index;
+            const groupEndPos = groupStartPos + match[groupIndex].length;
+            console.log('groupStartPos:', groupStartPos, 'groupEndPos:', groupEndPos, 'position:', position);
+        
+            if (position >= groupStartPos && position <= groupEndPos) {
+                return match;
+            }
+            
+        }
+    }
+}
+
 
 export function adjustEndPosition(remainLineText: string, endingNotation: string): number {
     if (!remainLineText) return 0;
