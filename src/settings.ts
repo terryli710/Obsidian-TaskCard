@@ -87,54 +87,56 @@ export class SettingsTab extends PluginSettingTab {
     let newProjectName = '';
     let newProjectColor = '';
 
-    // Text field for project name
-    const setting = new Setting(projectContainer).setName('Add a project');
+    const renderSetting = (showColorPicker: boolean = false) => {
+        // Clear the current setting
+        projectContainer.innerHTML = '';
 
-    const textComponent = setting.addText(text => {
-        text.setPlaceholder('Enter project name')
-            .onChange(value => {
-                newProjectName = value;
-            });
-    });
+        const setting = new Setting(projectContainer).setName('Add a project');
 
-    let colorComponent: any;
-    const colorPickerButton = setting.addButton(button => {
-        button.setTooltip("Pick a color")
-            .setIcon("palette")
-            .onClick(() => {
-                // Remove the color picker button
-                button.buttonEl.remove();
+        setting.addText(text => {
+            text.setPlaceholder('Enter project name')
+                .setValue(newProjectName) // Set the stored value
+                .onChange(value => {
+                    newProjectName = value;
+                });
+        });
 
-                // Add the color picker component
-                colorComponent = setting.addColorPicker(colorPicker => {
-                    colorPicker.onChange(value => {
-                        newProjectColor = value;
-                    });
+        if (showColorPicker) {
+            setting.addColorPicker(colorPicker => {
+                colorPicker.onChange(value => {
+                    newProjectColor = value;
                 });
             });
-    });
-
-    setting.addButton(button => {
-        button.setTooltip("Finish")
-            .setIcon("check-square")
-            .onClick(() => {
-                if (newProjectName) {
-                    // if newProjectColor is selected, use it, if not, generate.
-                    const newProject: Partial<Project> = {
-                        name: newProjectName,
-                        color: newProjectColor
-                    };
-
-                    // Update the project in your data store
-                    this.plugin.projectModule.updateProject(newProject);
-                    this.updateProjectsToSettings();
-
-                    // Re-render the settings to reflect the new project
-                    this.display();
-                }
+        } else {
+            setting.addButton(button => {
+                button.setTooltip("Pick a color")
+                    .setIcon("palette")
+                    .onClick(() => {
+                        renderSetting(true); // Re-render with color picker
+                    });
             });
-    });
+        }
+
+        setting.addButton(button => {
+            button.setTooltip("Finish")
+                .setIcon("check-square")
+                .onClick(() => {
+                    if (newProjectName) {
+                        const newProject: Partial<Project> = {
+                            name: newProjectName,
+                            color: newProjectColor
+                        };
+                        this.plugin.projectModule.updateProject(newProject);
+                        this.updateProjectsToSettings();
+                        this.display();
+                    }
+                });
+        });
+    };
+
+    renderSetting();
 }
+
 
 
   projectEditSetting(project: Project, projectContainer?: HTMLElement) {
