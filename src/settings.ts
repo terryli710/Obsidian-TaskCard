@@ -2,6 +2,7 @@ import { PluginSettingTab, Plugin, App, Setting } from 'obsidian';
 import { writable } from 'svelte/store';
 import type { Writable } from 'svelte/store';
 import TaskCardPlugin from './index';
+import { Project } from './taskModule/project';
 
 export interface TaskCardSettings {
   parsingSettings: {
@@ -60,73 +61,119 @@ export class SettingsTab extends PluginSettingTab {
   }
 
   projectSettings() {
-    // Fetch the projects from the projectModule
-    const projects = this.plugin.projectModule.getProjectsData();
-
-    // Display existing projects
+    this.containerEl.createEl('h4', { text: 'Add new projects' });
+    const projectContainer = this.containerEl.createEl('div', { cls: 'new-project-container' });
+    this.newProjectSetting(projectContainer);
+    const projects: Project[] = this.plugin.projectModule.getProjectsData();
+    this.containerEl.createEl('h4', { text: 'Edit existing projects' });
     for (const project of projects) {
-        // Create a container for each project
-        const projectContainer = this.containerEl.createEl('div', { cls: 'project-container' });
-
-        // Display project name with an option to edit
-        new Setting(projectContainer)
-            .setName('Project Name')
-            .addText(text => text
-                .setValue(project.name)
-                .onChange(async (value: string) => {
-                    this.plugin.projectModule.updateProject({ id: project.id, name: value });
-                    this.updateProjectsToSettings();
-                })
-            );
-
-        // Placeholder for future color implementation
-        // TODO: Implement color picker when available
-
-        // Option to delete the project
-        new Setting(projectContainer)
-            .addButton(button => button
-                .setButtonText("Delete")
-                .onClick(async () => {
-                    // Assuming null name means delete
-                    // Instead of setting the name to null, we'll remove the project from the map directly
-                    this.plugin.projectModule.deleteProjectById(project.id);
-                    this.updateProjectsToSettings();
-                    projectContainer.remove();  // Remove the project from the UI
-                })
-            );
+      const projectContainer = this.containerEl.createEl('div', { cls: 'project-container' });
+      this.projectEditSetting(project, projectContainer);
     }
 
-    // Add new project
-    const newProjectContainer = this.containerEl.createEl('div', { cls: 'new-project-container' });
+  }
+
+  // Update projects from projectModule to settings
+  updateProjectsToSettings() {
+      const projects = this.plugin.projectModule.getProjectsData();
+      this.plugin.writeSettings((old) => old.userMetadata.projects = projects);
+  }
+
+  newProjectSetting(projectContainer?: HTMLElement) {
+    if (!projectContainer) {
+        projectContainer = this.containerEl.createEl('div', { cls: 'project-container' });
+    }
+
     let newProjectName = '';
+    let newProjectColor = '';
 
-    new Setting(newProjectContainer)
-        .setName('New Project Name')
-        .addText(text => text
-            .setPlaceholder('Enter project name')
-            .onChange(value => newProjectName = value)
-        );
+    // Text field for project name
+    const setting = new Setting(projectContainer).setName('Add a project')
 
-    new Setting(newProjectContainer)
-        .addButton(button => button
-            .setButtonText("Add Project")
-            .onClick(async () => {
-                if (newProjectName) {
-                    this.plugin.projectModule.updateProject({ name: newProjectName });
-                    this.updateProjectsToSettings();
-                    // Refresh the settings tab to reflect the new project
-                    this.display();
-                }
+    const textComponent = setting.addText(text => {
+            text.setPlaceholder('Enter project name')
+                .onChange(value => {
+                    newProjectName = value;
+                });
+        })
+
+    const colorComponent = setting.addColorPicker(colorPicker => {
+            colorPicker.onChange(value => {
+                newProjectColor = value;
+            });
+        })
+
+    const button = setting.addButton(button => {
+            button.setButtonText("Save")
+                .onClick(() => {
+                    if (newProjectName && newProjectColor) {
+                        // if newProjectColor is selected, use it, if not, generate.
+                        let newProject: Partial<Project>
+                        if (!newProjectColor) {
+                            newProject = { name: newProjectName }
+                        } else {
+                          newProject = { name: newProjectName, color: newProjectColor }
+                        }
+                        // Update the project in your data store
+                        this.plugin.projectModule.updateProject(newProject)
+                        this.updateProjectsToSettings();
+
+                        // Re-render the settings to reflect the new project
+                        this.display();
+                    }
+                });
+        });
+  }
+
+  projectEditSetting(project: Project, projectContainer?: HTMLElement) {
+    if (!projectContainer) {
+        projectContainer = this.containerEl.createEl('div', { cls: 'project-container' });
+    }
+
+    // Heading for the Project Name
+    const setting = new Setting(projectContainer)
+        .setName('Project Name');
+
+    const textComponent = setting.addText(text => {
+        text.setValue(project.name)
+            .onChange(value => {
+                project.name = value;
             })
-        );
-}
+            .setDisabled(true); // Start in saved mode
+    });
 
-// Update projects from projectModule to settings
-updateProjectsToSettings() {
-    const projects = this.plugin.projectModule.getProjectsData();
-    this.plugin.writeSettings((old) => old.userMetadata.projects = projects);
-}
+    const colorComponent = setting.addColorPicker(colorPicker => {
+        colorPicker.setValue(project.color)
+            .onChange(value => {
+                project.color = value;
+            })
+            .setDisabled(true); // Start in saved mode
+    });
 
+    let isEditMode = false; // Flag to keep track of the current mode
+
+    setting.addButton(button => {
+        button.setButtonText("Edit")
+            .onClick(() => {
+                if (!isEditMode) {
+                    // Switch to edit mode
+                    textComponent.setDisabled(false);
+                    colorComponent.setDisabled(false);
+                    button.setButtonText("Save");
+                    isEditMode = true;
+                } else {
+                    // Switch to saved mode
+                    textComponent.setDisabled(true);
+                    colorComponent.setDisabled(true);
+                    button.setButtonText("Edit");
+                    this.plugin.projectModule.updateProject(project);
+                    this.updateProjectsToSettings();
+                    this.display();
+                    isEditMode = false;
+                }
+            });
+    });
+}
 
 
   cardParsingSettings() {
