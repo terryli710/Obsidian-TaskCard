@@ -1,8 +1,10 @@
 
-import { taskParser } from "../src/taskModule/taskParser";
+import { TaskParser } from "../src/taskModule/taskParser";
 import { ObsidianTask, DateOnly } from '../src/taskModule/task';
 import { JSDOM } from 'jsdom';
 import { logger } from "../src/utils/log";
+import { writable } from "svelte/store";
+import { Project, ProjectModule } from "../src/taskModule/project";
 
 describe('taskParser', () => {
 
@@ -21,6 +23,37 @@ describe('taskParser', () => {
         debugSpy.mockRestore();
         infoSpy.mockRestore();
     });
+    
+    let mockProjectModule;
+    let mockSettingStore;
+    let taskParser;
+    let projects: Project[];
+    beforeEach(() => {
+        // Mock the SettingStore with controlled settings
+        mockSettingStore = writable({
+            parsingSettings: {
+                indicatorTag: 'TaskCard',
+                markdownStartingNotation: '%%*',
+                markdownEndingNotation: '*%%'
+            }
+        });
+
+        projects = [
+            {
+                id: 'project-123',
+                name: 'Project Name'
+            },
+            {
+                id: 'project-456',
+                name: 'ProjectX'
+            }
+        ]
+        mockProjectModule = new ProjectModule()
+        mockProjectModule.updateProjects(projects);
+
+        taskParser = new TaskParser(mockSettingStore, mockProjectModule);
+    });    
+
 
     
     describe('parseTaskEl', () => {
@@ -230,8 +263,8 @@ describe('taskParser', () => {
         // 1. Parsing a simple task without any attributes.
         it('should parse a simple task without attributes correctly', () => {
             const taskMarkdown = "- [ ] A simple task";
-            const parserInstance = new taskParser();
-            const parsedTask = parserInstance.parseTaskMarkdown(taskMarkdown);
+            
+            const parsedTask = taskParser.parseTaskMarkdown(taskMarkdown);
 
             const expectedTask: Partial<ObsidianTask> = {
                 content: "A simple task",
@@ -241,25 +274,40 @@ describe('taskParser', () => {
             expect(parsedTask).toMatchObject(expectedTask);
         });
 
-        // 2. Parsing a task with a completed checkbox.
+        // 2. Parsing a task with a completed checkbox with labels.
         it('should parse a task with a completed checkbox correctly', () => {
-            const taskMarkdown = "- [x] A completed task";
-            const parserInstance = new taskParser();
-            const parsedTask = parserInstance.parseTaskMarkdown(taskMarkdown);
+            const taskMarkdown = "- [x] A completed task with #some #Labels #one-more-label";
+            
+            const parsedTask = taskParser.parseTaskMarkdown(taskMarkdown);
 
             const expectedTask: Partial<ObsidianTask> = {
-                content: "A completed task",
+                content: "A completed task with",
                 completed: true,
+                labels: ["some", "Labels", "one-more-label"]
             };
 
             expect(parsedTask).toMatchObject(expectedTask);
         });
 
+        // 2.5 the indicatorTag will be removed from labels
+        it('task with labels: the indicatorTag will be removed from labels', () => {
+            const taskMarkdown = "- [x] A completed task with #labels #TaskCard";
+
+            const parsedTask = taskParser.parseTaskMarkdown(taskMarkdown);
+
+            const expectedTask: Partial<ObsidianTask> = {
+                content: "A completed task with",
+                completed: true,
+                labels: ["labels"]
+            }
+            expect(parsedTask).toMatchObject(expectedTask);
+        })
+
         // 3. Parsing a task with a `due` attribute.
         it('should parse a task with a due attribute correctly', () => {
             const taskMarkdown = "- [ ] Task with due date %%*due:2023-08-05*%%";
-            const parserInstance = new taskParser();
-            const parsedTask = parserInstance.parseTaskMarkdown(taskMarkdown);
+            
+            const parsedTask = taskParser.parseTaskMarkdown(taskMarkdown);
 
             const expectedTask: Partial<ObsidianTask> = {
                 content: "Task with due date",
@@ -277,8 +325,8 @@ describe('taskParser', () => {
         // 4. Parsing a task with a `priority` attribute.
         it('should parse a task with a priority attribute correctly', () => {
             const taskMarkdown = "- [ ] Priority task %%*priority:2*%%";
-            const parserInstance = new taskParser();
-            const parsedTask = parserInstance.parseTaskMarkdown(taskMarkdown);
+            
+            const parsedTask = taskParser.parseTaskMarkdown(taskMarkdown);
 
             const expectedTask: Partial<ObsidianTask> = {
                 content: "Priority task",
@@ -292,8 +340,8 @@ describe('taskParser', () => {
         // 5. Parsing a task with an unknown attribute.
         it('should warn and skip unknown attributes', () => {
             const taskMarkdown = "- [ ] Task with unknown attribute %%*unknown:hello*%%";
-            const parserInstance = new taskParser();
-            const parsedTask = parserInstance.parseTaskMarkdown(taskMarkdown);
+            
+            const parsedTask = taskParser.parseTaskMarkdown(taskMarkdown);
 
             expect(warnSpy).toHaveBeenCalledWith("Unknown attribute: unknown");
 
@@ -302,8 +350,8 @@ describe('taskParser', () => {
         // 6. Parsing a task with a `description` attribute.
         it('should parse a task with a description attribute correctly', () => {
             const taskMarkdown = "- [ ] Task with description %%*description:A detailed description*%%";
-            const parserInstance = new taskParser();
-            const parsedTask = parserInstance.parseTaskMarkdown(taskMarkdown);
+            
+            const parsedTask = taskParser.parseTaskMarkdown(taskMarkdown);
 
             const expectedTask: Partial<ObsidianTask> = {
                 content: "Task with description",
@@ -316,8 +364,8 @@ describe('taskParser', () => {
         // 7. Parsing a task with an `order` attribute.
         it('should parse a task with an order attribute correctly', () => {
             const taskMarkdown = "- [ ] Ordered task %%*order:3*%%";
-            const parserInstance = new taskParser();
-            const parsedTask = parserInstance.parseTaskMarkdown(taskMarkdown);
+            
+            const parsedTask = taskParser.parseTaskMarkdown(taskMarkdown);
 
             const expectedTask: Partial<ObsidianTask> = {
                 content: "Ordered task",
@@ -329,26 +377,41 @@ describe('taskParser', () => {
 
         // 8. Parsing a task with a `project` attribute.
         it('should parse a task with a project attribute correctly', () => {
-            const taskMarkdown = "- [ ] Task for a project %%*project:{\"id\":\"1234\",\"name\":\"projectX\"}*%%";
-            const parserInstance = new taskParser();
-            const parsedTask = parserInstance.parseTaskMarkdown(taskMarkdown);
+            const taskMarkdown = "- [ ] Task for a project %%*project: Project Name*%%";
+            
+            const parsedTask = taskParser.parseTaskMarkdown(taskMarkdown);
 
             const expectedTask: Partial<ObsidianTask> = {
                 content: "Task for a project",
                 project: {
-                    id: "1234",
-                    name: "projectX"
+                    id: "project-123",
+                    name: "Project Name"
                 }
             };
 
             expect(parsedTask).toMatchObject(expectedTask);
         });
 
+        // 8.5 Parsing a task with wrong project name would be a task without a project
+        it('should parse a task with a wrong project name would be a task without a project', () => {
+            const taskMarkdown = "- [ ] Task for a project %%*project:Wrong Project Name*%%";
+            
+            const parsedTask = taskParser.parseTaskMarkdown(taskMarkdown);
+
+            const expectedTask: Partial<ObsidianTask> = {
+                content: "Task for a project",
+                project: null
+            }
+
+            expect(parsedTask).toMatchObject(expectedTask);
+        })
+
+
         // 9. Parsing a task with a `sectionID` attribute.
         it('should parse a task with a sectionID attribute correctly', () => {
             const taskMarkdown = "- [ ] Task in a section %%*sectionID:abcd*%%";
-            const parserInstance = new taskParser();
-            const parsedTask = parserInstance.parseTaskMarkdown(taskMarkdown);
+            
+            const parsedTask = taskParser.parseTaskMarkdown(taskMarkdown);
 
             const expectedTask: Partial<ObsidianTask> = {
                 content: "Task in a section",
@@ -361,8 +424,8 @@ describe('taskParser', () => {
         // 10. Parsing a task with `metadata` attribute.
         it('should parse a task with metadata correctly', () => {
             const taskMarkdown = "- [ ] Task with metadata %%*metadata:{\"key1\":\"value1\",\"key2\":42}*%%";
-            const parserInstance = new taskParser();
-            const parsedTask = parserInstance.parseTaskMarkdown(taskMarkdown);
+            
+            const parsedTask = taskParser.parseTaskMarkdown(taskMarkdown);
 
             const expectedTask: Partial<ObsidianTask> = {
                 content: "Task with metadata",
@@ -378,8 +441,8 @@ describe('taskParser', () => {
         // 11. Parsing a task with multiple attributes.
         it('should parse a task with multiple attributes correctly', () => {
             const taskMarkdown = "- [ ] Multi-attribute task %%*priority:2*%% %%*due:2023-09-01*%%";
-            const parserInstance = new taskParser();
-            const parsedTask = parserInstance.parseTaskMarkdown(taskMarkdown);
+            
+            const parsedTask = taskParser.parseTaskMarkdown(taskMarkdown);
 
             const expectedTask: Partial<ObsidianTask> = {
                 content: "Multi-attribute task",

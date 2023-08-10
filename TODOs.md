@@ -8,15 +8,17 @@
 - click behavior
 
 # Parsing and Formatting
-- mostly done.
+- special parsing for some attributes:
+  - project = name -> Project with id, name and color
+  - 
 
 # Task adding and editing and deletion
 
 ## Task Adding
-- 
+- Finish adding: when switch to preview mode;
+  - Can we catch the preview mode toggle?
 
 ## Attribute Adding 
-- Auto suggestion: filter along typing.
 
 
 ## Task Deletion

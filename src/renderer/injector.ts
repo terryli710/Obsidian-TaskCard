@@ -47,11 +47,11 @@ export class TaskItemSvelteAdapter extends MarkdownRenderChild {
     if (mode === 'single-line') {
       this.taskItemEl.addEventListener('click', this.handleSwitchMode);
       this.taskItemEl.addEventListener('keydown', this.handleKeydown);
-      logger.debug('Switched to single line mode');
+      logger.info('Switched to single line mode');
     } else if (mode === 'multi-line') {
       this.taskItemEl.removeEventListener('click', this.handleSwitchMode);
       this.taskItemEl.removeEventListener('keydown', this.handleKeydown);
-      logger.debug('Switched to multi-line mode');
+      logger.info('Switched to multi-line mode');
     } else {
       logger.error(`Unknown mode: ${mode}`);
     }
@@ -76,8 +76,6 @@ export class TaskItemSvelteAdapter extends MarkdownRenderChild {
   }
 
   onload() {
-    logger.debug(`taskItemEl: ${this.taskItemEl}`);
-    logger.debug(`params: ${JSON.stringify(this.params)}`);
     this.svelteComponent = new TaskItem({
       target: this.taskItemEl,
       props: {

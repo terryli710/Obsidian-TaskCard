@@ -19,7 +19,7 @@ describe('textUtils', () => {
     describe('extractTags', () => {
         it('should extract valid tags from a text and return remaining content without tags', () => {
             const text = "some content with   tags #tag1 #tag2 #tag3";
-            const expectedTags = ['#tag1', '#tag2', '#tag3'];
+            const expectedTags = ['tag1', 'tag2', 'tag3'];
             const expectedContent = "some content with   tags";
             const [tags, content] = extractTags(text);
             expect(tags).toEqual(expectedTags);
@@ -37,7 +37,7 @@ describe('textUtils', () => {
 
         it('should handle multiple consecutive spaces created by tags', () => {
             const text = "This   is a    sample #tag1   text #tag2 with  spaces.";
-            const expectedTags = ['#tag1', '#tag2'];
+            const expectedTags = ['tag1', 'tag2'];
             const expectedContent = "This   is a    sample   text with  spaces.";
             const [tags, content] = extractTags(text);
             expect(tags).toEqual(expectedTags);
@@ -46,7 +46,7 @@ describe('textUtils', () => {
 
         it('should handle texts that have only tags', () => {
             const text = "#only #tags #here";
-            const expectedTags = ['#only', '#tags', '#here'];
+            const expectedTags = ['only', 'tags', 'here'];
             const expectedContent = "";
             const [tags, content] = extractTags(text);
             expect(tags).toEqual(expectedTags);

@@ -193,7 +193,6 @@ export function matchByPositionAndGroup(s: string, r: RegExp, position: number, 
         if (match.index !== undefined && match[groupIndex]) {
             const groupStartPos = getGroupStartIndex(match[0], r, groupIndex) + match.index;
             const groupEndPos = groupStartPos + match[groupIndex].length;
-            console.log('groupStartPos:', groupStartPos, 'groupEndPos:', groupEndPos, 'position:', position);
         
             if (position >= groupStartPos && position <= groupEndPos) {
                 return match;

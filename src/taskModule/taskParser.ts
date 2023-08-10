@@ -6,22 +6,27 @@ import { escapeRegExp, extractTags } from "../utils/regexUtils";
 import { kebabToCamel } from "../utils/stringCaseConverter";
 import { toArray, toBoolean } from "../utils/typeConversion";
 import { DueDate, ObsidianTask, TaskProperties } from './task';
-import { Project } from './project';
+import { Project, ProjectModule } from './project';
 import * as chrono from 'chrono-node';
+import { SettingStore } from "../settings";
 
-export class taskParser {
+export class TaskParser {
+    indicatorTag: string;
     markdownStartingNotation: string;
     markdownEndingNotation: string;
+    projectModule: ProjectModule;
 
-    constructor(
-        markdownStartingNotation: string = '%%*',
-        markdownEndingNotation: string = '*%%',
-    ) {
-        this.markdownStartingNotation = markdownStartingNotation;
-        this.markdownEndingNotation = markdownEndingNotation;
+    constructor(settingsStore: typeof SettingStore, projectModule: ProjectModule) {
+        // Subscribe to the settings store
+        settingsStore.subscribe(settings => {
+            this.indicatorTag = settings.parsingSettings.indicatorTag;
+            this.markdownStartingNotation = settings.parsingSettings.markdownStartingNotation;
+            this.markdownEndingNotation = settings.parsingSettings.markdownEndingNotation;
+        });
+        this.projectModule = projectModule;
     }
 
-    static parseTaskEl(taskEl: Element): ObsidianTask {
+    parseTaskEl(taskEl: Element): ObsidianTask {
         function parseQuery(queryName: string, defaultValue: string = "") {
             try {
                 const embedElement = taskEl.querySelector(`.cm-html-embed > .${queryName}`);
@@ -58,7 +63,6 @@ export class taskParser {
     }
     
     parseTaskMarkdown(taskMarkdown: string): ObsidianTask {
-        // TODO: special parsing for project, and labels.
         const task: ObsidianTask = new ObsidianTask();
     
         // Splitting the content and the attributes
@@ -73,7 +77,7 @@ export class taskParser {
         // Extracting labels from the content line
         const [contentLabels, remainingContent] = extractTags(task.content);
         task.content = remainingContent;
-        task.labels = contentLabels;
+        task.labels = contentLabels.filter(label => label !== this.indicatorTag);
     
         // Parsing attributes
         const attributesString = taskMarkdown.slice(contentEndIndex);
@@ -96,21 +100,18 @@ export class taskParser {
 
             switch (attributeName) {
                 case 'due':
-                    if (!attributeValue) {
-                        logger.warn(`Failed to parse due attribute: ${attributeValue}`);
-                        task.due = null;
-                    } else {
+                    try {
                         task.due = this.parseDue(attributeValue);
+                    }
+                    catch (e) {
+                        console.error(`Failed to parse due date: ${e.message}`);
                     }
                 case 'project':
                     try {
-                        const parsedProject = JSON.parse(attributeValue);
-                        task.project = {
-                            id: parsedProject.id || "",
-                            name: parsedProject.name || ""
-                        };
+                        const parsedProject = this.parseProject(attributeValue);
+                        task.project = parsedProject;
                     } catch (e) {
-                        console.error(`Failed to parse project attribute: ${e.message}`);
+                        console.error(`Cannot find project: ${attributeValue}, error: ${e.message}`);
                     }
                     break;
                 case 'metadata':
@@ -162,7 +163,9 @@ export class taskParser {
     }
 
     private parseProject(projectString: string): Project | null {
-        // TODO
-        return { id: projectString, name: projectString }
+        logger.debug(`Parsing project: ${projectString}, this.projectModule: ${JSON.stringify(this.projectModule.getProjectsData())}`);
+        const project = this.projectModule.getProjectByName(projectString);
+        if (!project) { return null };
+        return project;
     }
 }

@@ -6,7 +6,6 @@ export function toArray(value: string): string[] {
     try {
       // If the value is single-quoted, replace with double quotes
       const formattedValue = value.replace(/'/g, '\"');
-      logger.debug(`input: ${formattedValue}, output: ${JSON.stringify(formattedValue)}`);
       return JSON.parse(formattedValue);
     } catch (e) {
       throw new Error(`Failed to convert string to array: ${value}`);
