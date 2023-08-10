@@ -88,42 +88,54 @@ export class SettingsTab extends PluginSettingTab {
     let newProjectColor = '';
 
     // Text field for project name
-    const setting = new Setting(projectContainer).setName('Add a project')
+    const setting = new Setting(projectContainer).setName('Add a project');
 
     const textComponent = setting.addText(text => {
-            text.setPlaceholder('Enter project name')
-                .onChange(value => {
-                    newProjectName = value;
-                });
-        })
-
-    const colorComponent = setting.addColorPicker(colorPicker => {
-            colorPicker.onChange(value => {
-                newProjectColor = value;
+        text.setPlaceholder('Enter project name')
+            .onChange(value => {
+                newProjectName = value;
             });
-        })
+    });
 
-    const button = setting.addButton(button => {
-            button.setButtonText("Save")
-                .onClick(() => {
-                    if (newProjectName && newProjectColor) {
-                        // if newProjectColor is selected, use it, if not, generate.
-                        let newProject: Partial<Project>
-                        if (!newProjectColor) {
-                            newProject = { name: newProjectName }
-                        } else {
-                          newProject = { name: newProjectName, color: newProjectColor }
-                        }
-                        // Update the project in your data store
-                        this.plugin.projectModule.updateProject(newProject)
-                        this.updateProjectsToSettings();
+    let colorComponent: any;
+    const colorPickerButton = setting.addButton(button => {
+        button.setTooltip("Pick a color")
+            .setIcon("palette")
+            .onClick(() => {
+                // Remove the color picker button
+                button.buttonEl.remove();
 
-                        // Re-render the settings to reflect the new project
-                        this.display();
-                    }
+                // Add the color picker component
+                colorComponent = setting.addColorPicker(colorPicker => {
+                    colorPicker.onChange(value => {
+                        newProjectColor = value;
+                    });
                 });
-        });
-  }
+            });
+    });
+
+    setting.addButton(button => {
+        button.setTooltip("Finish")
+            .setIcon("check-square")
+            .onClick(() => {
+                if (newProjectName) {
+                    // if newProjectColor is selected, use it, if not, generate.
+                    const newProject: Partial<Project> = {
+                        name: newProjectName,
+                        color: newProjectColor
+                    };
+
+                    // Update the project in your data store
+                    this.plugin.projectModule.updateProject(newProject);
+                    this.updateProjectsToSettings();
+
+                    // Re-render the settings to reflect the new project
+                    this.display();
+                }
+            });
+    });
+}
+
 
   projectEditSetting(project: Project, projectContainer?: HTMLElement) {
     if (!projectContainer) {
@@ -153,19 +165,20 @@ export class SettingsTab extends PluginSettingTab {
     let isEditMode = false; // Flag to keep track of the current mode
 
     setting.addButton(button => {
-        button.setButtonText("Edit")
+        button.setTooltip("Edit")
+        .setIcon("pencil")
             .onClick(() => {
                 if (!isEditMode) {
                     // Switch to edit mode
                     textComponent.setDisabled(false);
                     colorComponent.setDisabled(false);
-                    button.setButtonText("Save");
+                    button.setTooltip("Save").setIcon("save");
                     isEditMode = true;
                 } else {
                     // Switch to saved mode
                     textComponent.setDisabled(true);
                     colorComponent.setDisabled(true);
-                    button.setButtonText("Edit");
+                    button.setTooltip("Edit").setIcon("pencil");
                     this.plugin.projectModule.updateProject(project);
                     this.updateProjectsToSettings();
                     this.display();
@@ -173,6 +186,17 @@ export class SettingsTab extends PluginSettingTab {
                 }
             });
     });
+
+    // add a delete button, using the delete emoji
+    setting.addButton(button => {
+      button.setIcon("trash-2")
+      .setTooltip("Delete project")
+        .onClick(() => {
+          this.plugin.projectModule.deleteProjectById(project.id);
+          this.updateProjectsToSettings();
+          this.display();
+        });
+    })
 }
 
 
