@@ -1,21 +1,25 @@
-import { get } from "svelte/store";
+
+
+
 import { SettingStore } from "../settings";
-import { EditorSuggestContext } from "obsidian";
 import { SuggestInformation } from ".";
 import { ObsidianTask } from "../taskModule/task";
 import { escapeRegExp } from "../utils/regexUtils";
 import { logger } from "../utils/log";
+import { Project } from "../taskModule/project";
 
 
 export class AttributeSuggester {
     private startingNotation: string;
     private endingNotation: string;
+    private projects: Project[];
 
     constructor(settingsStore: typeof SettingStore) {
         // Subscribe to the settings store
         settingsStore.subscribe(settings => {
             this.startingNotation = settings.parsingSettings.markdownStartingNotation;
             this.endingNotation = settings.parsingSettings.markdownEndingNotation;
+            this.projects = settings.userMetadata.projects;
         });
     }
 
@@ -24,6 +28,7 @@ export class AttributeSuggester {
         suggestions = suggestions.concat(this.getAttributeSuggestions(lineText, cursorPos));
         suggestions = suggestions.concat(this.getPrioritySuggestions(lineText, cursorPos));
         suggestions = suggestions.concat(this.getDueSuggestions(lineText, cursorPos));
+        suggestions = suggestions.concat(this.getProjectSuggestions(lineText, cursorPos));
         return suggestions;
     }
 
@@ -106,6 +111,38 @@ export class AttributeSuggester {
             }
         });
     
+        return suggestions;
+    }
+
+    getProjectSuggestions(lineText: string, cursorPos: number): SuggestInformation[] {
+        let suggestions: SuggestInformation[] = [];
+        logger.debug(`projects: ${JSON.stringify(this.projects)}`);
+
+        const projectRegex = new RegExp(`${escapeRegExp(this.startingNotation)}\\s?project:\\s?${escapeRegExp(this.endingNotation)}`, 'g');
+        const projectMatch = matchByPosition(lineText, projectRegex, cursorPos);
+        if (!projectMatch) return suggestions; // No match
+        suggestions = this.projects.map(project => {
+            const replaceText = `${this.startingNotation}project: ${project.name}${this.endingNotation}`;
+            logger.debug(`project: ${JSON.stringify(project)}`);
+            return {
+                displayText: project.name,
+                replaceText: replaceText,
+                replaceFrom: projectMatch.index,
+                replaceTo: projectMatch.index + projectMatch[0].length,
+                cursorPosition: projectMatch.index + replaceText.length,
+                innerHTML: `${project.name}<span style="
+                    display: inline-block;
+                    width: 10px;
+                    height: 10px;
+                    border-radius: 50%;
+                    background-color: ${project.color};
+                    margin-left: 10px;
+                    vertical-align: baseline;
+                    float: right;
+                    "></span>`
+
+            }
+        })
         return suggestions;
     }
     

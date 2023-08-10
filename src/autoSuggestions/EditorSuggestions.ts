@@ -67,7 +67,15 @@ export default class AttributeSuggest extends EditorSuggest<SuggestInformation> 
     }
 
     renderSuggestion(suggestion: SuggestInfoWithContext, el: HTMLElement): void {
-        el.setText(suggestion.displayText);
+
+        if (!suggestion.innerHTML) { 
+            el.setText(suggestion.displayText); 
+        } else { 
+            // Apply Flexbox styles to vertically center the content
+            const parentStyle = { display: 'flex', alignItems: 'center', justifyContent: 'space-between' };
+            el.innerHTML = suggestion.innerHTML;
+            el.setCssStyles(parentStyle);
+        }
     }
 
     selectSuggestion(suggestion: SuggestInfoWithContext, event: KeyboardEvent | MouseEvent): void {

@@ -5,4 +5,5 @@ export type SuggestInformation = {
     replaceFrom: number, // where to replace from in a line.
     replaceTo: number, // where to replace to in a line.
     cursorPosition: number, // the new cursor position in the line.
+    innerHTML?: string // the innerHTML of the suggestion
 }

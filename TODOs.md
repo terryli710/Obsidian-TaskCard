@@ -16,16 +16,17 @@
 - 
 
 ## Attribute Adding 
-- Auto suggestions
+- Auto suggestion: filter along typing.
+
 
 ## Task Deletion
 
-# Project handling
-- Handle project + color;
-- Project selection when editing text;
-- Project color selection;
-- Project modification APIs;
 
+
+# Project handling
+- Project autoSuggest - show project + color;
+- Project color picker debug - related to text;
+- 
 
 # BUGs
 
