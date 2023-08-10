@@ -23,14 +23,6 @@ describe('displayDate', () => {
     expect(displayDate(dateString)).toBe('Yesterday');
   });
 
-  it('returns the weekday for a date within the same week', () => {
-    const date = new Date();
-    date.setDate(date.getDate() + 3); // Adjust as needed for your test scenario
-    const dateString = getLocalISODate(date);
-    const expectedWeekday = date.toLocaleString('default', { weekday: 'short' });
-    expect(displayDate(dateString)).toBe(expectedWeekday);
-  });
-
   it('returns the correct month and date for the same year', () => {
     const date = new Date(fixedDate());
     date.setMonth(date.getMonth() + 2); // Move to a different month

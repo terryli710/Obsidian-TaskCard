@@ -1,5 +1,5 @@
 import { DateOnly, TimeOnly } from '../taskModule/task';
-import { logger } from '../log';
+import { logger } from '../utils/log';
 
 export function displayDate(date: string): string {
     // the date string is local time.
@@ -33,7 +33,7 @@ export function displayDate(date: string): string {
     }
 
     // Adjust the logic to determine if the date is within the current week, starting from Sun to Sat
-    if (isSameWeek(inputDate, 0)) {
+    if (isSameWeek(inputDate, 0) === true) {
         return inputDate.toLocaleString('default', { weekday: 'short' });
     }
 
