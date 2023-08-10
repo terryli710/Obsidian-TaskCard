@@ -33,7 +33,7 @@ export class AttributeSuggester {
         const attributeRegex = new RegExp(`${escapeRegExp(this.startingNotation)}\\s?`, 'g');
         const attributeMatch = matchByPosition(lineText, attributeRegex, cursorPos);
         if (!attributeMatch) return suggestions; // No match
-        const nonInputtableAttributes: string[] = ['id', 'content', 'children', 'parent', 'order', 'sectionID', 'completed']; // Add more attributes as needed
+        const nonInputtableAttributes: string[] = ['id', 'content', 'children', 'parent', 'order', 'sectionID', 'completed', 'labels'];
 
         // Filter out the non-inputtable attributes
         const inputtableAttributes = Object.keys(new ObsidianTask()).filter(attr => !nonInputtableAttributes.includes(attr));

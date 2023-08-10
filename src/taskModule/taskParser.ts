@@ -1,11 +1,12 @@
 
 
 
-import { logger } from "../log";
+import { logger } from "../utils/log";
 import { escapeRegExp, extractTags } from "../utils/regexUtils";
 import { kebabToCamel } from "../utils/stringCaseConverter";
 import { toArray, toBoolean } from "../utils/typeConversion";
-import { DueDate, ObsidianTask, TaskProperties } from "./task";
+import { DueDate, ObsidianTask, TaskProperties } from './task';
+import { Project } from './project';
 import * as chrono from 'chrono-node';
 
 export class taskParser {
@@ -76,9 +77,7 @@ export class taskParser {
     
         // Parsing attributes
         const attributesString = taskMarkdown.slice(contentEndIndex);
-        const escapedStartingNotation = escapeRegExp(this.markdownStartingNotation);
-        const escapedEndingNotation = escapeRegExp(this.markdownEndingNotation);
-        const attributesPattern = new RegExp(`${escapedStartingNotation}(.*?)${escapedEndingNotation}`, 'g');
+        const attributesPattern = new RegExp(`${escapeRegExp(this.markdownStartingNotation)}(.*?)${escapeRegExp(this.markdownEndingNotation)}`, 'g');
     
         const matches = [...attributesString.matchAll(attributesPattern)];
         
@@ -160,5 +159,10 @@ export class taskParser {
         } else {
             return { isRecurring: true, date: parsedDate, time: parsedTime, string: dueString } as DueDate;
         }
+    }
+
+    private parseProject(projectString: string): Project | null {
+        // TODO
+        return { id: projectString, name: projectString }
     }
 }

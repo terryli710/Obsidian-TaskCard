@@ -1,6 +1,7 @@
 import type { Static } from 'runtypes';
 import { String } from 'runtypes';
 import { v4 as uuidv4 } from 'uuid';
+import { Project } from './project';
 
 
 export const DateOnly = String.withConstraint(s => /^\d{4}-\d{2}-\d{2}$/.test(s));
@@ -14,11 +15,6 @@ export type DueDate = {
   string?: string;
   timezone?: string | null;
 };
-
-export type Project = {
-  id: string;
-  name: string;
-}
 
 export type SectionID = string;
 export type Priority = 1 | 2 | 3 | 4;

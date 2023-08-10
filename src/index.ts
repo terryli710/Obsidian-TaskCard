@@ -5,10 +5,11 @@ import { SettingStore, SettingsTab } from './settings';
 import { TaskCardPostProcessor } from './renderer/injector';
 import { logger } from './utils/log';
 import AttributeSuggest from './autoSuggestions/EditorSuggestions';
+import { Project, ProjectModule } from './taskModule/project';
 
 export default class TaskCardPlugin extends Plugin {
   public settings: TaskCardSettings;
-  // TODO: more properties
+  public projectModule: ProjectModule;
 
   
   constructor(app: App, pluginManifest: PluginManifest) {
@@ -17,6 +18,7 @@ export default class TaskCardPlugin extends Plugin {
       logger.info('Settings updated', settings);
       this.settings = settings;
     })
+    this.projectModule = new ProjectModule();
   }
 
   async loadSettings() {
@@ -39,6 +41,7 @@ export default class TaskCardPlugin extends Plugin {
 
   async onload() {
     await this.loadSettings();
+    this.projectModule.updateProjects(this.settings.userMetadata.projects as Project[]);
     this.addSettingTab(new SettingsTab(this.app, this));
     const taskItemPostProcessor = this.registerMarkdownPostProcessor(TaskCardPostProcessor);
     this.registerEditorSuggest(new AttributeSuggest(this.app));

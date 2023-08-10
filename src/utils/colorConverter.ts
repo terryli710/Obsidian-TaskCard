@@ -1,4 +1,4 @@
-import { logger } from "../log";
+import { logger } from "../utils/log";
 
 
 type RGB = { r: number, g: number, b: number };
