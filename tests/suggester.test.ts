@@ -54,10 +54,10 @@ describe('AttributeSuggester', () => {
     });
 
     it('gets due suggestions', () => {
-        const lineText = "{{ due: }}";
+        const lineText = "{{ due: t }}";
         const cursorPos = 8;
         const suggestions = suggester.getDueSuggestions(lineText, cursorPos);
-        expect(suggestions).toHaveLength(12); // Assuming 12 due suggestions are returned
+        expect(suggestions).toHaveLength(4); // Assuming 4 due suggestions are returned
     });
 
     it('wont get attribute suggestions if the endingNotation is not found', () => {

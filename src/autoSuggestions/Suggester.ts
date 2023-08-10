@@ -95,13 +95,9 @@ export class AttributeSuggester {
         const dueRegex = new RegExp(`${escapeRegExp(this.startingNotation)}\\s?due:(\\s*[0-9a-zA-Z\s-]*\\s*)${escapeRegExp(this.endingNotation)}`, 'g');
         const dueMatch = matchByPositionAndGroup(lineText, dueRegex, cursorPos, 1);
         if (!dueMatch) return suggestions; // No match
-
-        logger.debug(`dueMatch: ${JSON.stringify(dueMatch)}`);
     
         // Get the due date query from the captured group
         const dueQuery = (dueMatch[1] || "").trim();
-
-        logger.debug(`dueQuery: ${dueQuery}`);
     
         const dueStringSelections = [
             'today',
@@ -191,11 +187,7 @@ export function matchByPosition(s: string, r: RegExp, position: number): RegExpM
  * Will return a result only if a match exists and the given position is part of the desired matching group.
  */
 export function matchByPositionAndGroup(s: string, r: RegExp, position: number, groupIndex: number): RegExpMatchArray | void {
-    console.log('Input string:', s);
-    console.log('Input regex:', r);
-    console.log('Input position:', position);
     const matches = [...s.matchAll(r)];
-    console.log('matches:', JSON.stringify(matches));
     
     for (const match of matches) {
         if (match.index !== undefined && match[groupIndex]) {
