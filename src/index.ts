@@ -7,11 +7,13 @@ import { logger } from './utils/log';
 import AttributeSuggest from './autoSuggestions/EditorSuggestions';
 import { Project, ProjectModule } from './taskModule/project';
 import { TaskParser } from './taskModule/taskParser';
+import { TaskValidator } from './taskModule/taskValidator';
 
 export default class TaskCardPlugin extends Plugin {
   public settings: TaskCardSettings;
   public projectModule: ProjectModule;
   public taskParser: TaskParser;
+  public taskValidator: TaskValidator;
 
   
   constructor(app: App, pluginManifest: PluginManifest) {
@@ -22,13 +24,16 @@ export default class TaskCardPlugin extends Plugin {
     })
     this.projectModule = new ProjectModule();
     this.taskParser = new TaskParser(SettingStore, this.projectModule);
+    this.taskValidator = new TaskValidator(SettingStore);
   }
 
   async taskCardPostProcessor(
     el: HTMLElement,
     ctx: MarkdownPostProcessorContext
   ): Promise<void> {
-    const taskCards = Array.from(el.querySelectorAll('.obsidian-taskcard'));
+    const potentialTaskCards = Array.from(el.querySelectorAll('li.task-list-item'));
+    const taskCards = potentialTaskCards.filter(this.taskValidator.isValidTaskElement.bind(this.taskValidator));
+    logger.debug(`el: ${el.innerHTML}`);
     const taskItems: HTMLElement[] = [];
     for (const taskCard of taskCards) { taskItems.push(taskCard.parentElement); }
 

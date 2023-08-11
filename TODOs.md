@@ -64,56 +64,24 @@
 ## Task Element (HTML Element)
 
 ```html
-<div class="cm-active HyperMD-list-line HyperMD-list-line-1 HyperMD-task-line cm-line" data-task=" " style="text-indent:-23px;padding-inline-start:27px">
-  <img class="cm-widgetBuffer" aria-hidden="true">
-  <span contenteditable="false"></span>
-  <img class="cm-widgetBuffer" aria-hidden="true">
-  <img class="cm-widgetBuffer" aria-hidden="true">
-  <label class="task-list-label" contenteditable="false">
-    <input class="task-list-item-checkbox" type="checkbox" data-task=" ">
-  </label>
-  <img class="cm-widgetBuffer" aria-hidden="true">
-  <span class="cm-list-1"> An example task </span>
-  <img class="cm-widgetBuffer" aria-hidden="true">
-  <span class="cm-html-embed" tabindex="-1" contenteditable="false">
+<ul class="contains-task-list has-list-bullet">
+  ...
+  <li data-line="0" data-task="" class="task-list-item">
+    <div class="list-bullet"></div>
+    <input data-line="0" type="checkbox" class="task-list-item-checkbox">An example task 
+    <a href="#TaskCard" class="tag" target="_blank" rel="noopener">#TaskCard</a>
     <span style="display:none;" class="priority">4</span>
-  </span>
-  <img class="cm-widgetBuffer" aria-hidden="true">
-  <span class="cm-list-1"> </span>
-  <img class="cm-widgetBuffer" aria-hidden="true">
-  <span class="cm-html-embed" tabindex="-1" contenteditable="false">
     <span style="display:none;" class="description">"- A multi line description.\n- the second line."</span>
-  </span>
-  <img class="cm-widgetBuffer" aria-hidden="true">
-  <span class="cm-list-1"> </span>
-  <img class="cm-widgetBuffer" aria-hidden="true">
-  <span class="cm-html-embed" tabindex="-1" contenteditable="false">
     <span style="display:none;" class="order">1</span>
-  </span>
-  <img class="cm-widgetBuffer" aria-hidden="true">
-  <span class="cm-list-1"> </span>
-  <img class="cm-widgetBuffer" aria-hidden="true">
-  <span class="cm-html-embed" tabindex="-1" contenteditable="false">
     <span style="display:none;" class="project">{"id":"project-123", "name":"Project Name"}</span>
-  </span>
-  <img class="cm-widgetBuffer" aria-hidden="true">
-  <span class="cm-list-1"> </span>
-  <img class="cm-widgetBuffer" aria-hidden="true">
-  <span class="cm-html-embed" tabindex="-1" contenteditable="false">
     <span style="display:none;" class="section-id">"section-456"</span>
-  </span>
-  <img class="cm-widgetBuffer" aria-hidden="true">
-  <span class="cm-list-1"> </span>
-  <img class="cm-widgetBuffer" aria-hidden="true">
-  <span class="cm-html-embed" tabindex="-1" contenteditable="false">
-    <span style="display:none;" class="labels">["label1","label2","label3","label4","label5"]</span>
-  </span>
-  <img class="cm-widgetBuffer" aria-hidden="true">
-  <span class="cm-list-1"> </span>
-  <img class="cm-widgetBuffer" aria-hidden="true">
-  <span class="cm-html-embed" tabindex="-1" contenteditable="false">
-    <span style="display:none;" class="completed">false</span>
-  </
+    <span style="display:none;" class="labels">["label1","label2"]</span>
+    <span style="display:none;" class="parent">null</span>
+    <span style="display:none;" class="children">[]</span>
+    <span style="display:none;" class="due">{"isRecurring":false,"string":"2023-08-15","date":"2024-08-15","datetime":null,"timezone":null}</span>
+    <span style="display:none;" class="metadata">{"filePath":"/path/to/file"}</span>
+  </li>
+</ul> 
 ```
 
 
@@ -128,3 +96,17 @@
 - `OrigMD` - `taskValidator`(✓)
 - `TaskEl` - `ElementFilter`
 - `OrigMD` - `taskMonitor` -> should work with autosuggest... so later
+
+
+# Reference
+
+## el.innerHTML
+
+```html
+<ul class="contains-task-list has-list-bullet">
+<li data-line="0" data-task="" class="task-list-item"><div class="list-bullet"></div><input data-line="0" type="checkbox" class="task-list-item-checkbox">An example task <a href="#TaskCard" class="tag" target="_blank" rel="noopener">#TaskCard</a><span style="display:none;" class="priority">4</span><span style="display:none;" class="description">"- A multi line description.\n- the second line."</span><span style="display:none;" class="order">1</span><span style="display:none;" class="project">{"id":"project-123", "name":"Project Name"}</span><span style="display:none;" class="section-id">"section-456"</span><span style="display:none;" class="labels">["label1","label2"]</span><span style="display:none;" class="parent">null</span><span style="display:none;" class="children">[]</span><span style="display:none;" class="due">{"isRecurring":false,"string":"2023-08-15","date":"2024-08-15","datetime":null,"timezone":null}</span><span style="display:none;" class="metadata">{"filePath":"/path/to/file"}</span></li>
+<li data-line="1" data-task="" class="task-list-item"><div class="list-bullet"></div><input data-line="1" type="checkbox" class="task-list-item-checkbox">An example task <a href="#TaskCard" class="tag" target="_blank" rel="noopener">#TaskCard</a><span style="display:none;" class="priority">4</span><span style="display:none;" class="description">"- A multi line description.\n- the second line."</span><span style="display:none;" class="order">1</span><span style="display:none;" class="project">{"id":"project-123", "name":"Project Name"}</span><span style="display:none;" class="section-id">"section-456"</span><span style="display:none;" class="labels">["label1","label2"]</span><span style="display:none;" class="parent">null</span><span style="display:none;" class="children">[]</span><span style="display:none;" class="due">{"isRecurring":false,"string":"2023-08-15","date":"2024-08-15","datetime":null,"timezone":null}</span><span style="display:none;" class="metadata">{"filePath":"/path/to/file"}</span><br>
+Some normal content</li>
+<li data-line="3" data-task="" class="task-list-item"><div class="list-bullet"></div><input data-line="3" type="checkbox" class="task-list-item-checkbox">unformatted task <a href="#TaskCard" class="tag" target="_blank" rel="noopener">#TaskCard</a>   </li>
+</ul> 
+```

@@ -48,28 +48,35 @@ export class TaskValidator {
         return false;
     }
 
-    checkTaskElementSpans(taskElement: HTMLElement): Record<keyof ObsidianTask, HTMLElement | null> {
-
+    private checkTaskElementSpans(taskElement: HTMLElement): Record<keyof ObsidianTask, HTMLElement | null> {
         const attributes = Object.keys(new ObsidianTask()) as (keyof ObsidianTask)[];
-
-        logger.debug(`taskElement: ${taskElement.innerHTML}, attributes: ${attributes}`);
-    
         const spans: Record<keyof ObsidianTask, HTMLElement | null> = {} as any;
-    
         for (const attribute of attributes) {
             spans[attribute] = taskElement.querySelector(`span.${attribute}`);
         }
-        logger.debug(`${taskElement.innerHTML}`);
-    
         return spans;
     }
 
+    private checkTaskElementClass(taskElement: HTMLElement): boolean {
+        // require to be task-list-item class as a li element.
+        // querySelector has to have input task-list-item-checkbox div list-bullet
+        if (!taskElement.classList.contains('task-list-item')) { return false; }
+        if (!taskElement.querySelector('.task-list-item-checkbox')) { return false; }
+        if (!taskElement.querySelector('.list-bullet')) { return false; }
+        return true;
+    }
+
+
     isValidTaskElement(taskElement: HTMLElement): boolean {
+        if (!this.checkTaskElementClass(taskElement)) { return false; }
+        logger.debug(`isValidTaskElement: ${taskElement}`);
+        // Check the span
         const spans = this.checkTaskElementSpans(taskElement);
         return Object.values(spans).some(span => span !== null);
     }
-
     isCompleteTaskElement(taskElement: HTMLElement): boolean {
+        if (!this.checkTaskElementClass(taskElement)) { return false; }
+        // check the span
         const spans = this.checkTaskElementSpans(taskElement);
         return Object.values(spans).every(span => span !== null);
     }

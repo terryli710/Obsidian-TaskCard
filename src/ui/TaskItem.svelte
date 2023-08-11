@@ -10,7 +10,8 @@
     export let params: TaskItemParams;
 
     const taskEl = taskItemEl.querySelector('.obsidian-taskcard');
-
+    logger.debug(`taskItemEl => ${JSON.stringify(taskItemEl)}`);
+    // TODO: parse the new task HTML
     // don't display the original task element content
     taskEl.style.display = "none";
 
