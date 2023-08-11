@@ -1,6 +1,7 @@
 import { logger } from "../utils/log";
 import { SettingStore } from '../settings';
 import { escapeRegExp } from "../utils/regexUtils";
+import { ObsidianTask } from './task';
 
 export class TaskValidator {
     private static formattedMarkdownPattern = /^\s*- \[[^\]]\](.*?)(<span class="[^"]+" style="display:none;">.*?<\/span>)+$/;
@@ -45,6 +46,32 @@ export class TaskValidator {
             return this.hasIndicatorTag(contentWithoutAttributes);
         }
         return false;
+    }
+
+    checkTaskElementSpans(taskElement: HTMLElement): Record<keyof ObsidianTask, HTMLElement | null> {
+
+        const attributes = Object.keys(new ObsidianTask()) as (keyof ObsidianTask)[];
+
+        logger.debug(`taskElement: ${taskElement.innerHTML}, attributes: ${attributes}`);
+    
+        const spans: Record<keyof ObsidianTask, HTMLElement | null> = {} as any;
+    
+        for (const attribute of attributes) {
+            spans[attribute] = taskElement.querySelector(`span.${attribute}`);
+        }
+        logger.debug(`${taskElement.innerHTML}`);
+    
+        return spans;
+    }
+
+    isValidTaskElement(taskElement: HTMLElement): boolean {
+        const spans = this.checkTaskElementSpans(taskElement);
+        return Object.values(spans).some(span => span !== null);
+    }
+
+    isCompleteTaskElement(taskElement: HTMLElement): boolean {
+        const spans = this.checkTaskElementSpans(taskElement);
+        return Object.values(spans).every(span => span !== null);
     }
 }
 

@@ -62,27 +62,27 @@ describe('taskParser', () => {
             const dom = new JSDOM();
             const document = dom.window.document;
 
+            const createImg = () => {
+                const img = document.createElement('img');
+                img.className = 'cm-widgetBuffer';
+                img.setAttribute('aria-hidden', 'true');
+                return img;
+            };
+        
+            const createSpanWithEmbed = (className: string, content: string) => {
+                const span = document.createElement('span');
+                span.className = 'cm-html-embed';
+                span.tabIndex = -1;
+                span.contentEditable = 'false';
+                span.innerHTML = `<span style="display:none;" class="${className}">${content}</span>`;
+                return span;
+            };
+
             const taskElement = document.createElement('div');
             taskElement.className = 'cm-active HyperMD-list-line HyperMD-list-line-1 HyperMD-task-line cm-line';
             taskElement.setAttribute('data-task', ' ');
             taskElement.style.textIndent = '-23px';
             taskElement.style.paddingInlineStart = '27px';
-
-            const createImg = () => {
-            const img = document.createElement('img');
-            img.className = 'cm-widgetBuffer';
-            img.setAttribute('aria-hidden', 'true');
-            return img;
-            };
-
-            const createSpanWithEmbed = (className: string, content: string) => {
-            const span = document.createElement('span');
-            span.className = 'cm-html-embed';
-            span.tabIndex = -1;
-            span.contentEditable = 'false';
-            span.innerHTML = `<span style="display:none;" class="${className}">${content}</span>`;
-            return span;
-            };
 
             const label = document.createElement('label');
             label.className = 'task-list-label';
@@ -157,7 +157,8 @@ describe('taskParser', () => {
             // Assert that the parsed task matches the expected task object
             expect(parsedTask).toEqual(expectedTask);
         });
-        it('should parse a task element correctly', () => {
+
+        it('should parse another task element correctly', () => {
             // Create a test task element using the example task HTML structure
             const dom = new JSDOM();
             const document = dom.window.document;

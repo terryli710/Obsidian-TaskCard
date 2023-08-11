@@ -4,6 +4,8 @@
 import { writable } from 'svelte/store';
 import { TaskValidator } from '../src/taskModule/taskValidator';  // Update this to the correct import path
 import { logger } from '../src/utils/log';
+import { ObsidianTask } from '../src/taskModule/task';
+import { JSDOM } from 'jsdom';
 
 describe('TaskValidator', () => {
     let mockSettingStore;
@@ -21,6 +23,42 @@ describe('TaskValidator', () => {
 
         taskValidator = new TaskValidator(mockSettingStore);
     });
+
+    const createImg = () => {
+        const img = document.createElement('img');
+        img.className = 'cm-widgetBuffer';
+        img.setAttribute('aria-hidden', 'true');
+        return img;
+    };
+
+    const createSpanWithEmbed = (className: string, content: string) => {
+        const span = document.createElement('span');
+        span.className = 'cm-html-embed';
+        span.tabIndex = -1;
+        span.contentEditable = 'false';
+        span.innerHTML = `<span style="display:none;" class="${className}">${content}</span>`;
+        return span;
+    };
+
+    function createMockTaskElement(includeAllSpans: boolean = true): HTMLElement {
+        const dom = new JSDOM();
+        const document = dom.window.document;
+        const taskElement = document.createElement('div');
+        taskElement.className = 'cm-active HyperMD-list-line HyperMD-list-line-1 HyperMD-task-line cm-line';
+    
+        const taskInstance = new ObsidianTask();
+        const attributes = Object.keys(taskInstance) as (keyof ObsidianTask)[];
+    
+        for (const attribute of attributes) {
+            if (includeAllSpans || Math.random() > 0.5) { // Randomly include spans if not includeAllSpans
+                const span = document.createElement('span');
+                span.className = attribute;
+                taskElement.appendChild(span);
+            }
+        }
+    
+        return taskElement;
+    }
 
     describe('isValidFormattedTaskMarkdown', () => {
 
@@ -105,4 +143,31 @@ describe('TaskValidator', () => {
             expect(taskValidator.isValidUnformattedTaskMarkdown(taskWithIncorrectTags)).toBe(true);
         });
     });
+
+    describe('Obsidian Task Functions', () => {
+        test('checkTaskElementSpans returns correct spans', () => {
+            const mockElement = createMockTaskElement();
+            const result = taskValidator.checkTaskElementSpans(mockElement);
+            logger.debug(`mockElement: ${mockElement.outerHTML}`);
+            logger.debug(`return correct spans: ${Object.values(result)}`);
+            expect(Object.values(result)).not.toContain(null);
+        });
+    
+        test('isValidTaskElement returns true if any span is present', () => {
+            const mockElement = createMockTaskElement(false);
+            expect(taskValidator.isValidTaskElement(mockElement)).toBe(true);
+        });
+    
+        test('isCompleteTaskElement returns true only if all spans are present', () => {
+            const mockElement = createMockTaskElement();
+            expect(taskValidator.isCompleteTaskElement(mockElement)).toBe(true);
+        });
+    
+        test('isCompleteTaskElement returns false if any span is missing', () => {
+            const mockElement = createMockTaskElement(false);
+            expect(taskValidator.isCompleteTaskElement(mockElement)).toBe(false);
+        });
+    });
+
+
 });
