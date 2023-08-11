@@ -1,9 +1,10 @@
-<script>
+<script lang="ts">
     import { getContext } from "svelte";
     import { logger } from "../utils/log";
     import { displayDate, displayTime } from "../utils/dateTimeFormatter"
+    import { DueDate } from "../taskModule/task";
 
-    export let due = {
+    export let due: DueDate = {
       isRecurring: false,
       date: null,
       time: null,

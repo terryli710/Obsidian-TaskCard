@@ -7,31 +7,14 @@
     import { logger } from '../utils/log';
     import { createEventDispatcher } from 'svelte';
     import Collapse from '../components/icons/Collapse.svelte';
+    import TaskCardPlugin from '../index';
+    import { ObsidianTask } from '../taskModule/task';
 
-    export let taskEl;
+    export let taskEl: HTMLElement;
+    export let plugin: TaskCardPlugin;
     export let params: TaskItemParams;
 
-    function parseQuery(queryName, defaultValue = "") {
-      try {
-        return JSON.parse(taskEl.querySelector(`.${queryName}`)?.textContent || defaultValue)
-      } catch (e) {
-        logger.warn(`Failed to parse ${queryName}: ${e}`);
-      }
-    }
-
-    let content = parseQuery('content');
-    let priority = parseQuery('priority');
-    let priorityClass = `priority${priority}`;
-    let description = parseQuery('description');
-    let order = parseQuery('order');
-    let project = JSON.parse(parseQuery('project', '{}'));
-    let sectionId = parseQuery('section-id');
-    let labels = parseQuery('labels', '[]');
-    let completed = parseQuery('completed');
-    let parent = parseQuery('parent');
-    let children = parseQuery('children');
-    let due = JSON.parse(parseQuery('due', '{}'));
-    let filePath = parseQuery('file-path');
+    const task: ObsidianTask = plugin.taskParser.parseTaskEl(taskEl);
 
     const dispatch = createEventDispatcher();
 
@@ -42,45 +25,44 @@
     }
 
     function handleCheckboxClick() {
-      completed = !completed;
+      task.completed = !task.completed;
       // we may add other logics here.
     }
 
-
-
 </script>
+
 
 {#if params.mode === "single-line"}
   <div class="task-card-single-line">
     <div class="task-card-single-line-left-container">
-      <input type="checkbox" class={`task-card-checkbox ${priorityClass}`} checked={completed} on:click|stopPropagation={handleCheckboxClick}>
-      <div class="task-card-content">{content}</div>
+      <input type="checkbox" class={`task-card-checkbox ${task.priority}`} checked={task.completed} on:click|stopPropagation={handleCheckboxClick}>
+      <div class="task-card-content">{task.content}</div>
     </div>
     <div class="task-card-single-line-right-container">
-      <Due {due} />
-      <Project {project} {params} />
+      <Due due={task.due} />
+      <Project project={task.project} params={params} />
     </div>
   </div>
 {:else}
 <!-- mode = multi-line -->
   <div class="task-card-major-block">
     <div class="task-card-checkbox-wrapper">
-      <input type="checkbox" class={`task-card-checkbox ${priorityClass}`} checked={completed} on:click|stopPropagation={handleCheckboxClick}>
+      <input type="checkbox" class={`task-card-checkbox ${task.priority}`} checked={task.completed} on:click|stopPropagation={handleCheckboxClick}>
     </div>
     <div class="task-card-content-project-line">
-      <div class="task-card-content">{content}</div>
+      <div class="task-card-content">{task.content}</div>
       <div class="task-card-project">
-        <Project {project} {params} />
+        <Project project={task.project} params={params} />
       </div>
     </div>
-    <Description {description} />
+    <Description description={task.description} />
   </div>
 
   <div class="task-card-attribute-bottom-bar">
     <div class="task-card-attribute-bottom-bar-left">
-      <Due {due} />
+      <Due due={task.due} />
       <div class="task-card-attribute-separator"> | </div>
-      <Labels {labels} />
+      <Labels labels={task.labels} />
     </div>
     <div class="task-card-attribute-bottom-bar-right">
       <button class="task-card-collapse-button" on:click={(event) => switchMode(event, 'single-line')}>

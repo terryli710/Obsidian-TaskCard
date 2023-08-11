@@ -3,8 +3,10 @@
     import { logger } from "../utils/log";
     import { TaskItemParams } from "../renderer/injector";
     import TaskCard from "./TaskCard.svelte";
+    import TaskCardPlugin from "..";
   
     export let taskItemEl;
+    export let plugin: TaskCardPlugin;
     export let params: TaskItemParams;
 
     const taskEl = taskItemEl.querySelector('.obsidian-taskcard');
@@ -26,10 +28,10 @@
 
 {#if params.mode === "single-line"}
     <div class="obsidian-taskcard task-list-item mode-single-line">
-        <TaskCard {taskEl} {params}/>
+        <TaskCard {taskEl} {plugin} {params}/>
     </div>
 {:else}
     <div class="obsidian-taskcard task-list-item mode-multi-line">
-        <TaskCard {taskEl} {params} on:switchMode={handleSwitchMode}/>
+        <TaskCard {taskEl} {plugin} {params} on:switchMode={handleSwitchMode}/>
     </div>
 {/if}

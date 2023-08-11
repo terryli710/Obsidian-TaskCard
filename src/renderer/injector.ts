@@ -7,6 +7,8 @@ import { logger } from '../utils/log';
 import type { SvelteComponent } from 'svelte';
 import TaskItem from '../ui/TaskItem.svelte';
 import { TaskCardSettings, SettingStore } from '../settings';
+import { get } from 'svelte/store';
+import TaskCardPlugin from '..';
 
 export type TaskMode = 'single-line' | 'multi-line';
 export interface TaskItemParams {
@@ -16,28 +18,22 @@ export interface TaskItemParams {
 export class TaskItemSvelteAdapter extends MarkdownRenderChild {
   taskItemEl: HTMLElement;
   svelteComponent: SvelteComponent;
+  plugin: TaskCardPlugin;
   params: TaskItemParams;
 
-  unsubscribeFromStore: () => void;
-
-  constructor(taskItemEl: HTMLElement,) {
+  constructor(taskItemEl: HTMLElement, plugin: TaskCardPlugin) {
     super(taskItemEl);
     this.taskItemEl = taskItemEl;
 
-    // Set initial value
-    this.params = { mode: 'single-line' };
+    const initialSettings = get(SettingStore);
+    this.params = { mode: initialSettings.displaySettings.defaultMode as TaskMode };
 
-    // Subscribe to SettingStore and update params.mode accordingly
-    this.unsubscribeFromStore = SettingStore.subscribe((settings: TaskCardSettings) => {
-      this.params.mode = settings.displaySettings.defaultMode as TaskMode;
-    });
+    this.plugin = plugin;
   }
 
   // Ensure to unsubscribe from the store when the object is destroyed to prevent memory leaks
   onDestroy() {
-    if (this.unsubscribeFromStore) {
-      this.unsubscribeFromStore();
-    }
+
   }
 
   setMode(mode: TaskMode) {
@@ -80,6 +76,7 @@ export class TaskItemSvelteAdapter extends MarkdownRenderChild {
       target: this.taskItemEl,
       props: {
         taskItemEl: this.taskItemEl,
+        plugin: this.plugin,
         params: this.params,
       },
     });
@@ -94,21 +91,3 @@ export class TaskItemSvelteAdapter extends MarkdownRenderChild {
     this.svelteComponent.$off('switchMode', this.handleCustomSwitchModeEvent);
   }
 }
-
-// The PostProcessor that identifies task markdown and applies the TaskCard class.
-export const TaskCardPostProcessor: MarkdownPostProcessor = async function (
-  el: HTMLElement,
-  ctx: MarkdownPostProcessorContext
-): Promise<void> {
-  // Select all task list items in the element.
-  const taskCards = Array.from(el.querySelectorAll('.obsidian-taskcard'));
-
-  const taskItems: HTMLElement[] = [];
-  for (const taskCard of taskCards) { taskItems.push(taskCard.parentElement); }
-
-  // print the first task's parent element
-  for (let i = 0; i < taskItems.length; i++) {
-    const taskItem = taskItems[i] as HTMLElement;
-    ctx.addChild(new TaskItemSvelteAdapter(taskItem));
-  }
-};

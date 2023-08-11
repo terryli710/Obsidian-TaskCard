@@ -2,15 +2,14 @@
 # Display
 - Debug no label, no due task.
 - css fully adapt to themes.
+- New display format.
+  - New detection of the checkbox + content.
 
 # Interaction
 - hover behavior
 - click behavior
 
 # Parsing and Formatting
-- special parsing for some attributes:
-  - project = name -> Project with id, name and color
-  - 
 
 # Task adding and editing and deletion
 
@@ -26,9 +25,7 @@
 
 
 # Project handling
-- Project autoSuggest - show project + color;
-- Project color picker debug - related to text;
-- 
+
 
 # BUGs
 
@@ -38,7 +35,7 @@
 ## Original Markdown
 
 - A symbol to indicate that this task should be formatted. (#TaskCard)
-
+- Edit the attributes using auto-suggests
 
 ```markdown
 - [ ] An example task #label1 #label2 #TaskCard %%*priority:4*%% %%*description:"- A multi line description.\n- the second line."*%% %%*order:1*%% %%*project:{"id":"project-123", "name":"Project Name"}*%% %%*section-id:"section-456"*%% %%*parent:null*%% %%*children:[]*%% %%*due:"Aug 15, 2024"*%% %%*metadata:{"filePath":"/path/to/file"}*%%
@@ -129,4 +126,5 @@
 - `TaskEl` -> `RenderedEl` - `taskParser`(✓) + `TaskCard.svelte`(✓)
 - `FormatMD` - `taskValidator`(✓)
 - `OrigMD` - `taskValidator`(✓)
+- `TaskEl` - `ElementFilter`
 - `OrigMD` - `taskMonitor` -> should work with autosuggest... so later
