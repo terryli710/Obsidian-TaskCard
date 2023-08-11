@@ -7,8 +7,6 @@
     export let project: Project;
     export let params: TaskItemParams;
     let color: string = stringToColor(project.name);
-    logger.debug(`project in TaskItem => ${JSON.stringify(project)}`);
-    logger.debug(`color in TaskItem => ${color}`);
   </script>
   
   {#if params.mode === "single-line"}

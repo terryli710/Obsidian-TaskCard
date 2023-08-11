@@ -33,14 +33,15 @@ export default class TaskCardPlugin extends Plugin {
   ): Promise<void> {
     const potentialTaskCards = Array.from(el.querySelectorAll('li.task-list-item'));
     const taskCards = potentialTaskCards.filter(this.taskValidator.isValidTaskElement.bind(this.taskValidator));
-    logger.debug(`el: ${el.innerHTML}`);
-    const taskItems: HTMLElement[] = [];
-    for (const taskCard of taskCards) { taskItems.push(taskCard.parentElement); }
-
-    for (let i = 0; i < taskItems.length; i++) {
-      const taskItem = taskItems[i] as HTMLElement;
-      ctx.addChild(new TaskItemSvelteAdapter(taskItem, this));
+    logger.debug(`el before: ${el.innerHTML}`);
+    for (const taskCard of taskCards) {
+      const taskItem = taskCard.parentElement as HTMLElement;
+      
+      const adapter = new TaskItemSvelteAdapter(taskItem, this);
+      adapter.onload();  // Ensure the Svelte component is loaded and rendered inside the taskItem
     }
+
+    logger.debug(`el after: ${el.innerHTML}`);
   }
 
   async loadSettings() {

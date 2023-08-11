@@ -35,59 +35,21 @@ export class TaskItemSvelteAdapter extends MarkdownRenderChild {
   onDestroy() {
 
   }
-
-  setMode(mode: TaskMode) {
-    this.params = { ...this.params, mode };
-    this.svelteComponent.$set({ params: this.params });
-
-    if (mode === 'single-line') {
-      this.taskItemEl.addEventListener('click', this.handleSwitchMode);
-      this.taskItemEl.addEventListener('keydown', this.handleKeydown);
-      logger.info('Switched to single line mode');
-    } else if (mode === 'multi-line') {
-      this.taskItemEl.removeEventListener('click', this.handleSwitchMode);
-      this.taskItemEl.removeEventListener('keydown', this.handleKeydown);
-      logger.info('Switched to multi-line mode');
-    } else {
-      logger.error(`Unknown mode: ${mode}`);
-    }
-  }
-
-  handleSwitchMode = (event: MouseEvent | KeyboardEvent) => {
-    this.setMode('multi-line');
-    if (event instanceof KeyboardEvent && (event.key === 'Enter' || event.key === ' ')) {
-      event.preventDefault();
-    }
-  }
-
-  handleKeydown = (event: KeyboardEvent) => {
-    if (event.key === 'Enter' || event.key === ' ') {
-      this.handleSwitchMode(event);
-    }
-  }
-
-  handleCustomSwitchModeEvent = (event: CustomEvent) => {
-    const newMode = event.detail;
-    this.setMode(newMode);
-  }
-
   onload() {
     this.svelteComponent = new TaskItem({
-      target: this.taskItemEl,
+      target: this.taskItemEl.parentElement,
       props: {
         taskItemEl: this.taskItemEl,
         plugin: this.plugin,
-        params: this.params,
+        defaultParams: this.params,
       },
+      anchor: this.taskItemEl,
     });
 
-    this.svelteComponent.$on('switchMode', this.handleCustomSwitchModeEvent);
-
-    this.setMode(this.params.mode);
   }
 
   onunload() {
     this.svelteComponent.$destroy();
-    this.svelteComponent.$off('switchMode', this.handleCustomSwitchModeEvent);
+    // this.svelteComponent.$off('switchMode', this.handleCustomSwitchModeEvent); // TODO: there's no $off for svelte components
   }
 }
