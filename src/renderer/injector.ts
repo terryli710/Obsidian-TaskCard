@@ -50,6 +50,5 @@ export class TaskItemSvelteAdapter extends MarkdownRenderChild {
 
   onunload() {
     this.svelteComponent.$destroy();
-    // this.svelteComponent.$off('switchMode', this.handleCustomSwitchModeEvent); // TODO: there's no $off for svelte components
   }
 }

@@ -26,7 +26,7 @@
 
     function handleCheckboxClick() {
       task.completed = !task.completed;
-      // we may add other logics here.
+      // more logic to reflect the change on the taskEl
     }
 
 </script>
@@ -55,7 +55,7 @@
         <Project project={task.project} params={params} />
       </div>
     </div>
-    <Description description={task.description} />
+    <Description description={task.description} descriptionEl={taskEl.querySelector('span.description')} />
   </div>
 
   <div class="task-card-attribute-bottom-bar">

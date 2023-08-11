@@ -1,5 +1,5 @@
 import { App, Plugin } from 'obsidian';
-import type { MarkdownPostProcessorContext, PluginManifest } from 'obsidian';
+import type { MarkdownPostProcessor, MarkdownPostProcessorContext, PluginManifest } from 'obsidian';
 import type { TaskCardSettings } from './settings';
 import { SettingStore, SettingsTab } from './settings';
 import { TaskItemSvelteAdapter } from './renderer/injector';
@@ -27,10 +27,7 @@ export default class TaskCardPlugin extends Plugin {
     this.taskValidator = new TaskValidator(SettingStore);
   }
 
-  async taskCardPostProcessor(
-    el: HTMLElement,
-    ctx: MarkdownPostProcessorContext
-  ): Promise<void> {
+  public taskCardPostProcessor: MarkdownPostProcessor = async (el: HTMLElement, ctx: MarkdownPostProcessorContext) => {
     const potentialTaskCards = Array.from(el.querySelectorAll('li.task-list-item'));
     const taskCards = potentialTaskCards.filter(this.taskValidator.isValidTaskElement.bind(this.taskValidator));
     logger.debug(`el before: ${el.innerHTML}`);
