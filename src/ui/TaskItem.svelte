@@ -9,10 +9,7 @@
     export let plugin: TaskCardPlugin;
     export let params: TaskItemParams;
 
-    const taskEl = taskItemEl.querySelector('.obsidian-taskcard');
-    logger.debug(`taskItemEl => ${JSON.stringify(taskItemEl)}`);
-    // TODO: parse the new task HTML
-    // don't display the original task element content
+    const taskEl = taskItemEl.querySelector('.task-list-item'); 
     taskEl.style.display = "none";
 
     const dispatch = createEventDispatcher();

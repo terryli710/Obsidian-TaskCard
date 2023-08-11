@@ -84,6 +84,14 @@
 </ul> 
 ```
 
+```html
+<li data-line="0" data-task="" class="task-list-item" style="display: none;"><div class="list-bullet"></div><input data-line="0" type="checkbox" class="task-list-item-checkbox">An example task <a href="#TaskCard" class="tag" target="_blank" rel="noopener">#TaskCard</a><span style="display:none;" class="priority">4</span><span style="display:none;" class="description">"- A multi line description.\n- the second line."</span><span style="display:none;" class="order">1</span><span style="display:none;" class="project">{"id":"project-123", "name":"Project Name", "color":"#f1f1f1"}</span><span style="display:none;" class="section-id">"section-456"</span><span style="display:none;" class="labels">["label1","label2"]</span><span style="display:none;" class="parent">null</span><span style="display:none;" class="children">[]</span><span style="display:none;" class="due">{"isRecurring":false,"string":"2023-08-15","date":"2024-08-15","datetime":null,"timezone":null}</span><span style="display:none;" class="metadata">{"filePath":"/path/to/file"}</span></li> 
+```
+
+```html
+<li data-line="0" data-task="" class="task-list-item" style="display: none;"><div class="list-bullet"></div><input data-line="0" type="checkbox" class="task-list-item-checkbox">An example task <a href="#TaskCard" class="tag" target="_blank" rel="noopener">#TaskCard</a><span style="display:none;" class="priority">4</span><span style="display:none;" class="description">"- A multi line description.\n- the second line."</span><span style="display:none;" class="order">1</span><span style="display:none;" class="project">{"id":"project-123", "name":"Project Name", "color":"#f1f1f1"}</span><span style="display:none;" class="section-id">"section-456"</span><span style="display:none;" class="labels">["label1","label2"]</span><span style="display:none;" class="parent">null</span><span style="display:none;" class="children">[]</span><span style="display:none;" class="due">{"isRecurring":false,"string":"2023-08-15","date":"2024-08-15","datetime":null,"timezone":null}</span><span style="display:none;" class="metadata">{"filePath":"/path/to/file"}</span></li> 
+```
+
 
 ## Rendered HTML
 

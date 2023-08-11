@@ -29,9 +29,9 @@ export class TaskParser {
     parseTaskEl(taskEl: Element): ObsidianTask {
         function parseQuery(queryName: string, defaultValue: string = "") {
             try {
-                const embedElement = taskEl.querySelector(`.cm-html-embed > .${queryName}`);
-                if (embedElement) {
-                    return JSON.parse(embedElement.textContent || defaultValue);
+                const spanElement = taskEl.querySelector(`span.${queryName}`);
+                if (spanElement) {
+                    return JSON.parse(spanElement.textContent || defaultValue);
                 }
                 return JSON.parse(defaultValue);
             } catch (e) {
@@ -42,25 +42,28 @@ export class TaskParser {
     
         const task = new ObsidianTask();
         task.id = parseQuery('id', '') as string;
-        task.content = taskEl.querySelector('.cm-list-1')?.textContent?.trim() || '';
+        task.content = taskEl.querySelector('.task-list-item-checkbox')?.nextSibling?.textContent?.trim() || '';
         task.priority = parseQuery('priority', '1') as TaskProperties['priority'];
-        task.description = parseQuery('description', '') as string;
+        task.description = parseQuery('description', '') as TaskProperties['description'];
         task.order = parseQuery('order', '0') as TaskProperties['order'];
-        task.project = parseQuery('project', 'null') as TaskProperties['project'];
+        task.project = parseQuery('project', 'null') as Project | null;
         task.sectionID = parseQuery('section-id', '') as TaskProperties['sectionID'];
         task.labels = parseQuery('labels', '[]') as TaskProperties['labels'];
         const checkbox = taskEl.querySelector('.task-list-item-checkbox') as HTMLInputElement;
-        task.completed = checkbox?.getAttribute('data-task') === 'x';
-
+        task.completed = checkbox?.checked || false;
+    
         // note: currently will always be null, as the relationship is already represented by indent in the document.
         task.parent = parseQuery('parent', 'null') as ObsidianTask['parent'] | null; 
         task.children = parseQuery('children', '[]') as ObsidianTask['children'] | []; 
-
-        task.due = parseQuery('due', 'null') as TaskProperties['due'] | null;
+    
+        task.due = parseQuery('due', 'null') as DueDate | null;
         task.metadata = parseQuery('metadata', '{}') as TaskProperties['metadata'];
+    
+        logger.debug(`task project: ${task.project}`);
     
         return task;
     }
+    
     
     parseTaskMarkdown(taskMarkdown: string): ObsidianTask {
         const task: ObsidianTask = new ObsidianTask();

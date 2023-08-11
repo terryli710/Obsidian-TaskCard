@@ -2,9 +2,13 @@
     import { TaskItemParams } from "../renderer/injector";
     import { Project } from "../taskModule/project";
     import { stringToColor } from "../utils/colorConverter";
+    import { logger } from "../utils/log";
     
     export let project: Project;
     export let params: TaskItemParams;
+    let color: string = stringToColor(project.name);
+    logger.debug(`project in TaskItem => ${JSON.stringify(project)}`);
+    logger.debug(`color in TaskItem => ${color}`);
   </script>
   
   {#if params.mode === "single-line"}
