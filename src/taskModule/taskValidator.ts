@@ -70,15 +70,17 @@ export class TaskValidator {
     isValidTaskElement(taskElement: HTMLElement): boolean {
         if (!this.checkTaskElementClass(taskElement)) { return false; }
         logger.debug(`isValidTaskElement: ${taskElement}`);
+  
         // Check the span
         const spans = this.checkTaskElementSpans(taskElement);
         return Object.values(spans).some(span => span !== null);
     }
+
     isCompleteTaskElement(taskElement: HTMLElement): boolean {
         if (!this.checkTaskElementClass(taskElement)) { return false; }
-        // check the span
+  
+  // Check the span
         const spans = this.checkTaskElementSpans(taskElement);
         return Object.values(spans).every(span => span !== null);
     }
 }
-

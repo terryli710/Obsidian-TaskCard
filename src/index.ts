@@ -30,15 +30,13 @@ export default class TaskCardPlugin extends Plugin {
   public taskCardPostProcessor: MarkdownPostProcessor = async (el: HTMLElement, ctx: MarkdownPostProcessorContext) => {
     const potentialTaskCards = Array.from(el.querySelectorAll('li.task-list-item'));
     const taskCards = potentialTaskCards.filter(this.taskValidator.isValidTaskElement.bind(this.taskValidator));
-    logger.debug(`el before: ${el.innerHTML}`);
     for (const taskCard of taskCards) {
       const taskItem = taskCard.parentElement as HTMLElement;
-      
+
       const adapter = new TaskItemSvelteAdapter(taskItem, this);
-      adapter.onload();  // Ensure the Svelte component is loaded and rendered inside the taskItem
+      adapter.onload(); 
     }
 
-    logger.debug(`el after: ${el.innerHTML}`);
   }
 
   async loadSettings() {
