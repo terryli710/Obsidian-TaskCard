@@ -55,7 +55,7 @@
         <Project project={task.project} params={params} />
       </div>
     </div>
-    <Description description={task.description} descriptionEl={taskEl.querySelector('span.description')} />
+    <Description description={task.description} />
   </div>
 
   <div class="task-card-attribute-bottom-bar">

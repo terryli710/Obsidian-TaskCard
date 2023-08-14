@@ -3,7 +3,7 @@
     import { logger } from "../utils/log";
 
     export let description: string;
-    export let descriptionEl: HTMLElement;
+    marked.use({ mangle: false, headerIds: false, langPrefix: '' });
     let descriptionMarkdown = marked(description);
     let isEditing = false;
 
@@ -24,7 +24,6 @@
             event.preventDefault();  // Prevent browser's default save behavior
             isEditing = false;  // Exit the editing mode after saving
             descriptionMarkdown = marked(description);  // Update the markdown\
-            descriptionEl.innerText = description;
         }
     }
 </script>

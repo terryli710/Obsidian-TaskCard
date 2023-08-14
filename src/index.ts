@@ -1,4 +1,4 @@
-import { App, Plugin } from 'obsidian';
+import { App, Plugin, htmlToMarkdown } from 'obsidian';
 import type { MarkdownPostProcessor, MarkdownPostProcessorContext, PluginManifest } from 'obsidian';
 import type { TaskCardSettings } from './settings';
 import { SettingStore, SettingsTab } from './settings';
@@ -28,6 +28,10 @@ export default class TaskCardPlugin extends Plugin {
   }
 
   public taskCardPostProcessor: MarkdownPostProcessor = async (el: HTMLElement, ctx: MarkdownPostProcessorContext) => {
+
+    logger.debug(`el: ${el.innerHTML}`);
+    logger.debug(`el - markdown: ${htmlToMarkdown(el.innerHTML)}`);
+
     const potentialTaskCards = Array.from(el.querySelectorAll('li.task-list-item'));
     const taskCards = potentialTaskCards.filter(this.taskValidator.isValidTaskElement.bind(this.taskValidator));
     for (const taskCard of taskCards) {
@@ -36,7 +40,6 @@ export default class TaskCardPlugin extends Plugin {
       const adapter = new TaskItemSvelteAdapter(taskItem, this);
       adapter.onload(); 
     }
-
   }
 
   async loadSettings() {

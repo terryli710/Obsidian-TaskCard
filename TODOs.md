@@ -4,7 +4,6 @@
 - css fully adapt to themes.
 - New display format.
   - New detection of the checkbox + content.
-- The `$off` action for injector.
 
 # Interaction
 - hover behavior
@@ -13,23 +12,32 @@
 # Parsing and Formatting
 
 # Task adding and editing and deletion
+- dropdown menu in preview mode to do attribute adding and editing etc.
 
 ## Task Adding
 - Finish adding: when switch to preview mode;
   - Can we catch the preview mode toggle?
 
 ## Attribute Adding 
-
+- dropdown menu?
 
 ## Task Deletion
-
+- Add delete button
 
 
 # Project handling
 
 
 # BUGs
+-  [ ] Project cannot be read in some cards.
+-  [ ] Display in the correct order in a `ul`.
 
+# File <-> HTML Sync
+
+## HTML pinpointing the MD
+- sections: based on index, we can match both.
+- section check: `ul` and specific class name - `contains-task-list has-list-bullet`.
+- In these section, there has to be all lines or tasks. Each line is a `li` or sub `li` or `br`.
 
 # Task Formats
 
