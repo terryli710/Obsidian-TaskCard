@@ -6,17 +6,17 @@
 .obsidian-taskcard {
   background-color: var(--background-primary);
   color: var(--text-normal);
-  font-size: var(--font-ui-medium);
-  font-weight: var(--input-font-weight);
+  font-size: var(--font-text-size);
+  font-family: var(--font-text);
+  line-height: var(--line-height-normal);
   border-radius: var(--radius-l);
   border: var(--border-width) solid var(--background-modifier-border);
-  padding: 4px 8px 4px 0px;
+  padding: 4px 8px 4px 0.48em;
   height: var(--input-height);
   margin: 1px 0;
   display: inline-flex;
   flex-direction: column;
   gap: 3px;
-  font-family: Arial, sans-serif;
   white-space: normal;
   outline: none;
   align-items:flex-start;
