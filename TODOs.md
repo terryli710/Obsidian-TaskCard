@@ -31,13 +31,14 @@
 # BUGs
 -  [ ] Project cannot be read in some cards.
 -  [ ] Display in the correct order in a `ul`.
+-  [ ] Display correctly in a `ul` as a `li` or a `button`.
 
 # File <-> HTML Sync
 
 ## HTML pinpointing the MD
 - sections: based on index, we can match both.
-- section check: `ul` and specific class name - `contains-task-list has-list-bullet`.
-- In these section, there has to be all lines or tasks. Each line is a `li` or sub `li` or `br`.
+- Task and descriptions in the same section.
+- 
 
 # Task Formats
 

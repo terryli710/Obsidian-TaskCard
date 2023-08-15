@@ -70,7 +70,6 @@ export class TaskValidator {
     }
 
     private checkTaskElementClass(taskElement: HTMLElement): boolean {
-        logger.debug(`checkTaskElementClass: ${taskElement.innerHTML}`);
         // Check if the element contains a child with the class 'task-list-item-checkbox'
         if (!taskElement.querySelector('.task-list-item-checkbox')) { return false; }
     
@@ -93,10 +92,8 @@ export class TaskValidator {
 
     isValidTaskElement(taskElement: HTMLElement): boolean {
         if (!this.checkTaskElementClass(taskElement)) { return false; }
-        logger.debug(`isValidTaskElement: ${taskElement.innerHTML}`);
 
         const spans: SpanElements = this.getTaskElementSpans(taskElement);
-        logger.debug(`spans: ${JSON.stringify(spans)}`);
         return Object.values(spans).length > 0 && Object.values(spans).some(span => span !== null);
     }
 
@@ -105,9 +102,6 @@ export class TaskValidator {
 
         const spans: SpanElements = this.getTaskElementSpans(taskElement);
         const attributes = this.getTaskElAttributeNames().map(attr => camelToKebab(attr));
-        logger.debug(`isCompleteTaskElement: ${taskElement.innerHTML}`);
-        logger.debug(`spans: ${JSON.stringify(spans)}`);
-        logger.debug(`attributes: ${JSON.stringify(attributes)}`);
         return attributes.every(attr => spans[attr] !== undefined && spans[attr] !== null);
     }
 

@@ -32,15 +32,16 @@ export class TaskCardRenderManager {
 
     getPostProcessor(): MarkdownPostProcessor {
         const postProcessor = async (el: HTMLElement, ctx: MarkdownPostProcessorContext) => {
-            logger.debug(`el: ${el.innerHTML}`)
+            logger.debug(`PostProcessor - before onload: el: ${el.innerHTML}`)
             
             const taskItems: TaskItemData[] = this.constructTaskItemsFromSectionElement(el, ctx);
 
             for (const taskItem of taskItems) {
                 const processor = new TaskItemSvelteAdapter(taskItem, this.plugin);
                 processor.onload();
+                }
+            logger.debug(`PostProcessor - after onload: el: ${el.innerHTML}`)
             }
-        }
         return postProcessor
     }
 
@@ -48,7 +49,7 @@ export class TaskCardRenderManager {
             sectionDiv: HTMLElement, 
             ctx: MarkdownPostProcessorContext): TaskItemData[] {
         const section: HTMLElement = sectionDiv.children[0] as HTMLElement;
-        logger.debug(`constructTaskItemsFromSectionElement: section: ${section.outerHTML}`)
+        // logger.debug(`constructTaskItemsFromSectionElement: section: ${section.outerHTML}`)
         if (!isTaskList(section)) return []
         const taskItemsIndices: number[] = getIndicesOfFilter(
             Array.from(section.children) as HTMLElement[], 
@@ -67,7 +68,7 @@ export class TaskCardRenderManager {
             return { el, origHTML, mdSectionInfo, lineNumberInSection, markdown };
         });
 
-        logger.debug(`constructTaskItemsFromSectionElement: taskItems: ${JSON.stringify(taskItems)}`)
+        // logger.debug(`constructTaskItemsFromSectionElement: taskItems: ${JSON.stringify(taskItems)}`)
 
         return taskItems;
     }

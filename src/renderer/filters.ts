@@ -6,7 +6,7 @@ import { logger } from '../utils/log';
 export function isTaskList(el: HTMLElement): boolean {
     // ul, class contains: contains-task-list and has-list-bullet
     if (!el) { return false; }
-    logger.debug(`isTaskList: el - ${el.innerHTML}, el.tagName - ${el.tagName}, el.classList - ${JSON.stringify(el.classList)}`)
+    // logger.debug(`isTaskList: el - ${el.innerHTML}, el.tagName - ${el.tagName}, el.classList - ${JSON.stringify(el.classList)}`)
     if (el.tagName !== 'UL') { return false; }
     return el.classList.contains('contains-task-list') && el.classList.contains('has-list-bullet');
 }
