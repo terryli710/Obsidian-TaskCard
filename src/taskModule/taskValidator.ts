@@ -2,6 +2,9 @@ import { logger } from "../utils/log";
 import { SettingStore } from '../settings';
 import { escapeRegExp } from "../utils/regexUtils";
 import { ObsidianTask } from './task';
+import { camelToKebab } from "../utils/stringCaseConverter";
+
+export type SpanElements = Record<keyof ObsidianTask, HTMLElement>;
 
 export class TaskValidator {
     private static formattedMarkdownPattern = /^\s*- \[[^\]]\](.*?)(<span class="[^"]+" style="display:none;">.*?<\/span>)+$/;
@@ -48,13 +51,22 @@ export class TaskValidator {
         return false;
     }
 
-    private checkTaskElementSpans(taskElement: HTMLElement): Record<keyof ObsidianTask, HTMLElement | null> {
+    private getTaskElAttributeNames(): string[] {
+        const exemptAttributes: string[] = ['content', 'completed'];
         const attributes = Object.keys(new ObsidianTask()) as (keyof ObsidianTask)[];
-        const spans: Record<keyof ObsidianTask, HTMLElement | null> = {} as any;
-        for (const attribute of attributes) {
-            spans[attribute] = taskElement.querySelector(`span.${attribute}`);
-        }
-        return spans;
+        return attributes.filter(attr => !exemptAttributes.includes(attr));
+    }
+
+    private getTaskElementSpans(taskElement: HTMLElement): SpanElements {
+        const attributes = this.getTaskElAttributeNames().map(attr => camelToKebab(attr));
+
+        return attributes.reduce((acc: Partial<SpanElements>, attribute) => {
+            const spanElement: HTMLElement = taskElement.querySelector(`span.${attribute}`);
+            if (spanElement) {
+                acc[attribute] = spanElement;
+            }
+            return acc;
+        }, {}) as SpanElements;
     }
 
     private checkTaskElementClass(taskElement: HTMLElement): boolean {
@@ -66,21 +78,23 @@ export class TaskValidator {
         return true;
     }
 
-
     isValidTaskElement(taskElement: HTMLElement): boolean {
         if (!this.checkTaskElementClass(taskElement)) { return false; }
         logger.debug(`isValidTaskElement: ${taskElement}`);
-  
-        // Check the span
-        const spans = this.checkTaskElementSpans(taskElement);
-        return Object.values(spans).some(span => span !== null);
+
+        const spans: SpanElements = this.getTaskElementSpans(taskElement);
+        return Object.values(spans).length > 0 && Object.values(spans).some(span => span !== null);
     }
 
     isCompleteTaskElement(taskElement: HTMLElement): boolean {
         if (!this.checkTaskElementClass(taskElement)) { return false; }
-  
-  // Check the span
-        const spans = this.checkTaskElementSpans(taskElement);
-        return Object.values(spans).every(span => span !== null);
+
+        const spans: SpanElements = this.getTaskElementSpans(taskElement);
+        const attributes = this.getTaskElAttributeNames().map(attr => camelToKebab(attr));
+        logger.debug(`isCompleteTaskElement: ${taskElement.innerHTML}`);
+        logger.debug(`spans: ${JSON.stringify(spans)}`);
+        logger.debug(`attributes: ${JSON.stringify(attributes)}`);
+        return attributes.every(attr => spans[attr] !== undefined && spans[attr] !== null);
     }
+
 }

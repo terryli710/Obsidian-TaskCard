@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { TaskItemParams } from "../renderer/injector";
+    import { TaskItemParams } from "../renderer/postProcessor";
     import { Project } from "../taskModule/project";
     import { stringToColor } from "../utils/colorConverter";
     import { logger } from "../utils/log";

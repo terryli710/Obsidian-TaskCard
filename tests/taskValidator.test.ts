@@ -43,16 +43,55 @@ describe('TaskValidator', () => {
     function createMockTaskElement(includeAllSpans: boolean = true): HTMLElement {
         const dom = new JSDOM();
         const document = dom.window.document;
-        const taskElement = document.createElement('div');
-        taskElement.className = 'cm-active HyperMD-list-line HyperMD-list-line-1 HyperMD-task-line cm-line';
     
-        const taskInstance = new ObsidianTask();
-        const attributes = Object.keys(taskInstance) as (keyof ObsidianTask)[];
+        // Create the root li element
+        const taskElement = document.createElement('li');
+        taskElement.setAttribute('data-line', '0');
+        taskElement.setAttribute('data-task', '');
+        taskElement.className = 'task-list-item';
+        taskElement.style.display = 'none';
+    
+        // Add child elements to the li
+        const bulletDiv = document.createElement('div');
+        bulletDiv.className = 'list-bullet';
+        taskElement.appendChild(bulletDiv);
+    
+        const checkbox = document.createElement('input');
+        checkbox.setAttribute('data-line', '0');
+        checkbox.type = 'checkbox';
+        checkbox.className = 'task-list-item-checkbox';
+        taskElement.appendChild(checkbox);
+    
+        taskElement.innerHTML += 'An example task ';
+    
+        const tagA = document.createElement('a');
+        tagA.href = '#TaskCard';
+        tagA.className = 'tag';
+        tagA.target = '_blank';
+        tagA.rel = 'noopener';
+        tagA.textContent = '#TaskCard';
+        taskElement.appendChild(tagA);
+    
+        const attributes = [ 'id',
+            'priority', 'description', 'order', 'project', 'section-id', 
+            'labels', 'parent', 'children', 'due', 'metadata'
+        ];
     
         for (const attribute of attributes) {
             if (includeAllSpans || Math.random() > 0.5) { // Randomly include spans if not includeAllSpans
                 const span = document.createElement('span');
                 span.className = attribute;
+                span.style.display = 'none';
+                // Sample data for each attribute can be added here if needed
+                switch(attribute) {
+                    case 'priority':
+                        span.textContent = '4';
+                        break;
+                    case 'description':
+                        span.textContent = '"- A multi line description.\n- the second line."';
+                        break;
+                    // ... add cases for other attributes as needed
+                }
                 taskElement.appendChild(span);
             }
         }
@@ -145,9 +184,9 @@ describe('TaskValidator', () => {
     });
 
     describe('Obsidian Task Functions', () => {
-        test('checkTaskElementSpans returns correct spans', () => {
+        test('getTaskElementSpans returns correct spans', () => {
             const mockElement = createMockTaskElement();
-            const result = taskValidator.checkTaskElementSpans(mockElement);
+            const result = taskValidator.getTaskElementSpans(mockElement);
             logger.debug(`mockElement: ${mockElement.outerHTML}`);
             logger.debug(`return correct spans: ${Object.values(result)}`);
             expect(Object.values(result)).not.toContain(null);

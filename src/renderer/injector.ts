@@ -15,6 +15,7 @@ export interface TaskItemParams {
   mode: TaskMode;
 }
 
+// will give the html element, and this class will render the element to what we want
 export class TaskItemSvelteAdapter extends MarkdownRenderChild {
   taskItemEl: HTMLElement;
   svelteComponent: SvelteComponent;
@@ -35,6 +36,7 @@ export class TaskItemSvelteAdapter extends MarkdownRenderChild {
   onDestroy() {
 
   }
+
   onload() {
     this.svelteComponent = new TaskItem({
       target: this.taskItemEl.parentElement,

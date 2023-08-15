@@ -109,6 +109,7 @@
 ## Format Transformations
 - `OrigMD` -> `FormatMD` - `taskParser`(✓) + `taskFormatter`(✓)
 - `TaskEl` -> `RenderedEl` - `taskParser`(✓) + `TaskCard.svelte`(✓)
+- `TaskEl` -> `FormatMD` - `taskParser`(✓) + taskFormatter(✓)
 - `FormatMD` - `taskValidator`(✓)
 - `OrigMD` - `taskValidator`(✓)
 - `TaskEl` - `ElementFilter`

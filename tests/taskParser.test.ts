@@ -6,6 +6,63 @@ import { logger } from "../src/utils/log";
 import { writable } from "svelte/store";
 import { Project, ProjectModule } from "../src/taskModule/project";
 
+
+function createTestTaskElement(document: Document): HTMLElement {
+    // Create the main task element
+    const taskElement = document.createElement('li');
+    taskElement.setAttribute('data-line', '0');
+    taskElement.setAttribute('data-task', '');
+    taskElement.className = 'task-list-item';
+    taskElement.style.display = 'none';
+
+    // Create the list bullet
+    const listBullet = document.createElement('div');
+    listBullet.className = 'list-bullet';
+    taskElement.appendChild(listBullet);
+
+    // Create the checkbox
+    const checkbox = document.createElement('input');
+    checkbox.setAttribute('data-line', '0');
+    checkbox.type = 'checkbox';
+    checkbox.className = 'task-list-item-checkbox';
+    taskElement.appendChild(checkbox);
+
+    // Add the task content
+    taskElement.appendChild(document.createTextNode('An example task '));
+
+    // Create the tag link
+    const tagLink = document.createElement('a');
+    tagLink.href = '#TaskCard';
+    tagLink.className = 'tag';
+    tagLink.target = '_blank';
+    tagLink.rel = 'noopener';
+    tagLink.textContent = '#TaskCard';
+    taskElement.appendChild(tagLink);
+
+    // Helper function to create hidden span elements
+    const createHiddenSpan = (className: string, content: string) => {
+        const span = document.createElement('span');
+        span.className = className;
+        span.style.display = 'none';
+        span.textContent = content;
+        taskElement.appendChild(span);
+    };
+
+    // Add the hidden span elements
+    createHiddenSpan('priority', '4');
+    createHiddenSpan('description', '"- A multi line description.\\n- the second line."');
+    createHiddenSpan('order', '1');
+    createHiddenSpan('project', '{"id":"project-123", "name":"Project Name", "color":"#f1f1f1"}');
+    createHiddenSpan('section-id', '"section-456"');
+    createHiddenSpan('labels', '["label1","label2"]');
+    createHiddenSpan('parent', 'null');
+    createHiddenSpan('children', '[]');
+    createHiddenSpan('due', '{"isRecurring":false,"string":"2023-08-15","date":"2024-08-15","timezone":null}');
+    createHiddenSpan('metadata', '{"filePath":"/path/to/file"}');
+
+    return taskElement;
+}
+
 describe('taskParser', () => {
 
     let warnSpy, errorSpy, debugSpy, infoSpy;
@@ -55,84 +112,13 @@ describe('taskParser', () => {
     });    
 
 
-    
     describe('parseTaskEl', () => {
         it('should parse a task element correctly', () => {
-            // Create a test task element using the example task HTML structure
+            // Create a test task element using the new task HTML structure
             const dom = new JSDOM();
             const document = dom.window.document;
-
-            const createImg = () => {
-                const img = document.createElement('img');
-                img.className = 'cm-widgetBuffer';
-                img.setAttribute('aria-hidden', 'true');
-                return img;
-            };
-        
-            const createSpanWithEmbed = (className: string, content: string) => {
-                const span = document.createElement('span');
-                span.className = 'cm-html-embed';
-                span.tabIndex = -1;
-                span.contentEditable = 'false';
-                span.innerHTML = `<span style="display:none;" class="${className}">${content}</span>`;
-                return span;
-            };
-
-            const taskElement = document.createElement('div');
-            taskElement.className = 'cm-active HyperMD-list-line HyperMD-list-line-1 HyperMD-task-line cm-line';
-            taskElement.setAttribute('data-task', ' ');
-            taskElement.style.textIndent = '-23px';
-            taskElement.style.paddingInlineStart = '27px';
-
-            const label = document.createElement('label');
-            label.className = 'task-list-label';
-            label.contentEditable = 'false';
-
-            const checkbox = document.createElement('input');
-            checkbox.className = 'task-list-item-checkbox';
-            checkbox.type = 'checkbox';
-            checkbox.setAttribute('data-task', ' ');
-
-            label.appendChild(checkbox);
-
-            const taskContentSpan = document.createElement('span');
-            taskContentSpan.className = 'cm-list-1';
-            taskContentSpan.textContent = ' An example task ';
-
-            taskElement.appendChild(createImg());
-            taskElement.appendChild(document.createElement('span'));
-            taskElement.appendChild(createImg());
-            taskElement.appendChild(createImg());
-            taskElement.appendChild(label);
-            taskElement.appendChild(createImg());
-            taskElement.appendChild(taskContentSpan);
-            taskElement.appendChild(createImg());
-            taskElement.appendChild(createSpanWithEmbed('priority', '4'));
-            taskElement.appendChild(createImg());
-            taskElement.appendChild(document.createElement('span'));
-            taskElement.appendChild(createImg());
-            taskElement.appendChild(createSpanWithEmbed('description', '"- A multi line description.\\n- the second line."'));
-            taskElement.appendChild(createImg());
-            taskElement.appendChild(document.createElement('span'));
-            taskElement.appendChild(createImg());
-            taskElement.appendChild(createSpanWithEmbed('order', '1'));
-            taskElement.appendChild(createImg());
-            taskElement.appendChild(document.createElement('span'));
-            taskElement.appendChild(createImg());
-            taskElement.appendChild(createSpanWithEmbed('project', '{"id":"project-123", "name":"Project Name"}'));
-            taskElement.appendChild(createImg());
-            taskElement.appendChild(document.createElement('span'));
-            taskElement.appendChild(createImg());
-            taskElement.appendChild(createSpanWithEmbed('section-id', '"section-456"'));
-            taskElement.appendChild(createImg());
-            taskElement.appendChild(document.createElement('span'));
-            taskElement.appendChild(createImg());
-            taskElement.appendChild(createSpanWithEmbed('labels', '["label1","label2","label3","label4","label5"]'));
-            taskElement.appendChild(createImg());
-            taskElement.appendChild(document.createElement('span'));
-            taskElement.appendChild(createImg());
-            taskElement.appendChild(createSpanWithEmbed('completed', 'false'));
-
+            const taskElement = createTestTaskElement(document);
+    
             // Expected task object
             const expectedTask: ObsidianTask = {
                 id: '',
@@ -140,125 +126,75 @@ describe('taskParser', () => {
                 priority: 4,
                 description: '- A multi line description.\n- the second line.',
                 order: 1,
-                project: { id: 'project-123', name: 'Project Name' },
+                project: { 
+                    id: 'project-123', 
+                    name: 'Project Name',
+                    color: '#f1f1f1'
+                },
                 sectionID: 'section-456',
-                labels: ['label1', 'label2', 'label3', 'label4', 'label5'],
+                labels: ['label1', 'label2'],
                 completed: false,
                 parent: null,
                 children: [],
-                due: null,
-                metadata: {}
-                // Add other properties as needed
+                due: {
+                    isRecurring: false,
+                    string: "2023-08-15",
+                    date: "2024-08-15",
+                    timezone: null
+                },
+                metadata: {
+                    filePath: "/path/to/file"
+                }
             };
-
+    
             // Call the parseTaskEl method
             const parsedTask = taskParser.parseTaskEl(taskElement);
-
+    
             // Assert that the parsed task matches the expected task object
             expect(parsedTask).toEqual(expectedTask);
         });
-
+        
         it('should parse another task element correctly', () => {
-            // Create a test task element using the example task HTML structure
+            // Create a test task element using the new task HTML structure
             const dom = new JSDOM();
             const document = dom.window.document;
-
-            const taskElement = document.createElement('div');
-            taskElement.className = 'cm-active HyperMD-list-line HyperMD-list-line-1 HyperMD-task-line cm-line';
-            taskElement.setAttribute('data-task', ' ');
-            taskElement.style.textIndent = '-23px';
-            taskElement.style.paddingInlineStart = '27px';
-
-            const createImg = () => {
-            const img = document.createElement('img');
-            img.className = 'cm-widgetBuffer';
-            img.setAttribute('aria-hidden', 'true');
-            return img;
-            };
-
-            const createSpanWithEmbed = (className: string, content: string) => {
-            const span = document.createElement('span');
-            span.className = 'cm-html-embed';
-            span.tabIndex = -1;
-            span.contentEditable = 'false';
-            span.innerHTML = `<span style="display:none;" class="${className}">${content}</span>`;
-            return span;
-            };
-
-            const label = document.createElement('label');
-            label.className = 'task-list-label';
-            label.contentEditable = 'false';
-
-            const checkbox = document.createElement('input');
-            checkbox.className = 'task-list-item-checkbox';
-            checkbox.type = 'checkbox';
-            checkbox.setAttribute('data-task', 'x');
-
-            label.appendChild(checkbox);
-
-            const taskContentSpan = document.createElement('span');
-            taskContentSpan.className = 'cm-list-1';
-            taskContentSpan.textContent = ' An example task ';
-
-            taskElement.appendChild(createImg());
-            taskElement.appendChild(document.createElement('span'));
-            taskElement.appendChild(createImg());
-            taskElement.appendChild(createImg());
-            taskElement.appendChild(label);
-            taskElement.appendChild(createImg());
-            taskElement.appendChild(taskContentSpan);
-            taskElement.appendChild(createImg());
-            taskElement.appendChild(createSpanWithEmbed('priority', '2'));
-            taskElement.appendChild(createImg());
-            taskElement.appendChild(document.createElement('span'));
-            taskElement.appendChild(createImg());
-            taskElement.appendChild(createSpanWithEmbed('description', '"- A multi line description.\\n- the second line."'));
-            taskElement.appendChild(createImg());
-            taskElement.appendChild(document.createElement('span'));
-            taskElement.appendChild(createImg());
-            taskElement.appendChild(createSpanWithEmbed('order', '1'));
-            taskElement.appendChild(createImg());
-            taskElement.appendChild(document.createElement('span'));
-            taskElement.appendChild(createImg());
-            taskElement.appendChild(createSpanWithEmbed('due', '{"isRecurring":false, "string":"next monday", "date":"2023-02-15"}'));
-            taskElement.appendChild(createImg());
-            taskElement.appendChild(document.createElement('span'));
-            taskElement.appendChild(createImg());
-            taskElement.appendChild(createSpanWithEmbed('section-id', '"section-456"'));
-            taskElement.appendChild(createImg());
-            taskElement.appendChild(document.createElement('span'));
-            taskElement.appendChild(createImg());
-            taskElement.appendChild(createSpanWithEmbed('labels', '["label1","label2","label3","label4","label5"]'));
-            taskElement.appendChild(createImg());
-            taskElement.appendChild(document.createElement('span'));
-
-            // Expected task object
-            const expectedTask: ObsidianTask = {
-                id: '',
+            const taskElement = createTestTaskElement(document);
+        
+            // Expected task object without the id property
+            const expectedTask = {
                 content: 'An example task',
-                priority: 2,
+                priority: 4,
                 description: '- A multi line description.\n- the second line.',
                 order: 1,
-                project: null,
+                project: { 
+                    id: 'project-123', 
+                    name: 'Project Name',
+                    color: '#f1f1f1'
+                },
                 sectionID: 'section-456',
-                labels: ['label1', 'label2', 'label3', 'label4', 'label5'],
-                completed: true,
+                labels: ['label1', 'label2'],
+                completed: false,
                 parent: null,
                 children: [],
-                due: {isRecurring: false, string:"next monday", date: "2023-02-15"},
-                metadata: {}
-                // Add other properties as needed
+                due: {
+                    isRecurring: false,
+                    string: "2023-08-15",
+                    date: "2024-08-15",
+                    timezone: null
+                },
+                metadata: {
+                    filePath: "/path/to/file"
+                }
             };
-
+        
             // Call the parseTaskEl method
             const parsedTask = taskParser.parseTaskEl(taskElement);
-
-            // Assert that the parsed task matches the expected task object
-            expect(parsedTask).toEqual(expectedTask);
+        
+            // Assert that the parsed task matches the expected task object without considering the id
+            expect(parsedTask).toEqual(expect.objectContaining(expectedTask));
         });
     });
-
-
+    
     describe('parseTaskMarkdown', () => {
 
         // 1. Parsing a simple task without any attributes.

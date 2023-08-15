@@ -1,17 +1,17 @@
 <script lang="ts">
     import { createEventDispatcher } from "svelte";
     import { logger } from "../utils/log";
-    import { TaskItemParams } from "../renderer/injector";
+    import { TaskItemParams } from "../renderer/postProcessor";
     import TaskCard from "./TaskCard.svelte";
     import TaskCardPlugin from "..";
   
-    export let taskItemEl;
+    export let taskItemEl: HTMLElement;
     export let plugin: TaskCardPlugin;
     export let defaultParams: TaskItemParams;
 
     let params = defaultParams;
 
-    const taskEl = taskItemEl.querySelector('.task-list-item'); 
+    const taskEl: HTMLElement = taskItemEl.querySelector('.task-list-item'); 
     taskEl.style.display = "none";
 
     const dispatch = createEventDispatcher();
@@ -38,10 +38,10 @@
         on:keydown={handleSwitchMode}
         tabindex="0"
     >
-        <TaskCard {taskEl} {plugin} {params}/>
+        <TaskCard taskEl={taskEl} {plugin} {params}/>
     </button>
 {:else}
     <li class="obsidian-taskcard task-list-item mode-multi-line">
-        <TaskCard {taskEl} {plugin} {params} on:switchMode={handleSwitchMode}/>
+        <TaskCard taskEl={taskEl} {plugin} {params} on:switchMode={handleSwitchMode}/>
     </li>
 {/if}

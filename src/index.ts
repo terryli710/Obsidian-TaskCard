@@ -1,19 +1,20 @@
-import { App, Plugin, htmlToMarkdown } from 'obsidian';
+import { App, Plugin, htmlToMarkdown, MarkdownRenderer } from 'obsidian';
 import type { MarkdownPostProcessor, MarkdownPostProcessorContext, PluginManifest } from 'obsidian';
 import type { TaskCardSettings } from './settings';
 import { SettingStore, SettingsTab } from './settings';
-import { TaskItemSvelteAdapter } from './renderer/injector';
 import { logger } from './utils/log';
 import AttributeSuggest from './autoSuggestions/EditorSuggestions';
 import { Project, ProjectModule } from './taskModule/project';
 import { TaskParser } from './taskModule/taskParser';
 import { TaskValidator } from './taskModule/taskValidator';
+import { TaskCardRenderManager } from './renderer/index';
 
 export default class TaskCardPlugin extends Plugin {
   public settings: TaskCardSettings;
   public projectModule: ProjectModule;
   public taskParser: TaskParser;
   public taskValidator: TaskValidator;
+  public taskCardRenderManager: TaskCardRenderManager
 
   
   constructor(app: App, pluginManifest: PluginManifest) {
@@ -25,21 +26,7 @@ export default class TaskCardPlugin extends Plugin {
     this.projectModule = new ProjectModule();
     this.taskParser = new TaskParser(SettingStore, this.projectModule);
     this.taskValidator = new TaskValidator(SettingStore);
-  }
-
-  public taskCardPostProcessor: MarkdownPostProcessor = async (el: HTMLElement, ctx: MarkdownPostProcessorContext) => {
-
-    logger.debug(`el: ${el.innerHTML}`);
-    logger.debug(`el - markdown: ${htmlToMarkdown(el.innerHTML)}`);
-
-    const potentialTaskCards = Array.from(el.querySelectorAll('li.task-list-item'));
-    const taskCards = potentialTaskCards.filter(this.taskValidator.isValidTaskElement.bind(this.taskValidator));
-    for (const taskCard of taskCards) {
-      const taskItem = taskCard.parentElement as HTMLElement;
-
-      const adapter = new TaskItemSvelteAdapter(taskItem, this);
-      adapter.onload(); 
-    }
+    this.taskCardRenderManager = new TaskCardRenderManager(this);
   }
 
   async loadSettings() {
@@ -64,7 +51,7 @@ export default class TaskCardPlugin extends Plugin {
     await this.loadSettings();
     this.projectModule.updateProjects(this.settings.userMetadata.projects as Project[]);
     this.addSettingTab(new SettingsTab(this.app, this));
-    this.registerMarkdownPostProcessor(this.taskCardPostProcessor.bind(this));
+    this.registerMarkdownPostProcessor(this.taskCardRenderManager.getPostProcessor());
     this.registerEditorSuggest(new AttributeSuggest(this.app));
     logger.info('Plugin loaded.');
   }

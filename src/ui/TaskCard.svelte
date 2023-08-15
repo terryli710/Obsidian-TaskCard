@@ -2,7 +2,7 @@
     import Due from './Due.svelte';
     import Project from "./Project.svelte";
     import Labels from "./Labels.svelte";
-    import { TaskItemParams } from "../renderer/injector";
+    import { TaskItemParams } from "../renderer/postProcessor";
     import Description from './Description.svelte';
     import { logger } from '../utils/log';
     import { createEventDispatcher } from 'svelte';

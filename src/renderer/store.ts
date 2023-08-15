@@ -1,7 +1,7 @@
 
 
 import { Writable, writable } from "svelte/store";
-import { TaskMode } from './injector';
+import { TaskMode } from './postProcessor';
 
 
 // Writable store to hold the modes for each task

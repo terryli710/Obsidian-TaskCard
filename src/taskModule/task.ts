@@ -56,19 +56,20 @@ export class ObsidianTask implements TaskProperties {
   public due?: DueDate | null;
   public metadata?: { [key: string]: string | number };
 
-  constructor() {
-    this.id = uuidv4();
-    this.content = '';
-    this.priority = 1;
-    this.description = '';
-    this.order = 0;
-    this.project = { id: '', name: '' };
-    this.sectionID = '';
-    this.labels = [];
-    this.completed = false;
-    this.parent = null;
-    this.children = [];
-    this.due = null;
-    this.metadata = {};
+  constructor(props?: Partial<ObsidianTask>) {
+    this.id = props?.id || uuidv4();
+    this.content = props?.content || '';
+    this.priority = props?.priority || 1;
+    this.description = props?.description || '';
+    this.order = props?.order || 0;
+    this.project = props?.project || { id: '', name: '' };
+    this.sectionID = props?.sectionID || '';
+    this.labels = props?.labels || [];
+    this.completed = props?.completed || false;
+    this.parent = props?.parent || null;
+    this.children = props?.children || [];
+    this.due = props?.due || null;
+    this.metadata = props?.metadata || {};
   }
 }
+
