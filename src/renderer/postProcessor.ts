@@ -39,9 +39,8 @@ export class TaskItemSvelteAdapter extends MarkdownRenderChild {
             anchor: this.taskItemData.el,
         });
     
-        // Replace the original li element with the new task card element
-        const newTaskCardElement = this.svelteComponent.$el;
-        this.taskItemData.el.parentElement.replaceChild(newTaskCardElement, this.taskItemData.el);
+        // New element has been created right before the target element, now hide the target element
+        this.taskItemData.el.style.display = 'none';
     }
 }
     

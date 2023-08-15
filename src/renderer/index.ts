@@ -11,6 +11,7 @@ export interface TaskItemData {
     origHTML: string;
     mdSectionInfo: MarkdownSectionInformation;
     lineNumberInSection: number;
+    lineNumberEndsInSection?: number;
     markdown: string;
 }
 
@@ -68,14 +69,10 @@ export class TaskCardRenderManager {
             return { el, origHTML, mdSectionInfo, lineNumberInSection, markdown };
         });
 
-        // logger.debug(`constructTaskItemsFromSectionElement: taskItems: ${JSON.stringify(taskItems)}`)
-
         return taskItems;
     }
 
-
 }
-
 
 
 export function getLineNumberOfListItem(ul: HTMLElement, index: number): number {
