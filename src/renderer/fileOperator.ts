@@ -2,8 +2,6 @@ import { TFile } from "obsidian";
 import TaskCardPlugin from "..";
 
 
-
-
 export class FileOperator {
     plugin: TaskCardPlugin;
     constructor(plugin: TaskCardPlugin) {

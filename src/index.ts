@@ -1,5 +1,5 @@
-import { App, Plugin, htmlToMarkdown, MarkdownRenderer } from 'obsidian';
-import type { MarkdownPostProcessor, MarkdownPostProcessorContext, PluginManifest } from 'obsidian';
+import { App, Plugin } from 'obsidian';
+import type { PluginManifest } from 'obsidian';
 import type { TaskCardSettings } from './settings';
 import { SettingStore, SettingsTab } from './settings';
 import { logger } from './utils/log';

@@ -1,4 +1,4 @@
-import { PluginSettingTab, Plugin, App, Setting } from 'obsidian';
+import { PluginSettingTab, App, Setting } from 'obsidian';
 import { writable } from 'svelte/store';
 import type { Writable } from 'svelte/store';
 import TaskCardPlugin from './index';

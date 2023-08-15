@@ -206,7 +206,33 @@ describe('TaskValidator', () => {
             const mockElement = createMockTaskElement(false);
             expect(taskValidator.isCompleteTaskElement(mockElement)).toBe(false);
         });
+
+        test('checkTaskElementClass returns true for valid task elements', () => {
+            const mockElement = createMockTaskElement();
+            expect(taskValidator.checkTaskElementClass(mockElement)).toBe(true);
+        });
+    
+        test('checkTaskElementClass returns false for invalid task elements', () => {
+            const mockElement = createMockTaskElement();
+            const tagElement = mockElement.querySelector('.tag');
+            if (tagElement) {
+                tagElement.textContent = '#InvalidTag';
+            }
+            expect(taskValidator.checkTaskElementClass(mockElement)).toBe(false);
+        });
+    
+        test('checkTaskElementIndicatorTag returns true for valid indicator tags', () => {
+            const mockElement = createMockTaskElement();
+            expect(taskValidator.checkTaskElementIndicatorTag(mockElement)).toBe(true);
+        });
+    
+        test('checkTaskElementIndicatorTag returns false for invalid indicator tags', () => {
+            const mockElement = createMockTaskElement();
+            const tagElement = mockElement.querySelector('.tag');
+            if (tagElement) {
+                tagElement.textContent = '#InvalidTag';
+            }
+            expect(taskValidator.checkTaskElementIndicatorTag(mockElement)).toBe(false);
+        });
     });
-
-
 });

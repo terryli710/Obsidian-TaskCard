@@ -11,8 +11,7 @@
 
     let params = defaultParams;
 
-    const taskEl: HTMLElement = taskItemEl.querySelector('.task-list-item'); 
-    taskEl.style.display = "none";
+    logger.debug(`taskItemEl: outerHTML => ${taskItemEl.outerHTML}, innerHTML => ${taskItemEl.innerHTML}`);
 
     const dispatch = createEventDispatcher();
 
@@ -38,10 +37,10 @@
         on:keydown={handleSwitchMode}
         tabindex="0"
     >
-        <TaskCard taskEl={taskEl} {plugin} {params}/>
+        <TaskCard taskEl={taskItemEl} {plugin} {params}/>
     </button>
 {:else}
     <li class="obsidian-taskcard task-list-item mode-multi-line">
-        <TaskCard taskEl={taskEl} {plugin} {params} on:switchMode={handleSwitchMode}/>
+        <TaskCard taskEl={taskItemEl} {plugin} {params} on:switchMode={handleSwitchMode}/>
     </li>
 {/if}

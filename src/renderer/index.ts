@@ -16,7 +16,6 @@ export interface TaskItemData {
 
 
 export class TaskCardRenderManager {
-    // TODO:
     // - Post Processor = input el and MarkdownPostProcessorContext
     // 1. filter the elements;
     // 2. pin point the markdown text for the filtered element;
@@ -36,6 +35,7 @@ export class TaskCardRenderManager {
             logger.debug(`el: ${el.innerHTML}`)
             
             const taskItems: TaskItemData[] = this.constructTaskItemsFromSectionElement(el, ctx);
+
             for (const taskItem of taskItems) {
                 const processor = new TaskItemSvelteAdapter(taskItem, this.plugin);
                 processor.onload();
@@ -44,9 +44,17 @@ export class TaskCardRenderManager {
         return postProcessor
     }
 
-    constructTaskItemsFromSectionElement(section: HTMLElement, ctx: MarkdownPostProcessorContext): TaskItemData[] {
+    constructTaskItemsFromSectionElement(
+            sectionDiv: HTMLElement, 
+            ctx: MarkdownPostProcessorContext): TaskItemData[] {
+        const section: HTMLElement = sectionDiv.children[0] as HTMLElement;
+        logger.debug(`constructTaskItemsFromSectionElement: section: ${section.outerHTML}`)
         if (!isTaskList(section)) return []
-        const taskItemsIndices: number[] = getIndicesOfFilter(Array.from(section.children) as HTMLElement[], this.taskItemFilter)
+        const taskItemsIndices: number[] = getIndicesOfFilter(
+            Array.from(section.children) as HTMLElement[], 
+            this.taskItemFilter
+        )
+        
         if (taskItemsIndices.length === 0) return []
         const mdSectionInfo = ctx.getSectionInfo(section)
         const lineNumbers: number[] = taskItemsIndices.map((index) => getLineNumberOfListItem(section, index));
@@ -58,6 +66,8 @@ export class TaskCardRenderManager {
             const markdown = el.innerText;
             return { el, origHTML, mdSectionInfo, lineNumberInSection, markdown };
         });
+
+        logger.debug(`constructTaskItemsFromSectionElement: taskItems: ${JSON.stringify(taskItems)}`)
 
         return taskItems;
     }

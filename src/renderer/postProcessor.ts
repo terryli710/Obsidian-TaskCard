@@ -1,5 +1,5 @@
 
-import { MarkdownRenderChild, type MarkdownPostProcessor } from 'obsidian';
+import { MarkdownRenderChild } from 'obsidian';
 import { TaskItemData } from './index';
 import { SvelteComponent } from 'svelte';
 import TaskCardPlugin from '..';
@@ -24,7 +24,7 @@ export class TaskItemSvelteAdapter extends MarkdownRenderChild {
 
         const initialSettings = get(SettingStore);
         this.params = { mode: initialSettings.displaySettings.defaultMode as TaskMode };
-    
+
         this.plugin = plugin;
     }
 

@@ -1,10 +1,12 @@
 import type { TaskValidator } from '../taskModule/taskValidator';
+import { logger } from '../utils/log';
 
 
 
 export function isTaskList(el: HTMLElement): boolean {
     // ul, class contains: contains-task-list and has-list-bullet
     if (!el) { return false; }
+    logger.debug(`isTaskList: el - ${el.innerHTML}, el.tagName - ${el.tagName}, el.classList - ${JSON.stringify(el.classList)}`)
     if (el.tagName !== 'UL') { return false; }
     return el.classList.contains('contains-task-list') && el.classList.contains('has-list-bullet');
 }
@@ -13,7 +15,7 @@ export function isTaskList(el: HTMLElement): boolean {
 export function isTaskItemEl(el: HTMLElement, taskValidator: TaskValidator): boolean {
     if (!el) { return false; }
     if (el.tagName !== 'LI' || el.children.length === 0) { return false; }
-    return taskValidator.isValidTaskElement(el.children[0] as HTMLElement);
+    return taskValidator.isValidTaskElement(el as HTMLElement);
 }
 
 

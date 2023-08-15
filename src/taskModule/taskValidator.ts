@@ -70,19 +70,33 @@ export class TaskValidator {
     }
 
     private checkTaskElementClass(taskElement: HTMLElement): boolean {
-        // require to be task-list-item class as a li element.
-        // querySelector has to have input task-list-item-checkbox div list-bullet
-        if (!taskElement.classList.contains('task-list-item')) { return false; }
+        logger.debug(`checkTaskElementClass: ${taskElement.innerHTML}`);
+        // Check if the element contains a child with the class 'task-list-item-checkbox'
         if (!taskElement.querySelector('.task-list-item-checkbox')) { return false; }
+    
+        // Check if the element contains a child with the class 'list-bullet'
         if (!taskElement.querySelector('.list-bullet')) { return false; }
+        
+        // Check indicator tag
+        if (!this.checkTaskElementIndicatorTag(taskElement)) { return false; }
+    
+        return true;
+    }
+
+    private checkTaskElementIndicatorTag(taskElement: HTMLElement): boolean {
+        
+        // Check if the element contains a child with the class 'tag' and the text `#${tagName}`
+        const tagElement = taskElement.querySelector('.tag');
+        if (!tagElement || !tagElement.textContent?.includes(`#${this.indicatorTag}`)) { return false; }
         return true;
     }
 
     isValidTaskElement(taskElement: HTMLElement): boolean {
         if (!this.checkTaskElementClass(taskElement)) { return false; }
-        logger.debug(`isValidTaskElement: ${taskElement}`);
+        logger.debug(`isValidTaskElement: ${taskElement.innerHTML}`);
 
         const spans: SpanElements = this.getTaskElementSpans(taskElement);
+        logger.debug(`spans: ${JSON.stringify(spans)}`);
         return Object.values(spans).length > 0 && Object.values(spans).some(span => span !== null);
     }
 
