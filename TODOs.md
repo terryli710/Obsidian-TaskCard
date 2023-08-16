@@ -108,9 +108,9 @@
 - Note: defined in `TaskCard.svelte`
 
 ## Format Transformations
-- `OrigMD` -> `FormatMD` - `taskParser`(✓) + `taskFormatter`(✓)
+- `OrigMD` -> `FormatMD` - `taskParser`(✓) + `TaskFormatter`(✓)
 - `TaskEl` -> `RenderedEl` - `taskParser`(✓) + `TaskCard.svelte`(✓)
-- `TaskEl` -> `FormatMD` - `taskParser`(✓) + taskFormatter(✓)
+- `TaskEl` -> `FormatMD` - `taskParser`(✓) + TaskFormatter(✓)
 - `FormatMD` - `taskValidator`(✓)
 - `OrigMD` - `taskValidator`(✓)
 - `TaskEl` - `ElementFilter`

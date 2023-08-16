@@ -1,11 +1,26 @@
 
 
 
+import { writable } from 'svelte/store';
 import { ObsidianTask } from '../src/taskModule/task';
-import { taskFormatter } from '../src/taskModule/taskFormatter';
+import { TaskFormatter } from '../src/taskModule/taskFormatter';
 
 
 describe('taskToMarkdown', () => {
+
+    let mockSettingStore;
+    let taskFormatter;
+
+    beforeEach(() => {
+        // Mock the SettingStore with controlled settings
+        mockSettingStore = writable({
+            parsingSettings: {
+                indicatorTag: 'TaskCard',
+            }
+        });
+        taskFormatter = new TaskFormatter(mockSettingStore);
+    });
+
     it('should format a basic task with content and completion status', () => {
         const task = new ObsidianTask({
             content: 'An example task',

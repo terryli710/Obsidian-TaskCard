@@ -1,13 +1,22 @@
 
 
 
+import { SettingStore } from '../settings';
 import { camelToKebab } from '../utils/stringCaseConverter';
 import { ObsidianTask } from './task';
 
-export class taskFormatter {
+export class TaskFormatter {
+    indicatorTag: string;
 
-    static taskToMarkdown(task: ObsidianTask, indicatorTag: string = "TaskCard"): string {
-        let markdownLine = `- [${task.completed ? 'x' : ' '}] ${task.content} #${indicatorTag}\n`;
+    constructor(settingsStore: typeof SettingStore) {
+        // Subscribe to the settings store
+        settingsStore.subscribe(settings => {
+            this.indicatorTag = settings.parsingSettings.indicatorTag;
+        });
+    }
+
+    taskToMarkdown(task: ObsidianTask): string {
+        let markdownLine = `- [${task.completed ? 'x' : ' '}] ${task.content} #${this.indicatorTag}\n`;
         
         // Iterate over keys in task, but exclude 'completed' and 'content'
         for (let key in task) {

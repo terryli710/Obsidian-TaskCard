@@ -9,11 +9,13 @@ import { TaskParser } from './taskModule/taskParser';
 import { TaskValidator } from './taskModule/taskValidator';
 import { TaskCardRenderManager } from './renderer/index';
 import { FileOperator } from './renderer/fileOperator';
+import { TaskFormatter } from './taskModule/taskFormatter';
 
 export default class TaskCardPlugin extends Plugin {
   public settings: TaskCardSettings;
   public projectModule: ProjectModule;
   public taskParser: TaskParser;
+  public taskFormatter: TaskFormatter
   public taskValidator: TaskValidator;
   public taskCardRenderManager: TaskCardRenderManager
   public fileOperator: FileOperator
@@ -27,6 +29,7 @@ export default class TaskCardPlugin extends Plugin {
     })
     this.projectModule = new ProjectModule();
     this.taskParser = new TaskParser(SettingStore, this.projectModule);
+    this.taskFormatter = new TaskFormatter(SettingStore);
     this.taskValidator = new TaskValidator(SettingStore);
     this.taskCardRenderManager = new TaskCardRenderManager(this);
     this.fileOperator = new FileOperator(this, this.app);
