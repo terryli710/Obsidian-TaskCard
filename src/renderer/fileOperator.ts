@@ -1,5 +1,6 @@
 import { App, TAbstractFile, TFile } from "obsidian";
 import TaskCardPlugin from "..";
+import { logger } from "../utils/log";
 
 
 export class FileOperator {
@@ -31,7 +32,8 @@ export class FileOperator {
         const file = await this.app.vault.getAbstractFileByPath(filePath);
         const fileLines = await this.getFileLines(filePath);
         const newFileLines: string[] = [...fileLines];
-        newFileLines.splice(lineStart, lineEnd - lineStart, ...newContent);
+        newFileLines.splice(lineStart, lineEnd - lineStart, newContent);
+        logger.debug(`newContent: ${newContent}, lineStart: ${lineStart}, lineEnd: ${lineEnd}`);
         await this.app.vault.modify(file as TFile, newFileLines.join('\n'));
     }
 

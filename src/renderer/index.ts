@@ -35,7 +35,7 @@ export class TaskCardRenderManager {
     getPostProcessor(): MarkdownPostProcessor {
         const postProcessor = async (el: HTMLElement, ctx: MarkdownPostProcessorContext) => {
             // logger.debug(`PostProcessor - before onload: el: ${el.innerHTML}`)
-            
+
             const taskSyncs: ObsidianTaskSyncProps[] = await this.constructTaskSync(el, ctx)
 
             for (const taskSync of taskSyncs) {
@@ -56,15 +56,17 @@ export class TaskCardRenderManager {
             this.taskItemFilter
         );
         if (taskItemsIndices.length === 0) return [];
-        
+        logger.debug(`taskItemsIndices: ${taskItemsIndices}`);
+
         const mdSectionInfo = ctx.getSectionInfo(section);
         const sourcePath = ctx.sourcePath;
         const lineNumbers: number[] = taskItemsIndices.map((index) => getLineNumberOfListItem(section, index));
+        // logger.debug(`lineNumbers: ${lineNumbers}`);
 
         const taskSyncs: ObsidianTaskSyncProps[] = taskItemsIndices.map((index, i) => {
             const taskItemEl: HTMLElement = section.children[index] as HTMLElement;
             const lineStartInSection = lineNumbers[i];
-            const lineEndsInSection = lineNumbers[i + 1]; // currently just 1 line
+            const lineEndsInSection = lineNumbers[i] + 1; // currently just 1 line
             const obsidianTask = this.plugin.taskParser.parseTaskEl(taskItemEl);
             return {
                 obsidianTask: obsidianTask,
@@ -84,11 +86,11 @@ export class TaskCardRenderManager {
 
 }
 
-
 export function getLineNumberOfListItem(ul: HTMLElement, index: number): number {
     let lineNumber = 0;
     for (let i = 0; i < index; i++) {
-        lineNumber += htmlToMarkdown(ul.children[i].innerHTML).split('\n').length;
+        const lines = htmlToMarkdown(ul.children[i].innerHTML).split('\n').filter(line => line.trim() !== '');
+        lineNumber += lines.length;
     }
     return lineNumber;
 }

@@ -38,6 +38,10 @@ export class TaskFormatter {
         
         return markdownLine;
     }
+
+    taskToMarkdownOneLine(task: ObsidianTask): string {
+        return this.taskToMarkdown(task).replace(/\n/g, '');
+    }
 }
 
 
