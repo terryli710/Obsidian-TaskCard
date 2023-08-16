@@ -1,8 +1,9 @@
-<script>
+<script lang='ts'>
     import { onMount } from 'svelte';
     import { logger } from '../utils/log';
   
-    export let labels;
+    export let taskSyncManager;
+    let labels: string[] = taskSyncManager.obsidianTask.labels;
     let isEditingLabel = false;
     let newLabel = '';
     let editingIndex = null;
@@ -15,6 +16,7 @@
       }
       newLabel = '';
       isEditingLabel = false;
+      taskSyncManager.updateObsidianTaskAttribute('labels', labels);
     }
   
     function editLabel(index) {
@@ -28,10 +30,12 @@
       }
       newLabel = '';
       editingIndex = null;
+      taskSyncManager.updateObsidianTaskAttribute('labels', labels);
     }
   
     function deleteLabel(index) {
       labels = labels.filter((_, i) => i !== index);
+      taskSyncManager.updateObsidianTaskAttribute('labels', labels);
     }
   
     function toggleDropdown(index, event) {
@@ -62,8 +66,8 @@
           </a>
           {#if showDropdown && dropdownIndex === index}
             <div class="dropdown">
-              <button on:click={() => editLabel(index)}>Edit</button>
-              <button on:click={() => deleteLabel(index)}>Delete</button>
+              <button on:click={() => {editLabel(index); showDropdown = false}}>Edit</button>
+              <button on:click={() => {deleteLabel(index); showDropdown = false}}>Delete</button>
             </div>
           {/if}
         </div>
@@ -80,32 +84,3 @@
       <button on:click={() => (isEditingLabel = true)}>+</button>
     {/if}
   </div>
-  
-  <style>
-    .task-card-labels {
-      display: flex;
-      flex-wrap: nowrap; /* Prevents wrapping */
-      overflow: scroll; /* Truncates any labels that don't fit */
-      white-space: nowrap; /* Keeps labels on a single line */
-      gap: 4px;
-    }
-  
-    .task-card-labels a {
-      text-decoration: none;
-      flex-shrink: 0; /* Prevents individual labels from shrinking */
-    }
-  
-    .label-container {
-      position: relative;
-    }
-  
-    .dropdown {
-      position: absolute;
-      top: 100%;
-      right: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-  </style>
-  

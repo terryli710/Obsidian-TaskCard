@@ -64,7 +64,7 @@
     <div class="task-card-attribute-bottom-bar-left">
       <Due taskSyncManager={taskSyncManager} plugin={plugin} />
       <div class="task-card-attribute-separator"> | </div>
-      <Labels labels={task.labels} />
+      <Labels taskSyncManager={taskSyncManager} />
     </div>
     <div class="task-card-attribute-bottom-bar-right">
       <button class="task-card-collapse-button" on:click={(event) => switchMode(event, 'single-line')}>
