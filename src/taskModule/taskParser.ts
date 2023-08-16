@@ -151,7 +151,7 @@ export class TaskParser {
         return task;
     }
 
-    private parseDue(dueString: string): DueDate | null {
+    parseDue(dueString: string): DueDate | null {
         const parsedResult = chrono.parse(dueString)[0];
         const ParsedComponent = parsedResult.start;
         const isDateOnly = !ParsedComponent.isCertain('hour') && !ParsedComponent.isCertain('minute') && !ParsedComponent.isCertain('second');
@@ -165,7 +165,7 @@ export class TaskParser {
         }
     }
 
-    private parseProject(projectString: string): Project | null {
+    parseProject(projectString: string): Project | null {
         logger.debug(`Parsing project: ${projectString}, this.projectModule: ${JSON.stringify(this.projectModule.getProjectsData())}`);
         const project = this.projectModule.getProjectByName(projectString);
         if (!project) { return null };

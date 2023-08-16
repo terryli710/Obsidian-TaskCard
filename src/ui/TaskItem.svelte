@@ -5,9 +5,9 @@
     import TaskCard from "./TaskCard.svelte";
     import TaskCardPlugin from "..";
     import { ObsidianTaskSyncManager } from "../taskModule/taskSyncManager";
-  
+
     export let taskSyncManager: ObsidianTaskSyncManager;
-    // export let plugin: TaskCardPlugin;
+    export let plugin: TaskCardPlugin;
     export let defaultParams: TaskItemParams;
 
     let params = defaultParams;
@@ -39,10 +39,18 @@
         on:keydown={handleSwitchMode}
         tabindex="0"
     >
-        <TaskCard taskSyncManager={taskSyncManager} params={params} on:switchMode={handleSwitchMode}/>
+        <TaskCard 
+            taskSyncManager={taskSyncManager} 
+            plugin={plugin} 
+            params={params} 
+            on:switchMode={handleSwitchMode}/>
     </button>
 {:else}
     <li class="obsidian-taskcard task-list-item mode-multi-line">
-        <TaskCard taskSyncManager={taskSyncManager} params={params} on:switchMode={handleSwitchMode}/>
+        <TaskCard 
+            taskSyncManager={taskSyncManager} 
+            plugin={plugin} 
+            params={params} 
+            on:switchMode={handleSwitchMode}/>
     </li>
 {/if}

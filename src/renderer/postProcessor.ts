@@ -35,7 +35,7 @@ export class TaskItemSvelteAdapter extends MarkdownRenderChild {
             target: this.taskSync.taskItemEl.parentElement,
             props: {
                 taskSyncManager: this.taskSyncManager,
-                // plugin: this.plugin,
+                plugin: this.plugin,
                 defaultParams: this.params,
             },
             anchor: this.taskSync.taskItemEl,

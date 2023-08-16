@@ -13,7 +13,7 @@
     import Content from './Content.svelte';
 
     export let taskSyncManager: ObsidianTaskSyncManager;
-    // export let plugin: TaskCardPlugin;
+    export let plugin: TaskCardPlugin;
     export let params: TaskItemParams;
 
     let task: ObsidianTask = taskSyncManager.obsidianTask;
@@ -41,7 +41,7 @@
       <div class="task-card-content">{task.content}</div>
     </div>
     <div class="task-card-single-line-right-container">
-      <Due due={task.due} />
+      <Due taskSyncManager={taskSyncManager} plugin={plugin} />
       <Project project={task.project} params={params} />
     </div>
   </div>
@@ -62,7 +62,7 @@
 
   <div class="task-card-attribute-bottom-bar">
     <div class="task-card-attribute-bottom-bar-left">
-      <Due due={task.due} />
+      <Due taskSyncManager={taskSyncManager} plugin={plugin} />
       <div class="task-card-attribute-separator"> | </div>
       <Labels labels={task.labels} />
     </div>
