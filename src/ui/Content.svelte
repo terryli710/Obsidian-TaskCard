@@ -1,12 +1,7 @@
 <script lang="ts">
-    import { marked } from 'marked';
-    marked.use({ mangle: false, headerIds: false, langPrefix: '' });
-    import { logger } from "../utils/log";
     import { ObsidianTaskSyncManager } from '../taskModule/taskSyncManager';
-
     export let taskSyncManager: ObsidianTaskSyncManager;
-    let description = taskSyncManager.obsidianTask.description;
-    let descriptionMarkdown = marked(description);
+    let content: string = taskSyncManager.obsidianTask.content;
     let isEditing = false;
 
     function enableEditMode(event: MouseEvent | KeyboardEvent) {
@@ -21,35 +16,32 @@
     }
 
     function finishEditing(event: KeyboardEvent) {
-        if (event.shiftKey && event.key === 'Enter') {
+        if (event.key === 'Enter') {
             event.preventDefault();  // Prevent browser's default save behavior
             isEditing = false;
-            descriptionMarkdown = marked(description);
-            taskSyncManager.updateObsidianTaskAttribute('description', description);
+            taskSyncManager.updateObsidianTaskAttribute('content', content);
         } else if (event.key === 'Escape') {
             // Cancel editing, return to non-editing mode, and reset the description
             isEditing = false;
-            description = taskSyncManager.obsidianTask.description;
-            descriptionMarkdown = marked(description);
+            content = taskSyncManager.obsidianTask.content;
         }
     }
-
+    // TODO: change the style of the input.
 </script>
 
+
 {#if isEditing}
-    <textarea 
-        bind:value={description} 
-        on:keydown={finishEditing}
-        class="task-card-description"
-    ></textarea>
+    <input 
+        class="task-card-content" 
+        bind:value={content} 
+        on:keydown={finishEditing} />
 {:else}
     <div 
-        class="task-card-description" 
+        class="task-card-content" 
         role="button" 
-        tabindex="0"
-        on:dblclick={enableEditMode}
-        on:keydown={enableEditMode}
-    >
-        {@html descriptionMarkdown}
+        tabindex="0" 
+        on:dblclick={enableEditMode} 
+        on:keydown={enableEditMode}>
+        {content}
     </div>
 {/if}

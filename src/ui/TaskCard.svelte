@@ -10,6 +10,7 @@
     import TaskCardPlugin from '../index';
     import { ObsidianTask } from '../taskModule/task';
     import { ObsidianTaskSyncManager } from '../taskModule/taskSyncManager';
+    import Content from './Content.svelte';
 
     export let taskSyncManager: ObsidianTaskSyncManager;
     // export let plugin: TaskCardPlugin;
@@ -51,7 +52,7 @@
       <input type="checkbox" class={`task-card-checkbox ${task.priority}`} checked={task.completed} on:click|stopPropagation={handleCheckboxClick}>
     </div>
     <div class="task-card-content-project-line">
-      <div class="task-card-content">{task.content}</div>
+      <Content taskSyncManager={taskSyncManager} />
       <div class="task-card-project">
         <Project project={task.project} params={params} />
       </div>
