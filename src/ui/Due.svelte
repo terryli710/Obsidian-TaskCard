@@ -30,6 +30,7 @@
           event.preventDefault();
           isEditingDue = false;
           due = plugin.taskParser.parseDue(dueString);
+          taskSyncManager.updateObsidianTaskAttribute('due', due);
           updateDueDisplay();
       } else if (event.key === 'Escape') {
           isEditingDue = false;
