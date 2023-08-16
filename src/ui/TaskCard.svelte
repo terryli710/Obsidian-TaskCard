@@ -42,7 +42,7 @@
     </div>
     <div class="task-card-single-line-right-container">
       <Due taskSyncManager={taskSyncManager} plugin={plugin} />
-      <Project project={task.project} params={params} />
+      <Project taskSyncManager={taskSyncManager} params={params} />
     </div>
   </div>
 {:else}
@@ -54,7 +54,7 @@
     <div class="task-card-content-project-line">
       <Content taskSyncManager={taskSyncManager} />
       <div class="task-card-project">
-        <Project project={task.project} params={params} />
+        <Project taskSyncManager={taskSyncManager} params={params} />
       </div>
     </div>
     <Description taskSyncManager={taskSyncManager} />

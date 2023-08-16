@@ -1,12 +1,18 @@
 <script lang="ts">
     import { TaskItemParams } from "../renderer/postProcessor";
     import { Project } from "../taskModule/project";
-    import { stringToColor } from "../utils/colorConverter";
+    import { ObsidianTaskSyncManager } from "../taskModule/taskSyncManager";
     import { logger } from "../utils/log";
-    
-    export let project: Project;
+    import { SettingStore } from "../settings";
+
+    export let taskSyncManager: ObsidianTaskSyncManager;
+
+    let project: Project = taskSyncManager.obsidianTask.project;
+    let availableProjects: Project[] = [];
+    SettingStore.subscribe((settings) => {
+      availableProjects = settings.userMetadata.projects;
+    })
     export let params: TaskItemParams;
-    let color: string = stringToColor(project.name);
   </script>
   
   {#if params.mode === "single-line"}

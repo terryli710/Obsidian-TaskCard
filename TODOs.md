@@ -79,6 +79,18 @@
 - TODO: (optional) use dots besides the label to delete.
 
 
+## Project
+
+### Addition
+- TODO: dropdown menu to add
+
+### Edit
+- TODO: Similar to labels.
+
+### Delete
+- TODO: dropdown menu to delete.
+- 
+
 # Parsing and Formatting
 
 # Task adding and editing and deletion
