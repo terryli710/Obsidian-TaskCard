@@ -16,20 +16,21 @@ export interface ObsidianTaskSyncProps {
     }
 
 export class ObsidianTaskSyncManager implements ObsidianTaskSyncProps {
-    obsidianTask: ObsidianTask;
+    public obsidianTask: ObsidianTask;
     // markdownTask: string | null;
-    taskItemEl: HTMLElement | null;
-    taskMetadata: {
+    public taskItemEl: HTMLElement | null;
+    public taskMetadata: {
         sourcePath: string,
         mdSectionInfo: MarkdownSectionInformation | null,
         lineStartInSection: number | null,
         lineEndsInSection: number | null,
     };
-    plugin: TaskCardPlugin;
+    public plugin: TaskCardPlugin;
 
     constructor(plugin: TaskCardPlugin, props?: Partial<ObsidianTaskSyncProps>) {
         // this.markdownTask = props?.markdownTask || null;
         this.obsidianTask = props?.obsidianTask || new ObsidianTask();
+        this.taskItemEl = props?.taskItemEl || null;
         this.taskMetadata = props?.taskMetadata || { sourcePath: null, mdSectionInfo: null, lineStartInSection: null, lineEndsInSection: null };
         this.plugin = plugin;
     }
@@ -50,7 +51,8 @@ export class ObsidianTaskSyncManager implements ObsidianTaskSyncProps {
 
     updateObsidianTaskAttribute(key: string, value: any): void {
         this.obsidianTask[key] = value;
-        const markdownTask = this.plugin.TaskFormatter
+        const markdownTask = this.plugin.taskFormatter.taskToMarkdown(this.obsidianTask);
+        this.updateTaskToFile(markdownTask);
     }
 
 }

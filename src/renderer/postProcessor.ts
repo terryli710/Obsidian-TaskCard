@@ -5,7 +5,7 @@ import TaskCardPlugin from '..';
 import { get } from 'svelte/store';
 import { SettingStore } from '../settings';
 import TaskItem from '../ui/TaskItem.svelte';
-import { ObsidianTaskSyncProps } from '../taskModule/taskSyncManager';
+import { ObsidianTaskSyncManager, ObsidianTaskSyncProps } from '../taskModule/taskSyncManager';
 
 export type TaskMode = 'single-line' | 'multi-line';
 export interface TaskItemParams {
@@ -14,6 +14,7 @@ export interface TaskItemParams {
 
 export class TaskItemSvelteAdapter extends MarkdownRenderChild {
     taskSync: ObsidianTaskSyncProps;
+    taskSyncManager: ObsidianTaskSyncManager
     svelteComponent: SvelteComponent;
     plugin: TaskCardPlugin;
     params: TaskItemParams;
@@ -21,6 +22,7 @@ export class TaskItemSvelteAdapter extends MarkdownRenderChild {
     constructor(taskSync: ObsidianTaskSyncProps, plugin: TaskCardPlugin) {
         super(taskSync.taskItemEl);
         this.taskSync = taskSync;
+        this.taskSyncManager = new ObsidianTaskSyncManager(plugin, taskSync);
 
         const initialSettings = get(SettingStore);
         this.params = { mode: initialSettings.displaySettings.defaultMode as TaskMode };
@@ -32,8 +34,8 @@ export class TaskItemSvelteAdapter extends MarkdownRenderChild {
         this.svelteComponent = new TaskItem({
             target: this.taskSync.taskItemEl.parentElement,
             props: {
-                taskItemEl: this.taskSync.taskItemEl,
-                plugin: this.plugin,
+                taskSyncManager: this.taskSyncManager,
+                // plugin: this.plugin,
                 defaultParams: this.params,
             },
             anchor: this.taskSync.taskItemEl,

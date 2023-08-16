@@ -1,9 +1,11 @@
 <script lang="ts">
     import { marked } from 'marked';
-    import { logger } from "../utils/log";
-
-    export let description: string;
     marked.use({ mangle: false, headerIds: false, langPrefix: '' });
+    import { logger } from "../utils/log";
+    import { ObsidianTaskSyncManager } from '../taskModule/taskSyncManager';
+
+    export let taskSyncManager: ObsidianTaskSyncManager;
+    let description = taskSyncManager.obsidianTask.description;
     let descriptionMarkdown = marked(description);
     let isEditing = false;
 
@@ -19,11 +21,21 @@
         }
     }
 
+    function descriptionSaved() {
+        isEditing = false;
+        descriptionMarkdown = marked(description);
+        taskSyncManager.updateObsidianTaskAttribute('description', description);
+    }
+
     function handleDescriptionEditKeyDown(event: KeyboardEvent) {
         if (event.shiftKey && event.key === 'Enter') {
             event.preventDefault();  // Prevent browser's default save behavior
-            isEditing = false;  // Exit the editing mode after saving
-            descriptionMarkdown = marked(description);  // Update the markdown\
+            descriptionSaved();
+        } else if (event.key === 'Escape') {
+            // Cancel editing, return to non-editing mode, and reset the description
+            isEditing = false;
+            description = taskSyncManager.obsidianTask.description;
+            descriptionMarkdown = marked(description);
         }
     }
 </script>

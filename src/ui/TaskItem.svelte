@@ -4,14 +4,16 @@
     import { TaskItemParams } from "../renderer/postProcessor";
     import TaskCard from "./TaskCard.svelte";
     import TaskCardPlugin from "..";
+    import { ObsidianTaskSyncManager } from "../taskModule/taskSyncManager";
   
-    export let taskItemEl: HTMLElement;
-    export let plugin: TaskCardPlugin;
+    export let taskSyncManager: ObsidianTaskSyncManager;
+    // export let plugin: TaskCardPlugin;
     export let defaultParams: TaskItemParams;
 
     let params = defaultParams;
+    let taskItemEl: HTMLElement = taskSyncManager.taskItemEl;
 
-    logger.debug(`taskItemEl: outerHTML => ${taskItemEl.outerHTML}, innerHTML => ${taskItemEl.innerHTML}`);
+    logger.debug(`taskItemEl: innerHTML => ${taskItemEl.innerHTML}`);
 
     const dispatch = createEventDispatcher();
 
@@ -37,10 +39,10 @@
         on:keydown={handleSwitchMode}
         tabindex="0"
     >
-        <TaskCard taskEl={taskItemEl} {plugin} {params}/>
+        <TaskCard taskSyncManager={taskSyncManager} params={params} on:switchMode={handleSwitchMode}/>
     </button>
 {:else}
     <li class="obsidian-taskcard task-list-item mode-multi-line">
-        <TaskCard taskEl={taskItemEl} {plugin} {params} on:switchMode={handleSwitchMode}/>
+        <TaskCard taskSyncManager={taskSyncManager} params={params} on:switchMode={handleSwitchMode}/>
     </li>
 {/if}

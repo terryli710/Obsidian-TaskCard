@@ -9,12 +9,13 @@
     import Collapse from '../components/icons/Collapse.svelte';
     import TaskCardPlugin from '../index';
     import { ObsidianTask } from '../taskModule/task';
+    import { ObsidianTaskSyncManager } from '../taskModule/taskSyncManager';
 
-    export let taskEl: HTMLElement;
-    export let plugin: TaskCardPlugin;
+    export let taskSyncManager: ObsidianTaskSyncManager;
+    // export let plugin: TaskCardPlugin;
     export let params: TaskItemParams;
 
-    const task: ObsidianTask = plugin.taskParser.parseTaskEl(taskEl);
+    let task: ObsidianTask = taskSyncManager.obsidianTask;
 
     const dispatch = createEventDispatcher();
 
@@ -55,7 +56,7 @@
         <Project project={task.project} params={params} />
       </div>
     </div>
-    <Description description={task.description} />
+    <Description taskSyncManager={taskSyncManager} />
   </div>
 
   <div class="task-card-attribute-bottom-bar">

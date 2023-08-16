@@ -34,7 +34,7 @@ export class TaskCardRenderManager {
 
     getPostProcessor(): MarkdownPostProcessor {
         const postProcessor = async (el: HTMLElement, ctx: MarkdownPostProcessorContext) => {
-            logger.debug(`PostProcessor - before onload: el: ${el.innerHTML}`)
+            // logger.debug(`PostProcessor - before onload: el: ${el.innerHTML}`)
             
             const taskSyncs: ObsidianTaskSyncProps[] = await this.constructTaskSync(el, ctx)
 
@@ -42,7 +42,7 @@ export class TaskCardRenderManager {
                 const processor = new TaskItemSvelteAdapter(taskSync, this.plugin);
                 processor.onload();
                 }
-            logger.debug(`PostProcessor - after onload: el: ${el.innerHTML}`)
+            // logger.debug(`PostProcessor - after onload: el: ${el.innerHTML}`)
             }
         return postProcessor
     }
@@ -69,12 +69,12 @@ export class TaskCardRenderManager {
             return {
                 obsidianTask: obsidianTask,
                 markdownTask: null,
-                taskItemEl,
+                taskItemEl: taskItemEl,
                 taskMetadata: {
-                    sourcePath,
-                    mdSectionInfo,
-                    lineStartInSection,
-                    lineEndsInSection,
+                    sourcePath: sourcePath,
+                    mdSectionInfo: mdSectionInfo,
+                    lineStartInSection: lineStartInSection,
+                    lineEndsInSection: lineEndsInSection,
                 }
             }
         })
