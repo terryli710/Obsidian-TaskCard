@@ -1,6 +1,5 @@
 
 import { MarkdownRenderChild } from 'obsidian';
-import { TaskItemData } from './index';
 import { SvelteComponent } from 'svelte';
 import TaskCardPlugin from '..';
 import { get } from 'svelte/store';

@@ -1,7 +1,6 @@
 import { MarkdownSectionInformation } from "obsidian";
 import { ObsidianTask } from "./task";
 import { FileOperator } from "../renderer/fileOperator";
-import TaskCardPlugin from "..";
 import { TaskParser } from './taskParser';
 
 
@@ -34,8 +33,8 @@ export class ObsidianTaskSyncManager implements ObsidianTaskSyncProps {
         this.markdownTask = props?.markdownTask || null;
         this.obsidianTask = props?.obsidianTask || new ObsidianTask();
         this.taskMetadata = props?.taskMetadata || { sourcePath: null, mdSectionInfo: null, lineStartInSection: null, lineEndsInSection: null };
-        this.fileOperator = fileOperator
-        this.taskParser = taskParser
+        this.fileOperator = fileOperator;
+        this.taskParser = taskParser;
     }
 
     async getMarkdownTaskFromFile(): Promise<string> {
@@ -52,11 +51,9 @@ export class ObsidianTaskSyncManager implements ObsidianTaskSyncProps {
         await this.fileOperator.updateFile(this.taskMetadata.sourcePath, markdownTask, docLineStart, docLineEnd);
     }
 
-    updateTaskAttribute(key: string, value: any): void {
-        
-    }
-
-
-
+    updateObsidianTaskAttribute(key: string, value: any): void {
+        this.obsidianTask[key] = value;
 
     }
+
+}

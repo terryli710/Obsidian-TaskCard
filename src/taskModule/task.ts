@@ -2,9 +2,6 @@ import type { Static } from 'runtypes';
 import { String } from 'runtypes';
 import { v4 as uuidv4 } from 'uuid';
 import { Project } from './project';
-import { MarkdownSectionInformation } from 'obsidian';
-import { FileOperator } from '../renderer/fileOperator';
-
 
 export const DateOnly = String.withConstraint(s => /^\d{4}-\d{2}-\d{2}$/.test(s));
 export const TimeOnly = String.withConstraint(s => /^\d{2}:\d{2}$/.test(s));
