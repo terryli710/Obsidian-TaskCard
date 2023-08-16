@@ -4,6 +4,7 @@ import { filterTaskItems, getIndicesOfFilter, isTaskItemEl, isTaskList } from ".
 import { TaskValidator } from "../taskModule/taskValidator";
 import { TaskItemSvelteAdapter } from "./postProcessor";
 import { logger } from "../utils/log";
+import { ObsidianTaskSyncProps } from "../taskModule/taskSyncManager";
 
 export interface TaskItemData {
     // HTML information about the TaskItem
@@ -35,10 +36,10 @@ export class TaskCardRenderManager {
         const postProcessor = async (el: HTMLElement, ctx: MarkdownPostProcessorContext) => {
             logger.debug(`PostProcessor - before onload: el: ${el.innerHTML}`)
             
-            const taskItems: TaskItemData[] = this.constructTaskItemsFromSectionElement(el, ctx);
+            const taskSyncs: ObsidianTaskSyncProps[] = await this.constructTaskSync(el, ctx)
 
-            for (const taskItem of taskItems) {
-                const processor = new TaskItemSvelteAdapter(taskItem, this.plugin);
+            for (const taskSync of taskSyncs) {
+                const processor = new TaskItemSvelteAdapter(taskSync, this.plugin);
                 processor.onload();
                 }
             logger.debug(`PostProcessor - after onload: el: ${el.innerHTML}`)
@@ -46,30 +47,39 @@ export class TaskCardRenderManager {
         return postProcessor
     }
 
-    constructTaskItemsFromSectionElement(
-            sectionDiv: HTMLElement, 
-            ctx: MarkdownPostProcessorContext): TaskItemData[] {
+    async constructTaskSync(sectionDiv: HTMLElement, ctx: MarkdownPostProcessorContext): Promise<ObsidianTaskSyncProps[]> {
+        // markdownTask is null (not used here)
         const section: HTMLElement = sectionDiv.children[0] as HTMLElement;
-        // logger.debug(`constructTaskItemsFromSectionElement: section: ${section.outerHTML}`)
-        if (!isTaskList(section)) return []
+        if (!isTaskList(section)) return [];
         const taskItemsIndices: number[] = getIndicesOfFilter(
             Array.from(section.children) as HTMLElement[], 
             this.taskItemFilter
-        )
+        );
+        if (taskItemsIndices.length === 0) return [];
         
-        if (taskItemsIndices.length === 0) return []
-        const mdSectionInfo = ctx.getSectionInfo(section)
+        const mdSectionInfo = ctx.getSectionInfo(section);
+        const sourcePath = ctx.sourcePath;
         const lineNumbers: number[] = taskItemsIndices.map((index) => getLineNumberOfListItem(section, index));
-        
-        const taskItems: TaskItemData[] = taskItemsIndices.map((index, i) => {
-            const el = section.children[index] as HTMLElement;
-            const origHTML = el.outerHTML;
-            const lineNumberInSection = lineNumbers[i];
-            const markdown = el.innerText;
-            return { el, origHTML, mdSectionInfo, lineNumberInSection, markdown };
-        });
 
-        return taskItems;
+        const taskSyncs: ObsidianTaskSyncProps[] = taskItemsIndices.map((index, i) => {
+            const taskItemEl: HTMLElement = section.children[index] as HTMLElement;
+            const lineStartInSection = lineNumbers[i];
+            const lineEndsInSection = lineNumbers[i + 1]; // currently just 1 line
+            const obsidianTask = this.plugin.taskParser.parseTaskEl(taskItemEl);
+            return {
+                obsidianTask: obsidianTask,
+                markdownTask: null,
+                taskItemEl,
+                taskMetadata: {
+                    sourcePath,
+                    mdSectionInfo,
+                    lineStartInSection,
+                    lineEndsInSection,
+                }
+            }
+        })
+        return taskSyncs
+
     }
 
 }

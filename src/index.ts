@@ -8,6 +8,7 @@ import { Project, ProjectModule } from './taskModule/project';
 import { TaskParser } from './taskModule/taskParser';
 import { TaskValidator } from './taskModule/taskValidator';
 import { TaskCardRenderManager } from './renderer/index';
+import { FileOperator } from './renderer/fileOperator';
 
 export default class TaskCardPlugin extends Plugin {
   public settings: TaskCardSettings;
@@ -15,6 +16,7 @@ export default class TaskCardPlugin extends Plugin {
   public taskParser: TaskParser;
   public taskValidator: TaskValidator;
   public taskCardRenderManager: TaskCardRenderManager
+  public fileOperator: FileOperator
 
   
   constructor(app: App, pluginManifest: PluginManifest) {
@@ -27,6 +29,7 @@ export default class TaskCardPlugin extends Plugin {
     this.taskParser = new TaskParser(SettingStore, this.projectModule);
     this.taskValidator = new TaskValidator(SettingStore);
     this.taskCardRenderManager = new TaskCardRenderManager(this);
+    this.fileOperator = new FileOperator(this, this.app);
   }
 
   async loadSettings() {

@@ -6,6 +6,7 @@ import TaskCardPlugin from '..';
 import { get } from 'svelte/store';
 import { SettingStore } from '../settings';
 import TaskItem from '../ui/TaskItem.svelte';
+import { ObsidianTaskSyncProps } from '../taskModule/taskSyncManager';
 
 export type TaskMode = 'single-line' | 'multi-line';
 export interface TaskItemParams {
@@ -13,14 +14,14 @@ export interface TaskItemParams {
 }
 
 export class TaskItemSvelteAdapter extends MarkdownRenderChild {
-    taskItemData: TaskItemData;
+    taskSync: ObsidianTaskSyncProps;
     svelteComponent: SvelteComponent;
     plugin: TaskCardPlugin;
     params: TaskItemParams;
 
-    constructor(taskItemData: TaskItemData, plugin: TaskCardPlugin) {
-        super(taskItemData.el);
-        this.taskItemData = taskItemData;
+    constructor(taskSync: ObsidianTaskSyncProps, plugin: TaskCardPlugin) {
+        super(taskSync.taskItemEl);
+        this.taskSync = taskSync;
 
         const initialSettings = get(SettingStore);
         this.params = { mode: initialSettings.displaySettings.defaultMode as TaskMode };
@@ -30,17 +31,17 @@ export class TaskItemSvelteAdapter extends MarkdownRenderChild {
 
     onload() {
         this.svelteComponent = new TaskItem({
-            target: this.taskItemData.el.parentElement,
+            target: this.taskSync.taskItemEl.parentElement,
             props: {
-                taskItemEl: this.taskItemData.el,
+                taskItemEl: this.taskSync.taskItemEl,
                 plugin: this.plugin,
                 defaultParams: this.params,
             },
-            anchor: this.taskItemData.el,
+            anchor: this.taskSync.taskItemEl,
         });
     
         // New element has been created right before the target element, now hide the target element
-        this.taskItemData.el.style.display = 'none';
+        this.taskSync.taskItemEl.style.display = 'none';
     }
 }
     

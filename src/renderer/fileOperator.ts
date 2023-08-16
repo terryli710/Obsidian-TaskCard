@@ -1,14 +1,14 @@
 import { App, TAbstractFile, TFile } from "obsidian";
 import TaskCardPlugin from "..";
-import { TaskItemData } from ".";
 
 
 export class FileOperator {
     app: App;
     plugin: TaskCardPlugin;
 
-    constructor(plugin: TaskCardPlugin) {
+    constructor(plugin: TaskCardPlugin, app: App) {
         this.plugin = plugin;
+        this.app = app;
     }
 
     async getFileContent(filePath: string): Promise<string> {
@@ -22,15 +22,8 @@ export class FileOperator {
         return content.split('\n');
     }
 
-    async getObsidianTaskLineNumber(taskItemData: TaskItemData): Promise<[number, number]> {
-        const lineStart = taskItemData.mdSectionInfo.lineStart;
-        const lineEnd = taskItemData.mdSectionInfo.lineStart + taskItemData.lineNumberEndsInSection? taskItemData.lineNumberEndsInSection : taskItemData.lineNumberInSection;
-        return [lineStart, lineEnd];
-    }
-
-    async getObsidianTask(taskItemData: TaskItemData, filePath: string): Promise<string> {
+    async getMarkdownBetweenLines(filePath: string, lineStart: number, lineEnd: number): Promise<string> {
         const fileLines = await this.getFileLines(filePath);
-        const [lineStart, lineEnd] = await this.getObsidianTaskLineNumber(taskItemData);
         return fileLines.slice(lineStart, lineEnd).join('\n');
     }
 
@@ -41,12 +34,5 @@ export class FileOperator {
         newFileLines.splice(lineStart, lineEnd - lineStart, ...newContent);
         await this.app.vault.modify(file as TFile, newFileLines.join('\n'));
     }
-
-    async updateObsidianTask(taskItemData: TaskItemData, filePath: string): Promise<void> {
-        const [lineStart, lineEnd] = await this.getObsidianTaskLineNumber(taskItemData);
-        const newContent = taskItemData.markdown;
-        await this.updateFile(filePath, newContent, lineStart, lineEnd);
-    }
-
 
 }

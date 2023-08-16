@@ -75,7 +75,7 @@ export class TaskParser {
             : taskMarkdown.trim();
     
         task.content = markdownTaskContent.slice(5).trim();
-        task.completed = markdownTaskContent.startsWith("- [x]");
+        task.completed = markdownTaskContent.startsWith("- [x]"); // TODO: currently only supports x
     
         // Extracting labels from the content line
         const [contentLabels, remainingContent] = extractTags(task.content);
