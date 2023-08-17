@@ -6,11 +6,12 @@
     import Description from './Description.svelte';
     import { logger } from '../utils/log';
     import { createEventDispatcher } from 'svelte';
-    import Collapse from '../components/icons/Collapse.svelte';
     import TaskCardPlugin from '../index';
     import { ObsidianTask } from '../taskModule/task';
     import { ObsidianTaskSyncManager } from '../taskModule/taskSyncManager';
     import Content from './Content.svelte';
+    // import { ChevronsDownUp } from 'lucide-svelte'; // BUG: somehow doesn't work
+    import ChevronsDownUp from '../components/icons/ChevronsDownUp.svelte';
 
     export let taskSyncManager: ObsidianTaskSyncManager;
     export let plugin: TaskCardPlugin;
@@ -67,8 +68,8 @@
       <Labels taskSyncManager={taskSyncManager} />
     </div>
     <div class="task-card-attribute-bottom-bar-right">
-      <button class="task-card-collapse-button" on:click={(event) => switchMode(event, 'single-line')}>
-        <Collapse class="task-card-icon" />
+      <button class="task-card-round-button" on:click={(event) => switchMode(event, 'single-line')}>
+        <ChevronsDownUp width="16" height="16" />
       </button>
     </div>
   </div>

@@ -14,6 +14,9 @@
 - TODO: Debug no label, no due task.
 - TODO: css fully adapt to themes.
 
+## Icon
+- Manually using lucide icon, because we cannot install lucide-svelte
+- TODO: some shadow inside the icon...
 # Interaction
 
 ## Settings

@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { logger } from '../utils/log';
   import { Menu } from 'obsidian';
+  import Plus from '../components/icons/Plus.svelte';
 
   export let taskSyncManager;
   let labels: string[] = taskSyncManager.obsidianTask.labels;
@@ -91,6 +92,8 @@
       on:keydown={(e) => e.key === 'Enter' && addLabel()}
     />
   {:else}
-    <button on:click={() => (isEditingLabel = true)}>+</button>
+    <button class="task-card-round-button" on:click={() => (isEditingLabel = true)}>
+      <Plus width="16" height="16" />
+    </button>
   {/if}
 </div>

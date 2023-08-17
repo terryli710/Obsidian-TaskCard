@@ -182,12 +182,29 @@
   flex-wrap: nowrap; /* Prevents wrapping */
   overflow: scroll; /* Truncates any labels that don't fit */
   white-space: nowrap; /* Keeps labels on a single line */
+  align-items: center;
   gap: 4px;
 }
 
 .task-card-labels a {
   text-decoration: none;
   flex-shrink: 0; /* Prevents individual labels from shrinking */
+}
+
+.task-card-labels button {
+  border-radius: 50%; /* This will make the button round */
+  background-color: var(--background-modifier-button); /* Set the background color as per your design */
+  border: none; /* Remove the default border */
+  font-size: 1em; /* Set the font size */
+  color: var(--text-color); /* Set the text color */
+  display: flex; /* Use flexbox for alignment */
+  align-items: center; /* Align content vertically */
+  justify-content: center; /* Align content horizontally */
+  cursor: pointer; /* Change the cursor to pointer on hover */
+}
+
+.task-card-labels button:hover {
+  background-color: var(--background-modifier-hover); /* Change the background color on hover */
 }
 
 .more-labels-symbol {
@@ -224,21 +241,41 @@ input.task-card-due:focus {
 }
 
 .task-card-icon {
-  vertical-align: middle;
   align-self: center;
-  height: 10px;
-  width: 10px;
-}
-
-.task-card-collapse-button {
-  display: flex;           /* Use Flexbox layout */
-  align-items: center;     /* Center children vertically */
-  justify-content: center; /* Center children horizontally */
-  border: none;            /* Remove default border */
-  background: none;        /* Remove default background */
-  padding: 0;              /* Remove default padding */
-  cursor: pointer;         /* Change cursor to pointer on hover */
   width: var(--icon-size);
   height: var(--icon-size);
+  fill: var(--icon-color);
+}
+
+.task-card-round-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  width: calc(var(--icon-size) + 10px);
+  height: calc(var(--icon-size) + 10px);
   border-radius: 50%;
+}
+
+.task-card-round-button:hover {
+  background-color: var(--background-modifier-hover);
+}
+
+.task-card-round-button:hover .task-card-icon {
+  fill: var(--icon-color-hover);
+}
+
+.task-card-round-button:active {
+  background-color: var(--background-modifier-active-hover);
+}
+
+.task-card-round-button:active .task-card-icon {
+  fill: var(--icon-color-active);
+}
+
+.task-card-round-button:focus .task-card-icon {
+  fill: var(--icon-color-focused);
 }
