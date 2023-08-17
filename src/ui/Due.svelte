@@ -44,7 +44,6 @@
   }
 </script>
 
-
 {#if isEditingDue}
   <input
     type="text"
