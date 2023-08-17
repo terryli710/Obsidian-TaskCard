@@ -67,6 +67,7 @@
     {#if editingIndex === index}
       <input
         type="text"
+        class="task-card-label-input"
         bind:value={newLabel}
         on:keydown={(e) => e.key === 'Enter' && saveEdit()}
       />
@@ -88,6 +89,7 @@
   {#if isEditingLabel}
     <input
       type="text"
+      class="task-card-label-input"
       bind:value={newLabel}
       on:keydown={(e) => e.key === 'Enter' && addLabel()}
     />

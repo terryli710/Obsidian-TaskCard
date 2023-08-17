@@ -209,7 +209,23 @@
 
 .more-labels-symbol {
   display: inline-block;
-  }
+}
+
+input.task-card-label-input {
+  display: inline-block;
+  padding: 1px 10px;
+  border-radius: 1000px; /* Rounded corners */
+  border: var(--border-width) solid var(--background-modifier-border);
+  width: auto;
+  font-size: 0.8em;
+  white-space: nowrap;
+}
+
+input.task-card-label-input:focus {
+  outline: none; /* Remove the default outline */
+  box-shadow: none; /* Remove the default box-shadow */
+  border: calc(0.75 * var(--border-width)) solid var(--background-modifier-border); /* Add a custom border */
+}
 
 .task-card-due {
   display: inline-block;
