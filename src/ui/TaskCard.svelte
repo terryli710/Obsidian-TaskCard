@@ -6,11 +6,12 @@
     import Description from './Description.svelte';
     import { logger } from '../utils/log';
     import { createEventDispatcher } from 'svelte';
-    import Collapse from '../components/icons/Collapse.svelte';
     import TaskCardPlugin from '../index';
     import { ObsidianTask } from '../taskModule/task';
     import { ObsidianTaskSyncManager } from '../taskModule/taskSyncManager';
     import Content from './Content.svelte';
+    // import { ChevronsDownUp } from 'lucide-svelte'; // BUG: somehow doesn't work
+    import ChevronsDownUp from '../components/icons/ChevronsDownUp.svelte';
 
     export let taskSyncManager: ObsidianTaskSyncManager;
     export let plugin: TaskCardPlugin;
@@ -42,7 +43,7 @@
     </div>
     <div class="task-card-single-line-right-container">
       <Due taskSyncManager={taskSyncManager} plugin={plugin} />
-      <Project project={task.project} params={params} />
+      <Project taskSyncManager={taskSyncManager} params={params} />
     </div>
   </div>
 {:else}
@@ -53,8 +54,8 @@
     </div>
     <div class="task-card-content-project-line">
       <Content taskSyncManager={taskSyncManager} />
-      <div class="task-card-project">
-        <Project project={task.project} params={params} />
+      <div class="project-wrapper">
+        <Project taskSyncManager={taskSyncManager} params={params} />
       </div>
     </div>
     <Description taskSyncManager={taskSyncManager} />
@@ -64,11 +65,11 @@
     <div class="task-card-attribute-bottom-bar-left">
       <Due taskSyncManager={taskSyncManager} plugin={plugin} />
       <div class="task-card-attribute-separator"> | </div>
-      <Labels labels={task.labels} />
+      <Labels taskSyncManager={taskSyncManager} />
     </div>
     <div class="task-card-attribute-bottom-bar-right">
-      <button class="task-card-collapse-button" on:click={(event) => switchMode(event, 'single-line')}>
-        <Collapse class="task-card-icon" />
+      <button class="task-card-round-button" on:click={(event) => switchMode(event, 'single-line')}>
+        <ChevronsDownUp/>
       </button>
     </div>
   </div>

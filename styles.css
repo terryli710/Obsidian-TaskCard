@@ -11,7 +11,6 @@
   line-height: var(--line-height-normal);
   border-radius: var(--radius-l);
   border: var(--border-width) solid var(--background-modifier-border);
-  padding: 4px 8px 4px 0.48em;
   height: var(--input-height);
   margin: 1px 0;
   display: inline-flex;
@@ -29,6 +28,7 @@
 
 .obsidian-taskcard.mode-single-line {
   cursor: var(--cursor-link);
+  padding: 0.25em 0.5em 0.25em 0.48em;
 }
 
 .obsidian-taskcard.mode-single-line:not(:empty):hover {
@@ -39,6 +39,9 @@
   background-color: var(--background-modifier-active-hover);
 }
 
+.obsidian-taskcard.mode-multi-line{
+  padding: 0.25em 0.5em 0.5em 0.48em;
+}
 
 .task-card-single-line {
   display: flex;
@@ -77,6 +80,7 @@
 }
 
 .task-card-content-project-line {
+  position: relative;
   grid-column: 2;
   grid-row: 1;
   display: flex;
@@ -85,10 +89,32 @@
   align-items: center; /* Centers items vertically */
 }
 
-.task-card-content {
-  flex-grow: 1; /* Takes all available space except what project needs */
-  white-space: pre-wrap; /* Allows content to wrap within its container */
+.project-wrapper {
+  position: relative; /* Ensure that this does not change */
 }
+
+.project-popup {
+  position: absolute;
+  top: 50%; /* Position the popup at the middle of the .project-wrapper */
+  right: 0; /* Align the popup to the right of the original project */
+  margin: 0; /* Remove any margins */
+  padding: 0; /* Remove any padding */
+}
+
+.project-option {
+  margin: 0; /* Remove margin from the first option */
+  display: flex;
+  justify-content: flex-end; /* Align the available projects on the right */
+}
+
+.project-option:first-child {
+  transform: translateY(-50%); /* Move the first project up by 50% of its own height */
+}
+
+.project-option:not(:first-child) {
+  margin-top: 2px; /* Reduce the margin between the subsequent options */
+}
+
 
 .task-card-project {
   flex-shrink: 0; /* Ensures that the project won't shrink */
@@ -114,7 +140,7 @@
 }
 
 .task-card-checkbox {
-  border: 1.5px solid;
+  border: var(--border-width) solid;
 }
 
 /* Apply color to checkbox based on priority */
@@ -146,6 +172,7 @@
 .task-card-attribute-bottom-bar-right {
   display: flex;
   align-items: center;
+  margin-left: calc(0.1 * var(--list-indent));
 }
 
 .task-card-attribute-separator {
@@ -159,50 +186,108 @@
   flex-wrap: nowrap; /* Prevents wrapping */
   overflow: scroll; /* Truncates any labels that don't fit */
   white-space: nowrap; /* Keeps labels on a single line */
+  align-items: center;
   gap: 4px;
+  flex-grow: 1; /* Make it take up all available space */
 }
 
 .task-card-labels a {
   text-decoration: none;
-  flex-shrink: 0; /* Prevents individual labels from shrinking */
+  flex-shrink: 0;
+}
+
+.task-card-labels button {
+  border-radius: 50%;
+  background-color: var(--background-modifier-button);
+  border: none;
+  font-size: 1em;
+  color: var(--text-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.task-card-labels button:hover {
+  background-color: var(--background-modifier-hover); /* Change the background color on hover */
 }
 
 .more-labels-symbol {
   display: inline-block;
-  }
+}
+
+input.task-card-label-input {
+  display: inline-block;
+  padding: 1px 10px;
+  border-radius: 1000px; /* Rounded corners */
+  border: var(--border-width) solid var(--background-modifier-border);
+  width: auto;
+  font-size: 0.8em;
+  white-space: nowrap;
+}
+
+input.task-card-label-input:focus {
+  outline: none; /* Remove the default outline */
+  box-shadow: none; /* Remove the default box-shadow */
+  border: calc(0.75 * var(--border-width)) solid var(--background-modifier-border); /* Add a custom border */
+}
 
 .task-card-due {
   display: inline-block;
   padding: 1px 10px;
-  border-radius: 15px;
-  border: 0.75px solid gray;
+  border-radius: 1000px; /* Rounded corners */
+  border: var(--border-width) solid var(--background-modifier-border);
   width: auto;
   font-size: 0.8em;
-  font-family: 'Arial Light', sans-serif;
-  font-weight: lighter;
   white-space: nowrap;
 }
 
+/* This selector ensures that the cursor only changes to a hand pointer when the div is not empty */
 .task-card-due:not(:empty):hover {
   background-color: var(--background-modifier-hover);
+  cursor: pointer;
+}
+
+input.task-card-due {
+  border-radius: 1000px; /* Rounded corners */
+  width: auto;
+  text-align: center;
+}
+
+/* Customize the focus styles */
+input.task-card-due:focus {
+  outline: none; /* Remove the default outline */
+  box-shadow: none; /* Remove the default box-shadow */
+  border: calc(0.75 * var(--border-width)) solid var(--background-modifier-border); /* Add a custom border */
 }
 
 .task-card-icon {
-  vertical-align: middle;
   align-self: center;
-  height: 10px;
-  width: 10px;
+  width: var(--icon-xs);
+  height: var(--icon-xs);
 }
 
-.task-card-collapse-button {
-  display: flex;           /* Use Flexbox layout */
-  align-items: center;     /* Center children vertically */
-  justify-content: center; /* Center children horizontally */
-  border: none;            /* Remove default border */
-  background: none;        /* Remove default background */
-  padding: 0;              /* Remove default padding */
-  cursor: pointer;         /* Change cursor to pointer on hover */
-  width: var(--icon-size);
-  height: var(--icon-size);
+.task-card-round-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  width: calc(var(--icon-xs) + 10px);
+  height: calc(var(--icon-xs) + 10px);
   border-radius: 50%;
+  overflow: hidden; /* Hide overflow */
+  min-width: calc(var(--icon-xs) + 10px); /* Set minimum width */
+  min-height: calc(var(--icon-xs) + 10px); /* Set minimum height */
+  flex-shrink: 0; /* Prevent shrinking */
+}
+
+.task-card-round-button:hover {
+  background-color: var(--background-modifier-hover);
+}
+
+.task-card-round-button:active {
+  background-color: var(--background-modifier-active-hover);
 }

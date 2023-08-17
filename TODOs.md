@@ -1,13 +1,108 @@
 
 # Display
-- Debug no label, no due task.
-- css fully adapt to themes.
-- New display format.
-  - New detection of the checkbox + content.
 
+## Edit Mode
+- like a normal markdown task.
+- Using no display html to achieve this.
+- formatted attribute saving.
+- No direct edit method.
+
+## Multi-mode display in preview mode
+- Single line and multi line modes.
+- Interactive UI in both modes.
+- Modification reflective to the original doc.
+- TODO: Debug no label, no due task.
+- TODO: css fully adapt to themes.
+
+## Icon
+- Manually using lucide icon, because we cannot install lucide-svelte
+- TODO: some shadow inside the icon...
 # Interaction
-- hover behavior
-- click behavior
+
+## Settings
+- TODO: for project, if saved, not interactive;
+- TODO: when adding project, visual cue for OPTIONAL color picking;
+
+## Content
+
+### Addition
+- NA
+
+### Edit
+- double click and edit content with single line window.
+  - Save and discard edits
+- TODO: Text size when editing.
+- TODO: Font when editing.
+
+### Delete
+- NA
+
+## Description
+
+### Addition
+- TODO: dropdown menu to add.
+- TODO: debug css when description is empty.
+
+### Edit
+- double click and edit description with multi line support.
+  - Save and discard edits.
+- TODO: (far stretch) interactive display mode when editing.
+
+### Delete
+- TODO: dropdown menu to delete.
+
+## Due
+
+### Addition
+- TODO: dropdown menu to add.
+- TODO: debug css when due is empty.
+
+### Edit
+- double click and edit due string.
+  - Save and discard edits.
+- TODO: the font when editing.
+- TODO: the text box when editing.
+- TODO: the hover behavior for the due.
+
+### Delete
+- TODO: dropdown menu to delete.
+
+## Labels
+
+### Functionality
+- TODO: searchable labels (currently cannot be searched).
+- TODO: add # to the label display.
+
+### Addition
+- bottom to add label.
+- TODO: adjust bottom shape.
+
+### Edit
+- right click -> dropdown to edit.
+- TODO: the css when editing.
+- TODO: (optional) use dots besides the label to edit
+
+### Delete
+- dropdown menu to delete.
+- TODO: (optional) use dots besides the label to delete.
+
+
+## Project
+
+### Functionality
+- TODO: debug the color function
+
+### Addition
+- TODO: dropdown menu to add
+
+### Edit
+- Using a pop up menu
+- CSS similar to the chosen project.
+- TODO: add a boarder?
+
+### Delete
+- TODO: dropdown menu to delete.
+- 
 
 # Parsing and Formatting
 
@@ -36,9 +131,8 @@
 # File <-> HTML Sync
 
 ## HTML pinpointing the MD
-- sections: based on index, we can match both.
-- Task and descriptions in the same section.
-- 
+- Mostly done.
+- TODO: Description as appending paragraphs
 
 # Task Formats
 
