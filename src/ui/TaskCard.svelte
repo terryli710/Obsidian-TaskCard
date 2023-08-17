@@ -53,7 +53,7 @@
     </div>
     <div class="task-card-content-project-line">
       <Content taskSyncManager={taskSyncManager} />
-      <div class="task-card-project">
+      <div class="project-wrapper">
         <Project taskSyncManager={taskSyncManager} params={params} />
       </div>
     </div>

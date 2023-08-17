@@ -37,14 +37,6 @@
 
 </script>
 
-<style>
-  .project-popup {
-    position: absolute;
-    /* top: 100%;
-    left: 0; */
-  }
-</style>
-
 {#if params.mode === "single-line"}
   <div class="task-card-project">
     <span class="project-color" style="background-color: {project.color};"></span>
@@ -75,10 +67,12 @@
             tabindex="0"
             role="button"
           >
-            <a href="#{availableProject.name}" class="tag" target="_blank" rel="noopener">
-              {availableProject.name}
-            </a>
-            <span class="project-color" style="background-color: {availableProject.color};"></span>
+            <div class="task-card-project">
+              <a href="#{availableProject.name}" class="tag" target="_blank" rel="noopener">
+                {availableProject.name}
+              </a>
+              <span class="project-color" style="background-color: {availableProject.color};"></span>
+            </div>
           </div>
         {/if}
       {/each}
