@@ -55,6 +55,7 @@
   - Save and discard edits.
 - TODO: the font when editing.
 - TODO: the text box when editing.
+- TODO: the hover behavior for the due.
 
 ### Delete
 - TODO: dropdown menu to delete.
@@ -81,11 +82,15 @@
 
 ## Project
 
+### Functionality
+- How to search for projects?
+
 ### Addition
 - TODO: dropdown menu to add
 
 ### Edit
-- TODO: Similar to labels.
+- TODO: DEBUG in the selection menu, the first project cannot be chosen. And when entering the selection, the first is always pre-chosen.
+- TODO: the css for the selection.
 
 ### Delete
 - TODO: dropdown menu to delete.
