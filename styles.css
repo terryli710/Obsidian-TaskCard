@@ -11,7 +11,6 @@
   line-height: var(--line-height-normal);
   border-radius: var(--radius-l);
   border: var(--border-width) solid var(--background-modifier-border);
-  padding: 0.25em 0.5em 0.5em 0.48em;
   height: var(--input-height);
   margin: 1px 0;
   display: inline-flex;
@@ -29,6 +28,7 @@
 
 .obsidian-taskcard.mode-single-line {
   cursor: var(--cursor-link);
+  padding: 0.25em 0.5em 0.25em 0.48em;
 }
 
 .obsidian-taskcard.mode-single-line:not(:empty):hover {
@@ -39,6 +39,9 @@
   background-color: var(--background-modifier-active-hover);
 }
 
+.obsidian-taskcard.mode-multi-line{
+  padding: 0.25em 0.5em 0.5em 0.48em;
+}
 
 .task-card-single-line {
   display: flex;
@@ -169,6 +172,7 @@
 .task-card-attribute-bottom-bar-right {
   display: flex;
   align-items: center;
+  margin-left: calc(0.1 * var(--list-indent));
 }
 
 .task-card-attribute-separator {
