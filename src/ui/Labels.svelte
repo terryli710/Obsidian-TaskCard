@@ -1,7 +1,7 @@
 <script lang='ts'>
   import { onMount } from 'svelte';
   import { logger } from '../utils/log';
-  import { Menu, MenuItem } from 'obsidian';
+  import { Menu } from 'obsidian';
 
   export let taskSyncManager;
   let labels: string[] = taskSyncManager.obsidianTask.labels;
