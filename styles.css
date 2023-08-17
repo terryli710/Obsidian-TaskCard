@@ -81,7 +81,9 @@
   grid-column: 2;
   grid-row: 1;
   display: flex;
-  align-items: center; /* Vertically align the content to the center */
+  flex-wrap: wrap; /* Allows content to wrap to the next line */
+  justify-content: space-between; /* Aligns content left, project right */
+  align-items: center; /* Centers items vertically */
 }
 
 .project-wrapper {
@@ -92,7 +94,6 @@
   position: absolute;
   top: 50%; /* Position the popup at the middle of the .project-wrapper */
   right: 0; /* Align the popup to the right of the original project */
-  background-color: rgba(0, 0, 0, 0.3); /* 30% transparency */
   margin: 0; /* Remove any margins */
   padding: 0; /* Remove any padding */
 }
@@ -108,13 +109,9 @@
 }
 
 .project-option:not(:first-child) {
-  margin-top: 0px; /* Add margin between the subsequent options */
+  margin-top: 2px; /* Reduce the margin between the subsequent options */
 }
 
-.task-card-content {
-  flex-grow: 1; /* Takes all available space except what project needs */
-  white-space: pre-wrap; /* Allows content to wrap within its container */
-}
 
 .task-card-project {
   flex-shrink: 0; /* Ensures that the project won't shrink */

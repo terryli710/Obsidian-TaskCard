@@ -16,6 +16,10 @@
 
 # Interaction
 
+## Settings
+- TODO: for project, if saved, not interactive;
+- TODO: when adding project, visual cue for OPTIONAL color picking;
+
 ## Content
 
 ### Addition
@@ -83,14 +87,15 @@
 ## Project
 
 ### Functionality
-- How to search for projects?
+- TODO: debug the color function
 
 ### Addition
 - TODO: dropdown menu to add
 
 ### Edit
-- TODO: DEBUG in the selection menu, the first project cannot be chosen. And when entering the selection, the first is always pre-chosen.
-- TODO: the css for the selection.
+- Using a pop up menu
+- CSS similar to the chosen project.
+- TODO: add a boarder?
 
 ### Delete
 - TODO: dropdown menu to delete.
