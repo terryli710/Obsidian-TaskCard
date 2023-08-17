@@ -1,41 +1,42 @@
+
+
 <script lang='ts'>
   import { onMount } from 'svelte';
   import { logger } from '../utils/log';
   import { Menu } from 'obsidian';
   import Plus from '../components/icons/Plus.svelte';
+  import { LabelModule } from '../taskModule/labels';
 
   export let taskSyncManager;
-  let labels: string[] = taskSyncManager.obsidianTask.labels;
+  let labelModule = new LabelModule();
   let isEditingLabel = false;
   let newLabel = '';
   let editingIndex = null;
 
+  labelModule.setLabels(taskSyncManager.obsidianTask.labels, false);
+
   function addLabel() {
-    if (newLabel && !labels.includes(newLabel)) {
-      labels = [...labels, newLabel];
-    }
+    labelModule.addLabel(newLabel, false);
     newLabel = '';
     isEditingLabel = false;
-    taskSyncManager.updateObsidianTaskAttribute('labels', labels);
+    taskSyncManager.updateObsidianTaskAttribute('labels', labelModule.getLabels());
   }
 
   function editLabel(index) {
     editingIndex = index;
-    newLabel = labels[index];
+    newLabel = labelModule.getLabels()[index].substr(1); // remove leading #
   }
 
   function saveEdit() {
-    if (newLabel && !labels.includes(newLabel)) {
-      labels[editingIndex] = newLabel;
-    }
+    labelModule.editLabel('#' + newLabel, '#' + labelModule.getLabels()[editingIndex].substr(1), false);
     newLabel = '';
     editingIndex = null;
-    taskSyncManager.updateObsidianTaskAttribute('labels', labels);
+    taskSyncManager.updateObsidianTaskAttribute('labels', labelModule.getLabels());
   }
 
   function deleteLabel(index) {
-    labels = labels.filter((_, i) => i !== index);
-    taskSyncManager.updateObsidianTaskAttribute('labels', labels);
+    labelModule.deleteLabel(labelModule.getLabels()[index]);
+    taskSyncManager.updateObsidianTaskAttribute('labels', labelModule.getLabels());
   }
 
   function showPopupMenu(index, event) {
@@ -62,8 +63,9 @@
 
 </script>
 
+
 <div class="task-card-labels">
-  {#each labels as label, index}
+  {#each labelModule.getLabels() as label, index}
     {#if editingIndex === index}
       <input
         type="text"
@@ -74,17 +76,17 @@
     {:else}
       <div class="label-container">
         <a
-          href="#{label}"
+          href="{label}"
           class="tag"
           target="_blank"
           rel="noopener"
           on:contextmenu={(e) => showPopupMenu(index, e)}
         >
-          #{label}
+          {label}
         </a>
       </div>
     {/if}
-    {#if label !== labels[labels.length - 1]}{" "}{/if}
+    {#if label !== labelModule.getLabels()[labelModule.getLabels().length - 1]}{" "}{/if}
   {/each}
   {#if isEditingLabel}
     <input
