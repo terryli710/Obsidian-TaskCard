@@ -81,19 +81,16 @@
   grid-column: 2;
   grid-row: 1;
   display: flex;
-  flex-wrap: wrap; /* Allows content to wrap to the next line */
-  justify-content: space-between; /* Aligns content left, project right */
-  align-items: flex-start;
+  align-items: center; /* Vertically align the content to the center */
 }
 
 .project-wrapper {
   position: relative; /* Ensure that this does not change */
-  align-items: center;
 }
 
 .project-popup {
   position: absolute;
-  top: 0; /* Position the popup at the top of the .project-wrapper */
+  top: 50%; /* Position the popup at the middle of the .project-wrapper */
   right: 0; /* Align the popup to the right of the original project */
   background-color: rgba(0, 0, 0, 0.3); /* 30% transparency */
   margin: 0; /* Remove any margins */
@@ -106,11 +103,13 @@
   justify-content: flex-end; /* Align the available projects on the right */
 }
 
-.project-option:not(:first-child) {
-  margin-top: 5px; /* Add margin between the subsequent options */
+.project-option:first-child {
+  transform: translateY(-50%); /* Move the first project up by 50% of its own height */
 }
 
-
+.project-option:not(:first-child) {
+  margin-top: 0px; /* Add margin between the subsequent options */
+}
 
 .task-card-content {
   flex-grow: 1; /* Takes all available space except what project needs */
