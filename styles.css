@@ -11,7 +11,7 @@
   line-height: var(--line-height-normal);
   border-radius: var(--radius-l);
   border: var(--border-width) solid var(--background-modifier-border);
-  padding: 4px 8px 4px 0.48em;
+  padding: 0.25em 0.5em 0.5em 0.48em;
   height: var(--input-height);
   margin: 1px 0;
   display: inline-flex;
@@ -242,8 +242,8 @@ input.task-card-due:focus {
 
 .task-card-icon {
   align-self: center;
-  width: var(--icon-size);
-  height: var(--icon-size);
+  width: var(--icon-xs);
+  height: var(--icon-xs);
   fill: var(--icon-color);
 }
 
@@ -255,8 +255,8 @@ input.task-card-due:focus {
   background: none;
   padding: 0;
   cursor: pointer;
-  width: calc(var(--icon-size) + 10px);
-  height: calc(var(--icon-size) + 10px);
+  width: calc(var(--icon-xs) + 10px);
+  height: calc(var(--icon-xs) + 10px);
   border-radius: 50%;
 }
 
