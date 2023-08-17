@@ -184,23 +184,24 @@
   white-space: nowrap; /* Keeps labels on a single line */
   align-items: center;
   gap: 4px;
+  flex-grow: 1; /* Make it take up all available space */
 }
 
 .task-card-labels a {
   text-decoration: none;
-  flex-shrink: 0; /* Prevents individual labels from shrinking */
+  flex-shrink: 0;
 }
 
 .task-card-labels button {
-  border-radius: 50%; /* This will make the button round */
-  background-color: var(--background-modifier-button); /* Set the background color as per your design */
-  border: none; /* Remove the default border */
-  font-size: 1em; /* Set the font size */
-  color: var(--text-color); /* Set the text color */
-  display: flex; /* Use flexbox for alignment */
-  align-items: center; /* Align content vertically */
-  justify-content: center; /* Align content horizontally */
-  cursor: pointer; /* Change the cursor to pointer on hover */
+  border-radius: 50%;
+  background-color: var(--background-modifier-button);
+  border: none;
+  font-size: 1em;
+  color: var(--text-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
 }
 
 .task-card-labels button:hover {
@@ -260,7 +261,6 @@ input.task-card-due:focus {
   align-self: center;
   width: var(--icon-xs);
   height: var(--icon-xs);
-  fill: var(--icon-color);
 }
 
 .task-card-round-button {
@@ -274,24 +274,16 @@ input.task-card-due:focus {
   width: calc(var(--icon-xs) + 10px);
   height: calc(var(--icon-xs) + 10px);
   border-radius: 50%;
+  overflow: hidden; /* Hide overflow */
+  min-width: calc(var(--icon-xs) + 10px); /* Set minimum width */
+  min-height: calc(var(--icon-xs) + 10px); /* Set minimum height */
+  flex-shrink: 0; /* Prevent shrinking */
 }
 
 .task-card-round-button:hover {
   background-color: var(--background-modifier-hover);
 }
 
-.task-card-round-button:hover .task-card-icon {
-  fill: var(--icon-color-hover);
-}
-
 .task-card-round-button:active {
   background-color: var(--background-modifier-active-hover);
-}
-
-.task-card-round-button:active .task-card-icon {
-  fill: var(--icon-color-active);
-}
-
-.task-card-round-button:focus .task-card-icon {
-  fill: var(--icon-color-focused);
 }

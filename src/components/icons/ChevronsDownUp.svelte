@@ -10,4 +10,4 @@
   `;
 </script>
 
-<LucideIcon width={width} height={height} svgPath={svgPath} ariaLabel="chevrons-down-up" />
+<LucideIcon width={width} height={height} svgPath={svgPath} ariaLabel="chevrons-down-up" class="task-card-icon" />

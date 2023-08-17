@@ -69,7 +69,7 @@
     </div>
     <div class="task-card-attribute-bottom-bar-right">
       <button class="task-card-round-button" on:click={(event) => switchMode(event, 'single-line')}>
-        <ChevronsDownUp width="16" height="16" />
+        <ChevronsDownUp/>
       </button>
     </div>
   </div>

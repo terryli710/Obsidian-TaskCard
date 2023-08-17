@@ -1,6 +1,6 @@
 
 
-<script>
+<script lang='ts'>
     import LucideIcon from './LucideIcon.svelte';
     export let width = "24";
     export let height = "24";
@@ -11,5 +11,5 @@
 
   </script>
   
-  <LucideIcon width={width} height={height} svgPath={svgPath} ariaLabel="plus" />
+  <LucideIcon width={width} height={height} svgPath={svgPath} ariaLabel="plus" class="task-card-icon" />
   

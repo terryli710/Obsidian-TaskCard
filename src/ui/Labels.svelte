@@ -97,7 +97,7 @@
     />
   {:else}
     <button class="task-card-round-button" on:click={() => (isEditingLabel = true)}>
-      <Plus width="16" height="16" />
+      <Plus/>
     </button>
   {/if}
 </div>
