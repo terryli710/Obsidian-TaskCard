@@ -12,8 +12,9 @@
     import Content from './Content.svelte';
     // import { ChevronsDownUp } from 'lucide-svelte'; // BUG: somehow doesn't work
     import ChevronsDownUp from '../components/icons/ChevronsDownUp.svelte';
-    import { showCardMenu } from './CardMenu';
+    // import { showCardMenu } from './CardMenu';
     import MoreVertical from '../components/icons/MoreVertical.svelte';
+    import { Menu } from 'obsidian';
 
     export let taskSyncManager: ObsidianTaskSyncManager;
     export let plugin: TaskCardPlugin;
@@ -32,6 +33,84 @@
     function handleCheckboxClick() {
       task.completed = !task.completed;
       // more logic to reflect the change on the taskEl
+    }
+
+    function showCardMenu(event) {
+      event.preventDefault();
+      const cardMenu = new Menu();
+      if (!taskSyncManager.obsidianTask.hasDescription()) {
+          cardMenu.addItem((item) => {
+              item.setTitle('Add Description');
+              item.setIcon('plus');
+              item.onClick((evt: MouseEvent | KeyboardEvent) => {
+                  taskSyncManager.taskCardStatus.descriptionStatus = 'editing';
+              })
+          })
+      } else {
+          cardMenu.addItem((item) => {
+              item.setTitle('Delete Description');
+              item.setIcon('trash');
+              item.onClick((evt: MouseEvent | KeyboardEvent) => {
+                  taskSyncManager.updateObsidianTaskAttribute('description', '');
+              })
+          })
+      }
+
+      if (!taskSyncManager.obsidianTask.hasDue()) {
+          cardMenu.addItem((item) => {
+              item.setTitle('Add Due');
+              item.setIcon('plus');
+              item.onClick((evt: MouseEvent | KeyboardEvent) => {
+                  taskSyncManager.taskCardStatus.dueStatus = 'editing';
+              })
+          })
+      } else {
+          cardMenu.addItem((item) => {
+              item.setTitle('Delete Due');
+              item.setIcon('trash');
+              item.onClick((evt: MouseEvent | KeyboardEvent) => {
+                  taskSyncManager.updateObsidianTaskAttribute('due', null);
+              })
+          })
+      }
+
+      if (taskSyncManager.obsidianTask.hasAnyLabels()) {
+          cardMenu.addItem((item) => {
+              item.setTitle('Remove All Labels');
+              item.setIcon('trash');
+              item.onClick((evt: MouseEvent | KeyboardEvent) => {
+                  taskSyncManager.updateObsidianTaskAttribute('labels', []);
+              })
+          })
+      }
+
+      if (taskSyncManager.obsidianTask.hasProject()) {
+          cardMenu.addItem((item) => {
+              item.setTitle('Remove Project');
+              item.setIcon('trash');
+              item.onClick((evt: MouseEvent | KeyboardEvent) => {
+                  taskSyncManager.updateObsidianTaskAttribute('project', null);
+              })
+          })
+      } else {
+          cardMenu.addItem((item) => {
+              item.setTitle('Add Project');
+              item.setIcon('plus');
+              item.onClick((evt: MouseEvent | KeyboardEvent) => {
+                  taskSyncManager.taskCardStatus.projectStatus = 'selecting';
+              })
+          })
+      }
+
+      cardMenu.addItem((item) => {
+          item.setTitle('Delete Task');
+          item.setIcon('trash');
+          item.onClick((evt: MouseEvent | KeyboardEvent) => {
+              taskSyncManager.deleteTask();
+          })
+      })
+
+      cardMenu.showAtPosition({ x: event.clientX, y: event.clientY });
     }
 
 </script>
@@ -63,14 +142,14 @@
       </div>
     </div>
     <Description taskSyncManager={taskSyncManager} />
-    <button class="task-card-menu-button mode-multi-line" on:click={(event) => showCardMenu(event, taskSyncManager)} tabindex="0">
+    <button class="task-card-menu-button mode-multi-line" on:click={(event) => showCardMenu(event)} tabindex="0">
       <MoreVertical/>
     </button>
   </div>
 
   <div class="task-card-attribute-bottom-bar">
     <div class="task-card-attribute-bottom-bar-left">
-      {#if taskSyncManager.obsidianTask.hasDue()}
+      {#if taskSyncManager.obsidianTask.hasDue() || taskSyncManager.getTaskCardStatus('dueStatus') === 'editing'}
         <Due taskSyncManager={taskSyncManager} plugin={plugin} />
         <div class="task-card-attribute-separator"> | </div>
       {/if}

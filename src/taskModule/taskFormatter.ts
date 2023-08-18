@@ -30,6 +30,11 @@ export class TaskFormatter {
             } else if (typeof value === 'object') {
                 value = JSON.stringify(value);
             }
+            // for string value, add quotes
+            const stringAttributes = ['id', 'description']
+            if (stringAttributes.includes(key)) {
+                value = `"${value}"`;
+            }
     
             let kebabCaseKey = camelToKebab(key);
             markdownLine += `<span class="${kebabCaseKey}" style="display:none;">${value}</span>\n`;

@@ -32,10 +32,15 @@
       }
   }
 
-  function updateDueDisplay() {
+  function updateDueDisplay(): string {
+      if (!due) {
+          dueDisplay = '';
+          return dueDisplay;
+      }
       let datePart = displayDate(due.date);
       let timePart = displayTime(due.time);
       dueDisplay = timePart ? `${datePart}, ${timePart}` : datePart;
+      return dueDisplay;
   }
 </script>
 

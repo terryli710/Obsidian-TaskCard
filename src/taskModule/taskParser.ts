@@ -44,7 +44,7 @@ export class TaskParser {
         task.id = parseQuery('id', '') as string;
         task.content = taskEl.querySelector('.task-list-item-checkbox')?.nextSibling?.textContent?.trim() || '';
         task.priority = parseQuery('priority', '1') as TaskProperties['priority'];
-        task.description = parseQuery('description', '') as TaskProperties['description'];
+        task.description = parseQuery('description', '""') as TaskProperties['description'];
         task.order = parseQuery('order', '0') as TaskProperties['order'];
         task.project = parseQuery('project', 'null') as Project | null;
         task.sectionID = parseQuery('section-id', '') as TaskProperties['sectionID'];

@@ -1,6 +1,7 @@
 import { MarkdownSectionInformation } from "obsidian";
 import { ObsidianTask } from "./task";
 import TaskCardPlugin from "..";
+import { logger } from '../utils/log';
 
 
 type TaskCardStatus = {
@@ -58,7 +59,9 @@ export class ObsidianTaskSyncManager implements ObsidianTaskSyncProps {
 
     updateObsidianTaskAttribute(key: string, value: any): void {
         this.obsidianTask[key] = value;
+        logger.debug(`successfully set ${key} to ${value}`);
         const markdownTask = this.plugin.taskFormatter.taskToMarkdownOneLine(this.obsidianTask);
+        logger.debug(`markdownTask: ${markdownTask}`);
         this.updateTaskToFile(markdownTask);
     }
 
@@ -66,6 +69,7 @@ export class ObsidianTaskSyncManager implements ObsidianTaskSyncProps {
         const allowedStatuses = {
             descriptionStatus: ['editing', 'done'],
             projectStatus: ['selecting', 'done'],
+            dueStatus: ['editing', 'done'],
         };
         return allowedStatuses[key].includes(status);
     }
@@ -75,6 +79,7 @@ export class ObsidianTaskSyncManager implements ObsidianTaskSyncProps {
         // check if the status is valid
         if (!this.isValidStatus(key, status)) return ;
         this.taskCardStatus[key] = status as any;
+        logger.debug(`successfully set ${key} to ${status}`);
     }
 
     getTaskCardStatus(key: keyof TaskCardStatus): string {

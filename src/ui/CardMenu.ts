@@ -14,6 +14,7 @@ export function showCardMenu(event, taskSyncManager: ObsidianTaskSyncManager) {
             item.setTitle('Add Description');
             item.setIcon('plus');
             item.onClick((evt: MouseEvent | KeyboardEvent) => {
+                // taskSyncManager.updateObsidianTaskAttribute('description', 'space');
                 taskSyncManager.setTaskCardStatus('descriptionStatus', 'editing');
             })
         })

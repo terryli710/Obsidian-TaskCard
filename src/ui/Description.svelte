@@ -1,3 +1,5 @@
+
+
 <script lang="ts">
     import { marked } from 'marked';
     marked.use({ mangle: false, headerIds: false, langPrefix: '' });
@@ -7,6 +9,8 @@
     export let taskSyncManager: ObsidianTaskSyncManager;
     let description = taskSyncManager.obsidianTask.description;
     let descriptionMarkdown = marked(description);
+
+    logger.debug(`taskSyncManager.getTaskCardStatus('descriptionStatus'): ${taskSyncManager.getTaskCardStatus('descriptionStatus')}`);
 
     function enableEditMode(event: MouseEvent | KeyboardEvent) {
         if (event instanceof KeyboardEvent) {
