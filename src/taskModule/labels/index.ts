@@ -75,6 +75,7 @@ export class LabelModule {
 
     // Edit an existing label
     public editLabel(newLabel: string, oldLabel: string, strict: boolean = true): void {
+        oldLabel = oldLabel.replace(/^#+/, ''); // Remove leading "#"
         const index = this.labels.indexOf(oldLabel);
         if (index === -1) throw new Error('Label not found');
 
