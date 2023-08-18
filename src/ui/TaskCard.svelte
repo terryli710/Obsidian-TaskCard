@@ -26,8 +26,11 @@
 
     function switchMode(event, newMode) {
       event.stopPropagation();
-      logger.debug(`Switching mode to ${newMode}`);
+      // logger.debug(`Switching mode to ${newMode}`);
       dispatch('switchMode', newMode);
+      for (let key in taskSyncManager.taskCardStatus) {
+        taskSyncManager.taskCardStatus[key] = 'done';
+      }
     }
 
     function handleCheckboxClick() {
