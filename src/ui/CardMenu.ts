@@ -60,6 +60,24 @@ export function showCardMenu(event, taskSyncManager: ObsidianTaskSyncManager) {
         })
     }
 
+    if (taskSyncManager.obsidianTask.hasProject()) {
+        cardMenu.addItem((item) => {
+            item.setTitle('Remove Project');
+            item.setIcon('trash');
+            item.onClick((evt: MouseEvent | KeyboardEvent) => {
+                taskSyncManager.updateObsidianTaskAttribute('project', null);
+            })
+        })
+    } else {
+        cardMenu.addItem((item) => {
+            item.setTitle('Add Project');
+            item.setIcon('plus');
+            item.onClick((evt: MouseEvent | KeyboardEvent) => {
+                taskSyncManager.setTaskCardStatus('projectStatus', 'selecting');
+            })
+        })
+    }
+
     cardMenu.showAtPosition({ x: event.clientX, y: event.clientY });
     logger.debug(`showCardMenu at ${event.clientX}, ${event.clientY}`);
 }
