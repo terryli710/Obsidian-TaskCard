@@ -23,6 +23,10 @@
 - TODO: for project, if saved, not interactive;
 - TODO: when adding project, visual cue for OPTIONAL color picking;
 
+## Priority
+- TODO: show by color of the checkbox??
+- TODO: edit it.
+
 ## Content
 
 ### Addition

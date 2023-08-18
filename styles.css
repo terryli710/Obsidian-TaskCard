@@ -144,13 +144,13 @@
 }
 
 /* Apply color to checkbox based on priority */
-.task-card-checkbox.priority1 {
+.task-card-checkbox.priority-1 {
   border-color: #EE3939;
 }
-.task-card-checkbox.priority2 {
+.task-card-checkbox.priority-2 {
   border-color: #FFB300;
 }
-.task-card-checkbox.priority3 {
+.task-card-checkbox.priority-3 {
   border-color: #36A41D;
 }
 

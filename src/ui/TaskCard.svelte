@@ -38,7 +38,7 @@
 {#if params.mode === "single-line"}
   <div class="task-card-single-line">
     <div class="task-card-single-line-left-container">
-      <input type="checkbox" class={`task-card-checkbox ${task.priority}`} checked={task.completed} on:click|stopPropagation={handleCheckboxClick}>
+      <input type="checkbox" class={`task-card-checkbox priority-${task.priority}`} checked={task.completed} on:click|stopPropagation={handleCheckboxClick}>
       <div class="task-card-content">{task.content}</div>
     </div>
     <div class="task-card-single-line-right-container">
@@ -50,7 +50,7 @@
 <!-- mode = multi-line -->
   <div class="task-card-major-block">
     <div class="task-card-checkbox-wrapper">
-      <input type="checkbox" class={`task-card-checkbox ${task.priority}`} checked={task.completed} on:click|stopPropagation={handleCheckboxClick}>
+      <input type="checkbox" class={`task-card-checkbox priority-${task.priority}`} checked={task.completed} on:click|stopPropagation={handleCheckboxClick}>
     </div>
     <div class="task-card-content-project-line">
       <Content taskSyncManager={taskSyncManager} />
