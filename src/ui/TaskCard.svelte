@@ -61,7 +61,7 @@
       </div>
     </div>
     <Description taskSyncManager={taskSyncManager} />
-    <button class="task-card-menu-button mode-multi-line" on:click={showCardMenu} on:keydown={showCardMenu} tabindex="0">
+    <button class="task-card-menu-button mode-multi-line" on:click={(event) => showCardMenu(event, taskSyncManager)} tabindex="0">
       <MoreVertical/>
     </button>
   </div>

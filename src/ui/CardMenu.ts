@@ -3,11 +3,10 @@
 
 import { Menu } from 'obsidian';
 import { ObsidianTaskSyncManager } from '../taskModule/taskSyncManager';
+import { logger } from '../utils/log';
 
-export let taskSyncManager: ObsidianTaskSyncManager;
 
-
-export function showCardMenu(event) {
+export function showCardMenu(event, taskSyncManager: ObsidianTaskSyncManager) {
     event.preventDefault();
     const cardMenu = new Menu();
     // description: add remove
@@ -50,5 +49,7 @@ export function showCardMenu(event) {
             })
         })
     }
-        
+
+    cardMenu.showAtPosition({ x: event.clientX, y: event.clientY });
+    logger.debug(`showCardMenu at ${event.clientX}, ${event.clientY}`);
 }
