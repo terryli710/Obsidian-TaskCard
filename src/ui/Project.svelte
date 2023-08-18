@@ -14,16 +14,17 @@
   })
   export let params: TaskItemParams;
 
-  let showProjectPopup = false;
-
   function toggleProjectPopup() {
-    showProjectPopup = !showProjectPopup;
-    logger.debug(`showProjectPopup: ${showProjectPopup}, availableProjects: ${JSON.stringify(availableProjects)}`);
+    if (taskSyncManager.getTaskCardStatus('projectStatus') === 'selecting') {
+      taskSyncManager.setTaskCardStatus('projectStatus', 'done');
+    } else {
+      taskSyncManager.setTaskCardStatus('projectStatus', 'selecting');
+    }
   }
 
   function selectProject(selectedProject: Project) {
     project = selectedProject;
-    showProjectPopup = false;
+    taskSyncManager.setTaskCardStatus('projectStatus', 'done');
     logger.debug(`project: ${JSON.stringify(project)}`);
     taskSyncManager.updateObsidianTaskAttribute('project', selectedProject);
   }
@@ -48,7 +49,7 @@
     {/if}
   </div>
 {:else}
-  {#if showProjectPopup}
+  {#if taskSyncManager.getTaskCardStatus('projectStatus') === 'selecting'}
     <div class="project-popup">
       {#if project}
         <div

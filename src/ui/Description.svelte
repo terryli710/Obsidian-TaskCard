@@ -7,28 +7,27 @@
     export let taskSyncManager: ObsidianTaskSyncManager;
     let description = taskSyncManager.obsidianTask.description;
     let descriptionMarkdown = marked(description);
-    let isEditing = false;
 
     function enableEditMode(event: MouseEvent | KeyboardEvent) {
         if (event instanceof KeyboardEvent) {
             if (event.key === 'Enter' || event.key === ' ') {
                 event.preventDefault();
-                isEditing = true;
+                taskSyncManager.setTaskCardStatus('descriptionStatus', 'editing');
             }
         } else if (event instanceof MouseEvent) {
-            isEditing = true;
+            taskSyncManager.setTaskCardStatus('descriptionStatus', 'editing');
         }
     }
 
     function finishEditing(event: KeyboardEvent) {
         if (event.shiftKey && event.key === 'Enter') {
             event.preventDefault();  // Prevent browser's default save behavior
-            isEditing = false;
+            taskSyncManager.setTaskCardStatus('descriptionStatus', 'done');
             descriptionMarkdown = marked(description);
             taskSyncManager.updateObsidianTaskAttribute('description', description);
         } else if (event.key === 'Escape') {
             // Cancel editing, return to non-editing mode, and reset the description
-            isEditing = false;
+            taskSyncManager.setTaskCardStatus('descriptionStatus', 'done');
             description = taskSyncManager.obsidianTask.description;
             descriptionMarkdown = marked(description);
         }
@@ -36,7 +35,7 @@
 
 </script>
 
-{#if isEditing}
+{#if taskSyncManager.getTaskCardStatus('descriptionStatus') === 'editing'}
     <textarea 
         bind:value={description} 
         on:keydown={finishEditing}
