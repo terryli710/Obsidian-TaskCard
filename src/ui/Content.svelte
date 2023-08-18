@@ -1,17 +1,23 @@
 <script lang="ts">
+    import { tick } from 'svelte';
     import { ObsidianTaskSyncManager } from '../taskModule/taskSyncManager';
     export let taskSyncManager: ObsidianTaskSyncManager;
     let content: string = taskSyncManager.obsidianTask.content;
     let isEditing = false;
+    let inputElement: HTMLInputElement;
 
-    function enableEditMode(event: MouseEvent | KeyboardEvent) {
+    async function enableEditMode(event: MouseEvent | KeyboardEvent) {
         if (event instanceof KeyboardEvent) {
             if (event.key === 'Enter' || event.key === ' ') {
                 event.preventDefault();
                 isEditing = true;
+                await tick();
+                focusAndSelect(inputElement);
             }
         } else if (event instanceof MouseEvent) {
             isEditing = true;
+            await tick();
+            focusAndSelect(inputElement);
         }
     }
 
@@ -26,6 +32,13 @@
             content = taskSyncManager.obsidianTask.content;
         }
     }
+
+    function focusAndSelect(node: HTMLInputElement) {
+        // Focus on the input element
+        node.focus();
+        // Select all the content
+        node.select();
+    }
 </script>
 
 
@@ -33,6 +46,7 @@
     <input 
         class="task-card-content mode-multi-line" 
         bind:value={content} 
+        bind:this={inputElement}
         on:keydown={finishEditing} />
 {:else}
     <div 

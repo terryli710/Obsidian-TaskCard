@@ -5,21 +5,27 @@
     marked.use({ mangle: false, headerIds: false, langPrefix: '' });
     import { logger } from "../utils/log";
     import { ObsidianTaskSyncManager } from '../taskModule/taskSyncManager';
+    import { tick } from 'svelte';
 
     export let taskSyncManager: ObsidianTaskSyncManager;
     let description = taskSyncManager.obsidianTask.description;
     let descriptionMarkdown = marked(description);
+    let inputElement: HTMLTextAreaElement;
 
     logger.debug(`taskSyncManager.getTaskCardStatus('descriptionStatus'): ${taskSyncManager.getTaskCardStatus('descriptionStatus')}`);
 
-    function enableEditMode(event: MouseEvent | KeyboardEvent) {
+    async function enableEditMode(event: MouseEvent | KeyboardEvent) {
         if (event instanceof KeyboardEvent) {
             if (event.key === 'Enter' || event.key === ' ') {
                 event.preventDefault();
                 taskSyncManager.taskCardStatus.descriptionStatus = 'editing';
+                await tick();
+                focusAndSelect(inputElement);
             }
         } else if (event instanceof MouseEvent) {
             taskSyncManager.taskCardStatus.descriptionStatus = 'editing';
+            await tick();
+            focusAndSelect(inputElement);
         }
     }
 
@@ -37,12 +43,20 @@
         }
     }
 
+    function focusAndSelect(node: HTMLTextAreaElement) {
+        // Focus on the input element
+        node.focus();
+        // Select all the content
+        node.select();
+    }
+
 </script>
 
 {#if taskSyncManager.getTaskCardStatus('descriptionStatus') === 'editing'}
     <textarea 
         bind:value={description} 
         on:keydown={finishEditing}
+        bind:this={inputElement}
         class="task-card-description"
     ></textarea>
 {:else}

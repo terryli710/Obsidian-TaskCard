@@ -12,12 +12,9 @@
 - Single line and multi line modes.
 - Interactive UI in both modes.
 - Modification reflective to the original doc.
-- TODO: Debug no label, no due task.
-- TODO: css fully adapt to themes.
 
 ## Icon
 - Manually using lucide icon, because we cannot install lucide-svelte
-- TODO: some shadow inside the icon...
 # Interaction
 
 ## Settings
@@ -35,9 +32,7 @@
 
 ### Edit
 - double click and edit content with single line window.
-  - Save and discard edits
-- TODO: Text size when editing.
-- TODO: Font when editing.
+  - Save and discard edits  
 - TODO: BUG: when editing two adjacent task cards.
 
 ### Delete
@@ -46,22 +41,21 @@
 ## Description
 
 ### Addition
-- TODO: dropdown menu to add.
-- TODO: debug css when description is empty.
+- Dropdown menu to add.
 
 ### Edit
 - double click and edit description with multi line support.
   - Save and discard edits.
 - TODO: (far stretch) interactive display mode when editing.
+- Sub task interactive.
 
 ### Delete
-- TODO: dropdown menu to delete.
+- dropdown menu to delete.
 
 ## Due
 
 ### Addition
-- TODO: dropdown menu to add.
-- TODO: debug css when due is empty.
+- dropdown menu to add.
 
 ### Edit
 - double click and edit due string.
@@ -105,6 +99,7 @@
 - Using a pop up menu
 - CSS similar to the chosen project.
 - TODO: add a boarder, when there are many labels, what to do?
+- TODO: hover behavior for the color
 
 ### Delete
 - TODO: dropdown menu to delete.

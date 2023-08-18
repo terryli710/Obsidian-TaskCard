@@ -4,6 +4,7 @@
   import { DueDate, ObsidianTask } from "../taskModule/task";
   import { ObsidianTaskSyncManager } from "../taskModule/taskSyncManager";
   import TaskCardPlugin from "..";
+  import { tick } from "svelte";
 
   export let taskSyncManager: ObsidianTaskSyncManager;
   export let plugin: TaskCardPlugin;
@@ -13,12 +14,15 @@
   dueString = due ? due.string : '';
 
   let dueDisplay = "";
+  let inputElement: HTMLInputElement;
 
   updateDueDisplay();
 
-  function enableDueEditMode() {
+  async function enableDueEditMode() {
       // taskSyncManager.setTaskCardStatus('dueStatus', 'editing');
       taskSyncManager.taskCardStatus.dueStatus = 'editing';
+      await tick();
+      focusAndSelect(inputElement);
   }
 
   function finishDueEditing(event: KeyboardEvent) {
@@ -45,6 +49,15 @@
       dueDisplay = timePart ? `${datePart}, ${timePart}` : datePart;
       return dueDisplay;
   }
+
+  // Action function to focus and select the input content
+  function focusAndSelect(node: HTMLInputElement) {
+    // Focus on the input element
+    node.focus();
+    // Select all the content
+    node.select();
+  }
+
 </script>
 
 {#if taskSyncManager.obsidianTask.hasDue() || taskSyncManager.getTaskCardStatus('dueStatus') === 'editing'}
@@ -53,6 +66,7 @@
       type="text"
       on:keydown={finishDueEditing}
       bind:value={dueString}
+      bind:this={inputElement}
       class="task-card-due"
     />
   {:else}
