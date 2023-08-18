@@ -50,6 +50,16 @@ export function showCardMenu(event, taskSyncManager: ObsidianTaskSyncManager) {
         })
     }
 
+    if (taskSyncManager.obsidianTask.hasAnyLabels()) {
+        cardMenu.addItem((item) => {
+            item.setTitle('Remove All Labels');
+            item.setIcon('trash');
+            item.onClick((evt: MouseEvent | KeyboardEvent) => {
+                taskSyncManager.updateObsidianTaskAttribute('labels', []);
+            })
+        })
+    }
+
     cardMenu.showAtPosition({ x: event.clientX, y: event.clientY });
     logger.debug(`showCardMenu at ${event.clientX}, ${event.clientY}`);
 }
