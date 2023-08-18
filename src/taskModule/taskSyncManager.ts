@@ -81,4 +81,10 @@ export class ObsidianTaskSyncManager implements ObsidianTaskSyncProps {
         return this.taskCardStatus[key];
     }
 
+    async deleteTask(): Promise<void> {
+        const docLineStart = this.taskMetadata.lineStartInSection + this.taskMetadata.mdSectionInfo.lineStart;
+        const docLineEnd = this.taskMetadata.lineEndsInSection + this.taskMetadata.mdSectionInfo.lineStart;
+        await this.plugin.fileOperator.updateFile(this.taskMetadata.sourcePath, '', docLineStart, docLineEnd);
+    }
+
 }
