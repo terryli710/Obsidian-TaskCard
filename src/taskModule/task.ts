@@ -76,7 +76,7 @@ export class ObsidianTask implements TaskProperties {
   }
 
   hasProject() {
-    return this.project.name.length > 0
+    return this.project !== null && this.project.name.length > 0
   }
 
   hasAnyLabels() {

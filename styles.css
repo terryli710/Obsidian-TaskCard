@@ -1,7 +1,4 @@
-:root {
-  --task-card-file-path-color: #000000;
-  --icon-size: 16px;
-}
+
 
 .obsidian-taskcard {
   background-color: var(--background-primary);
@@ -129,6 +126,11 @@
   grid-row: 2;
   font-size: 0.8em;
   color: var(--color-base-50);
+}
+
+.task-card-menu-button.mode-multi-line {
+  grid-column: 3;
+  grid-row: 1;
 }
 
 .project-color {

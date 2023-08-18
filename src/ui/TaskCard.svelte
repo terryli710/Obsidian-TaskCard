@@ -12,6 +12,8 @@
     import Content from './Content.svelte';
     // import { ChevronsDownUp } from 'lucide-svelte'; // BUG: somehow doesn't work
     import ChevronsDownUp from '../components/icons/ChevronsDownUp.svelte';
+    import { showCardMenu } from './CardMenu';
+    import MoreVertical from '../components/icons/MoreVertical.svelte';
 
     export let taskSyncManager: ObsidianTaskSyncManager;
     export let plugin: TaskCardPlugin;
@@ -59,6 +61,9 @@
       </div>
     </div>
     <Description taskSyncManager={taskSyncManager} />
+    <button class="task-card-menu-button mode-multi-line" on:click={showCardMenu} on:keydown={showCardMenu} tabindex="0">
+      <MoreVertical/>
+    </button>
   </div>
 
   <div class="task-card-attribute-bottom-bar">

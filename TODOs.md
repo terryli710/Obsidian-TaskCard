@@ -6,6 +6,7 @@
 - Using no display html to achieve this.
 - formatted attribute saving.
 - No direct edit method.
+- Single line mode background problem - taskcard background compatibility
 
 ## Multi-mode display in preview mode
 - Single line and multi line modes.
@@ -37,6 +38,7 @@
   - Save and discard edits
 - TODO: Text size when editing.
 - TODO: Font when editing.
+- TODO: BUG: when editing two adjacent task cards.
 
 ### Delete
 - NA
@@ -66,7 +68,7 @@
   - Save and discard edits.
 - TODO: the font when editing.
 - TODO: the text box when editing.
-- TODO: the hover behavior for the due.
+- TODO: font size and text box size when editing.
 
 ### Delete
 - TODO: dropdown menu to delete.
@@ -102,7 +104,7 @@
 ### Edit
 - Using a pop up menu
 - CSS similar to the chosen project.
-- TODO: add a boarder?
+- TODO: add a boarder, when there are many labels, what to do?
 
 ### Delete
 - TODO: dropdown menu to delete.
