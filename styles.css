@@ -1,7 +1,7 @@
 
 
 .obsidian-taskcard {
-  background-color: var(--background-primary);
+  background-color: var(--background-primary) !important;
   color: var(--text-normal);
   font-size: var(--font-text-size);
   font-family: var(--font-text);
@@ -28,11 +28,12 @@
   padding: 0.25em 0.5em 0.25em 0.48em;
 }
 
-.obsidian-taskcard.mode-single-line:not(:empty):hover {
+
+.obsidian-taskcard.mode-single-line:hover {
   background-color: var(--background-modifier-hover);
 }
 
-.obsidian-taskcard.mode-single-line:not(:empty):active:hover {
+.obsidian-taskcard.mode-single-line:active {
   background-color: var(--background-modifier-active-hover);
 }
 
@@ -300,5 +301,14 @@ input.task-card-due:focus {
   }
 
   .task-card-menu-button:hover svg {
-    color: #4287f5; /* Change the color to your preferred color */
+    color: var(--icon-color-hover);
+  }
+
+  .task-card-menu-button:active {
+    background: none !important;
+    box-shadow: none !important;
+  }
+
+  .task-card-menu-button:active svg {
+    color: var(--icon-color-active);
   }
