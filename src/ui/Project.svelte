@@ -16,15 +16,18 @@
 
   function toggleProjectPopup() {
     if (taskSyncManager.getTaskCardStatus('projectStatus') === 'selecting') {
-      taskSyncManager.setTaskCardStatus('projectStatus', 'done');
+      // taskSyncManager.setTaskCardStatus('projectStatus', 'done');
+      taskSyncManager.taskCardStatus.projectStatus = 'done';
     } else {
-      taskSyncManager.setTaskCardStatus('projectStatus', 'selecting');
+      // taskSyncManager.setTaskCardStatus('projectStatus', 'selecting');
+      taskSyncManager.taskCardStatus.projectStatus = 'selecting';
     }
   }
 
   function selectProject(selectedProject: Project) {
     project = selectedProject;
-    taskSyncManager.setTaskCardStatus('projectStatus', 'done');
+    // taskSyncManager.setTaskCardStatus('projectStatus', 'done');
+    taskSyncManager.taskCardStatus.projectStatus = 'done';
     logger.debug(`project: ${JSON.stringify(project)}`);
     taskSyncManager.updateObsidianTaskAttribute('project', selectedProject);
   }

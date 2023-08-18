@@ -17,18 +17,21 @@
   updateDueDisplay();
 
   function enableDueEditMode() {
-      taskSyncManager.setTaskCardStatus('dueStatus', 'editing');
+      // taskSyncManager.setTaskCardStatus('dueStatus', 'editing');
+      taskSyncManager.taskCardStatus.dueStatus = 'editing';
   }
 
   function finishDueEditing(event: KeyboardEvent) {
       if (event.key === 'Enter') {
           event.preventDefault();
-          taskSyncManager.setTaskCardStatus('dueStatus', 'done');
+          // taskSyncManager.setTaskCardStatus('dueStatus', 'done');
+          taskSyncManager.taskCardStatus.dueStatus = 'done';
           due = plugin.taskParser.parseDue(dueString);
           taskSyncManager.updateObsidianTaskAttribute('due', due);
           updateDueDisplay();
       } else if (event.key === 'Escape') {
-          taskSyncManager.setTaskCardStatus('dueStatus', 'done');
+          // taskSyncManager.setTaskCardStatus('dueStatus', 'done');
+          taskSyncManager.taskCardStatus.dueStatus = 'done';
       }
   }
 
@@ -54,7 +57,7 @@
     />
   {:else}
     <div
-      on:dblclick={enableDueEditMode}
+      on:click={enableDueEditMode}
       on:keydown={enableDueEditMode}
       class="task-card-due"
       role="button"
