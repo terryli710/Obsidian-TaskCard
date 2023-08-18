@@ -32,12 +32,12 @@
 
 {#if isEditing}
     <input 
-        class="task-card-content" 
+        class="task-card-content mode-multi-line" 
         bind:value={content} 
         on:keydown={finishEditing} />
 {:else}
     <div 
-        class="task-card-content" 
+        class="task-card-content mode-multi-line" 
         role="button" 
         tabindex="0" 
         on:dblclick={enableEditMode} 

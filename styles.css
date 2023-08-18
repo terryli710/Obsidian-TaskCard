@@ -28,7 +28,6 @@
   padding: 0.25em 0.5em 0.25em 0.48em;
 }
 
-
 .obsidian-taskcard.mode-single-line:hover {
   background-color: var(--background-modifier-hover);
 }
@@ -60,6 +59,22 @@
   display: flex;
   flex-direction: row;
   align-items: center; /* Vertically center the children */
+}
+
+.task-card-content {
+    border-radius: var(--radius-s); /* Rounded square */
+    cursor: pointer; /* Pointer cursor on hover */
+    flex-grow: 0.98;
+    padding-left: 0.25em;
+    padding-right: 0.25em;
+}
+
+.task-card-content:hover {
+    background-color: var(--background-modifier-hover); /* Background hover color */
+}
+
+.task-card-content:active {
+    background-color: var(--background-modifier-active-hover); /* Background active color */
 }
 
 .task-card-major-block {
