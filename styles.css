@@ -66,6 +66,7 @@
   grid-template-columns: auto 1fr; /* Checkbox takes only the space it needs, rest for content and description */
   grid-template-rows: auto auto; /* Two rows for content and description */
   width: 100%;
+  align-items: center;
 }
 
 .task-card-checkbox-wrapper {
@@ -198,18 +199,6 @@
   flex-shrink: 0;
 }
 
-.task-card-labels button {
-  border-radius: 50%;
-  background-color: var(--background-modifier-button);
-  border: none;
-  font-size: 1em;
-  color: var(--text-color);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-
 .task-card-labels button:hover {
   background-color: var(--background-modifier-hover); /* Change the background color on hover */
 }
@@ -284,6 +273,7 @@ input.task-card-due:focus {
   min-width: calc(var(--icon-xs) + 10px); /* Set minimum width */
   min-height: calc(var(--icon-xs) + 10px); /* Set minimum height */
   flex-shrink: 0; /* Prevent shrinking */
+  background-color: var(--interactive-normal);
 }
 
 .task-card-round-button:hover {
@@ -293,3 +283,22 @@ input.task-card-due:focus {
 .task-card-round-button:active {
   background-color: var(--background-modifier-active-hover);
 }
+
+.task-card-menu-button {
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+    cursor: pointer;
+    padding: 0 0.25em !important;
+    margin: 0 0.20em !important;
+  }
+
+  .task-card-menu-button:hover {
+    background: none !important;
+    box-shadow: none !important;
+  }
+
+  .task-card-menu-button:hover svg {
+    color: #4287f5; /* Change the color to your preferred color */
+  }
