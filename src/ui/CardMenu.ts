@@ -9,11 +9,6 @@ import { logger } from '../utils/log';
 export function showCardMenu(event, taskSyncManager: ObsidianTaskSyncManager) {
     event.preventDefault();
     const cardMenu = new Menu();
-    // description: add remove
-    // due: add remove
-    // labels: remove all
-    // project: add remove
-    // task: delete
     if (!taskSyncManager.obsidianTask.hasDescription()) {
         cardMenu.addItem((item) => {
             item.setTitle('Add Description');
@@ -78,6 +73,13 @@ export function showCardMenu(event, taskSyncManager: ObsidianTaskSyncManager) {
         })
     }
 
+    cardMenu.addItem((item) => {
+        item.setTitle('Delete Task');
+        item.setIcon('trash');
+        item.onClick((evt: MouseEvent | KeyboardEvent) => {
+            taskSyncManager.deleteTask();
+        })
+    })
+
     cardMenu.showAtPosition({ x: event.clientX, y: event.clientY });
-    logger.debug(`showCardMenu at ${event.clientX}, ${event.clientY}`);
 }
