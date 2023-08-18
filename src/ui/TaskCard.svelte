@@ -44,7 +44,9 @@
       <div class="task-card-content">{task.content}</div>
     </div>
     <div class="task-card-single-line-right-container">
-      <Due taskSyncManager={taskSyncManager} plugin={plugin} />
+      {#if taskSyncManager.obsidianTask.hasDue()}
+        <Due taskSyncManager={taskSyncManager} plugin={plugin} />
+      {/if}
       <Project taskSyncManager={taskSyncManager} params={params} />
     </div>
   </div>
@@ -68,8 +70,10 @@
 
   <div class="task-card-attribute-bottom-bar">
     <div class="task-card-attribute-bottom-bar-left">
-      <Due taskSyncManager={taskSyncManager} plugin={plugin} />
-      <div class="task-card-attribute-separator"> | </div>
+      {#if taskSyncManager.obsidianTask.hasDue()}
+        <Due taskSyncManager={taskSyncManager} plugin={plugin} />
+        <div class="task-card-attribute-separator"> | </div>
+      {/if}
       <Labels taskSyncManager={taskSyncManager} />
     </div>
     <div class="task-card-attribute-bottom-bar-right">

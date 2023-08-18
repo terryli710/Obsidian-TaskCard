@@ -28,7 +28,6 @@
   }
 
   function saveEdit() {
-    logger.debug(`Saving label: ${newLabel}, old: ${labelModule.getLabels()[editingIndex]}`);
     labelModule.editLabel('#' + newLabel, '#' + labelModule.getLabels()[editingIndex].substring(1), false);
     newLabel = '';
     editingIndex = null;

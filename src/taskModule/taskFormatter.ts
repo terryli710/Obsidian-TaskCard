@@ -22,22 +22,22 @@ export class TaskFormatter {
         for (let key in task) {
             if (key === 'completed' || key === 'content') continue;
     
-            if (task[key] !== null && task[key] !== undefined) {
-                let kebabCaseKey = camelToKebab(key);
-                let value = task[key];
-                if (key === 'description') {
-                    value = value.replace(/\n/g, '\\n');
-                }
-                if (typeof value === 'object') {
-                    markdownLine += `<span class="${kebabCaseKey}" style="display:none;">${JSON.stringify(value)}</span>\n`;
-                } else {
-                    markdownLine += `<span class="${kebabCaseKey}" style="display:none;">"${value}"</span>\n`;
-                }
+            let value = task[key];
+            if (value === null || value === undefined) {
+                value = "null";
+            } else if (key === 'description') {
+                value = value.replace(/\n/g, '\\n');
+            } else if (typeof value === 'object') {
+                value = JSON.stringify(value);
             }
+    
+            let kebabCaseKey = camelToKebab(key);
+            markdownLine += `<span class="${kebabCaseKey}" style="display:none;">${value}</span>\n`;
         }
         
         return markdownLine;
     }
+    
 
     taskToMarkdownOneLine(task: ObsidianTask): string {
         return this.taskToMarkdown(task).replace(/\n/g, '');
