@@ -16,11 +16,9 @@
         if (event instanceof KeyboardEvent) {
             if (event.key === 'Enter' || event.key === ' ') {
                 event.preventDefault();
-                // taskSyncManager.setTaskCardStatus('descriptionStatus', 'editing');
                 taskSyncManager.taskCardStatus.descriptionStatus = 'editing';
             }
         } else if (event instanceof MouseEvent) {
-            // taskSyncManager.setTaskCardStatus('descriptionStatus', 'editing');
             taskSyncManager.taskCardStatus.descriptionStatus = 'editing';
         }
     }
@@ -28,13 +26,11 @@
     function finishEditing(event: KeyboardEvent) {
         if (event.shiftKey && event.key === 'Enter') {
             event.preventDefault();  // Prevent browser's default save behavior
-            // taskSyncManager.setTaskCardStatus('descriptionStatus', 'done');
             taskSyncManager.taskCardStatus.descriptionStatus = 'done';
             descriptionMarkdown = marked(description);
             taskSyncManager.updateObsidianTaskAttribute('description', description);
         } else if (event.key === 'Escape') {
             // Cancel editing, return to non-editing mode, and reset the description
-            // taskSyncManager.setTaskCardStatus('descriptionStatus', 'done');
             taskSyncManager.taskCardStatus.descriptionStatus = 'done';
             description = taskSyncManager.obsidianTask.description;
             descriptionMarkdown = marked(description);
@@ -54,7 +50,7 @@
         class="task-card-description" 
         role="button" 
         tabindex="0"
-        on:dblclick={enableEditMode}
+        on:click={enableEditMode}
         on:keydown={enableEditMode}
     >
         {@html descriptionMarkdown}

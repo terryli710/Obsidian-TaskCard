@@ -26,7 +26,6 @@
             content = taskSyncManager.obsidianTask.content;
         }
     }
-    // TODO: change the style of the input.
 </script>
 
 
@@ -40,7 +39,7 @@
         class="task-card-content mode-multi-line" 
         role="button" 
         tabindex="0" 
-        on:dblclick={enableEditMode} 
+        on:click={enableEditMode} 
         on:keydown={enableEditMode}>
         {content}
     </div>
