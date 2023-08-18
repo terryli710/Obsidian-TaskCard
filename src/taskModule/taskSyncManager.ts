@@ -6,6 +6,7 @@ import TaskCardPlugin from "..";
 type TaskCardStatus = {
     descriptionStatus: 'editing' | 'done';
     projectStatus: 'selecting' | 'done';
+    dueStatus: 'editing' | 'done';
 };
 
 export interface ObsidianTaskSyncProps {
@@ -35,7 +36,7 @@ export class ObsidianTaskSyncManager implements ObsidianTaskSyncProps {
     constructor(plugin: TaskCardPlugin, props?: Partial<ObsidianTaskSyncProps>) {
         // this.markdownTask = props?.markdownTask || null;
         this.obsidianTask = props?.obsidianTask || new ObsidianTask();
-        this.taskCardStatus = props?.taskCardStatus || { descriptionStatus: 'done', projectStatus: 'done' };
+        this.taskCardStatus = props?.taskCardStatus || { descriptionStatus: 'done', projectStatus: 'done', dueStatus: 'done' };
         this.taskItemEl = props?.taskItemEl || null;
         this.taskMetadata = props?.taskMetadata || { sourcePath: null, mdSectionInfo: null, lineStartInSection: null, lineEndsInSection: null };
         this.plugin = plugin;

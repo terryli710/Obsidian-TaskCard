@@ -13,7 +13,6 @@
   dueString = due.string;
 
   let dueDisplay = "";
-  let isEditingDue = false;
 
   $: {
     let datePart = displayDate(due.date);
@@ -22,18 +21,18 @@
   }
 
   function enableDueEditMode() {
-      isEditingDue = true;
+      taskSyncManager.setTaskCardStatus('dueStatus', 'editing');
   }
 
   function finishDueEditing(event: KeyboardEvent) {
       if (event.key === 'Enter') {
           event.preventDefault();
-          isEditingDue = false;
+          taskSyncManager.setTaskCardStatus('dueStatus', 'done');
           due = plugin.taskParser.parseDue(dueString);
           taskSyncManager.updateObsidianTaskAttribute('due', due);
           updateDueDisplay();
       } else if (event.key === 'Escape') {
-          isEditingDue = false;
+          taskSyncManager.setTaskCardStatus('dueStatus', 'done');
       }
   }
 
@@ -44,7 +43,7 @@
   }
 </script>
 
-{#if isEditingDue}
+{#if taskSyncManager.getTaskCardStatus('dueStatus') === 'editing'}
   <input
     type="text"
     on:keydown={finishDueEditing}

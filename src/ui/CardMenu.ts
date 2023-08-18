@@ -19,7 +19,7 @@ export function showCardMenu(event, taskSyncManager: ObsidianTaskSyncManager) {
             item.setTitle('Add Description');
             item.setIcon('plus');
             item.onClick((evt: MouseEvent | KeyboardEvent) => {
-                // the function that is called when the menu item is clicked
+                taskSyncManager.setTaskCardStatus('descriptionStatus', 'editing');
             })
         })
     } else {
@@ -27,7 +27,7 @@ export function showCardMenu(event, taskSyncManager: ObsidianTaskSyncManager) {
             item.setTitle('Delete Description');
             item.setIcon('trash');
             item.onClick((evt: MouseEvent | KeyboardEvent) => {
-                // the function that is called when the menu item is clicked
+                taskSyncManager.updateObsidianTaskAttribute('description', '');
             })
         })
     }
@@ -37,7 +37,7 @@ export function showCardMenu(event, taskSyncManager: ObsidianTaskSyncManager) {
             item.setTitle('Add Due');
             item.setIcon('plus');
             item.onClick((evt: MouseEvent | KeyboardEvent) => {
-                
+                taskSyncManager.setTaskCardStatus('dueStatus', 'editing');
             })
         })
     } else {
@@ -45,7 +45,7 @@ export function showCardMenu(event, taskSyncManager: ObsidianTaskSyncManager) {
             item.setTitle('Delete Due');
             item.setIcon('trash');
             item.onClick((evt: MouseEvent | KeyboardEvent) => {
-                
+                taskSyncManager.updateObsidianTaskAttribute('due', null);
             })
         })
     }
