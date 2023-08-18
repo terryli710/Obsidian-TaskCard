@@ -139,11 +139,40 @@
 }
 
 .task-card-description {
-  grid-column: 2;
-  grid-row: 2;
-  font-size: 0.8em;
-  color: var(--color-base-50);
+    grid-column: 2;
+    grid-row: 2;
+    font-size: 0.8em;
+    color: var(--color-base-50);
+    border-radius: 5px; /* Rounded square */
+    cursor: pointer; /* Pointer cursor on hover */
+    margin: 0.1em; /* Padding for the content */
+    padding: 0.25em; /* Padding for the content */
 }
+
+.task-card-description:hover {
+    background-color: var(--background-modifier-hover); /* Background hover color */
+}
+
+.task-card-description:active {
+    background-color: var(--background-modifier-active-hover); /* Background active color */
+}
+
+.task-card-description textarea {
+    width: 100%; /* Full width of the container */
+    height: 100%; /* Full height of the container */
+    border-radius: 5px; /* Rounded square */
+    transition: background-color 0.3s ease; /* Smooth background color transition */
+    padding: 8px; /* Padding for the content */
+}
+
+.task-card-description textarea:hover {
+    background-color: var(--background-modifier-hover); /* Background hover color */
+}
+
+.task-card-description textarea:active {
+    background-color: var(--background-modifier-active-hover); /* Background active color */
+}
+
 
 .task-card-menu-button.mode-multi-line {
   grid-column: 3;
