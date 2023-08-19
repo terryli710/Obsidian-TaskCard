@@ -164,6 +164,7 @@
       background-color: var(--interactive-normal);
       border: var(--border-width) solid var(--background-modifier-border);
       border-radius: var(--radius-m);
+      z-index: 1;
     }
 
     .project-option {
