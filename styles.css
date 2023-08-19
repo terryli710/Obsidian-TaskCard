@@ -179,13 +179,13 @@ input.task-card-content.mode-multi-line :focus {
 
 /* Apply color to checkbox based on priority */
 .task-card-checkbox.priority-1 {
-  border-color: #EE3939;
+  border-color: var(--color-red);
 }
 .task-card-checkbox.priority-2 {
-  border-color: #FFB300;
+  border-color: var(--color-orange);
 }
 .task-card-checkbox.priority-3 {
-  border-color: #36A41D;
+  border-color: var(--color-yellow);
 }
 
 .task-card-attribute-bottom-bar {

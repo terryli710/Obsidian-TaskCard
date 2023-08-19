@@ -54,9 +54,10 @@
       if (firstOption) {
         const height = firstOption.offsetHeight;
         const padding = parseFloat(getComputedStyle(projectPopup).paddingTop);
-        const totalHeight = height + 2 * padding;
+        const margin = parseFloat(getComputedStyle(projectPopup).marginBottom);
+        const totalHeight = height + padding + margin;
         projectWrapper.style.height = `${totalHeight}px`;
-        logger.debug(`adjusting height to ${totalHeight}px, height=${height}, padding=${padding}`);
+        logger.debug(`adjusting height to ${totalHeight}px, height=${height}, padding=${padding}, margin=${margin}`);
       }
     }
   }
@@ -91,9 +92,9 @@
             </div>
         {/if}
         {#each availableProjects as availableProject, i}
-          <!-- {#if (i !== 0 || project) && !isSameProject(project, availableProject)}
+          {#if (i !== 0 || project) && !isSameProject(project, availableProject)}
               <div class="divider"></div>
-          {/if} -->
+          {/if}
           {#if !isSameProject(project, availableProject)}
               <div
                   class="project-option"
@@ -136,7 +137,8 @@
 <style>
 
   :root {
-    --project-popup-padding: 4px;
+    --project-popup-padding-y: 4px;
+    --project-popup-padding-x: 6px;
   }
     
   .project-wrapper {
@@ -154,32 +156,34 @@
   }
 
   .project-popup {
-        position: absolute;
-        top: calc(-1 * (var(--project-popup-padding) + var(--border-width)));
-        right: calc(-1 * (var(--project-popup-padding) + var(--border-width)));
-        margin: 0;
-        padding: var(--project-popup-padding);
-        background-color: var(--interactive-normal);
-        border: var(--border-width) solid var(--background-modifier-border);
-        border-radius: var(--radius-m);
+      position: absolute;
+      top: calc(-1 * (var(--project-popup-padding-y) + var(--border-width)));
+      right: calc(-1 * (var(--project-popup-padding-x) + var(--border-width)));
+      margin: 2px 0;
+      padding: var(--project-popup-padding-y) var(--project-popup-padding-x);
+      background-color: var(--interactive-normal);
+      border: var(--border-width) solid var(--background-modifier-border);
+      border-radius: var(--radius-m);
     }
 
     .project-option {
-        margin: 4px 0; /* Add equal margin to top and bottom */
-        display: flex;
-        justify-content: flex-end;
-        cursor: pointer;
-        transition: background-color 0.3s, color 0.3s;
+      display: flex;
+      justify-content: flex-end;
+      cursor: pointer;
     }
 
     .project-option:hover {
-        background-color: #f0f0f0;
-        color: #444;
+      background-color: var(--background-modifier-hover);
+    }
+
+    .project-option:active {
+      background-color: var(--background-modifier-active-hover);
     }
 
     .divider {
-        height: 1px;
-        background-color: #d0d0d0;
+      height: 1px;
+      margin: 2px 0;
+      background-color: var(--background-modifier-border);
     }
   
   </style>
