@@ -90,10 +90,10 @@
 ## Project
 
 ### Functionality
-- TODO: debug the color function
+- color is "randomly" generated from project name.
 
 ### Addition
-- TODO: dropdown menu to add
+- dropdown menu to add
 
 ### Edit
 - Using a pop up menu

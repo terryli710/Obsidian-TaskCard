@@ -1,4 +1,6 @@
-
+:root {
+  --project-popup-padding: 4px;
+}
 
 .obsidian-taskcard {
   background-color: var(--background-primary) !important;
@@ -124,43 +126,40 @@ input.task-card-content.mode-multi-line :focus {
 
 .project-wrapper {
   position: relative; /* Ensure that this does not change */
+  display: flex;
+  align-items: center;
 }
 
 .project-popup {
   position: absolute;
-  top: 50%; /* Position the popup at the middle of the .project-wrapper */
-  right: 0; /* Align the popup to the right of the original project */
+  top: calc(-1 * (var(--project-popup-padding) + var(--border-width))); /* Adjust this value based on the height of a single project option */
+  right: calc(-1 * (var(--project-popup-padding) + var(--border-width))); /* Align the popup to the right of the original project */
   margin: 0; /* Remove any margins */
-  padding: 0; /* Remove any padding */
+  padding: var(--project-popup-padding); /* Remove any padding */
+  background-color: var(--interactive-normal); /* Example background color */
+  border: var(--border-width) solid var(--background-modifier-border); /* Example border */
+  border-radius: var(--radius-m);
 }
 
 .project-option {
-  margin: 0; /* Remove margin from the first option */
+  margin-bottom: 2px; /* Remove margin from the first option */
+  /* transform: translateY(50%); */
   display: flex;
   justify-content: flex-end; /* Align the available projects on the right */
 }
-
-.project-option:first-child {
-  transform: translateY(-50%); /* Move the first project up by 50% of its own height */
-}
-
-.project-option:not(:first-child) {
-  margin-top: 2px; /* Reduce the margin between the subsequent options */
-}
-
 
 .task-card-project {
   flex-shrink: 0; /* Ensures that the project won't shrink */
   white-space: nowrap; /* Ensures that the project text won't wrap */
   display: flex;
   align-items: center;
-  font-size: 0.8em;
+  font-size: var(--font-ui-small);
 }
 
 .task-card-description {
     grid-column: 2;
     grid-row: 2;
-    font-size: 0.8em;
+    font-size: var(--font-ui-small);
     color: var(--color-base-50);
     border-radius: 5px; /* Rounded square */
     cursor: pointer; /* Pointer cursor on hover */
@@ -256,6 +255,7 @@ input.task-card-content.mode-multi-line :focus {
   align-items: center;
   gap: 4px;
   flex-grow: 1; /* Make it take up all available space */
+  font-size: var(--font-ui-medium)
 }
 
 .task-card-labels a {
@@ -277,7 +277,7 @@ input.task-card-label-input {
   border-radius: 1000px; /* Rounded corners */
   border: var(--border-width) solid var(--background-modifier-border);
   width: auto;
-  font-size: 0.8em;
+  font-size: var(--font-ui-small);
   white-space: nowrap;
 }
 
@@ -293,7 +293,7 @@ input.task-card-label-input:focus {
   border-radius: 1000px; /* Rounded corners */
   border: var(--border-width) solid var(--background-modifier-border);
   width: auto;
-  font-size: 0.8em;
+  font-size: var(--font-ui-small);
   white-space: nowrap;
 }
 

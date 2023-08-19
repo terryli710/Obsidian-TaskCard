@@ -4,23 +4,28 @@
   import { ObsidianTaskSyncManager } from "../taskModule/taskSyncManager";
   import { logger } from "../utils/log";
   import { SettingStore } from "../settings";
+    import { tick } from "svelte";
 
   export let taskSyncManager: ObsidianTaskSyncManager;
+  export let params: TaskItemParams;
 
   let project: Project | null = taskSyncManager.obsidianTask.hasProject() ? taskSyncManager.obsidianTask.project : null;
   let availableProjects: Project[] = [];
   SettingStore.subscribe((settings) => {
     availableProjects = settings.userMetadata.projects;
   })
-  export let params: TaskItemParams;
 
-  function toggleProjectPopup() {
+  let projectPopup;
+  let projectWrapper;
+
+  async function toggleProjectPopup() {
     if (taskSyncManager.getTaskCardStatus('projectStatus') === 'selecting') {
       // taskSyncManager.setTaskCardStatus('projectStatus', 'done');
       taskSyncManager.taskCardStatus.projectStatus = 'done';
     } else {
       // taskSyncManager.setTaskCardStatus('projectStatus', 'selecting');
       taskSyncManager.taskCardStatus.projectStatus = 'selecting';
+      await adjustWrapperHeight();
     }
   }
 
@@ -43,7 +48,18 @@
     return sameID && sameName;
   }
 
+  async function adjustWrapperHeight() {
+    await tick();
+    if (projectPopup && projectWrapper) {
+      const firstOption = projectPopup.firstChild;
+      projectWrapper.style.height = `${firstOption.offsetHeight}px`;
+    }
+  }
+
+  adjustWrapperHeight();
+
 </script>
+
 
 {#if params.mode === "single-line"}
   <div class="task-card-project">
@@ -52,58 +68,60 @@
     {/if}
   </div>
 {:else}
-  {#if taskSyncManager.getTaskCardStatus('projectStatus') === 'selecting'}
-    <div class="project-popup">
-      {#if project}
-        <div
-          class="project-option"
-          on:click={() => selectProject(project)}
-          on:keydown={(e) => e.key === 'Enter' && selectProject(project)}
-          tabindex="0"
-          role="button"
-        >
-          <div class="task-card-project">
-            <a href="#{project.name}" class="tag" target="_blank" rel="noopener">
-              {project.name}
-            </a>
-            <span class="project-color" style="background-color: {project.color};"></span>
-          </div>
-        </div>
-      {/if}
-      {#each availableProjects as availableProject}
-        {#if !isSameProject(project, availableProject)}
+  <div class="project-wrapper" bind:this={projectWrapper}>
+    {#if taskSyncManager.getTaskCardStatus('projectStatus') === 'selecting'}
+      <div class="project-popup" bind:this={projectPopup}>
+        {#if project}
           <div
             class="project-option"
-            on:click={() => selectProject(availableProject)}
-            on:keydown={(e) => e.key === 'Enter' && selectProject(availableProject)}
+            on:click={() => selectProject(project)}
+            on:keydown={(e) => e.key === 'Enter' && selectProject(project)}
             tabindex="0"
             role="button"
           >
             <div class="task-card-project">
-              <a href="#{availableProject.name}" class="tag" target="_blank" rel="noopener">
-                {availableProject.name}
+              <a href="#{project.name}" class="tag" target="_blank" rel="noopener">
+                {project.name}
               </a>
-              <span class="project-color" style="background-color: {availableProject.color};"></span>
+              <span class="project-color" style="background-color: {project.color};"></span>
             </div>
           </div>
         {/if}
-      {/each}
-    </div>
-  {:else}
-    {#if project}
-    <div class="task-card-project">
-      <a href="#{project.name}" class="tag" target="_blank" rel="noopener">
-        {project.name}
-      </a>
-      <span
-        class="project-color"
-        style="background-color: {project.color};"
-        on:click={toggleProjectPopup}
-        on:keydown={(e) => e.key === 'Enter' && toggleProjectPopup()}
-        tabindex="0"
-        role="button"
-      ></span>
-    </div>
+        {#each availableProjects as availableProject}
+          {#if !isSameProject(project, availableProject)}
+            <div
+              class="project-option"
+              on:click={() => selectProject(availableProject)}
+              on:keydown={(e) => e.key === 'Enter' && selectProject(availableProject)}
+              tabindex="0"
+              role="button"
+            >
+              <div class="task-card-project">
+                <a href="#{availableProject.name}" class="tag" target="_blank" rel="noopener">
+                  {availableProject.name}
+                </a>
+                <span class="project-color" style="background-color: {availableProject.color};"></span>
+              </div>
+            </div>
+          {/if}
+        {/each}
+      </div>
+    {:else}
+      {#if project}
+      <div class="task-card-project">
+        <a href="#{project.name}" class="tag" target="_blank" rel="noopener">
+          {project.name}
+        </a>
+        <span
+          class="project-color"
+          style="background-color: {project.color};"
+          on:click={toggleProjectPopup}
+          on:keydown={(e) => e.key === 'Enter' && toggleProjectPopup()}
+          tabindex="0"
+          role="button"
+        ></span>
+      </div>
+      {/if}
     {/if}
-  {/if}
+  </div>
 {/if}

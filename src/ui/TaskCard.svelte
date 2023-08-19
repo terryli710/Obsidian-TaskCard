@@ -140,9 +140,7 @@
     </div>
     <div class="task-card-content-project-line">
       <Content taskSyncManager={taskSyncManager} />
-      <div class="project-wrapper">
-        <Project taskSyncManager={taskSyncManager} params={params} />
-      </div>
+      <Project taskSyncManager={taskSyncManager} params={params} />
     </div>
     <Description taskSyncManager={taskSyncManager} />
     <button class="task-card-menu-button mode-multi-line" on:click={(event) => showCardMenu(event)} tabindex="0">
