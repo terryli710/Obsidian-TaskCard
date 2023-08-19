@@ -124,38 +124,6 @@ input.task-card-content.mode-multi-line :focus {
   align-items: center; /* Centers items vertically */
 }
 
-.project-wrapper {
-  position: relative; /* Ensure that this does not change */
-  display: flex;
-  align-items: center;
-}
-
-.project-popup {
-  position: absolute;
-  top: calc(-1 * (var(--project-popup-padding) + var(--border-width))); /* Adjust this value based on the height of a single project option */
-  right: calc(-1 * (var(--project-popup-padding) + var(--border-width))); /* Align the popup to the right of the original project */
-  margin: 0; /* Remove any margins */
-  padding: var(--project-popup-padding); /* Remove any padding */
-  background-color: var(--interactive-normal); /* Example background color */
-  border: var(--border-width) solid var(--background-modifier-border); /* Example border */
-  border-radius: var(--radius-m);
-}
-
-.project-option {
-  margin-bottom: 2px; /* Remove margin from the first option */
-  /* transform: translateY(50%); */
-  display: flex;
-  justify-content: flex-end; /* Align the available projects on the right */
-}
-
-.task-card-project {
-  flex-shrink: 0; /* Ensures that the project won't shrink */
-  white-space: nowrap; /* Ensures that the project text won't wrap */
-  display: flex;
-  align-items: center;
-  font-size: var(--font-ui-small);
-}
-
 .task-card-description {
     grid-column: 2;
     grid-row: 2;
