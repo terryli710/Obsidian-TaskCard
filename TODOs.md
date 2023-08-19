@@ -98,8 +98,6 @@
 ### Edit
 - Using a pop up menu
 - CSS similar to the chosen project.
-- TODO: add a boarder, when there are many labels, what to do?
-- TODO: hover behavior for the color
 
 ### Delete
 - TODO: dropdown menu to delete.

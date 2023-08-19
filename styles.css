@@ -165,14 +165,6 @@ input.task-card-content.mode-multi-line :focus {
   grid-row: 1;
 }
 
-.project-color {
-  display: inline-block;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  margin: 3px;
-}
-
 .task-card-checkbox {
   border: var(--border-width) solid;
 }

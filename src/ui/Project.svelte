@@ -120,7 +120,7 @@
             {project.name}
           </a>
           <span
-            class="project-color"
+            class="project-color clickable-icon"
             style="background-color: {project.color};"
             on:click={toggleProjectPopup}
             on:keydown={(e) => e.key === 'Enter' && toggleProjectPopup()}
@@ -171,6 +171,7 @@
       display: flex;
       justify-content: flex-end;
       cursor: pointer;
+      border-radius: var(--radius-s);
     }
 
     .project-option:hover {
@@ -186,5 +187,21 @@
       margin: 2px 0;
       background-color: var(--background-modifier-border);
     }
+
+  .project-color {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    padding: 4px;
+    border-radius: 50%;
+    margin: 4px;
+    /* box-sizing: border-box; */
+    border: var(--border-width) solid var(--background-primary);
+  }
+
+  .project-color.clickable-icon:hover {
+    cursor: pointer; /* Change the cursor to a pointer on hover */
+    border: var(--border-width) solid var(--background-modifier-border); /* Add a border on hover */
+  }
   
   </style>
