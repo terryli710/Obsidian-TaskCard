@@ -81,3 +81,35 @@
     </div>
   {/if}
 {/if}
+
+<style>
+
+  .task-card-due {
+    display: inline-block;
+    padding: var(--tag-padding-y) var(--tag-padding-x);
+    border-radius: var(--radius-l);
+    border: var(--border-width) solid var(--background-modifier-border);
+    width: auto;
+    font-size: var(--font-ui-smaller);
+    white-space: nowrap;
+  }
+
+  /* This selector ensures that the cursor only changes to a hand pointer when the div is not empty */
+  .task-card-due:not(:empty):hover {
+    background-color: var(--background-modifier-hover);
+    cursor: pointer;
+  }
+
+  input.task-card-due {
+    border-radius: var(--radius-l);
+    width: auto;
+    text-align: center;
+  }
+
+  /* Customize the focus styles */
+  input.task-card-due:focus {
+    outline: none; /* Remove the default outline */
+    box-shadow: none; /* Remove the default box-shadow */
+    border: calc(0.75 * var(--border-width)) solid var(--background-modifier-border); /* Add a custom border */
+  }
+</style>

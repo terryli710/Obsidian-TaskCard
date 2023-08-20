@@ -7,6 +7,7 @@
 - formatted attribute saving.
 - No direct edit method.
 - Single line mode background problem - taskcard background compatibility
+- TODO: task listener and formatter
 
 ## Multi-mode display in preview mode
 - Single line and multi line modes.
@@ -33,7 +34,6 @@
 ### Edit
 - double click and edit content with single line window.
   - Save and discard edits  
-- TODO: BUG: when editing two adjacent task cards.
 
 ### Delete
 - NA

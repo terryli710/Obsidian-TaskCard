@@ -247,35 +247,6 @@ input.task-card-label-input:focus {
   border: calc(0.75 * var(--border-width)) solid var(--background-modifier-border); /* Add a custom border */
 }
 
-.task-card-due {
-  display: inline-block;
-  padding: 1px 10px;
-  border-radius: 1000px; /* Rounded corners */
-  border: var(--border-width) solid var(--background-modifier-border);
-  width: auto;
-  font-size: var(--font-ui-small);
-  white-space: nowrap;
-}
-
-/* This selector ensures that the cursor only changes to a hand pointer when the div is not empty */
-.task-card-due:not(:empty):hover {
-  background-color: var(--background-modifier-hover);
-  cursor: pointer;
-}
-
-input.task-card-due {
-  border-radius: 1000px; /* Rounded corners */
-  width: auto;
-  text-align: center;
-}
-
-/* Customize the focus styles */
-input.task-card-due:focus {
-  outline: none; /* Remove the default outline */
-  box-shadow: none; /* Remove the default box-shadow */
-  border: calc(0.75 * var(--border-width)) solid var(--background-modifier-border); /* Add a custom border */
-}
-
 .task-card-icon {
   align-self: center;
   width: var(--icon-xs);
