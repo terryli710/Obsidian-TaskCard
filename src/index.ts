@@ -10,6 +10,7 @@ import { TaskValidator } from './taskModule/taskValidator';
 import { TaskCardRenderManager } from './renderer/index';
 import { FileOperator } from './renderer/fileOperator';
 import { TaskFormatter } from './taskModule/taskFormatter';
+import { TaskMonitor } from './taskModule/taskMonitor';
 
 export default class TaskCardPlugin extends Plugin {
   public settings: TaskCardSettings;
@@ -19,7 +20,7 @@ export default class TaskCardPlugin extends Plugin {
   public taskValidator: TaskValidator;
   public taskCardRenderManager: TaskCardRenderManager
   public fileOperator: FileOperator
-
+  public taskMonitor: TaskMonitor
   
   constructor(app: App, pluginManifest: PluginManifest) {
     super(app, pluginManifest);
@@ -33,6 +34,7 @@ export default class TaskCardPlugin extends Plugin {
     this.taskValidator = new TaskValidator(SettingStore);
     this.taskCardRenderManager = new TaskCardRenderManager(this);
     this.fileOperator = new FileOperator(this, this.app);
+    this.taskMonitor = new TaskMonitor(this);
   }
 
   async loadSettings() {
@@ -59,6 +61,13 @@ export default class TaskCardPlugin extends Plugin {
     this.addSettingTab(new SettingsTab(this.app, this));
     this.registerMarkdownPostProcessor(this.taskCardRenderManager.getPostProcessor());
     this.registerEditorSuggest(new AttributeSuggest(this.app));
+    this.registerEvent(this.app.workspace.on('layout-change', () => {
+      const file = this.app.workspace.getActiveFile();
+      setTimeout(() => {
+        logger.debug(`taskMonitor triggered for file: ${file.path}`);
+        this.taskMonitor.monitorFile(file);
+      }, 2);
+    }));
     logger.info('Plugin loaded.');
   }
 }

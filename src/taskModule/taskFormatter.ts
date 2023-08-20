@@ -2,6 +2,7 @@
 
 
 import { SettingStore } from '../settings';
+import { logger } from '../utils/log';
 import { camelToKebab } from '../utils/stringCaseConverter';
 import { ObsidianTask } from './task';
 
@@ -23,18 +24,8 @@ export class TaskFormatter {
             if (key === 'completed' || key === 'content') continue;
     
             let value = task[key];
-            if (value === null || value === undefined) {
-                value = "null";
-            } else if (key === 'description') {
-                value = value.replace(/\n/g, '\\n');
-            } else if (typeof value === 'object') {
-                value = JSON.stringify(value);
-            }
-            // for string value, add quotes
-            const stringAttributes = ['id', 'description']
-            if (stringAttributes.includes(key)) {
-                value = `"${value}"`;
-            }
+            if (value === undefined) { value = null; }
+            value = JSON.stringify(value);
     
             let kebabCaseKey = camelToKebab(key);
             markdownLine += `<span class="${kebabCaseKey}" style="display:none;">${value}</span>\n`;

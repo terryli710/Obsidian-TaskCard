@@ -37,7 +37,7 @@ describe('taskToMarkdown', () => {
             priority: 4,
         });
         const result = taskFormatter.taskToMarkdown(task);
-        expect(result).toContain('<span class="priority" style="display:none;">"4"</span>\n');
+        expect(result).toContain('<span class="priority" style="display:none;">4</span>\n');
     });
 
     it('should format a task with description', () => {
@@ -57,7 +57,7 @@ describe('taskToMarkdown', () => {
             order: 1,
         });
         const result = taskFormatter.taskToMarkdown(task);
-        expect(result).toContain('<span class="order" style="display:none;">"1"</span>\n');
+        expect(result).toContain('<span class="order" style="display:none;">1</span>\n');
     });
 
     it('should format a task with project', () => {
