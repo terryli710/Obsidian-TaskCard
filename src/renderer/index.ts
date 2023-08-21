@@ -102,7 +102,7 @@ export function getLineNumberOfListItem(ul: HTMLElement, index: number, content:
 
     logger.debug(`originalLines: ${JSON.stringify(originalLines)}`);
 
-    for (let i = 0; i <= index; i++) {
+    for (let i = 0; i < index; i++) {
         const markdown = htmlToMarkdown(ul.children[i].innerHTML);
         const lines = markdown.split('\n').filter(line => line.trim() !== '');
 
