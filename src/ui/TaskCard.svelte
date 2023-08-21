@@ -242,5 +242,20 @@
     cursor: pointer;
     border-width: calc( 2 * var(--border-width));
   }
-  
+
+  .task-card-menu-button {
+      background: none !important;
+      border: none !important;
+      box-shadow: none !important;
+      outline: none !important;
+      cursor: pointer;
+      padding: 0 0.25em !important;
+      margin: 0 0.15em !important;
+    }
+
+    .task-card-menu-button:hover {
+      background: none !important;
+      box-shadow: none !important;
+    }
+
 </style>

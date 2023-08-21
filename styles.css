@@ -190,6 +190,7 @@ input.task-card-content.mode-multi-line :focus {
   flex-shrink: 0; /* Prevents shrinking */
   margin: 0 4px;
   color: var(--color-base-50);
+  font-size: var(--font-ui-medium);
 }
 
 .task-card-labels {
@@ -264,30 +265,16 @@ input.task-card-label-input:focus {
   background-color: var(--background-modifier-active-hover);
 }
 
-.task-card-menu-button {
-    background: none !important;
-    border: none !important;
-    box-shadow: none !important;
-    outline: none !important;
-    cursor: pointer;
-    padding: 0 0.25em !important;
-    margin: 0 0.20em !important;
-  }
 
-  .task-card-menu-button:hover {
-    background: none !important;
-    box-shadow: none !important;
-  }
+.task-card-menu-button:hover svg {
+  color: var(--icon-color-hover);
+}
 
-  .task-card-menu-button:hover svg {
-    color: var(--icon-color-hover);
-  }
+.task-card-menu-button:active {
+  background: none !important;
+  box-shadow: none !important;
+}
 
-  .task-card-menu-button:active {
-    background: none !important;
-    box-shadow: none !important;
-  }
-
-  .task-card-menu-button:active svg {
-    color: var(--icon-color-active);
-  }
+.task-card-menu-button:active svg {
+  color: var(--icon-color-active);
+}

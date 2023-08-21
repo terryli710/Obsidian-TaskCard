@@ -22,7 +22,8 @@
 - TODO: when adding project, visual cue for OPTIONAL color picking;
 
 ## Priority
-- TODO: hover behavior
+
+### Edit
 
 ## Content
 
