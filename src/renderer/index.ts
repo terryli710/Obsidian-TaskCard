@@ -70,6 +70,11 @@ export class TaskCardRenderManager {
             const obsidianTask = this.plugin.taskParser.parseTaskEl(taskItemEl);
             return {
                 obsidianTask: obsidianTask,
+                taskCardStatus: {
+                    descriptionStatus: 'done',
+                    projectStatus: 'done',
+                    dueStatus: 'done'
+                },
                 markdownTask: null,
                 taskItemEl: taskItemEl,
                 taskMetadata: {
@@ -86,7 +91,7 @@ export class TaskCardRenderManager {
 
 }
 
-export function getLineNumberOfListItem(ul: HTMLElement, index: number): number {
+export function getLineNumberOfListItem(ul: HTMLElement, index: number): number { // TODO: debug
     let lineNumber = 0;
     for (let i = 0; i < index; i++) {
         const lines = htmlToMarkdown(ul.children[i].innerHTML).split('\n').filter(line => line.trim() !== '');

@@ -48,7 +48,6 @@
 
   async function adjustWrapperHeight() {
     await tick();
-    logger.debug(`adjustWrapperHeight called`);
     if (projectPopup && projectWrapper) {
       const firstOption = projectPopup.firstChild as HTMLDivElement;
       if (firstOption) {

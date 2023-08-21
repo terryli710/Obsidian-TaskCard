@@ -12,8 +12,6 @@
     let descriptionMarkdown = marked(description);
     let inputElement: HTMLTextAreaElement;
 
-    logger.debug(`taskSyncManager.getTaskCardStatus('descriptionStatus'): ${taskSyncManager.getTaskCardStatus('descriptionStatus')}`);
-
     async function enableEditMode(event: MouseEvent | KeyboardEvent) {
         if (event instanceof KeyboardEvent) {
             if (event.key === 'Enter' || event.key === ' ') {
