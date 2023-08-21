@@ -220,6 +220,7 @@ export class SettingsTab extends PluginSettingTab {
         })
         .addButton(button => {
             button.setButtonText("Reset")
+                .setWarning()
                 .onClick(async () => {
                     this.plugin.writeSettings((old) => (old.parsingSettings.indicatorTag = DefaultSettings.parsingSettings.indicatorTag));
                 });
@@ -234,8 +235,8 @@ export class SettingsTab extends PluginSettingTab {
       .addDropdown((dropdown) => {
         dropdown
           .addOptions({
-              'Single Line': 'single-line',
-              'Multi Line': 'multi-line'
+              'single-line': 'Single Line',
+              'multi-line': 'Multi Line'
           })
           .setValue(this.plugin.settings.displaySettings.defaultMode)
           .onChange(async (value: string) => {
