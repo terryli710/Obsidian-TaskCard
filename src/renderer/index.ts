@@ -34,8 +34,11 @@ export class TaskCardRenderManager {
 
     getPostProcessor(): MarkdownPostProcessor {
         const postProcessor = async (el: HTMLElement, ctx: MarkdownPostProcessorContext) => {
-            // logger.debug(`PostProcessor - before onload: el: ${el.innerHTML}`)
-
+            const markdown = htmlToMarkdown(el.innerHTML);
+            const lines = markdown.split('\n');
+            lines.forEach((line, i) => {
+                logger.debug(`- line ${i}: ${line}`);
+            });
             const taskSyncs: ObsidianTaskSyncProps[] = await this.constructTaskSync(el, ctx)
 
             for (const taskSync of taskSyncs) {
@@ -60,7 +63,8 @@ export class TaskCardRenderManager {
 
         const mdSectionInfo = ctx.getSectionInfo(section);
         const sourcePath = ctx.sourcePath;
-        const lineNumbers: number[] = taskItemsIndices.map((index) => getLineNumberOfListItem(section, index));
+        const mdSectionContent = await this.plugin.fileOperator.getMarkdownBetweenLines(sourcePath, mdSectionInfo.lineStart, mdSectionInfo.lineEnd + 1);
+        const lineNumbers: number[] = taskItemsIndices.map((index) => getLineNumberOfListItem(section, index, mdSectionContent));
         // logger.debug(`lineNumbers: ${lineNumbers}`);
 
         const taskSyncs: ObsidianTaskSyncProps[] = taskItemsIndices.map((index, i) => {
@@ -91,11 +95,29 @@ export class TaskCardRenderManager {
 
 }
 
-export function getLineNumberOfListItem(ul: HTMLElement, index: number): number { // TODO: debug
+export function getLineNumberOfListItem(ul: HTMLElement, index: number, content: string): number {
     let lineNumber = 0;
-    for (let i = 0; i < index; i++) {
-        const lines = htmlToMarkdown(ul.children[i].innerHTML).split('\n').filter(line => line.trim() !== '');
+    const originalLines = content.split('\n');
+    let originalLineIndex = 0;
+
+    logger.debug(`originalLines: ${JSON.stringify(originalLines)}`);
+
+    for (let i = 0; i <= index; i++) {
+        const markdown = htmlToMarkdown(ul.children[i].innerHTML);
+        const lines = markdown.split('\n').filter(line => line.trim() !== '');
+
         lineNumber += lines.length;
+
+        originalLineIndex += lines.length;
+        // Count any empty lines that follow the current list item in the original content
+        while (originalLines.length > originalLineIndex && originalLines[originalLineIndex].trim() === '') {
+            lineNumber++;
+            originalLineIndex++;
+        }
     }
+
+    logger.debug(`Final line number: ${lineNumber}`);
     return lineNumber;
 }
+
+
