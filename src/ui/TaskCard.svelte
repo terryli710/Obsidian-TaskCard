@@ -210,3 +210,37 @@
     </div>
   </div>
 {/if}
+
+<style>
+
+  .task-card-checkbox {
+    border: var(--border-width) solid;
+  }
+
+  /* Apply color to checkbox based on priority */
+  .task-card-checkbox.priority-1 {
+    border-color: var(--color-red);
+  }
+  .task-card-checkbox.priority-2 {
+    border-color: var(--color-orange);
+  }
+  .task-card-checkbox.priority-3 {
+    border-color: var(--color-yellow);
+  }
+
+  /* Maintain border color on hover */
+  .task-card-checkbox.priority-1:hover {
+    border-color: var(--color-red);
+  }
+  .task-card-checkbox.priority-2:hover {
+    border-color: var(--color-orange);
+  }
+  .task-card-checkbox.priority-3:hover {
+    border-color: var(--color-yellow);
+  }
+  .task-card-checkbox:hover {
+    cursor: pointer;
+    border-width: calc( 2 * var(--border-width));
+  }
+  
+</style>

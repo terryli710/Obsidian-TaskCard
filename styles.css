@@ -165,21 +165,6 @@ input.task-card-content.mode-multi-line :focus {
   grid-row: 1;
 }
 
-.task-card-checkbox {
-  border: var(--border-width) solid;
-}
-
-/* Apply color to checkbox based on priority */
-.task-card-checkbox.priority-1 {
-  border-color: var(--color-red);
-}
-.task-card-checkbox.priority-2 {
-  border-color: var(--color-orange);
-}
-.task-card-checkbox.priority-3 {
-  border-color: var(--color-yellow);
-}
-
 .task-card-attribute-bottom-bar {
   display: flex; /* Use Flexbox layout */
   align-items: center; /* Center children vertically */
