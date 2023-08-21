@@ -19,7 +19,6 @@
 
 ## Settings
 - TODO: for project, if saved, not interactive;
-- TODO: when adding project, visual cue for OPTIONAL color picking;
 
 ## Priority
 
@@ -64,7 +63,7 @@
 - TODO: font size and text box size when editing.
 
 ### Delete
-- TODO: dropdown menu to delete.
+- dropdown menu to delete.
 
 ## Labels
 
