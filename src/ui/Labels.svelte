@@ -24,11 +24,11 @@
 
   function editLabel(index) {
     editingIndex = index;
-    newLabel = labelModule.getLabels()[index].substr(1); // remove leading #
+    newLabel = labelModule.getLabels()[index].substring(1); // remove leading #
   }
 
   function saveEdit() {
-    labelModule.editLabel('#' + newLabel, '#' + labelModule.getLabels()[editingIndex].substr(1), false);
+    labelModule.editLabel('#' + newLabel, '#' + labelModule.getLabels()[editingIndex].substring(1), false);
     newLabel = '';
     editingIndex = null;
     taskSyncManager.updateObsidianTaskAttribute('labels', labelModule.getLabels());

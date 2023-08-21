@@ -50,7 +50,6 @@ export class SettingsTab extends PluginSettingTab {
     // title
     this.containerEl.createEl('h2', { text: 'Task Card' });
     // projects
-    this.containerEl.createEl('h3', { text: 'Projects' });
     this.projectSettings();
     // parsing settings
     this.containerEl.createEl('h3', { text: 'Parsing Settings' });
@@ -61,14 +60,19 @@ export class SettingsTab extends PluginSettingTab {
   }
 
   projectSettings() {
-    this.containerEl.createEl('h4', { text: 'Add new projects' });
-    const projectContainer = this.containerEl.createEl('div', { cls: 'new-project-container' });
-    this.newProjectSetting(projectContainer);
+    this.containerEl.createEl('h3', { text: 'Project Adding' });
+
+    this.newProjectSetting();
     const projects: Project[] = this.plugin.projectModule.getProjectsData();
-    this.containerEl.createEl('h4', { text: 'Edit existing projects' });
-    for (const project of projects) {
-      const projectContainer = this.containerEl.createEl('div', { cls: 'project-container' });
-      this.projectEditSetting(project, projectContainer);
+    this.containerEl.createEl('h3', { text: 'Project Editing' });
+    if (projects.length > 0) {
+      const firstProject = projects[0];
+      const restProjects = projects.slice(1);
+      this.projectEditSetting(firstProject);
+      for (const project of restProjects) {
+        const projectContainer = this.containerEl.createEl('div', { cls: 'project-container' });
+        this.projectEditSetting(project, projectContainer);
+      }
     }
 
   }
@@ -79,19 +83,16 @@ export class SettingsTab extends PluginSettingTab {
       this.plugin.writeSettings((old) => old.userMetadata.projects = projects);
   }
 
-  newProjectSetting(projectContainer?: HTMLElement) {
-    if (!projectContainer) {
-        projectContainer = this.containerEl.createEl('div', { cls: 'project-container' });
-    }
+  newProjectSetting() {
 
     let newProjectName = '';
     let newProjectColor = '';
 
     const renderSetting = (showColorPicker: boolean = false) => {
-        // Clear the current setting
-        projectContainer.innerHTML = '';
 
-        const setting = new Setting(projectContainer).setName('Add a project');
+        const setting = new Setting(this.containerEl).setName('Add A Project');
+
+        setting.setDesc('Project names must be unique. Color picking is optional.');
 
         setting.addText(text => {
             text.setPlaceholder('Enter project name')
@@ -126,7 +127,7 @@ export class SettingsTab extends PluginSettingTab {
                             name: newProjectName,
                             color: newProjectColor
                         };
-                        this.plugin.projectModule.updateProject(newProject);
+                        this.plugin.projectModule.addProject(newProject);
                         this.updateProjectsToSettings();
                         this.display();
                     }
@@ -138,15 +139,13 @@ export class SettingsTab extends PluginSettingTab {
 }
 
 
-
-  projectEditSetting(project: Project, projectContainer?: HTMLElement) {
-    if (!projectContainer) {
-        projectContainer = this.containerEl.createEl('div', { cls: 'project-container' });
+  projectEditSetting(project: Project, projectContainerEl?: HTMLElement) {
+    if (!projectContainerEl) {
+        projectContainerEl = this.containerEl;
     }
-
     // Heading for the Project Name
-    const setting = new Setting(projectContainer)
-        .setName('Project Name');
+    const setting = new Setting(projectContainerEl);
+    setting.setName(project.name);
 
     const textComponent = setting.addText(text => {
         text.setValue(project.name)
@@ -221,6 +220,7 @@ export class SettingsTab extends PluginSettingTab {
         })
         .addButton(button => {
             button.setButtonText("Reset")
+                .setWarning()
                 .onClick(async () => {
                     this.plugin.writeSettings((old) => (old.parsingSettings.indicatorTag = DefaultSettings.parsingSettings.indicatorTag));
                 });
@@ -235,8 +235,8 @@ export class SettingsTab extends PluginSettingTab {
       .addDropdown((dropdown) => {
         dropdown
           .addOptions({
-              'Single Line': 'single-line',
-              'Multi Line': 'multi-line'
+              'single-line': 'Single Line',
+              'multi-line': 'Multi Line'
           })
           .setValue(this.plugin.settings.displaySettings.defaultMode)
           .onChange(async (value: string) => {

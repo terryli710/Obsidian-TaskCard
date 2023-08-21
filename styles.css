@@ -1,10 +1,9 @@
 :root {
-  --task-card-file-path-color: #000000;
-  --icon-size: 16px;
+  --project-popup-padding: 4px;
 }
 
 .obsidian-taskcard {
-  background-color: var(--background-primary);
+  background-color: var(--background-primary) !important;
   color: var(--text-normal);
   font-size: var(--font-text-size);
   font-family: var(--font-text);
@@ -31,16 +30,16 @@
   padding: 0.25em 0.5em 0.25em 0.48em;
 }
 
-.obsidian-taskcard.mode-single-line:not(:empty):hover {
+.obsidian-taskcard.mode-single-line:hover {
   background-color: var(--background-modifier-hover);
 }
 
-.obsidian-taskcard.mode-single-line:not(:empty):active:hover {
+.obsidian-taskcard.mode-single-line:active {
   background-color: var(--background-modifier-active-hover);
 }
 
 .obsidian-taskcard.mode-multi-line{
-  padding: 0.25em 0.5em 0.5em 0.48em;
+  padding: 0.25em 0.5em 0.25em 0.48em;
 }
 
 .task-card-single-line {
@@ -69,6 +68,7 @@
   grid-template-columns: auto 1fr; /* Checkbox takes only the space it needs, rest for content and description */
   grid-template-rows: auto auto; /* Two rows for content and description */
   width: 100%;
+  align-items: center;
 }
 
 .task-card-checkbox-wrapper {
@@ -89,69 +89,55 @@
   align-items: center; /* Centers items vertically */
 }
 
-.project-wrapper {
-  position: relative; /* Ensure that this does not change */
+.task-card-content {
+  border-radius: var(--radius-s); /* Rounded square */
+  cursor: pointer; /* Pointer cursor on hover */
+  flex-grow: 0.98;
+  padding-left: 0.25em;
+  padding-right: 0.25em;
+  font-size: var(--font-text-size);
 }
 
-.project-popup {
-  position: absolute;
-  top: 50%; /* Position the popup at the middle of the .project-wrapper */
-  right: 0; /* Align the popup to the right of the original project */
-  margin: 0; /* Remove any margins */
-  padding: 0; /* Remove any padding */
-}
-
-.project-option {
-  margin: 0; /* Remove margin from the first option */
-  display: flex;
-  justify-content: flex-end; /* Align the available projects on the right */
-}
-
-.project-option:first-child {
-  transform: translateY(-50%); /* Move the first project up by 50% of its own height */
-}
-
-.project-option:not(:first-child) {
-  margin-top: 2px; /* Reduce the margin between the subsequent options */
-}
-
-
-.task-card-project {
-  flex-shrink: 0; /* Ensures that the project won't shrink */
-  white-space: nowrap; /* Ensures that the project text won't wrap */
-  display: flex;
-  align-items: center;
-  font-size: 0.8em;
-}
 
 .task-card-description {
-  grid-column: 2;
-  grid-row: 2;
-  font-size: 0.8em;
-  color: var(--color-base-50);
+    grid-column: 2;
+    grid-row: 2;
+    font-size: var(--font-ui-small);
+    color: var(--color-base-50);
+    border-radius: 5px; /* Rounded square */
+    cursor: pointer; /* Pointer cursor on hover */
+    margin: 0.1em; /* Padding for the content */
+    padding: 0.25em; /* Padding for the content */
 }
 
-.project-color {
-  display: inline-block;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  margin: 3px;
+.task-card-description:hover {
+    background-color: var(--background-modifier-hover); /* Background hover color */
 }
 
-.task-card-checkbox {
-  border: var(--border-width) solid;
+.task-card-description:active {
+    background-color: var(--background-modifier-active-hover); /* Background active color */
 }
 
-/* Apply color to checkbox based on priority */
-.task-card-checkbox.priority1 {
-  border-color: #EE3939;
+.task-card-description textarea {
+    width: 100%; /* Full width of the container */
+    height: 100%; /* Full height of the container */
+    border-radius: 5px; /* Rounded square */
+    transition: background-color 0.3s ease; /* Smooth background color transition */
+    padding: 8px; /* Padding for the content */
 }
-.task-card-checkbox.priority2 {
-  border-color: #FFB300;
+
+.task-card-description textarea:hover {
+    background-color: var(--background-modifier-hover); /* Background hover color */
 }
-.task-card-checkbox.priority3 {
-  border-color: #36A41D;
+
+.task-card-description textarea:active {
+    background-color: var(--background-modifier-active-hover); /* Background active color */
+}
+
+
+.task-card-menu-button.mode-multi-line {
+  grid-column: 3;
+  grid-row: 1;
 }
 
 .task-card-attribute-bottom-bar {
@@ -179,6 +165,7 @@
   flex-shrink: 0; /* Prevents shrinking */
   margin: 0 4px;
   color: var(--color-base-50);
+  font-size: var(--font-ui-medium);
 }
 
 .task-card-labels {
@@ -189,23 +176,12 @@
   align-items: center;
   gap: 4px;
   flex-grow: 1; /* Make it take up all available space */
+  font-size: var(--font-ui-medium)
 }
 
 .task-card-labels a {
   text-decoration: none;
   flex-shrink: 0;
-}
-
-.task-card-labels button {
-  border-radius: 50%;
-  background-color: var(--background-modifier-button);
-  border: none;
-  font-size: 1em;
-  color: var(--text-color);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
 }
 
 .task-card-labels button:hover {
@@ -222,40 +198,11 @@ input.task-card-label-input {
   border-radius: 1000px; /* Rounded corners */
   border: var(--border-width) solid var(--background-modifier-border);
   width: auto;
-  font-size: 0.8em;
+  font-size: var(--font-ui-small);
   white-space: nowrap;
 }
 
 input.task-card-label-input:focus {
-  outline: none; /* Remove the default outline */
-  box-shadow: none; /* Remove the default box-shadow */
-  border: calc(0.75 * var(--border-width)) solid var(--background-modifier-border); /* Add a custom border */
-}
-
-.task-card-due {
-  display: inline-block;
-  padding: 1px 10px;
-  border-radius: 1000px; /* Rounded corners */
-  border: var(--border-width) solid var(--background-modifier-border);
-  width: auto;
-  font-size: 0.8em;
-  white-space: nowrap;
-}
-
-/* This selector ensures that the cursor only changes to a hand pointer when the div is not empty */
-.task-card-due:not(:empty):hover {
-  background-color: var(--background-modifier-hover);
-  cursor: pointer;
-}
-
-input.task-card-due {
-  border-radius: 1000px; /* Rounded corners */
-  width: auto;
-  text-align: center;
-}
-
-/* Customize the focus styles */
-input.task-card-due:focus {
   outline: none; /* Remove the default outline */
   box-shadow: none; /* Remove the default box-shadow */
   border: calc(0.75 * var(--border-width)) solid var(--background-modifier-border); /* Add a custom border */
@@ -282,6 +229,7 @@ input.task-card-due:focus {
   min-width: calc(var(--icon-xs) + 10px); /* Set minimum width */
   min-height: calc(var(--icon-xs) + 10px); /* Set minimum height */
   flex-shrink: 0; /* Prevent shrinking */
+  background-color: var(--interactive-normal);
 }
 
 .task-card-round-button:hover {
@@ -290,4 +238,18 @@ input.task-card-due:focus {
 
 .task-card-round-button:active {
   background-color: var(--background-modifier-active-hover);
+}
+
+
+.task-card-menu-button:hover svg {
+  color: var(--icon-color-hover);
+}
+
+.task-card-menu-button:active {
+  background: none !important;
+  box-shadow: none !important;
+}
+
+.task-card-menu-button:active svg {
+  color: var(--icon-color-active);
 }

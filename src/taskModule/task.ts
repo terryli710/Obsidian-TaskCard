@@ -58,7 +58,7 @@ export class ObsidianTask implements TaskProperties {
   constructor(props?: Partial<ObsidianTask>) {
     this.id = props?.id || uuidv4();
     this.content = props?.content || '';
-    this.priority = props?.priority || 1;
+    this.priority = props?.priority || 4;
     this.description = props?.description || '';
     this.order = props?.order || 0;
     this.project = props?.project || { id: '', name: '' };
@@ -70,4 +70,35 @@ export class ObsidianTask implements TaskProperties {
     this.due = props?.due || null;
     this.metadata = props?.metadata || {};
   }
+
+  hasDescription() {
+    return this.description.length > 0
+  }
+
+  hasProject() {
+    return this.project !== null && this.project.name.length > 0
+  }
+
+  hasAnyLabels() {
+    return this.labels.length > 0
+  }
+
+  isCompleted() {
+    return this.completed
+  }
+
+  hasParent(): boolean {
+    return this.parent !== null
+  }
+
+  hasChildren(): boolean {
+    return this.children.length > 0
+  }
+
+  hasDue(): boolean {
+    if (!this.due) return false;
+    // return if the due string is not empty
+    return !(!this.due.string)
+  }
+
 }

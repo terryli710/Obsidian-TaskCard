@@ -33,7 +33,7 @@ export class FileOperator {
         const fileLines = await this.getFileLines(filePath);
         const newFileLines: string[] = [...fileLines];
         newFileLines.splice(lineStart, lineEnd - lineStart, newContent);
-        logger.debug(`newContent: ${newContent}, lineStart: ${lineStart}, lineEnd: ${lineEnd}`);
+        // logger.debug(`newContent: ${newContent}, lineStart: ${lineStart}, lineEnd: ${lineEnd}`);
         await this.app.vault.modify(file as TFile, newFileLines.join('\n'));
     }
 

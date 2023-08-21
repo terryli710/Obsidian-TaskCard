@@ -11,9 +11,7 @@
     export let defaultParams: TaskItemParams;
 
     let params = defaultParams;
-    let taskItemEl: HTMLElement = taskSyncManager.taskItemEl;
-
-    logger.debug(`taskItemEl: innerHTML => ${taskItemEl.innerHTML}`);
+    // let taskItemEl: HTMLElement = taskSyncManager.taskItemEl;
 
     const dispatch = createEventDispatcher();
 
@@ -29,7 +27,6 @@
         params = { ...params, mode: newMode };
     }
 
-    logger.debug(`params in taskItem => ${JSON.stringify(params)}`);
 </script>
 
 {#if params.mode === "single-line"}

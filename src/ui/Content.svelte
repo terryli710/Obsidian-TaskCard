@@ -1,17 +1,23 @@
 <script lang="ts">
+    import { tick } from 'svelte';
     import { ObsidianTaskSyncManager } from '../taskModule/taskSyncManager';
     export let taskSyncManager: ObsidianTaskSyncManager;
     let content: string = taskSyncManager.obsidianTask.content;
     let isEditing = false;
+    let inputElement: HTMLInputElement;
 
-    function enableEditMode(event: MouseEvent | KeyboardEvent) {
+    async function enableEditMode(event: MouseEvent | KeyboardEvent) {
         if (event instanceof KeyboardEvent) {
             if (event.key === 'Enter' || event.key === ' ') {
                 event.preventDefault();
                 isEditing = true;
+                await tick();
+                focusAndSelect(inputElement);
             }
         } else if (event instanceof MouseEvent) {
             isEditing = true;
+            await tick();
+            focusAndSelect(inputElement);
         }
     }
 
@@ -26,22 +32,59 @@
             content = taskSyncManager.obsidianTask.content;
         }
     }
-    // TODO: change the style of the input.
+
+    function focusAndSelect(node: HTMLInputElement) {
+        // Focus on the input element
+        node.focus();
+        // Select all the content
+        node.select();
+    }
 </script>
 
 
 {#if isEditing}
     <input 
-        class="task-card-content" 
+        class="task-card-content mode-multi-line" 
         bind:value={content} 
+        bind:this={inputElement}
         on:keydown={finishEditing} />
 {:else}
     <div 
-        class="task-card-content" 
+        class="task-card-content mode-multi-line" 
         role="button" 
         tabindex="0" 
-        on:dblclick={enableEditMode} 
+        on:click={enableEditMode} 
         on:keydown={enableEditMode}>
         {content}
     </div>
 {/if}
+
+<style>
+
+    .task-card-content.mode-multi-line:hover {
+    background-color: var(--background-modifier-hover); /* Background hover color */
+    }
+
+    .task-card-content.mode-multi-line:active {
+    background-color: var(--background-modifier-active-hover); /* Background active color */
+    }
+
+    input.task-card-content.mode-multi-line {
+    border:  var(--input-border-width) solid var(--background-modifier-border);
+    border-radius: var(--radius-s);
+    font-size: var(--font-text-size);
+    font-weight: var(--input-font-weight);
+    outline: none; /* Remove default focus outline */
+    box-shadow: none; /* Remove default box-shadow */
+    }
+
+    input.task-card-content.mode-multi-line:hover {
+        border-color: var(--background-modifier-border-hover); /* Border color on hover */
+    }
+
+    input.task-card-content.mode-multi-line:focus {
+        border-color: var(--background-modifier-border-focus); /* Border color on focus */
+        box-shadow: 0 0 5px var(--background-modifier-border-focus); /* Subtle shadow on focus */
+    }
+
+</style>

@@ -6,22 +6,24 @@
 - Using no display html to achieve this.
 - formatted attribute saving.
 - No direct edit method.
+- Single line mode background problem - taskcard background compatibility
 
 ## Multi-mode display in preview mode
 - Single line and multi line modes.
 - Interactive UI in both modes.
 - Modification reflective to the original doc.
-- TODO: Debug no label, no due task.
-- TODO: css fully adapt to themes.
 
 ## Icon
 - Manually using lucide icon, because we cannot install lucide-svelte
-- TODO: some shadow inside the icon...
 # Interaction
 
 ## Settings
 - TODO: for project, if saved, not interactive;
 - TODO: when adding project, visual cue for OPTIONAL color picking;
+
+## Priority
+
+### Edit
 
 ## Content
 
@@ -30,9 +32,7 @@
 
 ### Edit
 - double click and edit content with single line window.
-  - Save and discard edits
-- TODO: Text size when editing.
-- TODO: Font when editing.
+  - Save and discard edits  
 
 ### Delete
 - NA
@@ -40,29 +40,28 @@
 ## Description
 
 ### Addition
-- TODO: dropdown menu to add.
-- TODO: debug css when description is empty.
+- Dropdown menu to add.
 
 ### Edit
 - double click and edit description with multi line support.
   - Save and discard edits.
 - TODO: (far stretch) interactive display mode when editing.
+- Sub task interactive.
 
 ### Delete
-- TODO: dropdown menu to delete.
+- dropdown menu to delete.
 
 ## Due
 
 ### Addition
-- TODO: dropdown menu to add.
-- TODO: debug css when due is empty.
+- dropdown menu to add.
 
 ### Edit
 - double click and edit due string.
   - Save and discard edits.
 - TODO: the font when editing.
 - TODO: the text box when editing.
-- TODO: the hover behavior for the due.
+- TODO: font size and text box size when editing.
 
 ### Delete
 - TODO: dropdown menu to delete.
@@ -90,15 +89,14 @@
 ## Project
 
 ### Functionality
-- TODO: debug the color function
+- color is "randomly" generated from project name.
 
 ### Addition
-- TODO: dropdown menu to add
+- dropdown menu to add
 
 ### Edit
 - Using a pop up menu
 - CSS similar to the chosen project.
-- TODO: add a boarder?
 
 ### Delete
 - TODO: dropdown menu to delete.
