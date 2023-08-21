@@ -58,3 +58,33 @@
         {content}
     </div>
 {/if}
+
+<style>
+
+    .task-card-content.mode-multi-line:hover {
+    background-color: var(--background-modifier-hover); /* Background hover color */
+    }
+
+    .task-card-content.mode-multi-line:active {
+    background-color: var(--background-modifier-active-hover); /* Background active color */
+    }
+
+    input.task-card-content.mode-multi-line {
+    border:  var(--input-border-width) solid var(--background-modifier-border);
+    border-radius: var(--radius-s);
+    font-size: var(--font-text-size);
+    font-weight: var(--input-font-weight);
+    outline: none; /* Remove default focus outline */
+    box-shadow: none; /* Remove default box-shadow */
+    }
+
+    input.task-card-content.mode-multi-line:hover {
+        border-color: var(--background-modifier-border-hover); /* Border color on hover */
+    }
+
+    input.task-card-content.mode-multi-line:focus {
+        border-color: var(--background-modifier-border-focus); /* Border color on focus */
+        box-shadow: 0 0 5px var(--background-modifier-border-focus); /* Subtle shadow on focus */
+    }
+
+</style>

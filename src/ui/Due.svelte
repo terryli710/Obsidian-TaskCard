@@ -5,9 +5,11 @@
   import { ObsidianTaskSyncManager } from "../taskModule/taskSyncManager";
   import TaskCardPlugin from "..";
   import { tick } from "svelte";
+  import { TaskItemParams, TaskMode } from "../renderer/postProcessor";
 
   export let taskSyncManager: ObsidianTaskSyncManager;
   export let plugin: TaskCardPlugin;
+  export let params: TaskItemParams;
   let due: DueDate | null;
   let dueString: string;
   due = taskSyncManager.obsidianTask.hasDue() ? taskSyncManager.obsidianTask.due : null;
@@ -73,7 +75,7 @@
     <div
       on:click={enableDueEditMode}
       on:keydown={enableDueEditMode}
-      class="task-card-due"
+      class="task-card-due {params.mode === 'single-line' ? 'mode-single-line' : 'mode-multi-line'}"
       role="button"
       tabindex="0"
     >
@@ -95,7 +97,7 @@
   }
 
   /* This selector ensures that the cursor only changes to a hand pointer when the div is not empty */
-  .task-card-due:not(:empty):hover {
+  .task-card-due.mode-multi-line:not(:empty):hover {
     background-color: var(--background-modifier-hover);
     cursor: pointer;
   }

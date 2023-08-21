@@ -167,7 +167,7 @@
     </div>
     <div class="task-card-single-line-right-container">
       {#if taskSyncManager.obsidianTask.hasDue()}
-        <Due taskSyncManager={taskSyncManager} plugin={plugin} />
+        <Due taskSyncManager={taskSyncManager} plugin={plugin} params={params} />
       {/if}
       <Project taskSyncManager={taskSyncManager} params={params} />
     </div>
@@ -197,7 +197,7 @@
   <div class="task-card-attribute-bottom-bar">
     <div class="task-card-attribute-bottom-bar-left">
       {#if taskSyncManager.obsidianTask.hasDue() || taskSyncManager.getTaskCardStatus('dueStatus') === 'editing'}
-        <Due taskSyncManager={taskSyncManager} plugin={plugin} />
+        <Due taskSyncManager={taskSyncManager} plugin={plugin} params={params} />
         <div class="task-card-attribute-separator"> | </div>
       {/if}
       <Labels taskSyncManager={taskSyncManager} />
@@ -243,18 +243,18 @@
   }
 
   .task-card-menu-button {
-      background: none !important;
-      border: none !important;
-      box-shadow: none !important;
-      outline: none !important;
-      cursor: pointer;
-      padding: 0 0.25em !important;
-      margin: 0 0.15em !important;
-    }
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+    cursor: pointer;
+    padding: 0 0.25em !important;
+    margin: 0 0.15em !important;
+  }
 
-    .task-card-menu-button:hover {
-      background: none !important;
-      box-shadow: none !important;
-    }
+  .task-card-menu-button:hover {
+    background: none !important;
+    box-shadow: none !important;
+  }
 
 </style>

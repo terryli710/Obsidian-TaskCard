@@ -63,41 +63,6 @@
   align-items: center; /* Vertically center the children */
 }
 
-.task-card-content {
-    border-radius: var(--radius-s); /* Rounded square */
-    cursor: pointer; /* Pointer cursor on hover */
-    flex-grow: 0.98;
-    padding-left: 0.25em;
-    padding-right: 0.25em;
-    font-size: var(--font-text-size);
-}
-
-.task-card-content:hover {
-    background-color: var(--background-modifier-hover); /* Background hover color */
-}
-
-.task-card-content:active {
-    background-color: var(--background-modifier-active-hover); /* Background active color */
-}
-
-input.task-card-content.mode-multi-line {
-  border:  var(--input-border-width) solid var(--background-modifier-border);
-  border-radius: var(--radius-s);
-  font-size: var(--font-text-size);
-  font-weight: var(--input-font-weight);
-  outline: none; /* Remove default focus outline */
-  box-shadow: none; /* Remove default box-shadow */
-}
-
-input.task-card-content.mode-multi-line :hover {
-  border-color: var(--background-modifier-border-hover); /* Border color on hover */
-}
-
-input.task-card-content.mode-multi-line :focus {
-  border-color: var(--background-modifier-border-focus); /* Border color on focus */
-  box-shadow: 0 0 5px var(--background-modifier-border-focus); /* Subtle shadow on focus */
-}
-
 .task-card-major-block {
   display: grid;
   grid-template-columns: auto 1fr; /* Checkbox takes only the space it needs, rest for content and description */
@@ -123,6 +88,16 @@ input.task-card-content.mode-multi-line :focus {
   justify-content: space-between; /* Aligns content left, project right */
   align-items: center; /* Centers items vertically */
 }
+
+.task-card-content {
+  border-radius: var(--radius-s); /* Rounded square */
+  cursor: pointer; /* Pointer cursor on hover */
+  flex-grow: 0.98;
+  padding-left: 0.25em;
+  padding-right: 0.25em;
+  font-size: var(--font-text-size);
+}
+
 
 .task-card-description {
     grid-column: 2;
