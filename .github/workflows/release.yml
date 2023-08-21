@@ -4,13 +4,16 @@ on:
   push:
     tags:
       - "*"
+    branches:
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
       - name: Use Node.js
         uses: actions/setup-node@v3
@@ -32,3 +35,12 @@ jobs:
             --title="$tag" \
             --draft \
             main.js manifest.json styles.css
+
+      - name: Commit to releases branch
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git checkout releases
+          git add main.js manifest.json styles.css
+          git commit -m "Release ${{ github.ref }}"
+          git push origin releases
