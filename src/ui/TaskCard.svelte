@@ -38,6 +38,42 @@
       // more logic to reflect the change on the taskEl
     }
 
+    function showPriorityMenu(event) {
+      event.preventDefault();
+      const priorityMenu = new Menu();
+      priorityMenu.addItem((item) => {
+          item.setTitle('1. High');
+          item.setIcon('star');
+          item.onClick((evt: MouseEvent | KeyboardEvent) => {
+            taskSyncManager.updateObsidianTaskAttribute('priority', 1);
+          })
+      })
+      priorityMenu.addItem((item) => {
+          item.setTitle('2. Medium');
+          item.setIcon('star');
+          item.onClick((evt: MouseEvent | KeyboardEvent) => {
+            taskSyncManager.updateObsidianTaskAttribute('priority', 2);
+          })
+      })
+      priorityMenu.addItem((item) => {
+          item.setTitle('3. Low');
+          item.setIcon('star');
+          item.onClick((evt: MouseEvent | KeyboardEvent) => {
+            taskSyncManager.updateObsidianTaskAttribute('priority', 3);
+          })
+      })
+      priorityMenu.addItem((item) => {
+          item.setTitle('4. Basic');
+          item.setIcon('star');
+          item.onClick((evt: MouseEvent | KeyboardEvent) => {
+            taskSyncManager.updateObsidianTaskAttribute('priority', 4);
+          })
+      })
+
+      priorityMenu.showAtPosition({ x: event.clientX, y: event.clientY });
+
+    }
+
     function showCardMenu(event) {
       event.preventDefault();
       const cardMenu = new Menu();
@@ -122,7 +158,12 @@
 {#if params.mode === "single-line"}
   <div class="task-card-single-line">
     <div class="task-card-single-line-left-container">
-      <input type="checkbox" class={`task-card-checkbox priority-${task.priority}`} checked={task.completed} on:click|stopPropagation={handleCheckboxClick}>
+      <input 
+        type="checkbox" 
+        class={`task-card-checkbox priority-${task.priority}`} 
+        checked={task.completed} 
+        on:click|stopPropagation={handleCheckboxClick}
+      />
       <div class="task-card-content">{task.content}</div>
     </div>
     <div class="task-card-single-line-right-container">
@@ -136,7 +177,13 @@
 <!-- mode = multi-line -->
   <div class="task-card-major-block">
     <div class="task-card-checkbox-wrapper">
-      <input type="checkbox" class={`task-card-checkbox priority-${task.priority}`} checked={task.completed} on:click|stopPropagation={handleCheckboxClick}>
+      <input 
+      type="checkbox" 
+      class={`task-card-checkbox priority-${task.priority}`} 
+      checked={task.completed} 
+      on:click|stopPropagation={handleCheckboxClick}
+      on:contextmenu={showPriorityMenu}
+      />
     </div>
     <div class="task-card-content-project-line">
       <Content taskSyncManager={taskSyncManager} />

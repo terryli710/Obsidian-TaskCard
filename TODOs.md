@@ -7,7 +7,6 @@
 - formatted attribute saving.
 - No direct edit method.
 - Single line mode background problem - taskcard background compatibility
-- TODO: BUG: when adding project, wrong line is replaced (one before the actual line)
 
 ## Multi-mode display in preview mode
 - Single line and multi line modes.
@@ -23,7 +22,7 @@
 - TODO: when adding project, visual cue for OPTIONAL color picking;
 
 ## Priority
-- TODO: edit it.
+- TODO: hover behavior
 
 ## Content
 
