@@ -1,18 +1,17 @@
 <script lang="ts">
     import { createEventDispatcher } from "svelte";
     import { logger } from "../utils/log";
-    import { TaskItemParams } from "../renderer/injector";
+    import { TaskItemParams } from "../renderer/postProcessor";
     import TaskCard from "./TaskCard.svelte";
     import TaskCardPlugin from "..";
-  
-    export let taskItemEl;
+    import { ObsidianTaskSyncManager } from "../taskModule/taskSyncManager";
+
+    export let taskSyncManager: ObsidianTaskSyncManager;
     export let plugin: TaskCardPlugin;
     export let defaultParams: TaskItemParams;
 
     let params = defaultParams;
-
-    const taskEl = taskItemEl.querySelector('.task-list-item'); 
-    taskEl.style.display = "none";
+    // let taskItemEl: HTMLElement = taskSyncManager.taskItemEl;
 
     const dispatch = createEventDispatcher();
 
@@ -28,7 +27,6 @@
         params = { ...params, mode: newMode };
     }
 
-    logger.debug(`params in taskItem => ${JSON.stringify(params)}`);
 </script>
 
 {#if params.mode === "single-line"}
@@ -38,10 +36,18 @@
         on:keydown={handleSwitchMode}
         tabindex="0"
     >
-        <TaskCard {taskEl} {plugin} {params}/>
+        <TaskCard 
+            taskSyncManager={taskSyncManager} 
+            plugin={plugin} 
+            params={params} 
+            on:switchMode={handleSwitchMode}/>
     </button>
 {:else}
     <li class="obsidian-taskcard task-list-item mode-multi-line">
-        <TaskCard {taskEl} {plugin} {params} on:switchMode={handleSwitchMode}/>
+        <TaskCard 
+            taskSyncManager={taskSyncManager} 
+            plugin={plugin} 
+            params={params} 
+            on:switchMode={handleSwitchMode}/>
     </li>
 {/if}

@@ -3,7 +3,6 @@ import { String } from 'runtypes';
 import { v4 as uuidv4 } from 'uuid';
 import { Project } from './project';
 
-
 export const DateOnly = String.withConstraint(s => /^\d{4}-\d{2}-\d{2}$/.test(s));
 export const TimeOnly = String.withConstraint(s => /^\d{2}:\d{2}$/.test(s));
 
@@ -56,19 +55,50 @@ export class ObsidianTask implements TaskProperties {
   public due?: DueDate | null;
   public metadata?: { [key: string]: string | number };
 
-  constructor() {
-    this.id = uuidv4();
-    this.content = '';
-    this.priority = 1;
-    this.description = '';
-    this.order = 0;
-    this.project = { id: '', name: '' };
-    this.sectionID = '';
-    this.labels = [];
-    this.completed = false;
-    this.parent = null;
-    this.children = [];
-    this.due = null;
-    this.metadata = {};
+  constructor(props?: Partial<ObsidianTask>) {
+    this.id = props?.id || uuidv4();
+    this.content = props?.content || '';
+    this.priority = props?.priority || 4;
+    this.description = props?.description || '';
+    this.order = props?.order || 0;
+    this.project = props?.project || { id: '', name: '' };
+    this.sectionID = props?.sectionID || '';
+    this.labels = props?.labels || [];
+    this.completed = props?.completed || false;
+    this.parent = props?.parent || null;
+    this.children = props?.children || [];
+    this.due = props?.due || null;
+    this.metadata = props?.metadata || {};
   }
+
+  hasDescription() {
+    return this.description.length > 0
+  }
+
+  hasProject() {
+    return this.project !== null && this.project.name.length > 0
+  }
+
+  hasAnyLabels() {
+    return this.labels.length > 0
+  }
+
+  isCompleted() {
+    return this.completed
+  }
+
+  hasParent(): boolean {
+    return this.parent !== null
+  }
+
+  hasChildren(): boolean {
+    return this.children.length > 0
+  }
+
+  hasDue(): boolean {
+    if (!this.due) return false;
+    // return if the due string is not empty
+    return !(!this.due.string)
+  }
+
 }

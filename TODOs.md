@@ -1,35 +1,136 @@
 
 # Display
-- Debug no label, no due task.
-- css fully adapt to themes.
-- New display format.
-  - New detection of the checkbox + content.
-- The `$off` action for injector.
 
+## Edit Mode
+- like a normal markdown task.
+- Using no display html to achieve this.
+- formatted attribute saving.
+- No direct edit method.
+- Single line mode background problem - taskcard background compatibility
+
+## Multi-mode display in preview mode
+- Single line and multi line modes.
+- Interactive UI in both modes.
+- Modification reflective to the original doc.
+
+## Icon
+- Manually using lucide icon, because we cannot install lucide-svelte
 # Interaction
-- hover behavior
-- click behavior
+
+## Settings
+- TODO: for project, if saved, not interactive;
+- TODO: when adding project, visual cue for OPTIONAL color picking;
+
+## Priority
+
+### Edit
+
+## Content
+
+### Addition
+- NA
+
+### Edit
+- double click and edit content with single line window.
+  - Save and discard edits  
+
+### Delete
+- NA
+
+## Description
+
+### Addition
+- Dropdown menu to add.
+
+### Edit
+- double click and edit description with multi line support.
+  - Save and discard edits.
+- TODO: (far stretch) interactive display mode when editing.
+- Sub task interactive.
+
+### Delete
+- dropdown menu to delete.
+
+## Due
+
+### Addition
+- dropdown menu to add.
+
+### Edit
+- double click and edit due string.
+  - Save and discard edits.
+- TODO: the font when editing.
+- TODO: the text box when editing.
+- TODO: font size and text box size when editing.
+
+### Delete
+- TODO: dropdown menu to delete.
+
+## Labels
+
+### Functionality
+- TODO: searchable labels (currently cannot be searched).
+- TODO: add # to the label display.
+
+### Addition
+- bottom to add label.
+- TODO: adjust bottom shape.
+
+### Edit
+- right click -> dropdown to edit.
+- TODO: the css when editing.
+- TODO: (optional) use dots besides the label to edit
+
+### Delete
+- dropdown menu to delete.
+- TODO: (optional) use dots besides the label to delete.
+
+
+## Project
+
+### Functionality
+- color is "randomly" generated from project name.
+
+### Addition
+- dropdown menu to add
+
+### Edit
+- Using a pop up menu
+- CSS similar to the chosen project.
+
+### Delete
+- TODO: dropdown menu to delete.
+- 
 
 # Parsing and Formatting
 
 # Task adding and editing and deletion
+- dropdown menu in preview mode to do attribute adding and editing etc.
 
 ## Task Adding
 - Finish adding: when switch to preview mode;
   - Can we catch the preview mode toggle?
 
 ## Attribute Adding 
-
+- dropdown menu?
 
 ## Task Deletion
-
+- Add delete button
 
 
 # Project handling
 
 
 # BUGs
+-  [ ] Project cannot be read in some cards.
+-  [ ] Display in the correct order in a `ul`.
+-  [ ] Display correctly in a `ul` as a `li` or a `button`.
 
+# File <-> HTML Sync
+
+## HTML pinpointing the MD
+- Mostly done.
+- TODO: Description as appending paragraphs
 
 # Task Formats
 
@@ -99,8 +200,9 @@
 - Note: defined in `TaskCard.svelte`
 
 ## Format Transformations
-- `OrigMD` -> `FormatMD` - `taskParser`(✓) + `taskFormatter`(✓)
+- `OrigMD` -> `FormatMD` - `taskParser`(✓) + `TaskFormatter`(✓)
 - `TaskEl` -> `RenderedEl` - `taskParser`(✓) + `TaskCard.svelte`(✓)
+- `TaskEl` -> `FormatMD` - `taskParser`(✓) + TaskFormatter(✓)
 - `FormatMD` - `taskValidator`(✓)
 - `OrigMD` - `taskValidator`(✓)
 - `TaskEl` - `ElementFilter`

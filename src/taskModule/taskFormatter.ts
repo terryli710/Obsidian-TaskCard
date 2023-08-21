@@ -1,29 +1,44 @@
 
 
 
+import { SettingStore } from '../settings';
+import { logger } from '../utils/log';
 import { camelToKebab } from '../utils/stringCaseConverter';
 import { ObsidianTask } from './task';
 
-export class taskFormatter {
+export class TaskFormatter {
+    indicatorTag: string;
 
-    static taskToMarkdown(task: ObsidianTask, indicatorTag: string = "TaskCard"): string {
-        let markdownLine = `- [${task.completed ? 'x' : ' '}] ${task.content} #{indicatorTag}`;
+    constructor(settingsStore: typeof SettingStore) {
+        // Subscribe to the settings store
+        settingsStore.subscribe(settings => {
+            this.indicatorTag = settings.parsingSettings.indicatorTag;
+        });
+    }
+
+    taskToMarkdown(task: ObsidianTask): string {
+        let markdownLine = `- [${task.completed ? 'x' : ' '}] ${task.content} #${this.indicatorTag}\n`;
         
         // Iterate over keys in task, but exclude 'completed' and 'content'
         for (let key in task) {
             if (key === 'completed' || key === 'content') continue;
     
-            if (task[key] !== null && task[key] !== undefined) {
-                let kebabCaseKey = camelToKebab(key);
-                if (typeof task[key] === 'object') {
-                markdownLine += ` <span class="${kebabCaseKey}" style="display:none;">${JSON.stringify(task[key])}</span>`;
-                } else {
-                markdownLine += ` <span class="${kebabCaseKey}" style="display:none;">${task[key]}</span>`;
-                }
-            }
+            let value = task[key];
+            if (value === undefined) { value = null; }
+            value = JSON.stringify(value);
+    
+            let kebabCaseKey = camelToKebab(key);
+            markdownLine += `<span class="${kebabCaseKey}" style="display:none;">${value}</span>\n`;
         }
         
         return markdownLine;
     }
+    
+
+    taskToMarkdownOneLine(task: ObsidianTask): string {
+        return this.taskToMarkdown(task).replace(/\n/g, '');
+    }
 }
+
+
 

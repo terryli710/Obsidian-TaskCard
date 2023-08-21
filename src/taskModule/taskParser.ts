@@ -44,7 +44,7 @@ export class TaskParser {
         task.id = parseQuery('id', '') as string;
         task.content = taskEl.querySelector('.task-list-item-checkbox')?.nextSibling?.textContent?.trim() || '';
         task.priority = parseQuery('priority', '1') as TaskProperties['priority'];
-        task.description = parseQuery('description', '') as TaskProperties['description'];
+        task.description = parseQuery('description', '""') as TaskProperties['description'];
         task.order = parseQuery('order', '0') as TaskProperties['order'];
         task.project = parseQuery('project', 'null') as Project | null;
         task.sectionID = parseQuery('section-id', '') as TaskProperties['sectionID'];
@@ -75,7 +75,7 @@ export class TaskParser {
             : taskMarkdown.trim();
     
         task.content = markdownTaskContent.slice(5).trim();
-        task.completed = markdownTaskContent.startsWith("- [x]");
+        task.completed = markdownTaskContent.startsWith("- [x]"); // TODO: currently only supports x
     
         // Extracting labels from the content line
         const [contentLabels, remainingContent] = extractTags(task.content);
@@ -151,7 +151,7 @@ export class TaskParser {
         return task;
     }
 
-    private parseDue(dueString: string): DueDate | null {
+    parseDue(dueString: string): DueDate | null {
         const parsedResult = chrono.parse(dueString)[0];
         const ParsedComponent = parsedResult.start;
         const isDateOnly = !ParsedComponent.isCertain('hour') && !ParsedComponent.isCertain('minute') && !ParsedComponent.isCertain('second');
@@ -165,7 +165,7 @@ export class TaskParser {
         }
     }
 
-    private parseProject(projectString: string): Project | null {
+    parseProject(projectString: string): Project | null {
         logger.debug(`Parsing project: ${projectString}, this.projectModule: ${JSON.stringify(this.projectModule.getProjectsData())}`);
         const project = this.projectModule.getProjectByName(projectString);
         if (!project) { return null };

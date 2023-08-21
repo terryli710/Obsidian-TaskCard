@@ -1,20 +1,26 @@
 import { App, Plugin } from 'obsidian';
-import type { MarkdownPostProcessor, MarkdownPostProcessorContext, PluginManifest } from 'obsidian';
+import type { PluginManifest } from 'obsidian';
 import type { TaskCardSettings } from './settings';
 import { SettingStore, SettingsTab } from './settings';
-import { TaskItemSvelteAdapter } from './renderer/injector';
 import { logger } from './utils/log';
 import AttributeSuggest from './autoSuggestions/EditorSuggestions';
 import { Project, ProjectModule } from './taskModule/project';
 import { TaskParser } from './taskModule/taskParser';
 import { TaskValidator } from './taskModule/taskValidator';
+import { TaskCardRenderManager } from './renderer/index';
+import { FileOperator } from './renderer/fileOperator';
+import { TaskFormatter } from './taskModule/taskFormatter';
+import { TaskMonitor } from './taskModule/taskMonitor';
 
 export default class TaskCardPlugin extends Plugin {
   public settings: TaskCardSettings;
   public projectModule: ProjectModule;
   public taskParser: TaskParser;
+  public taskFormatter: TaskFormatter
   public taskValidator: TaskValidator;
-
+  public taskCardRenderManager: TaskCardRenderManager
+  public fileOperator: FileOperator
+  public taskMonitor: TaskMonitor
   
   constructor(app: App, pluginManifest: PluginManifest) {
     super(app, pluginManifest);
@@ -24,21 +30,11 @@ export default class TaskCardPlugin extends Plugin {
     })
     this.projectModule = new ProjectModule();
     this.taskParser = new TaskParser(SettingStore, this.projectModule);
+    this.taskFormatter = new TaskFormatter(SettingStore);
     this.taskValidator = new TaskValidator(SettingStore);
-  }
-
-  public taskCardPostProcessor: MarkdownPostProcessor = async (el: HTMLElement, ctx: MarkdownPostProcessorContext) => {
-    const potentialTaskCards = Array.from(el.querySelectorAll('li.task-list-item'));
-    const taskCards = potentialTaskCards.filter(this.taskValidator.isValidTaskElement.bind(this.taskValidator));
-    logger.debug(`el before: ${el.innerHTML}`);
-    for (const taskCard of taskCards) {
-      const taskItem = taskCard.parentElement as HTMLElement;
-      
-      const adapter = new TaskItemSvelteAdapter(taskItem, this);
-      adapter.onload();  // Ensure the Svelte component is loaded and rendered inside the taskItem
-    }
-
-    logger.debug(`el after: ${el.innerHTML}`);
+    this.taskCardRenderManager = new TaskCardRenderManager(this);
+    this.fileOperator = new FileOperator(this, this.app);
+    this.taskMonitor = new TaskMonitor(this);
   }
 
   async loadSettings() {
@@ -63,8 +59,15 @@ export default class TaskCardPlugin extends Plugin {
     await this.loadSettings();
     this.projectModule.updateProjects(this.settings.userMetadata.projects as Project[]);
     this.addSettingTab(new SettingsTab(this.app, this));
-    this.registerMarkdownPostProcessor(this.taskCardPostProcessor.bind(this));
+    this.registerMarkdownPostProcessor(this.taskCardRenderManager.getPostProcessor());
     this.registerEditorSuggest(new AttributeSuggest(this.app));
+    this.registerEvent(this.app.workspace.on('layout-change', () => {
+      const file = this.app.workspace.getActiveFile();
+      setTimeout(() => {
+        logger.debug(`taskMonitor triggered for file: ${file.path}`);
+        this.taskMonitor.monitorFile(file);
+      }, 2);
+    }));
     logger.info('Plugin loaded.');
   }
 }

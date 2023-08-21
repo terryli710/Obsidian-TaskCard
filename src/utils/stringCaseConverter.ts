@@ -35,3 +35,12 @@ export function kebabToCamel(kebabCase: string) {
 
   return result;
 }
+
+
+// Convert a word + space structure to camelCase
+export function toCamelCase(str: string): string {
+  return str.trim().split(/\s+/).map((word, index) => {
+      return index === 0 ? word.toLowerCase() : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+  }).join('');
+}
+
