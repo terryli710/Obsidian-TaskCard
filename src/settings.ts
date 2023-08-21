@@ -60,14 +60,19 @@ export class SettingsTab extends PluginSettingTab {
   }
 
   projectSettings() {
-    this.containerEl.createEl('h3', { text: 'Add new projects' });
-    const projectContainer = this.containerEl.createEl('div', { cls: 'new-project-container' });
-    this.newProjectSetting(projectContainer);
+    this.containerEl.createEl('h3', { text: 'Project Adding' });
+
+    this.newProjectSetting();
     const projects: Project[] = this.plugin.projectModule.getProjectsData();
-    this.containerEl.createEl('h3', { text: 'Edit existing projects' });
-    for (const project of projects) {
-      const projectContainer = this.containerEl.createEl('div', { cls: 'project-container' });
-      this.projectEditSetting(project, projectContainer);
+    this.containerEl.createEl('h3', { text: 'Project Editing' });
+    if (projects.length > 0) {
+      const firstProject = projects[0];
+      const restProjects = projects.slice(1);
+      this.projectEditSetting(firstProject);
+      for (const project of restProjects) {
+        const projectContainer = this.containerEl.createEl('div', { cls: 'project-container' });
+        this.projectEditSetting(project, projectContainer);
+      }
     }
 
   }
@@ -78,19 +83,14 @@ export class SettingsTab extends PluginSettingTab {
       this.plugin.writeSettings((old) => old.userMetadata.projects = projects);
   }
 
-  newProjectSetting(projectContainer?: HTMLElement) {
-    if (!projectContainer) {
-        projectContainer = this.containerEl.createEl('div', { cls: 'project-container' });
-    }
+  newProjectSetting() {
 
     let newProjectName = '';
     let newProjectColor = '';
 
     const renderSetting = (showColorPicker: boolean = false) => {
-        // Clear the current setting
-        projectContainer.innerHTML = '';
 
-        const setting = new Setting(projectContainer).setName('Add A Project');
+        const setting = new Setting(this.containerEl).setName('Add A Project');
 
         setting.setDesc('Project names must be unique. Color picking is optional.');
 
@@ -139,14 +139,13 @@ export class SettingsTab extends PluginSettingTab {
 }
 
 
-
-  projectEditSetting(project: Project, projectContainer?: HTMLElement) {
-    if (!projectContainer) {
-        projectContainer = this.containerEl.createEl('div', { cls: 'project-container' });
+  projectEditSetting(project: Project, projectContainerEl?: HTMLElement) {
+    if (!projectContainerEl) {
+        projectContainerEl = this.containerEl;
     }
-
     // Heading for the Project Name
-    const setting = new Setting(projectContainer)
+    const setting = new Setting(projectContainerEl);
+    setting.setName(project.name);
 
     const textComponent = setting.addText(text => {
         text.setValue(project.name)
