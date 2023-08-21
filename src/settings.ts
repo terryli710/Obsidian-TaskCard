@@ -50,7 +50,6 @@ export class SettingsTab extends PluginSettingTab {
     // title
     this.containerEl.createEl('h2', { text: 'Task Card' });
     // projects
-    this.containerEl.createEl('h3', { text: 'Projects' });
     this.projectSettings();
     // parsing settings
     this.containerEl.createEl('h3', { text: 'Parsing Settings' });
@@ -61,11 +60,11 @@ export class SettingsTab extends PluginSettingTab {
   }
 
   projectSettings() {
-    this.containerEl.createEl('h4', { text: 'Add new projects' });
+    this.containerEl.createEl('h3', { text: 'Add new projects' });
     const projectContainer = this.containerEl.createEl('div', { cls: 'new-project-container' });
     this.newProjectSetting(projectContainer);
     const projects: Project[] = this.plugin.projectModule.getProjectsData();
-    this.containerEl.createEl('h4', { text: 'Edit existing projects' });
+    this.containerEl.createEl('h3', { text: 'Edit existing projects' });
     for (const project of projects) {
       const projectContainer = this.containerEl.createEl('div', { cls: 'project-container' });
       this.projectEditSetting(project, projectContainer);
@@ -91,7 +90,9 @@ export class SettingsTab extends PluginSettingTab {
         // Clear the current setting
         projectContainer.innerHTML = '';
 
-        const setting = new Setting(projectContainer).setName('Add a project');
+        const setting = new Setting(projectContainer).setName('Add A Project');
+
+        setting.setDesc('Project names must be unique. Color picking is optional.');
 
         setting.addText(text => {
             text.setPlaceholder('Enter project name')
@@ -126,7 +127,7 @@ export class SettingsTab extends PluginSettingTab {
                             name: newProjectName,
                             color: newProjectColor
                         };
-                        this.plugin.projectModule.updateProject(newProject);
+                        this.plugin.projectModule.addProject(newProject);
                         this.updateProjectsToSettings();
                         this.display();
                     }
@@ -146,7 +147,6 @@ export class SettingsTab extends PluginSettingTab {
 
     // Heading for the Project Name
     const setting = new Setting(projectContainer)
-        .setName('Project Name');
 
     const textComponent = setting.addText(text => {
         text.setValue(project.name)

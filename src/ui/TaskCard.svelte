@@ -12,7 +12,6 @@
     import Content from './Content.svelte';
     // import { ChevronsDownUp } from 'lucide-svelte'; // BUG: somehow doesn't work
     import ChevronsDownUp from '../components/icons/ChevronsDownUp.svelte';
-    // import { showCardMenu } from './CardMenu';
     import MoreVertical from '../components/icons/MoreVertical.svelte';
     import { Menu } from 'obsidian';
 

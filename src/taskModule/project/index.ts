@@ -89,7 +89,7 @@ export class ProjectModule {
     }
 
     // Add a new project by providing the name
-    addProject(name: string): Project | null {
+    addProjectByName(name: string): Project | null {
         if (this.nameToIdMap.has(name)) {
             return null; // Project with the same name already exists
         }
@@ -100,6 +100,37 @@ export class ProjectModule {
         this.nameToIdMap.set(name, id);
         return newProject;
     }
+
+    addProject(project: Partial<Project>): void {
+        if (!project.name && !project.id) {
+            return; // Empty info, don't create
+        }
+    
+        let existingProject: Project | undefined;
+        if (project.id) {
+            existingProject = this.projects.get(project.id);
+        } else if (project.name) {
+            const id = this.nameToIdMap.get(project.name);
+            if (id) {
+                existingProject = this.projects.get(id);
+            }
+        }
+    
+        if (existingProject) {
+            return; // The project already exists, do not add it
+        } else {
+            // New project, create
+            const newProject: Project = {
+                id: project.id || uuidv4(),
+                name: project.name!,
+                color: project.color || this.assignColor(project.name!)
+            };
+            this.ensureProjectData(newProject);
+            this.projects.set(newProject.id, newProject);
+            this.nameToIdMap.set(newProject.name, newProject.id);
+        }
+    }
+    
 
     // Delete a project by its ID
     deleteProjectById(id: string): void {
