@@ -69,7 +69,7 @@
   </div>
 {:else}
   <div class="project-wrapper" bind:this={projectWrapper}>
-    {#if taskSyncManager.getTaskCardStatus('projectStatus') === 'selecting'}
+    {#if taskSyncManager.getTaskCardStatus('projectStatus') === 'selecting' && availableProjects.length > 0}
       <div class="project-popup" bind:this={projectPopup}>
         {#if project}
             <div

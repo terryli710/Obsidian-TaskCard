@@ -66,7 +66,7 @@ export function showCardMenu(event, taskSyncManager: ObsidianTaskSyncManager) {
         })
     } else {
         cardMenu.addItem((item) => {
-            item.setTitle('Add Project');
+            item.setTitle('Assign Project');
             item.setIcon('plus');
             item.onClick((evt: MouseEvent | KeyboardEvent) => {
                 taskSyncManager.setTaskCardStatus('projectStatus', 'selecting');
