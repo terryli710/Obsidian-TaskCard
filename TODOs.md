@@ -4,6 +4,13 @@
 - TODO: Add README.md
 - TODO: Add simple docs.
 
+# Features
+
+- Aggregate by project, due and other filters (potentially achievable by dataview?).
+- Auto added due.
+- todoist sync?
+- google calendar sync?
+
 # Display
 
 ## Edit Mode
