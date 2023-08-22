@@ -34,11 +34,7 @@ export class TaskCardRenderManager {
 
     getPostProcessor(): MarkdownPostProcessor {
         const postProcessor = async (el: HTMLElement, ctx: MarkdownPostProcessorContext) => {
-            const markdown = htmlToMarkdown(el.innerHTML);
-            const lines = markdown.split('\n');
-            lines.forEach((line, i) => {
-                logger.debug(`- line ${i}: ${line}`);
-            });
+            logger.debug(`el.innerHTML: ${el.innerHTML}`)
             const taskSyncs: ObsidianTaskSyncProps[] = await this.constructTaskSync(el, ctx)
 
             for (const taskSync of taskSyncs) {

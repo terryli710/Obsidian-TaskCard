@@ -8,11 +8,13 @@ import { ObsidianTask } from './task';
 
 export class TaskFormatter {
     indicatorTag: string;
+    markdownSuffix: string;
 
     constructor(settingsStore: typeof SettingStore) {
         // Subscribe to the settings store
         settingsStore.subscribe(settings => {
             this.indicatorTag = settings.parsingSettings.indicatorTag;
+            this.markdownSuffix = settings.parsingSettings.markdownSuffix;
         });
     }
 
@@ -36,7 +38,9 @@ export class TaskFormatter {
     
 
     taskToMarkdownOneLine(task: ObsidianTask): string {
-        return this.taskToMarkdown(task).replace(/\n/g, '');
+        // add suffix ' .' to task content
+        const markdown = this.taskToMarkdown(task).replace(/\n/g, '');
+        return markdown + this.markdownSuffix;
     }
 }
 

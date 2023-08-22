@@ -63,7 +63,6 @@ export default class AttributeSuggest extends EditorSuggest<SuggestInformation> 
         const cursorPos = currentCursor.ch;
     
         const suggestions: SuggestInformation[] = this.attributeSuggester.buildSuggestions(line, cursorPos);
-        // TODO: filter the suggestions
         return suggestions.map((s) => ({ ...s, context }));
     }
     

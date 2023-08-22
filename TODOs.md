@@ -185,6 +185,7 @@
 <span class="children" style="display:none;">[]</span> 
 <span class="due" style="display:none;">{"isRecurring":false,"string":"2023-08-15","date":"2024-08-15","datetime":null,"timezone":null}</span> 
 <span class="metadata" style="display:none;">{"filePath":"/path/to/file"}</span>
+ .
 ```
 
 - Note: in reality they are on the same line, here's just for better visualization.

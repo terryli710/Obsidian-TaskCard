@@ -7,12 +7,13 @@ import { camelToKebab } from "../utils/stringCaseConverter";
 export type SpanElements = Record<keyof ObsidianTask, HTMLElement>;
 
 export class TaskValidator {
-    private static formattedMarkdownPattern: RegExp = /^\s*- \[[^\]]\](.*?)(<span class="[^"]+" style="display:none;">.*?<\/span>)+$/;
+    private static formattedMarkdownPattern: RegExp = /^\s*- \[[^\]]\](.*?)(<span class="[^"]+" style="display:none;">.*?<\/span>)+{this.markdownSuffix}?$/;
     private spanElementPattern: RegExp = /<span class="[^"]+" style="display:none;">(.*?)<\/span>/g;
     private unformattedMarkdownPattern: RegExp;
     private indicatorTag: string;
     private startingNotation: string;
     private endingNotation: string;
+    private markdownSuffix: string;
 
     constructor(settingsStore: typeof SettingStore) {
         // Subscribe to the settings store
@@ -20,8 +21,9 @@ export class TaskValidator {
             this.indicatorTag = escapeRegExp(settings.parsingSettings.indicatorTag);
             this.startingNotation = escapeRegExp(settings.parsingSettings.markdownStartingNotation);
             this.endingNotation = escapeRegExp(settings.parsingSettings.markdownEndingNotation);
+            this.markdownSuffix = escapeRegExp(settings.parsingSettings.markdownSuffix);
         });
-        this.unformattedMarkdownPattern = new RegExp(`^\\s*- \\[[\\s*+-x=]\\](.*)(${this.startingNotation}.*?${this.endingNotation})?`);
+        this.unformattedMarkdownPattern = new RegExp(`^\\s*- \\[[\\s*+-x=]\\](.*)(${this.startingNotation}.*?${this.endingNotation})?${this.markdownSuffix}?`, 'g');
     }
 
     private hasIndicatorTag(contentPart: string): boolean {
