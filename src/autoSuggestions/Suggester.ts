@@ -113,7 +113,7 @@ export class AttributeSuggester {
     if (!priorityMatch) return suggestions; // No match
     const prioritySelections = ['1', '2', '3', '4'];
     suggestions = prioritySelections.map((priority) => {
-      const replaceText = `${this.startingNotation}priority: ${priority}${this.endingNotation}`;
+      const replaceText = `${this.startingNotation}priority: ${priority}${this.endingNotation} `;
       return {
         displayText: priority,
         replaceText: replaceText,
@@ -130,9 +130,10 @@ export class AttributeSuggester {
     let suggestions: SuggestInformation[] = [];
 
     // Modify regex to capture the due date query
-    const dueRegexText = `${escapeRegExp(this.startingNotation)}\\s?due:\\s*${escapeRegExp(this.endingNotation)}`;
-    const dueRegex = new RegExp( dueRegexText, 'g');
+    const dueRegexText = `${escapeRegExp(this.startingNotation)}\\s?due:(\\s*)${escapeRegExp(this.endingNotation)}`;
+    const dueRegex = new RegExp(dueRegexText, 'g');
     const dueMatch = matchByPositionAndGroup(lineText, dueRegex, cursorPos, 1);
+    logger.debug(`dueMatch: ${dueMatch}`);
     if (!dueMatch) return suggestions; // No match
 
     // Get the due date query from the captured group
@@ -159,7 +160,7 @@ export class AttributeSuggester {
     );
 
     suggestions = filteredDueStrings.map((dueString) => {
-      const replaceText = `${this.startingNotation}due: ${dueString}${this.endingNotation}`;
+      const replaceText = `${this.startingNotation}due: ${dueString}${this.endingNotation} `;
       return {
         displayText: dueString,
         replaceText: replaceText,
@@ -198,7 +199,7 @@ export class AttributeSuggester {
     );
 
     suggestions = filteredProjects.map((project) => {
-      const replaceText = `${this.startingNotation}project: ${project.name}${this.endingNotation}`;
+      const replaceText = `${this.startingNotation}project: ${project.name}${this.endingNotation} `;
       return {
         displayText: project.name,
         replaceText: replaceText,

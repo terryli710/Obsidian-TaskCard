@@ -148,7 +148,7 @@ export class TaskParser {
             console.error(
               `Cannot find project: ${attributeValue}, error: ${e.message}`
             );
-            new Notice(`[TaskCard] Failed to parse due date: ${e.message}`);
+            new Notice(`[TaskCard] Failed to parse project: ${e.message}`);
           }
           break;
         case 'metadata':
