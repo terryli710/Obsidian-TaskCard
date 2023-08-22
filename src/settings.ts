@@ -1,8 +1,9 @@
-import { PluginSettingTab, App, Setting } from 'obsidian';
+import { PluginSettingTab, App, Setting, Notice } from 'obsidian';
 import { writable } from 'svelte/store';
 import type { Writable } from 'svelte/store';
 import TaskCardPlugin from './index';
 import { Project } from './taskModule/project';
+import { logger } from './utils/log';
 
 export interface TaskCardSettings {
   parsingSettings: {
@@ -134,11 +135,17 @@ export class SettingsTab extends PluginSettingTab {
                           name: newProjectName,
                           color: newProjectColor
                       };
-                      this.plugin.projectModule.addProject(newProject);
-                      this.updateProjectsToSettings();
-                      this.settingStatus.showColorPicker = false;
-                      this.display();
+                      const succeeded = this.plugin.projectModule.addProject(newProject);
+                      if (succeeded) {
+                        this.updateProjectsToSettings();
+                        this.display();
+                      } else {
+                        logger.error(`[TaskCard] Failed to add project: ${newProjectName}`);
+                        new Notice(`[TaskCard] Failed to add project: ${newProjectName}. Project name must be unique.`);
+                      }
                   }
+                  this.settingStatus.showColorPicker = false;
+                  this.display();
               });
       });
   };

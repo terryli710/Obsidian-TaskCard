@@ -101,9 +101,9 @@ export class ProjectModule {
         return newProject;
     }
 
-    addProject(project: Partial<Project>): void {
+    addProject(project: Partial<Project>): boolean {
         if (!project.name && !project.id) {
-            return; // Empty info, don't create
+            return false;
         }
     
         let existingProject: Project | undefined;
@@ -117,7 +117,7 @@ export class ProjectModule {
         }
     
         if (existingProject) {
-            return; // The project already exists, do not add it
+            return false;
         } else {
             // New project, create
             const newProject: Project = {
@@ -129,6 +129,7 @@ export class ProjectModule {
             this.projects.set(newProject.id, newProject);
             this.nameToIdMap.set(newProject.name, newProject.id);
         }
+        return true;
     }
     
 
