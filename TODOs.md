@@ -114,8 +114,6 @@
 ### Addition
 - dropdown menu to add
 - TODO: BUG: when there's no project in the setting, a circle will be added.
-- TODO: BUG: when adding project in settings, a bug when clicking on the color picker.
-- TODO: BUG: when project is added, name should not be the same. (add a popup msg)
 - TODO: OPTIMIZE: when there's no project, the project edit section.
 
 ### Edit

@@ -82,6 +82,8 @@ export class SettingsTab extends PluginSettingTab {
         const projectContainer = this.containerEl.createEl('div', { cls: 'project-container' });
         this.projectEditSetting(project, projectContainer);
       }
+    } else {
+      this.editProjectPlaceHolder();
     }
 
   }
@@ -90,6 +92,23 @@ export class SettingsTab extends PluginSettingTab {
   updateProjectsToSettings() {
       const projects = this.plugin.projectModule.getProjectsData();
       this.plugin.writeSettings((old) => old.userMetadata.projects = projects);
+  }
+
+  editProjectPlaceHolder() {
+    // used when there's no project saved
+    const setting = new Setting(this.containerEl).setName('Project Name');
+    setting.setDesc(`Projects can be edited here.`);
+    setting.addButton(button => {
+      button.setTooltip("Edit")
+          .setIcon("pencil")
+          .setDisabled(true);
+    })
+    setting.addButton(button => {
+      button.setTooltip("Delete Project")
+          .setIcon("trash-2")
+          .setDisabled(true);
+    })
+    
   }
 
   newProjectSetting() {
@@ -202,7 +221,7 @@ export class SettingsTab extends PluginSettingTab {
     // add a delete button, using the delete emoji
     setting.addButton(button => {
       button.setIcon("trash-2")
-      .setTooltip("Delete project")
+      .setTooltip("Delete Project")
         .onClick(() => {
           this.plugin.projectModule.deleteProjectById(project.id);
           this.updateProjectsToSettings();
