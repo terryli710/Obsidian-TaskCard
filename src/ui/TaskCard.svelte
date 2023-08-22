@@ -13,7 +13,8 @@
     // import { ChevronsDownUp } from 'lucide-svelte'; // BUG: somehow doesn't work
     import ChevronsDownUp from '../components/icons/ChevronsDownUp.svelte';
     import MoreVertical from '../components/icons/MoreVertical.svelte';
-    import { Menu } from 'obsidian';
+    import { Menu, Notice } from 'obsidian';
+    import { SettingStore } from '../settings';
 
     export let taskSyncManager: ObsidianTaskSyncManager;
     export let plugin: TaskCardPlugin;
@@ -72,6 +73,11 @@
       priorityMenu.showAtPosition({ x: event.clientX, y: event.clientY });
 
     }
+
+    let projects: Project[];
+    SettingStore.subscribe((settings) => {
+        projects = settings.userMetadata.projects;
+    })
 
     function showCardMenu(event) {
       event.preventDefault();
@@ -132,10 +138,15 @@
           })
       } else {
           cardMenu.addItem((item) => {
-              item.setTitle('Add Project');
+              item.setTitle('Assign Project');
               item.setIcon('plus');
               item.onClick((evt: MouseEvent | KeyboardEvent) => {
-                  taskSyncManager.taskCardStatus.projectStatus = 'selecting';
+                  taskSyncManager.setTaskCardStatus('projectStatus', 'selecting');
+                  logger.debug(`projects: ${projects}`);
+                  if (projects.length === 0) {
+                      logger.warn('No projects available');
+                      new Notice(`[TaskCard] No projects available. Add one in Settings Tab.`);
+                  }
               })
           })
       }

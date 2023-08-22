@@ -1,6 +1,6 @@
 {
   "name": "obsidian-taskcard",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Task formatter with card view.",
   "main": "index.js",
   "scripts": {
