@@ -104,18 +104,30 @@ export class TaskParser {
 
             switch (attributeName) {
                 case 'due':
+                    logger.debug(`in DUE: attributeName: ${attributeName}, attributeValue: ${attributeValue}`);
                     try {
-                        task.due = this.parseDue(attributeValue);
+                        const parsedDue = this.parseDue(attributeValue);
+                        if (!task.due) {
+                            throw new Error(`Failed to parse due date: ${attributeValue}`);
+                        }
+                        task.due = parsedDue;
                     }
                     catch (e) {
                         console.error(`Failed to parse due date: ${e.message}`);
+                        new Notice(`[TaskCard] Failed to parse due date: ${e.message}`);
                     }
+                    break;
                 case 'project':
+                    logger.debug(`in PROJECT: attributeName: ${attributeName}, attributeValue: ${attributeValue}`);
                     try {
                         const parsedProject = this.parseProject(attributeValue);
+                        if (!parsedProject) {
+                            throw new Error(`Failed to parse project: ${attributeValue}`);
+                        }
                         task.project = parsedProject;
                     } catch (e) {
                         console.error(`Cannot find project: ${attributeValue}, error: ${e.message}`);
+                        new Notice(`[TaskCard] Failed to parse due date: ${e.message}`);
                     }
                     break;
                 case 'metadata':
@@ -173,14 +185,13 @@ export class TaskParser {
                 return { isRecurring: true, date: parsedDate, time: parsedTime, string: dueString } as DueDate;
             }
         } catch (e) {
-            logger.error(`Failed to parse due date: ${e.message}`);
-            new Notice(`[TaskCard]: Failed to parse due date: ${e.message}`);
+            new Notice(`[TaskCard] Failed to parse due date: ${e.message}`);
             return null;
         }
     }
 
     parseProject(projectString: string): Project | null {
-        logger.debug(`Parsing project: ${projectString}, this.projectModule: ${JSON.stringify(this.projectModule.getProjectsData())}`);
+        logger.debug(`Parsing project: ${projectString}}`);
         const project = this.projectModule.getProjectByName(projectString);
         if (!project) { return null };
         return project;
