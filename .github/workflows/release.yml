@@ -17,7 +17,6 @@ jobs:
         with:
             ref: main
             fetch-depth: 0
-    
 
       - name: Use Node.js
         uses: actions/setup-node@v3
@@ -29,6 +28,10 @@ jobs:
           npm install
           npm run build
 
+      - name: Zip files
+        run: |
+          zip plugin-release.zip main.js manifest.json styles.css
+  
       - name: Create release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
