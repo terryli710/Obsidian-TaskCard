@@ -38,8 +38,6 @@ export class AttributeSuggester {
         // Modify regex to capture the attribute query
         const attributeRegex = new RegExp(`${escapeRegExp(this.startingNotation)}(\\s*[a-zA-Z]*)(?=:)?`, 'g');
         const attributeMatch = matchByPosition(lineText, attributeRegex, cursorPos);
-        logger.debug(`lineText: ${lineText}, cursorPos: ${cursorPos}`);
-        logger.debug(`getAttributeSuggestions: ${JSON.stringify(attributeMatch)}`);
         if (!attributeMatch) return suggestions; // No match
     
         // Get the attribute query from the captured group
