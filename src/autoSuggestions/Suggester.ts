@@ -4,11 +4,14 @@ import { ObsidianTask } from '../taskModule/task';
 import { escapeRegExp, getGroupStartIndex } from '../utils/regexUtils';
 import { logger } from '../utils/log';
 import { Project } from '../taskModule/project';
+import { filterTaskItems } from '../renderer/filters';
 
 export class AttributeSuggester {
   private startingNotation: string;
   private endingNotation: string;
   private projects: Project[];
+  private nonInputtableAttributes: string[];
+  private inputtableAttributes: string[];
 
   constructor(settingsStore: typeof SettingStore) {
     // Subscribe to the settings store
@@ -16,6 +19,21 @@ export class AttributeSuggester {
       this.startingNotation = settings.parsingSettings.markdownStartingNotation;
       this.endingNotation = settings.parsingSettings.markdownEndingNotation;
       this.projects = settings.userMetadata.projects;
+      this.nonInputtableAttributes = [
+        'id',
+        'content',
+        'children',
+        'parent',
+        'order',
+        'sectionID',
+        'completed',
+        'labels'
+      ];
+  
+      // Filter out the non-inputtable attributes
+      this.inputtableAttributes = Object.keys(new ObsidianTask()).filter(
+        (attr) => !this.nonInputtableAttributes.includes(attr)
+      );
     });
   }
 
@@ -43,9 +61,10 @@ export class AttributeSuggester {
     let suggestions: SuggestInformation[] = [];
 
     // Modify regex to capture the attribute query
-    const attributeRegex = new RegExp(
-      `${escapeRegExp(this.startingNotation)}(\\s*[a-zA-Z]*)(?=:)?`,
-      'g'
+    const attributeRegexText = `${escapeRegExp(this.startingNotation)}\\s*([a-zA-Z]*)(?=:)?`;
+    const attributeRegex = new RegExp(attributeRegexText, 'g');
+    const attributesInLine: string[] = Array.from(lineText.matchAll(attributeRegex)).map(
+      (match) => match[1].trim()
     );
     const attributeMatch = matchByPosition(lineText, attributeRegex, cursorPos);
     if (!attributeMatch) return suggestions; // No match
@@ -53,24 +72,15 @@ export class AttributeSuggester {
     // Get the attribute query from the captured group
     const attributeQuery = attributeMatch[1].trim() || '';
 
-    const nonInputtableAttributes: string[] = [
-      'id',
-      'content',
-      'children',
-      'parent',
-      'order',
-      'sectionID',
-      'completed',
-      'labels'
-    ];
-
-    // Filter out the non-inputtable attributes
-    const inputtableAttributes = Object.keys(new ObsidianTask()).filter(
-      (attr) => !nonInputtableAttributes.includes(attr)
-    );
+    let filteredAttributes: string[] = [];
+    let inputtableAttributes: string[] = [...this.inputtableAttributes];
+    // Filter out attributes that already exist
+    filteredAttributes = inputtableAttributes.filter((attr) =>
+      !attributesInLine.includes(attr)
+    )
 
     // Use the attributeQuery to filter the suggestions
-    const filteredAttributes = inputtableAttributes.filter((attr) =>
+    filteredAttributes = filteredAttributes.filter((attr) =>
       attr.startsWith(attributeQuery)
     );
 
@@ -97,13 +107,8 @@ export class AttributeSuggester {
     cursorPos: number
   ): SuggestInformation[] {
     let suggestions: SuggestInformation[] = [];
-
-    const priorityRegex = new RegExp(
-      `${escapeRegExp(this.startingNotation)}\\s?priority:\\s*${escapeRegExp(
-        this.endingNotation
-      )}`,
-      'g'
-    );
+    const priorityRegexText = `${escapeRegExp(this.startingNotation)}\\s?priority:\\s*${escapeRegExp(this.endingNotation)}`;
+    const priorityRegex = new RegExp(priorityRegexText, 'g');
     const priorityMatch = matchByPosition(lineText, priorityRegex, cursorPos);
     if (!priorityMatch) return suggestions; // No match
     const prioritySelections = ['1', '2', '3', '4'];
@@ -125,12 +130,8 @@ export class AttributeSuggester {
     let suggestions: SuggestInformation[] = [];
 
     // Modify regex to capture the due date query
-    const dueRegex = new RegExp(
-      `${escapeRegExp(
-        this.startingNotation
-      )}\\s?due:(\\s*[0-9a-zA-Z\s-]*\\s*)${escapeRegExp(this.endingNotation)}`,
-      'g'
-    );
+    const dueRegexText = `${escapeRegExp(this.startingNotation)}\\s?due:\\s*${escapeRegExp(this.endingNotation)}`;
+    const dueRegex = new RegExp( dueRegexText, 'g');
     const dueMatch = matchByPositionAndGroup(lineText, dueRegex, cursorPos, 1);
     if (!dueMatch) return suggestions; // No match
 
@@ -178,14 +179,8 @@ export class AttributeSuggester {
     let suggestions: SuggestInformation[] = [];
 
     // Modify regex to capture the project name query
-    const projectRegex = new RegExp(
-      `${escapeRegExp(
-        this.startingNotation
-      )}\\s?project:(\\s*[0-9a-zA-Z\s-]*\\s*)${escapeRegExp(
-        this.endingNotation
-      )}`,
-      'g'
-    );
+    const projectRegexText = `${escapeRegExp(this.startingNotation)}\\s?project:\\s*${escapeRegExp(this.endingNotation)}`;
+    const projectRegex = new RegExp( projectRegexText, 'g');
     const projectMatch = matchByPositionAndGroup(
       lineText,
       projectRegex,

@@ -122,9 +122,6 @@
 
 ## Project
 
-- TODO: bug: sometimes the project cannot be correctly parsed when task has been added
-  - case: when due is AFTER the project, project cannot be parsed.
-
 ### Functionality
 
 - color is "randomly" generated from project name.
@@ -132,8 +129,6 @@
 ### Addition
 
 - dropdown menu to add
-- TODO: BUG: when there's no project in the setting, a circle will be added.
-- TODO: OPTIMIZE: when there's no project, the project edit section.
 
 ### Edit
 
@@ -148,6 +143,7 @@
 # Parsing and Formatting
 
 - TODO: OPTIMIZE: when creating task, won't suggest attributes that has already been added.
+- TODO: OPTIMIZE: prevent repetitive tags being added, and immune to repetitive tags when parsing.
 
 # Task adding and editing and deletion
 
