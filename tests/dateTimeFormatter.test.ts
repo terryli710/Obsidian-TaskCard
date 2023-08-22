@@ -1,6 +1,12 @@
 import { logger } from '../src/utils/log';
-import { displayDate, displayTime, isSameWeek, isToday, isTomorrow, isYesterday } from '../src/utils/dateTimeFormatter';
-
+import {
+  displayDate,
+  displayTime,
+  isSameWeek,
+  isToday,
+  isTomorrow,
+  isYesterday
+} from '../src/utils/dateTimeFormatter';
 
 describe('displayDate', () => {
   it('returns "Today" for the current date', () => {
@@ -26,7 +32,9 @@ describe('displayDate', () => {
   it('returns the correct month and date for the same year', () => {
     const date = new Date(fixedDate());
     date.setMonth(date.getMonth() + 2); // Move to a different month
-    const expectedFormat = `${date.toLocaleString('default', { month: 'short' })} ${date.getDate()}`;
+    const expectedFormat = `${date.toLocaleString('default', {
+      month: 'short'
+    })} ${date.getDate()}`;
     const dateString = getLocalISODate(date);
     expect(displayDate(dateString)).toBe(expectedFormat);
   });
@@ -34,7 +42,9 @@ describe('displayDate', () => {
   it('returns the correct month, date, and year for a different year', () => {
     const date = new Date(fixedDate());
     date.setFullYear(date.getFullYear() + 1); // Move to next year
-    const expectedFormat = `${date.toLocaleString('default', { month: 'short' })} ${date.getDate()}, ${date.getFullYear()}`;
+    const expectedFormat = `${date.toLocaleString('default', {
+      month: 'short'
+    })} ${date.getDate()}, ${date.getFullYear()}`;
     const dateString = getLocalISODate(date);
     expect(displayDate(dateString)).toBe(expectedFormat);
   });
@@ -107,7 +117,6 @@ describe('isSameWeek', () => {
   });
 });
 
-
 describe('displayTime', () => {
   test('should return undefined when time is undefined', () => {
     expect(displayTime(undefined)).toBe(undefined);
@@ -138,14 +147,11 @@ describe('displayTime', () => {
   });
 });
 
-
-
 function fixedDate(): string | number | Date {
   // return the Mar 3 of this year
   const currentYear = new Date().getFullYear();
   return new Date(currentYear, 3, 3);
 }
-
 
 function getLocalISODate(date: Date) {
   const year = date.getFullYear();

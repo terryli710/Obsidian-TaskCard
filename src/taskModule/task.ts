@@ -3,9 +3,10 @@ import { String } from 'runtypes';
 import { v4 as uuidv4 } from 'uuid';
 import { Project } from './project';
 
-export const DateOnly = String.withConstraint(s => /^\d{4}-\d{2}-\d{2}$/.test(s));
-export const TimeOnly = String.withConstraint(s => /^\d{2}:\d{2}$/.test(s));
-
+export const DateOnly = String.withConstraint((s) =>
+  /^\d{4}-\d{2}-\d{2}$/.test(s)
+);
+export const TimeOnly = String.withConstraint((s) => /^\d{2}:\d{2}$/.test(s));
 
 export type DueDate = {
   isRecurring: boolean;
@@ -35,7 +36,6 @@ export interface TaskProperties {
 
   due?: DueDate | null;
   metadata?: { [key: string]: string | number };
-
 }
 
 export class ObsidianTask implements TaskProperties {
@@ -72,33 +72,32 @@ export class ObsidianTask implements TaskProperties {
   }
 
   hasDescription() {
-    return this.description.length > 0
+    return this.description.length > 0;
   }
 
   hasProject() {
-    return this.project !== null && this.project.name.length > 0
+    return this.project !== null && this.project.name.length > 0;
   }
 
   hasAnyLabels() {
-    return this.labels.length > 0
+    return this.labels.length > 0;
   }
 
   isCompleted() {
-    return this.completed
+    return this.completed;
   }
 
   hasParent(): boolean {
-    return this.parent !== null
+    return this.parent !== null;
   }
 
   hasChildren(): boolean {
-    return this.children.length > 0
+    return this.children.length > 0;
   }
 
   hasDue(): boolean {
     if (!this.due) return false;
     // return if the due string is not empty
-    return !(!this.due.string)
+    return !!this.due.string;
   }
-
 }
