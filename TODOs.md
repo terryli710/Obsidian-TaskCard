@@ -113,7 +113,7 @@
 
 ### Addition
 - dropdown menu to add
-- TODO: BUG: when there's no project, a circle will be added.
+- TODO: BUG: when there's no project in the setting, a circle will be added.
 - TODO: BUG: when adding project in settings, a bug when clicking on the color picker.
 - TODO: BUG: when project is added, name should not be the same. (add a popup msg)
 - TODO: OPTIMIZE: when there's no project, the project edit section.
@@ -129,11 +129,6 @@
 # Parsing and Formatting
 
 - TODO: OPTIMIZE: when creating task, won't suggest attributes that has already been added.
-- TODO: BUG: autosuggest bugs:
-  - number of spaces matters for:
-    - attribute suggest to show;
-    - project to show up at witch space;
-  - priority suggest not showing;
 
 # Task adding and editing and deletion
 - dropdown menu in preview mode to do attribute adding and editing etc.

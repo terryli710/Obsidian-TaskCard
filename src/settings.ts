@@ -41,10 +41,16 @@ export const SettingStore: Writable<TaskCardSettings> = writable<TaskCardSetting
 
 export class SettingsTab extends PluginSettingTab {
   private plugin: TaskCardPlugin;
+  private settingStatus: {
+    showColorPicker: boolean
+  }
   
   constructor(app: App, plugin: TaskCardPlugin) {
     super(app, plugin);
     this.plugin = plugin;
+    this.settingStatus = {
+      showColorPicker: false
+    }
   }
 
   display(): void {
@@ -90,55 +96,52 @@ export class SettingsTab extends PluginSettingTab {
     let newProjectName = '';
     let newProjectColor = '';
 
-    const renderSetting = (showColorPicker: boolean = false) => {
+      const setting = new Setting(this.containerEl).setName('Add A Project');
 
-        const setting = new Setting(this.containerEl).setName('Add A Project');
+      setting.setDesc('Project names must be unique. Color picking is optional.');
 
-        setting.setDesc('Project names must be unique. Color picking is optional.');
+      setting.addText(text => {
+          text.setPlaceholder('Enter project name')
+              .setValue(newProjectName) // Set the stored value
+              .onChange(value => {
+                  newProjectName = value;
+              });
+      });
 
-        setting.addText(text => {
-            text.setPlaceholder('Enter project name')
-                .setValue(newProjectName) // Set the stored value
-                .onChange(value => {
-                    newProjectName = value;
-                });
-        });
+      if (this.settingStatus.showColorPicker) {
+          setting.addColorPicker(colorPicker => {
+              colorPicker.onChange(value => {
+                  newProjectColor = value;
+              });
+          });
+      } else {
+          setting.addButton(button => {
+              button.setTooltip("Pick a color")
+                  .setIcon("palette")
+                  .onClick(() => {
+                    this.settingStatus.showColorPicker = true;
+                    this.display();
+                  });
+          });
+      }
 
-        if (showColorPicker) {
-            setting.addColorPicker(colorPicker => {
-                colorPicker.onChange(value => {
-                    newProjectColor = value;
-                });
-            });
-        } else {
-            setting.addButton(button => {
-                button.setTooltip("Pick a color")
-                    .setIcon("palette")
-                    .onClick(() => {
-                        renderSetting(true); // Re-render with color picker
-                    });
-            });
-        }
-
-        setting.addButton(button => {
-            button.setTooltip("Finish")
-                .setIcon("check-square")
-                .onClick(() => {
-                    if (newProjectName) {
-                        const newProject: Partial<Project> = {
-                            name: newProjectName,
-                            color: newProjectColor
-                        };
-                        this.plugin.projectModule.addProject(newProject);
-                        this.updateProjectsToSettings();
-                        this.display();
-                    }
-                });
-        });
-    };
-
-    renderSetting();
-}
+      setting.addButton(button => {
+          button.setTooltip("Finish")
+              .setIcon("check-square")
+              .onClick(() => {
+                  if (newProjectName) {
+                      const newProject: Partial<Project> = {
+                          name: newProjectName,
+                          color: newProjectColor
+                      };
+                      this.plugin.projectModule.addProject(newProject);
+                      this.updateProjectsToSettings();
+                      this.settingStatus.showColorPicker = false;
+                      this.display();
+                  }
+              });
+      });
+  };
 
 
   projectEditSetting(project: Project, projectContainerEl?: HTMLElement) {
@@ -184,7 +187,6 @@ export class SettingsTab extends PluginSettingTab {
                     button.setTooltip("Edit").setIcon("pencil");
                     this.plugin.projectModule.updateProject(project);
                     this.updateProjectsToSettings();
-                    this.display();
                     isEditMode = false;
                 }
             });
@@ -239,7 +241,6 @@ cardParsingSettings() {
                   this.plugin.writeSettings((old) => (old.parsingSettings.indicatorTag = textField.getValue()));
                   button.setTooltip("Edit").setIcon("pencil");
                   isEditMode = false;
-                  this.display();
               }
           });
   });
