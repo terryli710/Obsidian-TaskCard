@@ -54,9 +54,9 @@ export class ObsidianTaskSyncManager implements ObsidianTaskSyncProps {
     async updateTaskToFile(markdownTask: string): Promise<void> {
         const docLineStart = this.taskMetadata.lineStartInSection + this.taskMetadata.mdSectionInfo.lineStart;
         const docLineEnd = this.taskMetadata.lineEndsInSection + this.taskMetadata.mdSectionInfo.lineStart;
-        logger.debug(`taskSyncManager - updateTaskToFile: docLineStart: ${docLineStart}, docLineEnd: ${docLineEnd},
-        linStartInSection: ${this.taskMetadata.lineStartInSection}, lineEndsInSection: ${this.taskMetadata.lineEndsInSection},
-        section line start: ${this.taskMetadata.mdSectionInfo.lineStart}, section line end: ${this.taskMetadata.mdSectionInfo.lineEnd}`);
+        // logger.debug(`taskSyncManager - updateTaskToFile: docLineStart: ${docLineStart}, docLineEnd: ${docLineEnd},
+        // linStartInSection: ${this.taskMetadata.lineStartInSection}, lineEndsInSection: ${this.taskMetadata.lineEndsInSection},
+        // section line start: ${this.taskMetadata.mdSectionInfo.lineStart}, section line end: ${this.taskMetadata.mdSectionInfo.lineEnd}`);
         await this.plugin.fileOperator.updateFile(this.taskMetadata.sourcePath, markdownTask, docLineStart, docLineEnd);
     }
 
@@ -64,7 +64,7 @@ export class ObsidianTaskSyncManager implements ObsidianTaskSyncProps {
         this.obsidianTask[key] = value;
         logger.debug(`successfully set ${key} to ${value}`);
         const markdownTask = this.plugin.taskFormatter.taskToMarkdownOneLine(this.obsidianTask);
-        logger.debug(`markdownTask: ${markdownTask}`);
+        // logger.debug(`markdownTask: ${markdownTask}`);
         this.updateTaskToFile(markdownTask);
     }
 

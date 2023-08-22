@@ -64,7 +64,6 @@ export default class TaskCardPlugin extends Plugin {
     this.registerEvent(this.app.workspace.on('layout-change', () => {
       const file = this.app.workspace.getActiveFile();
       setTimeout(() => {
-        logger.debug(`taskMonitor triggered for file: ${file.path}`);
         this.taskMonitor.monitorFile(file);
       }, 2);
     }));

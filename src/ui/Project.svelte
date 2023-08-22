@@ -33,7 +33,6 @@
   function selectProject(selectedProject: Project) {
     project = selectedProject;
     taskSyncManager.taskCardStatus.projectStatus = 'done';
-    logger.debug(`project: ${JSON.stringify(project)}`);
     taskSyncManager.updateObsidianTaskAttribute('project', selectedProject);
   }
 
@@ -42,7 +41,6 @@
     if (!project1 || !project2) return false;
     const sameID = (project1.id === project2.id) || (!project1.id && !project2.id);
     const sameName = (project1.name === project2.name) || (!project1.name && !project2.name);
-    logger.debug(`comparing project ${JSON.stringify(project1)} and ${JSON.stringify(project2)}, sameID: ${sameID}, sameName: ${sameName}`);
     return sameID && sameName;
   }
 
@@ -56,7 +54,6 @@
         const margin = parseFloat(getComputedStyle(projectPopup).marginBottom);
         const totalHeight = height + padding + margin;
         projectWrapper.style.height = `${totalHeight}px`;
-        logger.debug(`adjusting height to ${totalHeight}px, height=${height}, padding=${padding}, margin=${margin}`);
       }
     }
   }

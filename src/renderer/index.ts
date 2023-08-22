@@ -34,7 +34,7 @@ export class TaskCardRenderManager {
 
     getPostProcessor(): MarkdownPostProcessor {
         const postProcessor = async (el: HTMLElement, ctx: MarkdownPostProcessorContext) => {
-            logger.debug(`el.innerHTML: ${el.innerHTML}`)
+            // logger.debug(`el.innerHTML: ${el.innerHTML}`)
             const taskSyncs: ObsidianTaskSyncProps[] = await this.constructTaskSync(el, ctx)
 
             for (const taskSync of taskSyncs) {
@@ -55,7 +55,7 @@ export class TaskCardRenderManager {
             this.taskItemFilter
         );
         if (taskItemsIndices.length === 0) return [];
-        logger.debug(`taskItemsIndices: ${taskItemsIndices}`);
+        // logger.debug(`taskItemsIndices: ${taskItemsIndices}`);
 
         const mdSectionInfo = ctx.getSectionInfo(section);
         const sourcePath = ctx.sourcePath;
@@ -96,8 +96,6 @@ export function getLineNumberOfListItem(ul: HTMLElement, index: number, content:
     const originalLines = content.split('\n');
     let originalLineIndex = 0;
 
-    logger.debug(`originalLines: ${JSON.stringify(originalLines)}`);
-
     for (let i = 0; i < index; i++) {
         const markdown = htmlToMarkdown(ul.children[i].innerHTML);
         const lines = markdown.split('\n').filter(line => line.trim() !== '');
@@ -112,7 +110,6 @@ export function getLineNumberOfListItem(ul: HTMLElement, index: number, content:
         }
     }
 
-    logger.debug(`Final line number: ${lineNumber}`);
     return lineNumber;
 }
 

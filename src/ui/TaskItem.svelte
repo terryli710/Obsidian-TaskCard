@@ -23,7 +23,6 @@
         // Toggle between the two modes
         const newMode = params.mode === 'single-line' ? 'multi-line' : 'single-line';
         dispatch('switchMode', newMode);
-        logger.debug(`In TaskItem, switching mode to ${newMode}`);
         params = { ...params, mode: newMode };
     }
 

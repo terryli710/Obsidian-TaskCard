@@ -102,7 +102,6 @@ export class TaskParser {
 
             switch (attributeName) {
                 case 'due':
-                    logger.debug(`in DUE: attributeName: ${attributeName}, attributeValue: ${attributeValue}`);
                     try {
                         const parsedDue = this.parseDue(attributeValue);
                         if (!parsedDue) {
@@ -116,7 +115,6 @@ export class TaskParser {
                     }
                     break;
                 case 'project':
-                    logger.debug(`in PROJECT: attributeName: ${attributeName}, attributeValue: ${attributeValue}`);
                     try {
                         const parsedProject = this.parseProject(attributeValue);
                         if (!parsedProject) {
