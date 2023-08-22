@@ -1,7 +1,6 @@
 
 
 # Releases
-- TODO: Add README.md
 - TODO: Add simple docs.
 
 # Features
@@ -19,6 +18,7 @@
 - formatted attribute saving.
 - No direct edit method.
 - Single line mode background problem - taskcard background compatibility
+- TODO: BUG: when rerendering, all the task will be rerender to default mode. (can we memorize the display modes for each task?)
 
 ## Multi-mode display in preview mode
 - Single line and multi line modes.
@@ -118,7 +118,7 @@
 - dropdown menu to add
 - TODO: BUG: when there's no project, a circle will be added.
 - TODO: BUG: when adding project in settings, a bug when clicking on the color picker.
-- TODO: BUG: when project is added, name should not be the same.
+- TODO: BUG: when project is added, name should not be the same. (add a popup msg)
 - TODO: OPTIMIZE: when there's no project, the project edit section.
 
 ### Edit

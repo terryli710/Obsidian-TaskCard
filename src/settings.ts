@@ -200,32 +200,63 @@ export class SettingsTab extends PluginSettingTab {
     })
 }
 
+cardParsingSettings() {
+  let textField: any;
+  let isEditMode = false;
 
-  cardParsingSettings() {
-    let textField: any;
+  const setting = new Setting(this.containerEl)
 
-    new Setting(this.containerEl)
-        .setName('Indicator Tag')
-        .setDesc('The tag used to identify task cards.')
-        .addText(text => {
-            textField = text;
-            return text
-                .setPlaceholder('YourTagHere')
-                .setValue(this.plugin.settings.parsingSettings.indicatorTag)
-                .onChange(async (value: string) => {
-                    // remove all the leading # from the value
-                    const indicatorTag = value.replace(/^#/, '');
-                    this.plugin.writeSettings((old) => (old.parsingSettings.indicatorTag = indicatorTag));
-                });
-        })
-        .addButton(button => {
-            button.setButtonText("Reset")
-                .setWarning()
-                .onClick(async () => {
-                    this.plugin.writeSettings((old) => (old.parsingSettings.indicatorTag = DefaultSettings.parsingSettings.indicatorTag));
-                });
-        });
+  setting.setName('Indicator Tag')
+      .setDesc('The tag used to identify task cards.')
+      .addText(text => {
+          textField = text;
+          return text
+              .setPlaceholder('YourTagHere')
+              .setValue(this.plugin.settings.parsingSettings.indicatorTag)
+              .setDisabled(true) // Disable the text field initially
+              .onChange(async (value: string) => {
+                  // remove all the leading # from the value
+                  const indicatorTag = value.replace(/^#/, '');
+                  this.plugin.writeSettings((old) => (old.parsingSettings.indicatorTag = indicatorTag));
+              });
+      });
+
+  // Add an edit/save button
+  setting.addButton(button => {
+      button.setTooltip("Edit")
+          .setIcon("pencil")
+          .onClick(() => {
+              if (!isEditMode) {
+                  // Switch to edit mode
+                  textField.setDisabled(false); // Enable the text field
+                  button.setTooltip("Save").setIcon("save");
+                  isEditMode = true;
+              } else {
+                  // Switch to saved mode
+                  textField.setDisabled(true); // Disable the text field
+                  this.plugin.writeSettings((old) => (old.parsingSettings.indicatorTag = textField.getValue()));
+                  button.setTooltip("Edit").setIcon("pencil");
+                  isEditMode = false;
+                  this.display();
+              }
+          });
+  });
+
+  // Add a reset button
+  setting.addButton(button => {
+      button
+          .setIcon("rotate-ccw")
+          .setWarning()
+          .setTooltip("Reset")
+          .onClick(async () => {
+              // Reset the value to the default
+              this.plugin.writeSettings((old) => (old.parsingSettings.indicatorTag = DefaultSettings.parsingSettings.indicatorTag));
+              // Update the text field with the default value
+              textField.setValue(DefaultSettings.parsingSettings.indicatorTag);
+          });
+  });
 }
+
 
 
   cardDisplaySettings() {
