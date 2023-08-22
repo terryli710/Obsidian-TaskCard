@@ -47,10 +47,8 @@ export class TaskValidator {
   }
 
   private getUnformattedMarkdownPattern(): RegExp {
-    return new RegExp(
-      `^\\s*- \\[[\\s*+-x=]\\] (.*)(${this.startingNotation}[a-zA-Z]+:\\s*.*?${this.endingNotation}\\s*)*${this.markdownSuffix}?$`,
-      'gm'
-    );
+    const markdownPatternText: string = `^\\s*- \\[[\\s*+-x=]\\] (.*)(${this.startingNotation}[a-zA-Z]+:\\s*.*?${this.endingNotation}\\s*)*(${this.markdownSuffix})?$`;
+    return new RegExp(markdownPatternText, 'gm');
   }
 
   private hasSpanElement(markdown: string): boolean {
