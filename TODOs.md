@@ -1,4 +1,9 @@
 
+
+# Releases
+- TODO: Add README.md
+- TODO: Add simple docs.
+
 # Display
 
 ## Edit Mode
@@ -18,8 +23,6 @@
 # Interaction
 
 ## Settings
-- TODO: for project, if saved, not interactive;
-- TODO: when adding project, visual cue for OPTIONAL color picking;
 
 ## Priority
 
@@ -46,6 +49,7 @@
 - double click and edit description with multi line support.
   - Save and discard edits.
 - TODO: (far stretch) interactive display mode when editing.
+- TODO: sub task in descriptions
 - Sub task interactive.
 
 ### Delete
@@ -64,13 +68,12 @@
 - TODO: font size and text box size when editing.
 
 ### Delete
-- TODO: dropdown menu to delete.
+- dropdown menu to delete.
 
 ## Labels
 
 ### Functionality
 - TODO: searchable labels (currently cannot be searched).
-- TODO: add # to the label display.
 
 ### Addition
 - bottom to add label.

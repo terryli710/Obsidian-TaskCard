@@ -4,13 +4,19 @@ on:
   push:
     tags:
       - "*"
+    branches:
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          ref: main
+          fetch-depth: 0
 
       - name: Use Node.js
         uses: actions/setup-node@v3
@@ -22,6 +28,10 @@ jobs:
           npm install
           npm run build
 
+      - name: Zip files
+        run: |
+          zip plugin-release.zip main.js manifest.json styles.css
+
       - name: Create release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -31,4 +41,17 @@ jobs:
           gh release create "$tag" \
             --title="$tag" \
             --draft \
-            main.js manifest.json styles.css
+            main.js manifest.json styles.css plugin-release.zip
+
+      - name: Commit to releases branch
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git checkout releases
+          git add -f main.js manifest.json styles.css
+          if git diff-index --quiet HEAD --; then
+            echo "No changes to commit"
+          else
+            git commit -m "Release ${{ github.ref }}"
+            git push origin releases
+          fi
