@@ -66,8 +66,9 @@
 - dropdown menu to delete.
 
 ## Due
-- `chorno` is not string enough for all the date formats.
+- `chrono` is not string enough for all the date formats.
 - Add msg to indicate user when date parsing is failed.
+- Add `sugar.js` to replace chrono.
 
 ### Addition
 - dropdown menu to add.

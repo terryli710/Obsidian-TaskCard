@@ -7,7 +7,7 @@ import { kebabToCamel } from "../utils/stringCaseConverter";
 import { toArray, toBoolean } from "../utils/typeConversion";
 import { DueDate, ObsidianTask, TaskProperties } from './task';
 import { Project, ProjectModule } from './project';
-import * as chrono from 'chrono-node';
+import Sugar from 'sugar';
 import { SettingStore } from "../settings";
 import { Notice } from "obsidian";
 
@@ -152,30 +152,30 @@ export class TaskParser {
         return task;
     }
 
+    
     parseDue(dueString: string): DueDate | null {
-        let parsedResult;
         try {
-            parsedResult = chrono.parse(dueString)[0];
-            // Check if parsedResult is undefined
-            if (!parsedResult) {
-                throw new Error('Failed to parse due date. No parsed result found.');
+            const parsedDateTime = Sugar.Date.create(dueString);
+
+            // Check if the parsedDateTime is a valid date
+            if (!Sugar.Date.isValid(parsedDateTime)) {
+                throw new Error('Failed to parse due date. No valid date found.');
             }
-            
+
+            const parsedDate = Sugar.Date.format(parsedDateTime, '{yyyy}-{MM}-{dd}');
+            const parsedTime = Sugar.Date.format(parsedDateTime, '{HH}:{mm}');
+
+            const isDateOnly = parsedTime === '00:00';
+
+            if (isDateOnly) {
+                return { isRecurring: false, date: parsedDate, string: dueString } as DueDate;
+            } else {
+                return { isRecurring: true, date: parsedDate, time: parsedTime, string: dueString } as DueDate;
+            }
         } catch (e) {
             logger.error(`Failed to parse due date: ${e.message}`);
             new Notice(`[TaskCard]: Failed to parse due date: ${e.message}`);
             return null;
-        }
-        const ParsedComponent = parsedResult.start;
-        const isDateOnly = !ParsedComponent.isCertain('hour') && !ParsedComponent.isCertain('minute') && !ParsedComponent.isCertain('second');
-        const parsedDateTime: Date = ParsedComponent.date();
-        const parsedDate = `${parsedDateTime.getFullYear()}-${String(parsedDateTime.getMonth() + 1).padStart(2, '0')}-${String(parsedDateTime.getDate()).padStart(2, '0')}`;
-        const parsedTime = `${parsedDateTime.getHours()}:${parsedDateTime.getMinutes()}`;
-        logger.debug(`dueString: ${dueString}, parsedDate: ${parsedDate}, parsedTime: ${parsedTime}`);
-        if (isDateOnly) {
-            return { isRecurring: false, date: parsedDate, string: dueString } as DueDate;
-        } else {
-            return { isRecurring: true, date: parsedDate, time: parsedTime, string: dueString } as DueDate;
         }
     }
 
