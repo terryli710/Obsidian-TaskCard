@@ -9,7 +9,7 @@ export type SpanElements = Record<keyof ObsidianTask, HTMLElement>;
 export class TaskValidator {
     private static formattedMarkdownPattern: RegExp = /^\s*- \[[^\]]\](.*?)(<span class="[^"]+" style="display:none;">.*?<\/span>)+{this.markdownSuffix}?$/;
     private spanElementPattern: RegExp = /<span class="[^"]+" style="display:none;">(.*?)<\/span>/g;
-    private unformattedMarkdownPattern: RegExp;
+    private markdownTaskPattern: RegExp = /^\s*- \[[^\]]\]\s/;
     private indicatorTag: string;
     private startingNotation: string;
     private endingNotation: string;
@@ -23,7 +23,6 @@ export class TaskValidator {
             this.endingNotation = escapeRegExp(settings.parsingSettings.markdownEndingNotation);
             this.markdownSuffix = escapeRegExp(settings.parsingSettings.markdownSuffix);
         });
-        this.unformattedMarkdownPattern = new RegExp(`^\\s*- \\[[\\s*+-x=]\\](.*)(${this.startingNotation}.*?${this.endingNotation})?${this.markdownSuffix}?`, 'g');
     }
 
     private hasIndicatorTag(contentPart: string): boolean {
@@ -31,8 +30,16 @@ export class TaskValidator {
         return indicatorTagPattern.test(contentPart);
     }
 
+    isMarkdownTask(taskMarkdown: string): boolean {
+        return this.markdownTaskPattern.test(taskMarkdown);
+    }
+
     private getAttributePattern(): RegExp {
         return new RegExp(`${this.startingNotation}.*?${this.endingNotation}`, 'g');
+    }
+
+    private getUnformattedMarkdownPattern(): RegExp {
+        return new RegExp(`^\\s*- \\[[\\s*+-x=]\\] (.*)(${this.startingNotation}[a-zA-Z]+:\\s*.*?${this.endingNotation}\\s*)*${this.markdownSuffix}?$`, 'gm');
     }
 
     private hasSpanElement(markdown: string): boolean {
@@ -52,13 +59,17 @@ export class TaskValidator {
     }
 
     isValidUnformattedTaskMarkdown(taskMarkdown: string): boolean {
-        const match = this.unformattedMarkdownPattern.exec(taskMarkdown);
+        const match = this.getUnformattedMarkdownPattern().exec(taskMarkdown);
         if (match && match[1]) {
             if (!match[2] && this.hasSpanElement(taskMarkdown)) { return false; }
             const contentWithoutAttributes = match[1].replace(this.getAttributePattern(), '').trim();
             return this.hasIndicatorTag(contentWithoutAttributes);
         }
         return false;
+    }
+
+    isMarkdownTaskWithIndicatorTag(taskMarkdown: string): boolean {
+        return this.isMarkdownTask(taskMarkdown) && this.hasIndicatorTag(taskMarkdown);
     }
 
     private getTaskElAttributeNames(): string[] {

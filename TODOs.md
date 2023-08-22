@@ -129,6 +129,11 @@
 # Parsing and Formatting
 
 - TODO: OPTIMIZE: when creating task, won't suggest attributes that has already been added.
+- TODO: BUG: autosuggest bugs:
+  - number of spaces matters for:
+    - attribute suggest to show;
+    - project to show up at witch space;
+  - priority suggest not showing;
 
 # Task adding and editing and deletion
 - dropdown menu in preview mode to do attribute adding and editing etc.
@@ -146,11 +151,7 @@
 
 # Project handling
 
-
 # BUGs
--  [ ] Project cannot be read in some cards.
--  [ ] Display in the correct order in a `ul`.
--  [ ] Display correctly in a `ul` as a `li` or a `button`.
 
 # File <-> HTML Sync
 

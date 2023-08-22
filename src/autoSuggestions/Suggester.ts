@@ -38,6 +38,8 @@ export class AttributeSuggester {
         // Modify regex to capture the attribute query
         const attributeRegex = new RegExp(`${escapeRegExp(this.startingNotation)}(\\s*[a-zA-Z]*)(?=:)?`, 'g');
         const attributeMatch = matchByPosition(lineText, attributeRegex, cursorPos);
+        logger.debug(`lineText: ${lineText}, cursorPos: ${cursorPos}`);
+        logger.debug(`getAttributeSuggestions: ${JSON.stringify(attributeMatch)}`);
         if (!attributeMatch) return suggestions; // No match
     
         // Get the attribute query from the captured group
@@ -71,6 +73,8 @@ export class AttributeSuggester {
 
         const priorityRegex = new RegExp(`${escapeRegExp(this.startingNotation)}\\s?priority:\\s*${escapeRegExp(this.endingNotation)}`, 'g');
         const priorityMatch = matchByPosition(lineText, priorityRegex, cursorPos);
+        logger.debug(`lineText: ${lineText}, cursorPos: ${cursorPos}`);
+        logger.debug(`getPrioritySuggestions: ${JSON.stringify(priorityMatch)}`);
         if (!priorityMatch) return suggestions; // No match
         const prioritySelections = ['1', '2', '3', '4'];
         suggestions = prioritySelections.map(priority => {
@@ -94,6 +98,8 @@ export class AttributeSuggester {
         // Modify regex to capture the due date query
         const dueRegex = new RegExp(`${escapeRegExp(this.startingNotation)}\\s?due:(\\s*[0-9a-zA-Z\s-]*\\s*)${escapeRegExp(this.endingNotation)}`, 'g');
         const dueMatch = matchByPositionAndGroup(lineText, dueRegex, cursorPos, 1);
+        logger.debug(`lineText: ${lineText}, cursorPos: ${cursorPos}`);
+        logger.debug(`getDueSuggestions: ${JSON.stringify(dueMatch)}`);
         if (!dueMatch) return suggestions; // No match
     
         // Get the due date query from the captured group

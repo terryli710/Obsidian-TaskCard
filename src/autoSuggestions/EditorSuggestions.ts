@@ -45,8 +45,10 @@ export default class AttributeSuggest extends EditorSuggest<SuggestInformation> 
 
     onTrigger(cursor: EditorPosition, editor: Editor, file: TFile): EditorSuggestTriggerInfo {
         // TODO: return null if the plugin is not loaded
+        logger.debug(`onTrigger is called`)
         const line = editor.getLine(cursor.line);
-        if (!this.taskValidator.isValidUnformattedTaskMarkdown(line)) {return null;}
+        if (!this.taskValidator.isMarkdownTaskWithIndicatorTag(line)) {return null;}
+        logger.debug(`onTrigger returns content`)
         return {
             start: { line: cursor.line, ch: 0 },
             end: {
