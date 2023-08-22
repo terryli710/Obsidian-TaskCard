@@ -34,7 +34,7 @@ export default class TaskCardPlugin extends Plugin {
     this.taskValidator = new TaskValidator(SettingStore);
     this.taskCardRenderManager = new TaskCardRenderManager(this);
     this.fileOperator = new FileOperator(this, this.app);
-    this.taskMonitor = new TaskMonitor(this);
+    this.taskMonitor = new TaskMonitor(this, this.app);
   }
 
   async loadSettings() {
@@ -68,12 +68,7 @@ export default class TaskCardPlugin extends Plugin {
     );
     this.registerEditorSuggest(new AttributeSuggest(this.app));
     this.registerEvent(
-      this.app.workspace.on('layout-change', () => {
-        const file = this.app.workspace.getActiveFile();
-        setTimeout(() => {
-          this.taskMonitor.monitorFile(file);
-        }, 2);
-      })
+      this.app.workspace.on('layout-change', this.taskMonitor.layoutChangeHandler.bind(this.taskMonitor))
     );
     logger.info('Plugin loaded.');
   }

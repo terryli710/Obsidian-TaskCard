@@ -141,8 +141,9 @@
 -
 
 # Parsing and Formatting
+- TODO: OPTIMIZE: formatting - only format when layout-change and when current view = preview view.
+  - currently will format when refresh the page.
 
-- TODO: OPTIMIZE: prevent repetitive tags being added, and immune to repetitive tags when parsing.
 
 # Task adding and editing and deletion
 

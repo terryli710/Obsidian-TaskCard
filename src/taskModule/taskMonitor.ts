@@ -1,17 +1,29 @@
-import { TFile, WorkspaceLeaf } from 'obsidian';
+import { App, MarkdownView, TFile, WorkspaceLeaf } from 'obsidian';
 import TaskCardPlugin from '..';
 
 export class TaskMonitor {
   plugin: TaskCardPlugin;
+  app: App;
 
-  constructor(plugin: TaskCardPlugin) {
+  constructor(plugin: TaskCardPlugin, app: App) {
     this.plugin = plugin;
+    this.app = app;
   }
 
   async monitorFile(file: TFile) {
     const lines = await this.getLinesFromFile(file);
     const updatedLines = this.updateTasksInLines(lines);
     await this.updateFileWithNewLines(file, updatedLines);
+  }
+
+  layoutChangeHandler() {
+    const file = this.app.workspace.getActiveFile();
+    const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+    const mode = view.getMode();
+    if (!file || mode !== 'preview') return;
+    setTimeout(() => {
+      this.monitorFile(file);
+    }, 2);
   }
 
   async getLinesFromFile(file: TFile) {
