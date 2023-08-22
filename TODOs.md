@@ -32,9 +32,6 @@
 
 ## Settings
 
-- TODO: BUG: indicator tag reset button doesn't work.
-- TODO: BUG: when reset indicator tag, the tag will disappear when next entering the setting.
-
 ## Priority
 
 ### Edit
@@ -69,9 +66,8 @@
 - dropdown menu to delete.
 
 ## Due
-
-- TODO: BUG!!: input day after tomorrow's date will appear to be tomorrow.
-- TODO: BUG!!: has to input year, then the due can be correctly parsed.
+- `chorno` is not string enough for all the date formats.
+- Add msg to indicate user when date parsing is failed.
 
 ### Addition
 - dropdown menu to add.

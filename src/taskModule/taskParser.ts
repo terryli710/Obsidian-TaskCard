@@ -9,6 +9,7 @@ import { DueDate, ObsidianTask, TaskProperties } from './task';
 import { Project, ProjectModule } from './project';
 import * as chrono from 'chrono-node';
 import { SettingStore } from "../settings";
+import { Notice } from "obsidian";
 
 export class TaskParser {
     indicatorTag: string;
@@ -152,12 +153,25 @@ export class TaskParser {
     }
 
     parseDue(dueString: string): DueDate | null {
-        const parsedResult = chrono.parse(dueString)[0];
+        let parsedResult;
+        try {
+            parsedResult = chrono.parse(dueString)[0];
+            // Check if parsedResult is undefined
+            if (!parsedResult) {
+                throw new Error('Failed to parse due date. No parsed result found.');
+            }
+            
+        } catch (e) {
+            logger.error(`Failed to parse due date: ${e.message}`);
+            new Notice(`[TaskCard]: Failed to parse due date: ${e.message}`);
+            return null;
+        }
         const ParsedComponent = parsedResult.start;
         const isDateOnly = !ParsedComponent.isCertain('hour') && !ParsedComponent.isCertain('minute') && !ParsedComponent.isCertain('second');
         const parsedDateTime: Date = ParsedComponent.date();
         const parsedDate = `${parsedDateTime.getFullYear()}-${String(parsedDateTime.getMonth() + 1).padStart(2, '0')}-${String(parsedDateTime.getDate()).padStart(2, '0')}`;
         const parsedTime = `${parsedDateTime.getHours()}:${parsedDateTime.getMinutes()}`;
+        logger.debug(`dueString: ${dueString}, parsedDate: ${parsedDate}, parsedTime: ${parsedTime}`);
         if (isDateOnly) {
             return { isRecurring: false, date: parsedDate, string: dueString } as DueDate;
         } else {
