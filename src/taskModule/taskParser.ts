@@ -59,9 +59,7 @@ export class TaskParser {
     
         task.due = parseQuery('due', 'null') as DueDate | null;
         task.metadata = parseQuery('metadata', '{}') as TaskProperties['metadata'];
-    
-        logger.debug(`task project: ${task.project}`);
-    
+        
         return task;
     }
     
@@ -107,7 +105,7 @@ export class TaskParser {
                     logger.debug(`in DUE: attributeName: ${attributeName}, attributeValue: ${attributeValue}`);
                     try {
                         const parsedDue = this.parseDue(attributeValue);
-                        if (!task.due) {
+                        if (!parsedDue) {
                             throw new Error(`Failed to parse due date: ${attributeValue}`);
                         }
                         task.due = parsedDue;
@@ -166,32 +164,26 @@ export class TaskParser {
 
     
     parseDue(dueString: string): DueDate | null {
-        try {
-            const parsedDateTime = Sugar.Date.create(dueString);
+        const parsedDateTime = Sugar.Date.create(dueString);
 
-            // Check if the parsedDateTime is a valid date
-            if (!Sugar.Date.isValid(parsedDateTime)) {
-                throw new Error('Failed to parse due date. No valid date found.');
-            }
+        // Check if the parsedDateTime is a valid date
+        if (!parsedDateTime) {
+            return null
+        }
 
-            const parsedDate = Sugar.Date.format(parsedDateTime, '{yyyy}-{MM}-{dd}');
-            const parsedTime = Sugar.Date.format(parsedDateTime, '{HH}:{mm}');
+        const parsedDate = Sugar.Date.format(parsedDateTime, '{yyyy}-{MM}-{dd}');
+        const parsedTime = Sugar.Date.format(parsedDateTime, '{HH}:{mm}');
 
-            const isDateOnly = parsedTime === '00:00';
+        const isDateOnly = parsedTime === '00:00';
 
-            if (isDateOnly) {
-                return { isRecurring: false, date: parsedDate, string: dueString } as DueDate;
-            } else {
-                return { isRecurring: true, date: parsedDate, time: parsedTime, string: dueString } as DueDate;
-            }
-        } catch (e) {
-            new Notice(`[TaskCard] Failed to parse due date: ${e.message}`);
-            return null;
+        if (isDateOnly) {
+            return { isRecurring: false, date: parsedDate, string: dueString } as DueDate;
+        } else {
+            return { isRecurring: true, date: parsedDate, time: parsedTime, string: dueString } as DueDate;
         }
     }
 
     parseProject(projectString: string): Project | null {
-        logger.debug(`Parsing project: ${projectString}}`);
         const project = this.projectModule.getProjectByName(projectString);
         if (!project) { return null };
         return project;
