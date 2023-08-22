@@ -1,47 +1,74 @@
 import { Writable, writable } from 'svelte/store';
 import { TaskMode } from './postProcessor';
+import { SettingStore } from '../settings';
 
-// Writable store to hold the modes for each task
-type TaskModes = { [key: string]: TaskMode };
+class TaskStore {
+  private taskModes: Writable<{ [key: number]: TaskMode }>;
+  public subscribe: Function;
+  private filePath: string;
+  private defaultMode: TaskMode;
 
-const taskModes: Writable<TaskModes> = writable({});
+  constructor() {
+    this.taskModes = writable({});
+    this.subscribe = this.taskModes.subscribe;  // Now it's safe
+    this.filePath = '';
+    
+    SettingStore.subscribe((settings) => {
+        this.defaultMode = settings.displaySettings.defaultMode as TaskMode;
+    });
+  }
 
-// Actions to interact with the store
-const taskStore = {
-  subscribe: taskModes.subscribe,
-  createMode: (id, initialMode: TaskMode = 'single-line') => {
-    taskModes.update((modes) => {
-      modes[id] = initialMode;
+  setFilePath(newFilePath: string) {
+    if (newFilePath !== this.filePath) {
+      this.filePath = newFilePath;
+      this.taskModes.set({});
+    }
+  }
+
+  createMode(lineNumber: number, initialMode: TaskMode = 'single-line') {
+    this.taskModes.update((modes) => {
+      modes[lineNumber] = initialMode;
       return modes;
     });
-  },
-  getMode: async (id) => {
+  }
+
+  async getMode(lineNumber: number) {
     let mode;
-    taskModes.subscribe((modes) => {
-      mode = modes[id];
+    this.taskModes.subscribe((modes) => {
+      mode = modes[lineNumber];
     })();
     return mode;
-  },
-  setMode: (id, newMode) => {
-    taskModes.update((modes) => {
-      modes[id] = newMode;
+  }
+
+  setMode(lineNumber: number, newMode: TaskMode) {
+    this.taskModes.update((modes) => {
+      modes[lineNumber] = newMode;
       return modes;
     });
-  },
-  deleteMode: (id) => {
-    taskModes.update((modes) => {
-      delete modes[id];
+  }
+
+  setDefaultMode(lineNumber: number) {
+    this.taskModes.update((modes) => {
+      modes[lineNumber] = this.defaultMode;
       return modes;
     });
-  },
-  ensureMode: (id, initialMode: TaskMode = 'single-line') => {
-    taskModes.update((modes) => {
-      if (modes[id] === undefined) {
-        modes[id] = initialMode;
+  }
+
+  deleteMode(lineNumber: number) {
+    this.taskModes.update((modes) => {
+      delete modes[lineNumber];
+      return modes;
+    });
+  }
+
+  ensureMode(lineNumber: number, initialMode: TaskMode = 'single-line') {
+    this.taskModes.update((modes) => {
+      if (modes[lineNumber] === undefined) {
+        modes[lineNumber] = initialMode;
       }
       return modes;
     });
   }
-};
+}
 
-export default taskStore;
+export default new TaskStore();

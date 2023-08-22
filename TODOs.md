@@ -141,8 +141,6 @@
 -
 
 # Parsing and Formatting
-- TODO: OPTIMIZE: formatting - only format when layout-change and when current view = preview view.
-  - currently will format when refresh the page.
 
 
 # Task adding and editing and deletion

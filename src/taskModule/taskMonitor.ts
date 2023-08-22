@@ -18,9 +18,11 @@ export class TaskMonitor {
 
   layoutChangeHandler() {
     const file = this.app.workspace.getActiveFile();
+    if (!file) return;
     const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+    if (!view) return;
     const mode = view.getMode();
-    if (!file || mode !== 'preview') return;
+    if (mode !== 'preview') return;
     setTimeout(() => {
       this.monitorFile(file);
     }, 2);

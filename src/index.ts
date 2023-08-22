@@ -1,5 +1,5 @@
 import { App, Plugin } from 'obsidian';
-import type { PluginManifest } from 'obsidian';
+import type { PluginManifest, Workspace, WorkspaceLeaf } from 'obsidian';
 import type { TaskCardSettings } from './settings';
 import { SettingStore, SettingsTab } from './settings';
 import { logger } from './utils/log';
@@ -70,6 +70,14 @@ export default class TaskCardPlugin extends Plugin {
     this.registerEvent(
       this.app.workspace.on('layout-change', this.taskMonitor.layoutChangeHandler.bind(this.taskMonitor))
     );
+
+    this.registerEvent(this.app.workspace.on('file-open', () => logger.debug('file-open')));
+    this.registerEvent(this.app.workspace.on('layout-change', () => logger.debug('layout-change')));
+    this.registerEvent(this.app.workspace.on('window-open', () => logger.debug('window-open')));
+    this.registerEvent(this.app.workspace.on('window-close', () => logger.debug('window-close')));
+
     logger.info('Plugin loaded.');
   }
+
+
 }
