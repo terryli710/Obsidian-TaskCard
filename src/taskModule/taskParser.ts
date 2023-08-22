@@ -78,7 +78,7 @@ export class TaskParser {
     return task;
   }
 
-  parseTaskMarkdown(taskMarkdown: string): ObsidianTask {
+  parseTaskMarkdown(taskMarkdown: string): ObsidianTask { // TODO: optimize this function
     const task: ObsidianTask = new ObsidianTask();
 
     // Splitting the content and the attributes
@@ -88,30 +88,35 @@ export class TaskParser {
         ? taskMarkdown.slice(0, contentEndIndex).trim()
         : taskMarkdown.trim();
 
-    task.content = markdownTaskContent.slice(5).trim();
+    const contentWithLabels = markdownTaskContent.slice(5).trim();
     task.completed = markdownTaskContent.startsWith('- [x]'); // TODO: currently only supports x
 
     // Extracting labels from the content line
-    const [contentLabels, remainingContent] = extractTags(task.content);
+    const [contentLabels, remainingContent] = extractTags(contentWithLabels);
     task.content = remainingContent;
     task.labels = contentLabels.filter((label) => label !== this.indicatorTag);
 
     // Parsing attributes
     const attributesString = taskMarkdown.slice(contentEndIndex);
-    const attributesPattern = new RegExp(
-      `${escapeRegExp(this.markdownStartingNotation)}(.*?)${escapeRegExp(
-        this.markdownEndingNotation
-      )}`,
-      'g'
-    );
+    const attributeRegexText = `${escapeRegExp(this.markdownStartingNotation)}(.*?)${escapeRegExp(this.markdownEndingNotation)}`;
+    const attributesPattern = new RegExp(attributeRegexText, 'g');
 
     const matches = [...attributesString.matchAll(attributesPattern)];
+
+    let parsedAttributeNames: string[] = [];
 
     for (const match of matches) {
       const attributeString = match[1];
       const attributeName = kebabToCamel(
         attributeString.substring(0, attributeString.indexOf(':')).trim()
       );
+      
+      // Check if this attribute has already been parsed
+      if (parsedAttributeNames.includes(attributeName)) {
+        logger.warn(`Duplicate attribute ignored: ${attributeName}`);
+        continue;
+      }
+
       const attributeValue = attributeString
         .substring(attributeString.indexOf(':') + 1)
         .trim();
@@ -132,6 +137,7 @@ export class TaskParser {
               throw new Error(`Failed to parse due date: ${attributeValue}`);
             }
             task.due = parsedDue;
+            parsedAttributeNames.push('due');
           } catch (e) {
             console.error(`Failed to parse due date: ${e.message}`);
             new Notice(`[TaskCard] Failed to parse due date: ${e.message}`);
@@ -144,6 +150,7 @@ export class TaskParser {
               throw new Error(`Failed to parse project: ${attributeValue}`);
             }
             task.project = parsedProject;
+            parsedAttributeNames.push('project');
           } catch (e) {
             console.error(
               `Cannot find project: ${attributeValue}, error: ${e.message}`
@@ -154,6 +161,7 @@ export class TaskParser {
         case 'metadata':
           try {
             task.metadata = JSON.parse(attributeValue);
+            parsedAttributeNames.push('metadata');
           } catch (e) {
             console.error(`Failed to parse metadata attribute: ${e.message}`);
           }
@@ -174,6 +182,7 @@ export class TaskParser {
               } else {
                 (task[taskKey] as any) = JSON.parse(attributeValue);
               }
+              parsedAttributeNames.push(taskKey);
             } catch (e) {
               logger.error(
                 `Failed to convert value for key ${taskKey}: ${e.message}`

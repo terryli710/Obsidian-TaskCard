@@ -142,7 +142,6 @@
 
 # Parsing and Formatting
 
-- TODO: OPTIMIZE: when creating task, won't suggest attributes that has already been added.
 - TODO: OPTIMIZE: prevent repetitive tags being added, and immune to repetitive tags when parsing.
 
 # Task adding and editing and deletion
