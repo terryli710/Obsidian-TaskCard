@@ -15,8 +15,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
         with:
-            ref: main
-            fetch-depth: 0
+          ref: main
+          fetch-depth: 0
 
       - name: Use Node.js
         uses: actions/setup-node@v3
@@ -31,7 +31,7 @@ jobs:
       - name: Zip files
         run: |
           zip plugin-release.zip main.js manifest.json styles.css
-  
+
       - name: Create release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -41,7 +41,7 @@ jobs:
           gh release create "$tag" \
             --title="$tag" \
             --draft \
-            main.js manifest.json styles.css
+            main.js manifest.json styles.css plugin-release.zip
 
       - name: Commit to releases branch
         run: |
