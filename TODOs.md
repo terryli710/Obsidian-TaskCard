@@ -6,10 +6,10 @@
 
 # Features
 
-- Aggregate by project, due and other filters (potentially achievable by dataview?).
-- Auto added due.
-- todoist sync?
-- google calendar sync?
+- TODO: Aggregate by project, due and other filters (potentially achievable by dataview?).
+- TODO: Auto added due.
+- TODO: todoist sync?
+- TODO: google calendar sync?
 
 # Display
 
@@ -27,9 +27,13 @@
 
 ## Icon
 - Manually using lucide icon, because we cannot install lucide-svelte
+
 # Interaction
 
 ## Settings
+
+- TODO: BUG: indicator tag reset button doesn't work.
+- TODO: BUG: when reset indicator tag, the tag will disappear when next entering the setting.
 
 ## Priority
 
@@ -48,6 +52,8 @@
 - NA
 
 ## Description
+- change line vs. save hot key?
+- Add place holder to instruct people.
 
 ### Addition
 - Dropdown menu to add.
@@ -64,6 +70,9 @@
 
 ## Due
 
+- TODO: BUG!!: input day after tomorrow's date will appear to be tomorrow.
+- TODO: BUG!!: has to input year, then the due can be correctly parsed.
+
 ### Addition
 - dropdown menu to add.
 
@@ -78,6 +87,7 @@
 - dropdown menu to delete.
 
 ## Labels
+- TODO: BUG: when adding labels, single line mode will be enabled unexpected.
 
 ### Functionality
 - TODO: searchable labels (currently cannot be searched).
@@ -98,11 +108,18 @@
 
 ## Project
 
+- TODO: bug: sometimes the project cannot be correctly parsed when task has been added
+  - case: when due is AFTER the project, project cannot be parsed.
+
 ### Functionality
 - color is "randomly" generated from project name.
 
 ### Addition
 - dropdown menu to add
+- TODO: BUG: when there's no project, a circle will be added.
+- TODO: BUG: when adding project in settings, a bug when clicking on the color picker.
+- TODO: BUG: when project is added, name should not be the same.
+- TODO: OPTIMIZE: when there's no project, the project edit section.
 
 ### Edit
 - Using a pop up menu
@@ -113,6 +130,8 @@
 - 
 
 # Parsing and Formatting
+
+- TODO: OPTIMIZE: when creating task, won't suggest attributes that has already been added.
 
 # Task adding and editing and deletion
 - dropdown menu in preview mode to do attribute adding and editing etc.
