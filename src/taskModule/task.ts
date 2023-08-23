@@ -2,6 +2,7 @@ import type { Static } from 'runtypes';
 import { String } from 'runtypes';
 import { v4 as uuidv4 } from 'uuid';
 import { Project } from './project';
+import { TaskItemParams } from '../renderer/postProcessor';
 
 export const DateOnly = String.withConstraint((s) =>
   /^\d{4}-\d{2}-\d{2}$/.test(s)
@@ -35,8 +36,12 @@ export interface TaskProperties {
   children: TaskProperties[];
 
   due?: DueDate | null;
-  metadata?: { [key: string]: string | number };
+  metadata?: {
+    taskItemParams?: TaskItemParams | null;
+    [key: string]: any; 
+  };
 }
+
 
 export class ObsidianTask implements TaskProperties {
   public id: string;
@@ -53,7 +58,12 @@ export class ObsidianTask implements TaskProperties {
   public children: ObsidianTask[];
 
   public due?: DueDate | null;
-  public metadata?: { [key: string]: string | number };
+  
+  public metadata?: {
+    taskItemParams?: TaskItemParams | null;
+    [key: string]: any; 
+  };
+  
 
   constructor(props?: Partial<ObsidianTask>) {
     this.id = props?.id || uuidv4();
@@ -99,5 +109,16 @@ export class ObsidianTask implements TaskProperties {
     if (!this.due) return false;
     // return if the due string is not empty
     return !!this.due.string;
+  }
+
+  setTaskItemParams(key: string, value: any): void {
+    this.metadata.taskItemParams = {
+      ...this.metadata.taskItemParams,
+      [key]: value
+    };
+  }
+
+  clearTaskItemParams(): void {
+    this.metadata.taskItemParams = null;
   }
 }

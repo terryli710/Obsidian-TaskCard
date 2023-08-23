@@ -11,8 +11,14 @@
     export let taskSyncManager: ObsidianTaskSyncManager;
     export let plugin: TaskCardPlugin;
     export let defaultParams: TaskItemParams;
+    let params: TaskItemParams;
 
-    let params: TaskItemParams = { ...defaultParams };
+
+    if (taskSyncManager.obsidianTask.metadata.taskItemParams) {
+        params = { ...taskSyncManager.obsidianTask.metadata.taskItemParams };
+    } else {
+        params = { ...defaultParams };
+    }
 
     function handleSwitchMode(event: MouseEvent | KeyboardEvent | CustomEvent) {
         if (event instanceof KeyboardEvent && (event.key !== 'Enter' && event.key !== ' ')) {

@@ -70,7 +70,7 @@ export class ObsidianTaskSyncManager implements ObsidianTaskSyncProps {
     return markdownTask;
   }
 
-  async updateTaskToFile(markdownTask: string): Promise<void> {
+  async updateMarkdownTaskToFile(markdownTask: string): Promise<void> {
     const [docLineStart, docLineEnd] = this.getDocLineStartEnd();
     await this.plugin.fileOperator.updateFile(
       this.taskMetadata.sourcePath,
@@ -83,10 +83,26 @@ export class ObsidianTaskSyncManager implements ObsidianTaskSyncProps {
   updateObsidianTaskAttribute(key: string, value: any): void {
     this.obsidianTask[key] = value;
     logger.debug(`successfully set ${key} to ${value}`);
+    this.updateTaskToFile();
+  }
+
+  updateObsidianTaskItemParams(key: string, value: any): void {
+    this.obsidianTask.setTaskItemParams(key, value);
+    logger.debug(`successfully set TaskItem Param ${key} to ${value}`);
+    this.updateTaskToFile();
+  }
+
+  clearObsidianTaskItemParams(): void {
+    this.obsidianTask.clearTaskItemParams();
+    logger.debug(`successfully cleared TaskItem Params`);
+    this.updateTaskToFile();
+  }
+
+  updateTaskToFile(): void {
     const markdownTask = this.plugin.taskFormatter.taskToMarkdownOneLine(
       this.obsidianTask
     );
-    this.updateTaskToFile(markdownTask);
+    this.updateMarkdownTaskToFile(markdownTask);
   }
 
   isValidStatus(key: keyof TaskCardStatus, status: string): boolean {

@@ -76,12 +76,6 @@ export default class TaskCardPlugin extends Plugin {
         this.taskMonitor.layoutChangeHandler.bind(this.taskMonitor))
     );
 
-    // this.registerEvent(
-    //   this.app.workspace.on('active-leaf-change', 
-    //     this.taskStore.activeLeafChangeHandler.bind(this.taskStore)
-    //     )
-    // )
-
     this.registerEvent(this.app.workspace.on('file-open', () => logger.debug('file-open')));
     this.registerEvent(this.app.workspace.on('layout-change', () => logger.debug('layout-change')));
     this.registerEvent(this.app.workspace.on('window-open', () => logger.debug('window-open')));

@@ -24,13 +24,18 @@
 
     const dispatch = createEventDispatcher();
 
-    function switchMode(event: MouseEvent | KeyboardEvent, newMode: TaskMode | null = null) {
+    function switchMode(event: MouseEvent | KeyboardEvent | CustomEvent, newMode: TaskMode | null = null) {
       event.stopPropagation();
       // logger.debug(`Switching mode to ${newMode}`);
       dispatch('switchMode', { mode: newMode });
       for (let key in taskSyncManager.taskCardStatus) {
         taskSyncManager.taskCardStatus[key] = 'done';
       }
+    }
+
+    function handleSetMode(event: MouseEvent | KeyboardEvent | CustomEvent) {
+      const mode = event.detail.mode ? event.detail.mode : null;
+      taskSyncManager.updateObsidianTaskAttribute('metadata', { taskItemParams: { mode: mode } });
     }
 
     function handleCheckboxClick() {
@@ -196,7 +201,8 @@
       />
     </div>
     <div class="task-card-content-project-line">
-      <Content taskSyncManager={taskSyncManager} />
+      <Content taskSyncManager={taskSyncManager} 
+        on:setMode={handleSetMode} />
       <Project taskSyncManager={taskSyncManager} params={params} />
     </div>
     <Description taskSyncManager={taskSyncManager} />

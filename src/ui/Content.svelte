@@ -1,6 +1,8 @@
 <script lang="ts">
-    import { tick } from 'svelte';
+    import { createEventDispatcher, tick } from 'svelte';
     import { ObsidianTaskSyncManager } from '../taskModule/taskSyncManager';
+    import { TaskMode } from '../renderer/postProcessor';
+    import { logger } from '../utils/log';
     export let taskSyncManager: ObsidianTaskSyncManager;
     let content: string = taskSyncManager.obsidianTask.content;
     let isEditing = false;
@@ -26,6 +28,7 @@
             event.preventDefault();  // Prevent browser's default save behavior
             isEditing = false;
             taskSyncManager.updateObsidianTaskAttribute('content', content);
+            setMode(event, 'multi-line');
         } else if (event.key === 'Escape') {
             // Cancel editing, return to non-editing mode, and reset the description
             isEditing = false;
@@ -39,6 +42,17 @@
         // Select all the content
         node.select();
     }
+
+    const dispatch = createEventDispatcher();
+
+    function setMode(event: MouseEvent | KeyboardEvent, newMode: TaskMode | null = null) {
+        event.stopPropagation();
+        logger.debug(`CONTENT: set mode to ${newMode}`);
+        dispatch('setMode', { mode: newMode });
+    }
+
+
+
 </script>
 
 
