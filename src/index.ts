@@ -11,7 +11,7 @@ import { TaskCardRenderManager } from './renderer/index';
 import { FileOperator } from './renderer/fileOperator';
 import { TaskFormatter } from './taskModule/taskFormatter';
 import { TaskMonitor } from './taskModule/taskMonitor';
-import { TaskStore } from './renderer/store';
+// import { TaskStore } from './renderer/store';
 
 export default class TaskCardPlugin extends Plugin {
   public settings: TaskCardSettings;
@@ -22,7 +22,7 @@ export default class TaskCardPlugin extends Plugin {
   public taskCardRenderManager: TaskCardRenderManager;
   public fileOperator: FileOperator;
   public taskMonitor: TaskMonitor;
-  public taskStore: TaskStore;
+  // public taskStore: TaskStore;
 
   constructor(app: App, pluginManifest: PluginManifest) {
     super(app, pluginManifest);
@@ -37,7 +37,7 @@ export default class TaskCardPlugin extends Plugin {
     this.taskCardRenderManager = new TaskCardRenderManager(this);
     this.fileOperator = new FileOperator(this, this.app);
     this.taskMonitor = new TaskMonitor(this, this.app);
-    this.taskStore = new TaskStore();
+    // this.taskStore = new TaskStore();
   }
 
   async loadSettings() {
@@ -76,11 +76,16 @@ export default class TaskCardPlugin extends Plugin {
         this.taskMonitor.layoutChangeHandler.bind(this.taskMonitor))
     );
 
-    this.registerEvent(
-      this.app.workspace.on('active-leaf-change', 
-        this.taskStore.handleActiveLeafChange.bind(this.taskStore)
-        )
-    )
+    // this.registerEvent(
+    //   this.app.workspace.on('active-leaf-change', 
+    //     this.taskStore.activeLeafChangeHandler.bind(this.taskStore)
+    //     )
+    // )
+
+    this.registerEvent(this.app.workspace.on('file-open', () => logger.debug('file-open')));
+    this.registerEvent(this.app.workspace.on('layout-change', () => logger.debug('layout-change')));
+    this.registerEvent(this.app.workspace.on('window-open', () => logger.debug('window-open')));
+    this.registerEvent(this.app.workspace.on('window-close', () => logger.debug('window-close')));
 
     logger.info('Plugin loaded.');
   }

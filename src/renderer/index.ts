@@ -52,7 +52,6 @@ export class TaskCardRenderManager {
 
       for (const taskSync of taskSyncs) {
         // register taskStore
-        this.plugin.taskStore.setModeBySync(taskSync);
         const processor = new TaskItemSvelteAdapter(taskSync, this.plugin);
         processor.onload();
       }

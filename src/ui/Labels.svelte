@@ -6,8 +6,9 @@
   import { Menu } from 'obsidian';
   import Plus from '../components/icons/Plus.svelte';
   import { LabelModule } from '../taskModule/labels';
+    import { ObsidianTaskSyncManager } from '../taskModule/taskSyncManager';
 
-  export let taskSyncManager;
+  export let taskSyncManager: ObsidianTaskSyncManager;
   let labelModule = new LabelModule();
   let isEditingLabel = false;
   let newLabel = '';

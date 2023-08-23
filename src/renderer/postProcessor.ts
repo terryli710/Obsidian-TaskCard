@@ -3,7 +3,6 @@ import { SvelteComponent } from 'svelte';
 import TaskCardPlugin from '..';
 import { get } from 'svelte/store';
 import { SettingStore } from '../settings';
-import { TaskStore } from './store';
 import TaskItem from '../ui/TaskItem.svelte';
 import {
   ObsidianTaskSyncManager,
@@ -13,7 +12,7 @@ import { logger } from '../utils/log';
 
 export type TaskMode = 'single-line' | 'multi-line';
 export interface TaskItemParams {
-  mode: TaskMode;
+  mode: TaskMode |  null;
 }
 
 export class TaskItemSvelteAdapter extends MarkdownRenderChild {
@@ -31,20 +30,6 @@ export class TaskItemSvelteAdapter extends MarkdownRenderChild {
     this.params = {
       mode: get(SettingStore).displaySettings.defaultMode as TaskMode
     }
-
-    // Subscribe to taskModes in TaskStore to keep params.mode in sync
-    this.plugin.taskStore.subscribe(async (taskModes) => {
-      const mode = await this.plugin.taskStore.getModeBySync(this.taskSync);
-      if (!mode) {
-        this.plugin.taskStore.setModeBySync(this.taskSync);
-        this.params.mode = this.plugin.taskStore.getDefaultMode(); // Assuming you have a getDefaultMode() method in TaskStore
-      } else {
-        this.params.mode = mode;
-      }
-
-      // Notify Svelte component about the change
-      this.svelteComponent.$set({ params: this.params });
-    });
   }
 
   onload() {

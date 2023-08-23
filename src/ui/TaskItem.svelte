@@ -3,7 +3,7 @@
 <script lang="ts">
     import { createEventDispatcher } from "svelte";
     import { logger } from "../utils/log";
-    import { TaskItemParams } from "../renderer/postProcessor";
+    import { TaskItemParams, TaskMode } from "../renderer/postProcessor";
     import TaskCard from "./TaskCard.svelte";
     import TaskCardPlugin from "..";
     import { ObsidianTaskSyncManager } from "../taskModule/taskSyncManager";
@@ -12,15 +12,7 @@
     export let plugin: TaskCardPlugin;
     export let defaultParams: TaskItemParams;
 
-    let params = defaultParams;
-
-    // Reactive statement to watch for changes in params.mode
-    $: {
-    // Update TaskStore if params.mode changes
-    plugin.taskStore.setModeBySync(taskSyncManager, params.mode); // Assuming you have a setModeForSync() method in TaskStore
-    }
-
-    const dispatch = createEventDispatcher();
+    let params: TaskItemParams = { ...defaultParams };
 
     function handleSwitchMode(event: MouseEvent | KeyboardEvent | CustomEvent) {
         if (event instanceof KeyboardEvent && (event.key !== 'Enter' && event.key !== ' ')) {
@@ -28,8 +20,9 @@
         }
         
         // Toggle between the two modes
-        const newMode = params.mode === 'single-line' ? 'multi-line' : 'single-line';
-        dispatch('switchMode', newMode);
+        let newMode: TaskMode | null = null;
+        if (event.detail.mode) { newMode = event.detail.mode;}
+        else { newMode = params.mode === 'single-line' ? 'multi-line' : 'single-line';}
         params = { ...params, mode: newMode };
     }
 
@@ -46,7 +39,7 @@
             taskSyncManager={taskSyncManager} 
             plugin={plugin} 
             params={params} 
-            on:switchMode={handleSwitchMode}/>
+        />
     </button>
 {:else}
     <li class="obsidian-taskcard task-list-item mode-multi-line">

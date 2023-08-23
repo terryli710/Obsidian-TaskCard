@@ -2,7 +2,7 @@
     import Due from './Due.svelte';
     import Project from "./Project.svelte";
     import Labels from "./Labels.svelte";
-    import { TaskItemParams } from "../renderer/postProcessor";
+    import { TaskItemParams, TaskMode } from "../renderer/postProcessor";
     import Description from './Description.svelte';
     import { logger } from '../utils/log';
     import { createEventDispatcher } from 'svelte';
@@ -24,10 +24,10 @@
 
     const dispatch = createEventDispatcher();
 
-    function switchMode(event, newMode) {
+    function switchMode(event: MouseEvent | KeyboardEvent, newMode: TaskMode | null = null) {
       event.stopPropagation();
       // logger.debug(`Switching mode to ${newMode}`);
-      dispatch('switchMode', newMode);
+      dispatch('switchMode', { mode: newMode });
       for (let key in taskSyncManager.taskCardStatus) {
         taskSyncManager.taskCardStatus[key] = 'done';
       }

@@ -1,7 +1,7 @@
 import { Writable, writable } from 'svelte/store';
 import { TaskMode } from './postProcessor';
 import { SettingStore } from '../settings';
-import { Workspace, WorkspaceLeaf } from 'obsidian';
+import { MarkdownView, Workspace, WorkspaceLeaf } from 'obsidian';
 import { logger } from '../utils/log';
 import { ObsidianTaskSyncProps } from '../taskModule/taskSyncManager';
 
@@ -21,16 +21,24 @@ export class TaskStore {
   }
 
   // FilePath-related Methods
-  handleActiveLeafChange(leaf: WorkspaceLeaf): void {
-    // @ts-ignore
-    const newFilePath = leaf.view.file.path;
+  activeLeafChangeHandler(leaf: WorkspaceLeaf): void {
+    const view = leaf.view as MarkdownView;
+    if (!view.file) { return; }
+    const newFilePath = view.file.path;
+    const mode = view.getMode();
+    logger.debug(`leaf-change: view mode: ${mode}, newFilePath: ${newFilePath}`);
+    if (mode !== 'preview') { this.clearTaskModes(); }
     this.setFilePath(newFilePath);
+  }
+
+  private clearTaskModes(): void {
+    this.taskModes.set({});
   }
 
   private setFilePath(newFilePath: string): void {
     if (newFilePath !== this.filePath) {
       this.filePath = newFilePath;
-      this.taskModes.set({});
+      this.clearTaskModes();
     }
   }
 
@@ -118,5 +126,3 @@ export class TaskStore {
     return this.generateKey(docLineStart, docLineEnd);
   }
 }
-
-export default new TaskStore();
