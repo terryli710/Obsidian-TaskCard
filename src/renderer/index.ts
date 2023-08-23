@@ -48,17 +48,17 @@ export class TaskCardRenderManager {
       el: HTMLElement,
       ctx: MarkdownPostProcessorContext
     ) => {
-      // logger.debug(`el.innerHTML: ${el.innerHTML}`)
-      const taskSyncs: ObsidianTaskSyncProps[] = await this.constructTaskSync(
-        el,
-        ctx
-      );
+      const taskSyncs: ObsidianTaskSyncProps[] = await this.constructTaskSync(el, ctx);
 
       for (const taskSync of taskSyncs) {
+        // register taskStore
+        const docLineStart = taskSync.taskMetadata.lineStartInSection + taskSync.taskMetadata.mdSectionInfo.lineStart;
+        const docLineEnd = taskSync.taskMetadata.lineEndsInSection + taskSync.taskMetadata.mdSectionInfo.lineStart;
+        this.plugin.taskStore.setDefaultMode(docLineStart, docLineEnd);
         const processor = new TaskItemSvelteAdapter(taskSync, this.plugin);
         processor.onload();
       }
-      // logger.debug(`PostProcessor - after onload: el: ${el.innerHTML}`)
+
     };
     return postProcessor;
   }
@@ -75,7 +75,6 @@ export class TaskCardRenderManager {
       this.taskItemFilter
     );
     if (taskItemsIndices.length === 0) return [];
-    // logger.debug(`taskItemsIndices: ${taskItemsIndices}`);
 
     const mdSectionInfo = ctx.getSectionInfo(section);
     const sourcePath = ctx.sourcePath;
@@ -88,7 +87,6 @@ export class TaskCardRenderManager {
     const lineNumbers: number[] = taskItemsIndices.map((index) =>
       getLineNumberOfListItem(section, index, mdSectionContent)
     );
-    // logger.debug(`lineNumbers: ${lineNumbers}`);
 
     const taskSyncs: ObsidianTaskSyncProps[] = taskItemsIndices.map(
       (index, i) => {

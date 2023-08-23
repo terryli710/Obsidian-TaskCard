@@ -1,4 +1,4 @@
-import { App, Plugin } from 'obsidian';
+import { App, MarkdownView, Plugin } from 'obsidian';
 import type { PluginManifest, Workspace, WorkspaceLeaf } from 'obsidian';
 import type { TaskCardSettings } from './settings';
 import { SettingStore, SettingsTab } from './settings';
@@ -11,6 +11,7 @@ import { TaskCardRenderManager } from './renderer/index';
 import { FileOperator } from './renderer/fileOperator';
 import { TaskFormatter } from './taskModule/taskFormatter';
 import { TaskMonitor } from './taskModule/taskMonitor';
+import { TaskStore } from './renderer/store';
 
 export default class TaskCardPlugin extends Plugin {
   public settings: TaskCardSettings;
@@ -21,6 +22,7 @@ export default class TaskCardPlugin extends Plugin {
   public taskCardRenderManager: TaskCardRenderManager;
   public fileOperator: FileOperator;
   public taskMonitor: TaskMonitor;
+  public taskStore: TaskStore;
 
   constructor(app: App, pluginManifest: PluginManifest) {
     super(app, pluginManifest);
@@ -35,6 +37,7 @@ export default class TaskCardPlugin extends Plugin {
     this.taskCardRenderManager = new TaskCardRenderManager(this);
     this.fileOperator = new FileOperator(this, this.app);
     this.taskMonitor = new TaskMonitor(this, this.app);
+    this.taskStore = new TaskStore();
   }
 
   async loadSettings() {
@@ -68,13 +71,16 @@ export default class TaskCardPlugin extends Plugin {
     );
     this.registerEditorSuggest(new AttributeSuggest(this.app));
     this.registerEvent(
-      this.app.workspace.on('layout-change', this.taskMonitor.layoutChangeHandler.bind(this.taskMonitor))
+      this.app.workspace.on(
+        'layout-change', 
+        this.taskMonitor.layoutChangeHandler.bind(this.taskMonitor))
     );
 
-    this.registerEvent(this.app.workspace.on('file-open', () => logger.debug('file-open')));
-    this.registerEvent(this.app.workspace.on('layout-change', () => logger.debug('layout-change')));
-    this.registerEvent(this.app.workspace.on('window-open', () => logger.debug('window-open')));
-    this.registerEvent(this.app.workspace.on('window-close', () => logger.debug('window-close')));
+    this.registerEvent(
+      this.app.workspace.on('active-leaf-change', 
+        this.taskStore.handleActiveLeafChange.bind(this.taskStore)
+        )
+    )
 
     logger.info('Plugin loaded.');
   }

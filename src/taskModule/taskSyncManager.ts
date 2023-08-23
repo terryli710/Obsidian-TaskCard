@@ -52,14 +52,16 @@ export class ObsidianTaskSyncManager implements ObsidianTaskSyncProps {
     this.plugin = plugin;
   }
 
+  getDocLineStartEnd(): [number, number] {
+    return [
+      this.taskMetadata.lineStartInSection + this.taskMetadata.mdSectionInfo.lineStart, 
+      this.taskMetadata.lineEndsInSection + this.taskMetadata.mdSectionInfo.lineStart
+    ];
+  }
+
   async getMarkdownTaskFromFile(): Promise<string> {
     // use the taskMetadata to get the file content for the task
-    const docLineStart =
-      this.taskMetadata.lineStartInSection +
-      this.taskMetadata.mdSectionInfo.lineStart;
-    const docLineEnd =
-      this.taskMetadata.lineEndsInSection +
-      this.taskMetadata.mdSectionInfo.lineStart;
+    const [docLineStart, docLineEnd] = this.getDocLineStartEnd();
     const markdownTask = await this.plugin.fileOperator.getMarkdownBetweenLines(
       this.taskMetadata.sourcePath,
       docLineStart,
@@ -69,15 +71,7 @@ export class ObsidianTaskSyncManager implements ObsidianTaskSyncProps {
   }
 
   async updateTaskToFile(markdownTask: string): Promise<void> {
-    const docLineStart =
-      this.taskMetadata.lineStartInSection +
-      this.taskMetadata.mdSectionInfo.lineStart;
-    const docLineEnd =
-      this.taskMetadata.lineEndsInSection +
-      this.taskMetadata.mdSectionInfo.lineStart;
-    // logger.debug(`taskSyncManager - updateTaskToFile: docLineStart: ${docLineStart}, docLineEnd: ${docLineEnd},
-    // linStartInSection: ${this.taskMetadata.lineStartInSection}, lineEndsInSection: ${this.taskMetadata.lineEndsInSection},
-    // section line start: ${this.taskMetadata.mdSectionInfo.lineStart}, section line end: ${this.taskMetadata.mdSectionInfo.lineEnd}`);
+    const [docLineStart, docLineEnd] = this.getDocLineStartEnd();
     await this.plugin.fileOperator.updateFile(
       this.taskMetadata.sourcePath,
       markdownTask,
@@ -117,12 +111,7 @@ export class ObsidianTaskSyncManager implements ObsidianTaskSyncProps {
   }
 
   async deleteTask(): Promise<void> {
-    const docLineStart =
-      this.taskMetadata.lineStartInSection +
-      this.taskMetadata.mdSectionInfo.lineStart;
-    const docLineEnd =
-      this.taskMetadata.lineEndsInSection +
-      this.taskMetadata.mdSectionInfo.lineStart;
+    const [docLineStart, docLineEnd] = this.getDocLineStartEnd();
     await this.plugin.fileOperator.updateFile(
       this.taskMetadata.sourcePath,
       '',

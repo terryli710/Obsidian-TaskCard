@@ -1,21 +1,30 @@
+
 import { Writable, writable } from 'svelte/store';
 import { TaskMode } from './postProcessor';
 import { SettingStore } from '../settings';
+import { Workspace, WorkspaceLeaf } from 'obsidian';
+import { logger } from '../utils/log';
 
-class TaskStore {
-  private taskModes: Writable<{ [key: number]: TaskMode }>;
+export class TaskStore {
+  private taskModes: Writable<{ [key: string]: TaskMode }>;
   public subscribe: Function;
   private filePath: string;
   private defaultMode: TaskMode;
 
   constructor() {
     this.taskModes = writable({});
-    this.subscribe = this.taskModes.subscribe;  // Now it's safe
+    this.subscribe = this.taskModes.subscribe;
     this.filePath = '';
     
     SettingStore.subscribe((settings) => {
         this.defaultMode = settings.displaySettings.defaultMode as TaskMode;
     });
+  }
+
+  handleActiveLeafChange = (leaf: WorkspaceLeaf) => {
+    // @ts-ignore
+    const filePath = leaf.view.file.path;
+    this.setFilePath(filePath);
   }
 
   setFilePath(newFilePath: string) {
@@ -25,46 +34,60 @@ class TaskStore {
     }
   }
 
-  createMode(lineNumber: number, initialMode: TaskMode = 'single-line') {
+  createMode(startLine: number, endLine: number, initialMode: TaskMode = 'single-line') {
+    const key = `${startLine}-${endLine}`;
     this.taskModes.update((modes) => {
-      modes[lineNumber] = initialMode;
+      modes[key] = initialMode;
       return modes;
     });
   }
 
-  async getMode(lineNumber: number) {
+  async getMode(startLine: number, endLine: number): Promise<TaskMode> {
     let mode;
+    const key = `${startLine}-${endLine}`;
     this.taskModes.subscribe((modes) => {
-      mode = modes[lineNumber];
+      mode = modes[key];
     })();
     return mode;
   }
 
-  setMode(lineNumber: number, newMode: TaskMode) {
+  async getAllModes(): Promise<{ [key: string]: TaskMode }> {
+    let modes;
+    this.taskModes.subscribe((modes) => {
+      modes = modes;
+    })
+    return modes;
+  }
+
+  setMode(startLine: number, endLine: number, newMode: TaskMode): void {
+    const key = `${startLine}-${endLine}`;
     this.taskModes.update((modes) => {
-      modes[lineNumber] = newMode;
+      modes[key] = newMode;
       return modes;
     });
   }
 
-  setDefaultMode(lineNumber: number) {
+  setDefaultMode(startLine: number, endLine: number) {
+    const key = `${startLine}-${endLine}`;
     this.taskModes.update((modes) => {
-      modes[lineNumber] = this.defaultMode;
+      modes[key] = this.defaultMode;
       return modes;
     });
   }
 
-  deleteMode(lineNumber: number) {
+  deleteMode(startLine: number, endLine: number) {
+    const key = `${startLine}-${endLine}`;
     this.taskModes.update((modes) => {
-      delete modes[lineNumber];
+      delete modes[key];
       return modes;
     });
   }
 
-  ensureMode(lineNumber: number, initialMode: TaskMode = 'single-line') {
+  ensureMode(startLine: number, endLine: number, initialMode: TaskMode = 'single-line') {
+    const key = `${startLine}-${endLine}`;
     this.taskModes.update((modes) => {
-      if (modes[lineNumber] === undefined) {
-        modes[lineNumber] = initialMode;
+      if (modes[key] === undefined) {
+        modes[key] = initialMode;
       }
       return modes;
     });
