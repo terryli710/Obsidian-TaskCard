@@ -1,96 +1,121 @@
-
 import { Writable, writable } from 'svelte/store';
 import { TaskMode } from './postProcessor';
 import { SettingStore } from '../settings';
 import { Workspace, WorkspaceLeaf } from 'obsidian';
 import { logger } from '../utils/log';
+import { ObsidianTaskSyncProps } from '../taskModule/taskSyncManager';
 
 export class TaskStore {
   private taskModes: Writable<{ [key: string]: TaskMode }>;
-  public subscribe: Function;
-  private filePath: string;
-  private defaultMode: TaskMode;
+  public readonly subscribe: Function;
+  private filePath: string = '';
+  private defaultMode: TaskMode = 'single-line'; // Default value
 
   constructor() {
     this.taskModes = writable({});
     this.subscribe = this.taskModes.subscribe;
-    this.filePath = '';
-    
+
     SettingStore.subscribe((settings) => {
-        this.defaultMode = settings.displaySettings.defaultMode as TaskMode;
+      this.defaultMode = settings.displaySettings.defaultMode as TaskMode;
     });
   }
 
-  handleActiveLeafChange = (leaf: WorkspaceLeaf) => {
+  // FilePath-related Methods
+  handleActiveLeafChange(leaf: WorkspaceLeaf): void {
     // @ts-ignore
-    const filePath = leaf.view.file.path;
-    this.setFilePath(filePath);
+    const newFilePath = leaf.view.file.path;
+    this.setFilePath(newFilePath);
   }
 
-  setFilePath(newFilePath: string) {
+  private setFilePath(newFilePath: string): void {
     if (newFilePath !== this.filePath) {
       this.filePath = newFilePath;
       this.taskModes.set({});
     }
   }
 
-  createMode(startLine: number, endLine: number, initialMode: TaskMode = 'single-line') {
-    const key = `${startLine}-${endLine}`;
-    this.taskModes.update((modes) => {
-      modes[key] = initialMode;
-      return modes;
-    });
+  getDefaultMode(): TaskMode {
+    return this.defaultMode;
   }
 
-  async getMode(startLine: number, endLine: number): Promise<TaskMode> {
-    let mode;
-    const key = `${startLine}-${endLine}`;
+  // Mode-related CRUD Operations (By Line Numbers)
+  setModeByLine(startLine: number, endLine: number, newMode: TaskMode = this.defaultMode): void {
+    this.updateMode(this.generateKey(startLine, endLine), newMode);
+  }
+
+  getModeByLine(startLine: number, endLine: number): TaskMode | null {
+    return this.getModeByKey(this.generateKey(startLine, endLine));
+  }
+
+  updateModeByLine(startLine: number, endLine: number, newMode: TaskMode): void {
+    this.ensureMode(this.generateKey(startLine, endLine), newMode);
+  }
+
+  // Mode-related CRUD Operations (By Key)
+  setModeByKey(key: string, newMode: TaskMode = this.defaultMode): void {
+    this.updateMode(key, newMode);
+  }
+
+  getModeByKey(key: string): TaskMode | null {
+    let mode = null;
     this.taskModes.subscribe((modes) => {
-      mode = modes[key];
+      mode = modes[key] || null;
     })();
     return mode;
   }
 
-  async getAllModes(): Promise<{ [key: string]: TaskMode }> {
+  updateModeByKey(key: string, newMode: TaskMode): void {
+    this.ensureMode(key, newMode);
+  }
+
+  // Mode-related CRUD Operations (By Task Sync)
+  setModeBySync(taskSync: ObsidianTaskSyncProps, newMode: TaskMode = this.defaultMode): void {
+    this.updateMode(this.generateKeyFromSync(taskSync), newMode);
+  }
+
+  getModeBySync(taskSync: ObsidianTaskSyncProps): TaskMode | null {
+    return this.getModeByKey(this.generateKeyFromSync(taskSync));
+  }
+
+  updateModeBySync(taskSync: ObsidianTaskSyncProps, newMode: TaskMode): void {
+    this.ensureMode(this.generateKeyFromSync(taskSync), newMode);
+  }
+
+  // Ensure Mode Exists
+  private ensureMode(key: string, newMode: TaskMode): void {
+    this.taskModes.update((modes) => {
+      if (modes[key]) {
+        modes[key] = newMode;
+      }
+      return modes;
+    });
+  }
+
+  // Get All Modes
+  getAllModes(): { [key: string]: TaskMode } {
     let modes;
-    this.taskModes.subscribe((modes) => {
-      modes = modes;
-    })
+    this.taskModes.subscribe((currentModes) => {
+      modes = { ...currentModes };
+    })();
     return modes;
   }
 
-  setMode(startLine: number, endLine: number, newMode: TaskMode): void {
-    const key = `${startLine}-${endLine}`;
+  // Helper Methods
+  private generateKey(startLine: number, endLine: number): string {
+    return `${startLine}-${endLine}`;
+  }
+
+  private updateMode(key: string, newMode: TaskMode): void {
     this.taskModes.update((modes) => {
       modes[key] = newMode;
       return modes;
     });
   }
 
-  setDefaultMode(startLine: number, endLine: number) {
-    const key = `${startLine}-${endLine}`;
-    this.taskModes.update((modes) => {
-      modes[key] = this.defaultMode;
-      return modes;
-    });
-  }
-
-  deleteMode(startLine: number, endLine: number) {
-    const key = `${startLine}-${endLine}`;
-    this.taskModes.update((modes) => {
-      delete modes[key];
-      return modes;
-    });
-  }
-
-  ensureMode(startLine: number, endLine: number, initialMode: TaskMode = 'single-line') {
-    const key = `${startLine}-${endLine}`;
-    this.taskModes.update((modes) => {
-      if (modes[key] === undefined) {
-        modes[key] = initialMode;
-      }
-      return modes;
-    });
+  private generateKeyFromSync(taskSync: ObsidianTaskSyncProps): string {
+    const docLineStart = taskSync.taskMetadata.lineStartInSection + taskSync.taskMetadata.mdSectionInfo.lineStart;
+    const docLineEnd = taskSync.taskMetadata.lineEndsInSection + taskSync.taskMetadata.mdSectionInfo.lineStart;
+    return this.generateKey(docLineStart, docLineEnd);
   }
 }
 

@@ -1,3 +1,5 @@
+
+
 <script lang="ts">
     import { createEventDispatcher } from "svelte";
     import { logger } from "../utils/log";
@@ -11,7 +13,12 @@
     export let defaultParams: TaskItemParams;
 
     let params = defaultParams;
-    // let taskItemEl: HTMLElement = taskSyncManager.taskItemEl;
+
+    // Reactive statement to watch for changes in params.mode
+    $: {
+    // Update TaskStore if params.mode changes
+    plugin.taskStore.setModeBySync(taskSyncManager, params.mode); // Assuming you have a setModeForSync() method in TaskStore
+    }
 
     const dispatch = createEventDispatcher();
 

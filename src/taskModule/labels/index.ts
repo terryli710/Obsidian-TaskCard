@@ -103,6 +103,7 @@ export class LabelModule {
 
   // Delete a label from the labels list
   public deleteLabel(label: string): void {
+    label = label.replace(/^#+/, ''); // Remove leading "#"
     const index = this.labels.indexOf(label);
     if (index === -1) throw new Error('Label not found');
     this.labels.splice(index, 1);

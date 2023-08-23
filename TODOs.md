@@ -99,6 +99,7 @@
 ## Labels
 
 - TODO: BUG: when adding labels, single line mode will be enabled unexpected.
+- TODO: BUG: cannot delete label;
 
 ### Functionality
 

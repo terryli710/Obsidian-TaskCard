@@ -52,9 +52,7 @@ export class TaskCardRenderManager {
 
       for (const taskSync of taskSyncs) {
         // register taskStore
-        const docLineStart = taskSync.taskMetadata.lineStartInSection + taskSync.taskMetadata.mdSectionInfo.lineStart;
-        const docLineEnd = taskSync.taskMetadata.lineEndsInSection + taskSync.taskMetadata.mdSectionInfo.lineStart;
-        this.plugin.taskStore.setDefaultMode(docLineStart, docLineEnd);
+        this.plugin.taskStore.setModeBySync(taskSync);
         const processor = new TaskItemSvelteAdapter(taskSync, this.plugin);
         processor.onload();
       }
