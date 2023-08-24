@@ -24,6 +24,8 @@
 - Single line and multi line modes.
 - Interactive UI in both modes.
 - Modification reflective to the original doc.
+- TODO: OPTIMIZE: keep the window position when rerendering!!
+- TODO: BUG: line error when there's multiple text and spaces lines!!!
 
 ## Icon
 
@@ -33,7 +35,21 @@
 
 ## Settings
 
+- TODO: OPTIMIZE: NOTICE when
+  - Project added
+  - saved
+  - Tag reset, etc.
+
+- TODO: BUG: when indicator tag has been changed, 
+  - previous cards 
+
+
 ## Priority
+
+## Complete
+
+- TODO: BUG: sometimes task are not correctly finished.
+  - 
 
 ### Edit
 
@@ -119,8 +135,7 @@
 
 ## Project
 
-- TODO: BUG: when creating project, the project ranking doesn't work correctly.
-- TODO: BUG: when edit project, the project ranking doesn't work.
+- TODO: BUG: when creating task, project suggest doesn't work.
 
 ### Functionality
 

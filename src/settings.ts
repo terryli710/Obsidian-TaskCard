@@ -167,8 +167,10 @@ export class SettingsTab extends PluginSettingTab {
               this.settingStatus.newProjectName = '';
               this.settingStatus.newProjectColor = '';
               this.display();
+              logger.info(`Project added: ${newProjectName}`);
+              new Notice(`[TaskCard] Project added: ${newProjectName}.`);
             } else {
-              logger.error(`[TaskCard] Failed to add project: ${newProjectName}`);
+              logger.error(`Failed to add project: ${newProjectName}`);
               new Notice(`[TaskCard] Failed to add project: ${newProjectName}. Project name must be unique.`);
             }
           }
@@ -229,6 +231,8 @@ export class SettingsTab extends PluginSettingTab {
             this.plugin.projectModule.updateProject(project);
             this.updateProjectsToSettings();
             isEditMode = false;
+            logger.info(`Project updated: ${project.name}`);
+            new Notice(`[TaskCard] Project updated: ${project.name}.`);
             this.display();
           }
         });
@@ -242,6 +246,8 @@ export class SettingsTab extends PluginSettingTab {
         .onClick(() => {
           this.plugin.projectModule.deleteProjectById(project.id);
           this.updateProjectsToSettings();
+          logger.info(`Project deleted: ${project.name}`);
+          new Notice(`[TaskCard] Project deleted: ${project.name}.`);
           this.display();
         });
     });
@@ -291,6 +297,8 @@ export class SettingsTab extends PluginSettingTab {
             );
             button.setTooltip('Edit').setIcon('pencil');
             isEditMode = false;
+            logger.info(`Indicator tag updated: ${textField.getValue()}`);
+            new Notice(`[TaskCard] Indicator tag updated: ${textField.getValue()}.`);
           }
         });
     });
@@ -310,6 +318,8 @@ export class SettingsTab extends PluginSettingTab {
           );
           // Update the text field with the default value
           textField.setValue(DefaultSettings.parsingSettings.indicatorTag);
+          logger.info(`Indicator tag reset to default.`);
+          new Notice(`[TaskCard] Indicator tag reset to default.`);
         });
     });
   }
@@ -329,6 +339,8 @@ export class SettingsTab extends PluginSettingTab {
             await this.plugin.writeSettings(
               (old) => (old.displaySettings.defaultMode = value)
             );
+            logger.info(`Default display mode updated: ${value}`);
+            new Notice(`[TaskCard] Default display mode updated: ${value}.`);
           });
       });
   }
