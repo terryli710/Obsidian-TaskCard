@@ -1,12 +1,11 @@
-
 {
-    "author": "Terry Li",
-    "description": "Task formatter with card view.",
-    "id": "obsidian-taskcard",
-    "isDesktopOnly": false,
-    "minAppVersion": "0.0.1",
-    "name": "Task Card",
-    "version": "1.0.0",
-    "authorUrl": "https://github.com/terryli710",
-    "fundingUrl": "https://github.com/sponsors/terryli710"
+  "author": "Terry Li",
+  "description": "Task formatter with card view.",
+  "id": "obsidian-taskcard",
+  "isDesktopOnly": false,
+  "minAppVersion": "0.0.1",
+  "name": "Task Card",
+  "version": "0.1.6",
+  "authorUrl": "https://github.com/terryli710",
+  "fundingUrl": "https://github.com/sponsors/terryli710"
 }

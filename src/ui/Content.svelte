@@ -1,6 +1,8 @@
 <script lang="ts">
-    import { tick } from 'svelte';
+    import { createEventDispatcher, tick } from 'svelte';
     import { ObsidianTaskSyncManager } from '../taskModule/taskSyncManager';
+    import { TaskMode } from '../renderer/postProcessor';
+    import { logger } from '../utils/log';
     export let taskSyncManager: ObsidianTaskSyncManager;
     let content: string = taskSyncManager.obsidianTask.content;
     let isEditing = false;
@@ -39,6 +41,16 @@
         // Select all the content
         node.select();
     }
+
+    const dispatch = createEventDispatcher();
+
+    function setMode(event: MouseEvent | KeyboardEvent, newMode: TaskMode | null = null) {
+        event.stopPropagation();
+        dispatch('setMode', { mode: newMode });
+    }
+
+
+
 </script>
 
 

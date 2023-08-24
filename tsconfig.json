@@ -1,9 +1,9 @@
 {
-    "extends": "@tsconfig/svelte/tsconfig.json",
-    "compilerOptions": {
-        "types": ["svelte", "node", "jest"],
-        "esModuleInterop": true,
-        "verbatimModuleSyntax": false,
-    },
-    "module": "CommonJS"
+  "extends": "@tsconfig/svelte/tsconfig.json",
+  "compilerOptions": {
+    "types": ["svelte", "node", "jest"],
+    "esModuleInterop": true,
+    "verbatimModuleSyntax": false
+  },
+  "module": "CommonJS"
 }
