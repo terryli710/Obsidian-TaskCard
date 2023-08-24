@@ -38,7 +38,6 @@
 
 - TODO: BUG: when indicator tag changes, 
   - previous cards?
-- TODO: BUG: when reset, display button as not warning
 
 
 ## Priority
@@ -128,8 +127,6 @@
 - dropdown menu to delete.
 
 ## Project
-
-- TODO: OPTIMIZE: optimize addProjects -> avoid ranking repetitively.
 
 ### Functionality
 
