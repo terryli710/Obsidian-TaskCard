@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import { HSLToRGB, RGBToHEX, stringToHSL } from '../../utils/colorConverter';
+import { logger } from '../../utils/log';
 
 export type Project = {
   id: string;
@@ -125,7 +126,7 @@ export class ProjectModule {
       const newProject: Project = {
         id: project.id || uuidv4(),
         name: project.name!,
-        color: project.color || this.assignColor(project.name!)
+        color: project.color || this.assignColor(project.name)
       };
       this.ensureProjectData(newProject);
       this.projects.set(newProject.id, newProject);

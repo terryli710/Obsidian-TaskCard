@@ -79,7 +79,7 @@ export function stringToHSL(str: string, saturation = 50, lightness = 50): HSL {
     hash = str.charCodeAt(i) + ((hash << 5) - hash);
   }
 
-  const hue = hash % 360; // Hue value must be between 0 and 359
+  const hue = ((hash % 360) + 360) % 360; // Force hue to be a non-negative integer between 0 and 359
 
   return { h: hue, s: saturation, l: lightness };
 }

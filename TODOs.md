@@ -33,7 +33,6 @@
 
 ## Settings
 
-- TODO: BUG: when click on save, cannot switch to edit once more.
 - TODO: BUG: when generating project, except the first one, the color picker doesn't work.
 
 ## Priority
