@@ -1,14 +1,16 @@
-import { PluginSettingTab, App, Setting } from 'obsidian';
+import { PluginSettingTab, App, Setting, Notice } from 'obsidian';
 import { writable } from 'svelte/store';
 import type { Writable } from 'svelte/store';
 import TaskCardPlugin from './index';
 import { Project } from './taskModule/project';
+import { logger } from './utils/log';
 
 export interface TaskCardSettings {
   parsingSettings: {
     markdownStartingNotation: string;
     markdownEndingNotation: string;
     indicatorTag: string;
+    markdownSuffix: string;
   };
   displaySettings: {
     defaultMode: string;
@@ -24,25 +26,36 @@ export const DefaultSettings: TaskCardSettings = {
     markdownStartingNotation: '%%*',
     markdownEndingNotation: '*%%',
     indicatorTag: 'TaskCard',
+    markdownSuffix: ' .'
   },
   displaySettings: {
-    defaultMode: 'single-line',
+    defaultMode: 'single-line'
   },
   userMetadata: {
-    projects: {},
+    projects: {}
   },
-  syncSettings: {},
+  syncSettings: {}
 };
 
-export const SettingStore: Writable<TaskCardSettings> = writable<TaskCardSettings>(DefaultSettings);
-
+export const SettingStore: Writable<TaskCardSettings> =
+  writable<TaskCardSettings>(DefaultSettings);
 
 export class SettingsTab extends PluginSettingTab {
   private plugin: TaskCardPlugin;
-  
+  private settingStatus: {
+    showColorPicker: boolean;
+    newProjectName: string;
+    newProjectColor: string;
+  };
+
   constructor(app: App, plugin: TaskCardPlugin) {
     super(app, plugin);
     this.plugin = plugin;
+    this.settingStatus = {
+      showColorPicker: false,
+      newProjectName: '',
+      newProjectColor: ''
+    };
   }
 
   display(): void {
@@ -63,170 +76,243 @@ export class SettingsTab extends PluginSettingTab {
     this.containerEl.createEl('h3', { text: 'Project Adding' });
 
     this.newProjectSetting();
+
     const projects: Project[] = this.plugin.projectModule.getProjectsData();
+
     this.containerEl.createEl('h3', { text: 'Project Editing' });
     if (projects.length > 0) {
       const firstProject = projects[0];
       const restProjects = projects.slice(1);
       this.projectEditSetting(firstProject);
       for (const project of restProjects) {
-        const projectContainer = this.containerEl.createEl('div', { cls: 'project-container' });
+        const projectContainer = this.containerEl.createEl('div', {
+          cls: 'project-container'
+        });
         this.projectEditSetting(project, projectContainer);
       }
+    } else {
+      this.editProjectPlaceHolder();
     }
-
   }
 
   // Update projects from projectModule to settings
   updateProjectsToSettings() {
-      const projects = this.plugin.projectModule.getProjectsData();
-      this.plugin.writeSettings((old) => old.userMetadata.projects = projects);
+    const projects = this.plugin.projectModule.getProjectsData();
+    this.plugin.writeSettings((old) => (old.userMetadata.projects = projects));
+  }
+
+  editProjectPlaceHolder() {
+    // used when there's no project saved
+    const setting = new Setting(this.containerEl).setName('Project Name');
+    setting.setDesc(`Projects can be edited here.`);
+    setting.addButton((button) => {
+      button.setTooltip('Edit').setIcon('pencil').setDisabled(true);
+    });
+    setting.addButton((button) => {
+      button.setTooltip('Delete Project').setIcon('trash-2').setDisabled(true);
+    });
   }
 
   newProjectSetting() {
-
-    let newProjectName = '';
-    let newProjectColor = '';
-
-    const renderSetting = (showColorPicker: boolean = false) => {
-
-        const setting = new Setting(this.containerEl).setName('Add A Project');
-
-        setting.setDesc('Project names must be unique. Color picking is optional.');
-
-        setting.addText(text => {
-            text.setPlaceholder('Enter project name')
-                .setValue(newProjectName) // Set the stored value
-                .onChange(value => {
-                    newProjectName = value;
-                });
+    // If these variables are losing their values on a redraw, consider moving them 
+    // to the class scope to retain their values across function calls.
+    let newProjectName = this.settingStatus.newProjectName || ''; // Retrieve stored name if available
+    let newProjectColor = this.settingStatus.newProjectColor || '';
+  
+    const setting = new Setting(this.containerEl).setName('Add A Project');
+    setting.setDesc('Project names must be unique. Color picking is optional.');
+  
+    setting.addText((text) => {
+      text
+        .setPlaceholder('Enter project name')
+        .setValue(newProjectName) // Set the stored value
+        .onChange((value) => {
+          newProjectName = value;
+          this.settingStatus.newProjectName = value; // Store the value for later use
         });
-
-        if (showColorPicker) {
-            setting.addColorPicker(colorPicker => {
-                colorPicker.onChange(value => {
-                    newProjectColor = value;
-                });
-            });
-        } else {
-            setting.addButton(button => {
-                button.setTooltip("Pick a color")
-                    .setIcon("palette")
-                    .onClick(() => {
-                        renderSetting(true); // Re-render with color picker
-                    });
-            });
-        }
-
-        setting.addButton(button => {
-            button.setTooltip("Finish")
-                .setIcon("check-square")
-                .onClick(() => {
-                    if (newProjectName) {
-                        const newProject: Partial<Project> = {
-                            name: newProjectName,
-                            color: newProjectColor
-                        };
-                        this.plugin.projectModule.addProject(newProject);
-                        this.updateProjectsToSettings();
-                        this.display();
-                    }
-                });
+    });
+  
+    if (this.settingStatus.showColorPicker) {
+      setting.addColorPicker((colorPicker) => {
+        colorPicker.onChange((value) => {
+          newProjectColor = value;
+          this.settingStatus.newProjectColor = value; // Store the color value if needed
         });
-    };
-
-    renderSetting();
-}
-
-
-  projectEditSetting(project: Project, projectContainerEl?: HTMLElement) {
-    if (!projectContainerEl) {
-        projectContainerEl = this.containerEl;
+      });
+    } else {
+      setting.addButton((button) => {
+        button
+          .setTooltip('Pick a color')
+          .setIcon('palette')
+          .onClick(() => {
+            this.settingStatus.showColorPicker = true;
+            this.display();
+          });
+      });
     }
+  
+    setting.addButton((button) => {
+      button
+        .setTooltip('Finish')
+        .setIcon('check-square')
+        .onClick(() => {
+          if (newProjectName) {
+            const newProject = {
+              name: newProjectName,
+              color: newProjectColor
+            };
+            const succeeded = this.plugin.projectModule.addProject(newProject);
+            if (succeeded) {
+              this.updateProjectsToSettings();
+              this.settingStatus.newProjectName = '';
+              this.settingStatus.newProjectColor = '';
+              this.display();
+            } else {
+              logger.error(`[TaskCard] Failed to add project: ${newProjectName}`);
+              new Notice(`[TaskCard] Failed to add project: ${newProjectName}. Project name must be unique.`);
+            }
+          }
+          this.settingStatus.showColorPicker = false;
+          this.display();
+        });
+    });
+  }
+
+  projectEditSetting(project, projectContainerEl?: HTMLElement) {
+    if (!projectContainerEl) {
+      projectContainerEl = this.containerEl;
+    }
+
+    let isEditMode = false;
+
     // Heading for the Project Name
     const setting = new Setting(projectContainerEl);
     setting.setName(project.name);
 
-    const textComponent = setting.addText(text => {
-        text.setValue(project.name)
-            .onChange(value => {
-                project.name = value;
-            })
-            .setDisabled(true); // Start in saved mode
+    // Text Component
+    const textComponent = setting.addText((text) => {
+      text
+        .setValue(project.name)
+        .onChange((value) => {
+          project.name = value;
+        })
+        .setDisabled(!isEditMode); // Start in saved mode if isEditMode is false
     });
 
-    const colorComponent = setting.addColorPicker(colorPicker => {
-        colorPicker.setValue(project.color)
-            .onChange(value => {
-                project.color = value;
-            })
-            .setDisabled(true); // Start in saved mode
+    // Color Component
+    const colorComponent = setting.addColorPicker((colorPicker) => {
+      colorPicker
+        .setValue(project.color)
+        .onChange((value) => {
+          project.color = value;
+        })
+        .setDisabled(!isEditMode); // Start in saved mode if isEditMode is false
     });
 
-    let isEditMode = false; // Flag to keep track of the current mode
-
-    setting.addButton(button => {
-        button.setTooltip("Edit")
-        .setIcon("pencil")
-            .onClick(() => {
-                if (!isEditMode) {
-                    // Switch to edit mode
-                    textComponent.setDisabled(false);
-                    colorComponent.setDisabled(false);
-                    button.setTooltip("Save").setIcon("save");
-                    isEditMode = true;
-                } else {
-                    // Switch to saved mode
-                    textComponent.setDisabled(true);
-                    colorComponent.setDisabled(true);
-                    button.setTooltip("Edit").setIcon("pencil");
-                    this.plugin.projectModule.updateProject(project);
-                    this.updateProjectsToSettings();
-                    this.display();
-                    isEditMode = false;
-                }
-            });
+    // Edit/Save Button
+    setting.addButton((button) => {
+      button
+        .setTooltip(isEditMode ? 'Save' : 'Edit')
+        .setIcon(isEditMode ? 'save' : 'pencil')
+        .onClick(() => {
+          if (!isEditMode) {
+            // Switch to edit mode
+            textComponent.setDisabled(false);
+            colorComponent.setDisabled(false);
+            button.setTooltip('Save').setIcon('save');
+            isEditMode = true;
+          } else {
+            // Switch to saved mode
+            textComponent.setDisabled(true);
+            colorComponent.setDisabled(true);
+            button.setTooltip('Edit').setIcon('pencil');
+            this.plugin.projectModule.updateProject(project);
+            this.updateProjectsToSettings();
+            isEditMode = false;
+            this.display();
+          }
+        });
     });
 
-    // add a delete button, using the delete emoji
-    setting.addButton(button => {
-      button.setIcon("trash-2")
-      .setTooltip("Delete project")
+    // Delete Button
+    setting.addButton((button) => {
+      button
+        .setIcon('trash-2')
+        .setTooltip('Delete Project')
         .onClick(() => {
           this.plugin.projectModule.deleteProjectById(project.id);
           this.updateProjectsToSettings();
           this.display();
         });
-    })
-}
+    });
+  }
 
 
   cardParsingSettings() {
     let textField: any;
+    let isEditMode = false;
 
-    new Setting(this.containerEl)
-        .setName('Indicator Tag')
-        .setDesc('The tag used to identify task cards.')
-        .addText(text => {
-            textField = text;
-            return text
-                .setPlaceholder('YourTagHere')
-                .setValue(this.plugin.settings.parsingSettings.indicatorTag)
-                .onChange(async (value: string) => {
-                    // remove all the leading # from the value
-                    const indicatorTag = value.replace(/^#/, '');
-                    this.plugin.writeSettings((old) => (old.parsingSettings.indicatorTag = indicatorTag));
-                });
-        })
-        .addButton(button => {
-            button.setButtonText("Reset")
-                .setWarning()
-                .onClick(async () => {
-                    this.plugin.writeSettings((old) => (old.parsingSettings.indicatorTag = DefaultSettings.parsingSettings.indicatorTag));
-                });
+    const setting = new Setting(this.containerEl);
+
+    setting
+      .setName('Indicator Tag')
+      .setDesc('The tag used to identify task cards.')
+      .addText((text) => {
+        textField = text;
+        return text
+          .setPlaceholder('YourTagHere')
+          .setValue(this.plugin.settings.parsingSettings.indicatorTag)
+          .setDisabled(true) // Disable the text field initially
+          .onChange(async (value: string) => {
+            // remove all the leading # from the value
+            const indicatorTag = value.replace(/^#/, '');
+            this.plugin.writeSettings(
+              (old) => (old.parsingSettings.indicatorTag = indicatorTag)
+            );
+          });
+      });
+
+    // Add an edit/save button
+    setting.addButton((button) => {
+      button
+        .setTooltip('Edit')
+        .setIcon('pencil')
+        .onClick(() => {
+          if (!isEditMode) {
+            // Switch to edit mode
+            textField.setDisabled(false); // Enable the text field
+            button.setTooltip('Save').setIcon('save');
+            isEditMode = true;
+          } else {
+            // Switch to saved mode
+            textField.setDisabled(true); // Disable the text field
+            this.plugin.writeSettings(
+              (old) => (old.parsingSettings.indicatorTag = textField.getValue())
+            );
+            button.setTooltip('Edit').setIcon('pencil');
+            isEditMode = false;
+          }
         });
-}
+    });
 
+    // Add a reset button
+    setting.addButton((button) => {
+      button
+        .setIcon('rotate-ccw')
+        .setWarning()
+        .setTooltip('Reset')
+        .onClick(async () => {
+          // Reset the value to the default
+          this.plugin.writeSettings(
+            (old) =>
+              (old.parsingSettings.indicatorTag =
+                DefaultSettings.parsingSettings.indicatorTag)
+          );
+          // Update the text field with the default value
+          textField.setValue(DefaultSettings.parsingSettings.indicatorTag);
+        });
+    });
+  }
 
   cardDisplaySettings() {
     new Setting(this.containerEl)
@@ -235,16 +321,15 @@ export class SettingsTab extends PluginSettingTab {
       .addDropdown((dropdown) => {
         dropdown
           .addOptions({
-              'single-line': 'Single Line',
-              'multi-line': 'Multi Line'
+            'single-line': 'Single Line',
+            'multi-line': 'Multi Line'
           })
           .setValue(this.plugin.settings.displaySettings.defaultMode)
           .onChange(async (value: string) => {
-              await this.plugin.writeSettings((old) => (old.displaySettings.defaultMode = value));
+            await this.plugin.writeSettings(
+              (old) => (old.displaySettings.defaultMode = value)
+            );
           });
       });
   }
-
-
-
 }

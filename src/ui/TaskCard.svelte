@@ -2,7 +2,7 @@
     import Due from './Due.svelte';
     import Project from "./Project.svelte";
     import Labels from "./Labels.svelte";
-    import { TaskItemParams } from "../renderer/postProcessor";
+    import { TaskItemParams, TaskMode } from "../renderer/postProcessor";
     import Description from './Description.svelte';
     import { logger } from '../utils/log';
     import { createEventDispatcher } from 'svelte';
@@ -13,7 +13,8 @@
     // import { ChevronsDownUp } from 'lucide-svelte'; // BUG: somehow doesn't work
     import ChevronsDownUp from '../components/icons/ChevronsDownUp.svelte';
     import MoreVertical from '../components/icons/MoreVertical.svelte';
-    import { Menu } from 'obsidian';
+    import { Menu, Notice } from 'obsidian';
+    import { SettingStore } from '../settings';
 
     export let taskSyncManager: ObsidianTaskSyncManager;
     export let plugin: TaskCardPlugin;
@@ -23,10 +24,10 @@
 
     const dispatch = createEventDispatcher();
 
-    function switchMode(event, newMode) {
+    function switchMode(event: MouseEvent | KeyboardEvent | CustomEvent, newMode: TaskMode | null = null) {
       event.stopPropagation();
       // logger.debug(`Switching mode to ${newMode}`);
-      dispatch('switchMode', newMode);
+      dispatch('switchMode', { mode: newMode });
       for (let key in taskSyncManager.taskCardStatus) {
         taskSyncManager.taskCardStatus[key] = 'done';
       }
@@ -72,6 +73,11 @@
       priorityMenu.showAtPosition({ x: event.clientX, y: event.clientY });
 
     }
+
+    let projects: Project[];
+    SettingStore.subscribe((settings) => {
+        projects = settings.userMetadata.projects;
+    })
 
     function showCardMenu(event) {
       event.preventDefault();
@@ -132,10 +138,14 @@
           })
       } else {
           cardMenu.addItem((item) => {
-              item.setTitle('Add Project');
+              item.setTitle('Assign Project');
               item.setIcon('plus');
               item.onClick((evt: MouseEvent | KeyboardEvent) => {
                   taskSyncManager.taskCardStatus.projectStatus = 'selecting';
+                  if (projects.length === 0) {
+                      logger.warn('No projects available');
+                      new Notice(`[TaskCard] No projects available. Add one in Settings Tab.`);
+                  }
               })
           })
       }
