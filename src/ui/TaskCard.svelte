@@ -35,7 +35,7 @@
 
     function handleCheckboxClick() {
       task.completed = !task.completed;
-      // more logic to reflect the change on the taskEl
+      taskSyncManager.updateObsidianTaskAttribute('completed', task.completed);
     }
 
     function showPriorityMenu(event) {

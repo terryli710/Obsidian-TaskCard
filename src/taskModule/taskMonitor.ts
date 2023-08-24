@@ -12,6 +12,7 @@ export class TaskMonitor {
 
   async monitorFileToFormatTasks(file: TFile) {
     const lines = await this.getLinesFromFile(file);
+    if (!lines) return;
     const updatedLines = this.updateTasksInLines(lines);
     await this.updateFileWithNewLines(file, updatedLines);
   }
@@ -28,7 +29,7 @@ export class TaskMonitor {
     }, 2);
   }
 
-  async getLinesFromFile(file: TFile) {
+  async getLinesFromFile(file: TFile): Promise<string[] | null> {
     return await this.plugin.fileOperator.getFileLines(file.path);
   }
 

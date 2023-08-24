@@ -179,7 +179,7 @@ export class AttributeSuggester {
     let suggestions: SuggestInformation[] = [];
 
     // Modify regex to capture the project name query
-    const projectRegexText = `${escapeRegExp(this.startingNotation)}\\s?project:\\s*${escapeRegExp(this.endingNotation)}`;
+    const projectRegexText = `${escapeRegExp(this.startingNotation)}\\s?project:(\\s*)${escapeRegExp(this.endingNotation)}`;
     const projectRegex = new RegExp( projectRegexText, 'g');
     const projectMatch = matchByPositionAndGroup(
       lineText,

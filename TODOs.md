@@ -24,6 +24,9 @@
 - Single line and multi line modes.
 - Interactive UI in both modes.
 - Modification reflective to the original doc.
+- TODO: OPTIMIZE: keep the window position when rerendering!!
+- TODO: BUG: line error when there's multiple text and spaces lines!!!
+- TODO: OPTIMIZE: text between two tasks will be leave out. -> they should be shown in description.
 
 ## Icon
 
@@ -33,7 +36,14 @@
 
 ## Settings
 
+- TODO: BUG: when indicator tag changes, 
+  - previous cards?
+- TODO: BUG: when reset, display button as not warning
+
+
 ## Priority
+
+## Complete
 
 ### Edit
 
@@ -56,6 +66,7 @@
 
 - change line vs. save hot key?
 - Add place holder to instruct people.
+- TODO: OPTIMIZE: instructions on how to save?
 
 ### Addition
 
@@ -115,12 +126,10 @@
 ### Delete
 
 - dropdown menu to delete.
-- TODO: (optional) use dots besides the label to delete.
 
 ## Project
 
-- TODO: BUG: when creating project, the project ranking doesn't work correctly.
-- TODO: BUG: when edit project, the project ranking doesn't work.
+- TODO: OPTIMIZE: optimize addProjects -> avoid ranking repetitively.
 
 ### Functionality
 
@@ -137,11 +146,8 @@
 
 ### Delete
 
-- TODO: dropdown menu to delete.
--
 
 # Parsing and Formatting
-
 
 # Task adding and editing and deletion
 
@@ -179,7 +185,7 @@
 - Edit the attributes using auto-suggests
 
 ```markdown
-- [ ] An example task #label1 #label2 #TaskCard %%_priority:4_%% %%_description:"- A multi line description.\n- the second line."_%% %%_order:1_%% %%_project:{"id":"project-123", "name":"Project Name"}_%% %%_section-id:"section-456"_%% %%_parent:null_%% %%_children:[]_%% %%_due:"Aug 15, 2024"_%% %%_metadata:{"filePath":"/path/to/file"}_%%
+- [ ] An example task #label1 #label2 #TaskCard %%*priority: 4*%% %%*description: - A multi line description.\n- the second line.*%% %%*project: Project Name*%% %%*due:Aug 15, 2024*%%
 ```
 
 ## Formatted Markdown
