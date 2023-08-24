@@ -31,6 +31,7 @@ export class ProjectModule {
     logger.debug(`projects are sorted: ${JSON.stringify([...this.projects.values()])}`);
 }
 
+
   // Update or create multiple projects at once
   updateProjects(projectData: Project[]): void {
     // if empty, do nothing
@@ -38,13 +39,15 @@ export class ProjectModule {
       return;
     }
     for (const project of projectData) {
-      this.updateProject(project);
+      this.updateProject(project, false);  // Notice the new argument
     }
-    this.sortProjectsByName();
+    this.sortProjectsByName();  // Sort once after updating all
   }
 
+
   // Accept update of the data using partial of the data structure
-  updateProject(data: Partial<Project>): void {
+  // Added a new parameter to control sorting
+  updateProject(data: Partial<Project>, sort: boolean = true): void {
     if (!data.name && !data.id) {
       return; // Empty info, don't create
     }
@@ -64,7 +67,6 @@ export class ProjectModule {
       const updatedProject = { ...project, ...data };
       this.ensureProjectData(updatedProject);
       this.projects.set(updatedProject.id, updatedProject);
-      this.sortProjectsByName();
     } else {
       // New project, create
       const newProject: Project = {
@@ -75,9 +77,13 @@ export class ProjectModule {
       this.ensureProjectData(newProject);
       this.projects.set(newProject.id, newProject);
       this.nameToIdMap.set(newProject.name, newProject.id);
-      this.sortProjectsByName();
+    }
+
+    if (sort) {
+      this.sortProjectsByName();  // Sort only if the sort flag is true
     }
   }
+
 
   // Ensure each project has all the necessary information
   private ensureProjectData(project: Project): void {
@@ -96,9 +102,7 @@ export class ProjectModule {
 
   // Look up of the data by Name
   getProjectByName(name: string): Project | undefined {
-    logger.debug(`getProjectByName: ${name}`);
     const id = this.nameToIdMap.get(name);
-    logger.debug(`getProjectByName: ${id}`);
     if (id) {
       return this.projects.get(id);
     }

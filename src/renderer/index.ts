@@ -85,7 +85,7 @@ export class TaskCardRenderManager {
       getLineNumberOfListItem(section, index, mdSectionContent)
     );
 
-    logger.debug(`lineNumbers: ${JSON.stringify(lineNumbers)}, section line start: ${mdSectionInfo.lineStart}`);
+    // logger.debug(`lineNumbers: ${JSON.stringify(lineNumbers)}, section line start: ${mdSectionInfo.lineStart}`);
 
     const taskSyncs: ObsidianTaskSyncProps[] = taskItemsIndices.map(
       (index, i) => {

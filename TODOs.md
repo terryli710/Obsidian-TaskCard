@@ -128,7 +128,6 @@
 
 ## Project
 
-- TODO: BUG: when creating task, project suggest doesn't work.
 - TODO: OPTIMIZE: optimize addProjects -> avoid ranking repetitively.
 
 ### Functionality
@@ -148,9 +147,6 @@
 
 
 # Parsing and Formatting
-- TODO: BUG: failed to parse
-  - Projects
-  - Dues.
 
 # Task adding and editing and deletion
 
