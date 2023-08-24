@@ -96,7 +96,9 @@ export class ProjectModule {
 
   // Look up of the data by Name
   getProjectByName(name: string): Project | undefined {
+    logger.debug(`getProjectByName: ${name}`);
     const id = this.nameToIdMap.get(name);
+    logger.debug(`getProjectByName: ${id}`);
     if (id) {
       return this.projects.get(id);
     }

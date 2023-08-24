@@ -26,6 +26,7 @@
 - Modification reflective to the original doc.
 - TODO: OPTIMIZE: keep the window position when rerendering!!
 - TODO: BUG: line error when there's multiple text and spaces lines!!!
+- TODO: OPTIMIZE: text between two tasks will be leave out. -> they should be shown in description.
 
 ## Icon
 
@@ -35,21 +36,13 @@
 
 ## Settings
 
-- TODO: OPTIMIZE: NOTICE when
-  - Project added
-  - saved
-  - Tag reset, etc.
-
 - TODO: BUG: when indicator tag has been changed, 
-  - previous cards 
+  - previous cards?
 
 
 ## Priority
 
 ## Complete
-
-- TODO: BUG: sometimes task are not correctly finished.
-  - 
 
 ### Edit
 
@@ -72,6 +65,7 @@
 
 - change line vs. save hot key?
 - Add place holder to instruct people.
+- TODO: OPTIMIZE: instructions on how to save?
 
 ### Addition
 
@@ -131,7 +125,6 @@
 ### Delete
 
 - dropdown menu to delete.
-- TODO: (optional) use dots besides the label to delete.
 
 ## Project
 
@@ -152,11 +145,11 @@
 
 ### Delete
 
-- TODO: dropdown menu to delete.
--
 
 # Parsing and Formatting
-
+- TODO: BUG: failed to parse
+  - Projects
+  - Dues.
 
 # Task adding and editing and deletion
 
@@ -194,7 +187,7 @@
 - Edit the attributes using auto-suggests
 
 ```markdown
-- [ ] An example task #label1 #label2 #TaskCard %%_priority:4_%% %%_description:"- A multi line description.\n- the second line."_%% %%_order:1_%% %%_project:{"id":"project-123", "name":"Project Name"}_%% %%_section-id:"section-456"_%% %%_parent:null_%% %%_children:[]_%% %%_due:"Aug 15, 2024"_%% %%_metadata:{"filePath":"/path/to/file"}_%%
+- [ ] An example task #label1 #label2 #TaskCard %%*priority: 4*%% %%*description: - A multi line description.\n- the second line.*%% %%*project: Project Name*%% %%*due:Aug 15, 2024*%%
 ```
 
 ## Formatted Markdown
