@@ -41,13 +41,12 @@ export class TaskFormatter {
       let kebabCaseKey = camelToKebab(key);
       markdownLine += `<span class="${kebabCaseKey}" style="display:none;">${value}</span>\n`;
     }
-
     return markdownLine;
   }
 
   taskToMarkdownOneLine(task: ObsidianTask): string {
     // add suffix ' .' to task content
-    const markdown = this.taskToMarkdown(task).replace(/\n/g, ' ');
+    const markdown = this.taskToMarkdown(task).replace(/\n/g, '');
     return markdown + this.markdownSuffix;
   }
 }

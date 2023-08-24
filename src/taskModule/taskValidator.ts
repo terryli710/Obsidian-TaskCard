@@ -10,7 +10,7 @@ export class TaskValidator {
   private static formattedMarkdownPattern: RegExp =
     /^\s*- \[[^\]]\](.*?)(<span class="[^"]+" style="display:none;">.*?<\/span>)+{this.markdownSuffix}?$/;
   private spanElementPattern: RegExp =
-    /<span class="[^"]+" style="display:none;">(.*?)<\/span>/g;
+    /<span class="[^"]+" style="display:none;">(.*?)<\/span>/;
   private markdownTaskPattern: RegExp = /^\s*- \[[^\]]\]\s/;
   private indicatorTag: string;
   private startingNotation: string;
@@ -51,8 +51,13 @@ export class TaskValidator {
     return new RegExp(markdownPatternText, 'gm');
   }
 
+
   private hasSpanElement(markdown: string): boolean {
-    return this.spanElementPattern.test(markdown);
+    if (typeof markdown !== 'string') return false;
+  
+    const hasSpan = this.spanElementPattern.test(markdown);
+  
+    return hasSpan;
   }
 
   isValidFormattedTaskMarkdown(taskMarkdown: string): boolean {
@@ -72,9 +77,7 @@ export class TaskValidator {
   isValidUnformattedTaskMarkdown(taskMarkdown: string): boolean {
     const match = this.getUnformattedMarkdownPattern().exec(taskMarkdown);
     if (match && match[1]) {
-      if (!match[2] && this.hasSpanElement(taskMarkdown)) {
-        return false;
-      }
+      if (this.hasSpanElement(taskMarkdown)) { return false; }
       const contentWithoutAttributes = match[1]
         .replace(this.getAttributePattern(), '')
         .trim();
