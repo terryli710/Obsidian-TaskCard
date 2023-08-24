@@ -36,7 +36,7 @@
 
 ## Settings
 
-- TODO: BUG: when indicator tag has been changed, 
+- TODO: BUG: when indicator tag changes, 
   - previous cards?
 
 
@@ -129,6 +129,7 @@
 ## Project
 
 - TODO: BUG: when creating task, project suggest doesn't work.
+- TODO: OPTIMIZE: optimize addProjects -> avoid ranking repetitively.
 
 ### Functionality
 

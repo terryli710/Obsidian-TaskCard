@@ -1,4 +1,4 @@
-import { PluginSettingTab, App, Setting, Notice } from 'obsidian';
+import { PluginSettingTab, App, Setting, Notice, ButtonComponent, TextComponent, ColorComponent } from 'obsidian';
 import { writable } from 'svelte/store';
 import type { Writable } from 'svelte/store';
 import TaskCardPlugin from './index';
@@ -184,82 +184,140 @@ export class SettingsTab extends PluginSettingTab {
     if (!projectContainerEl) {
       projectContainerEl = this.containerEl;
     }
-
+  
     let isEditMode = false;
-
+    let isDeleteWarning = false;
+    let textComponent: TextComponent;
+    let colorComponent: ColorComponent;
+    let editCancelButton: ButtonComponent;
+    let saveDeleteButton: ButtonComponent;
+  
+    const updateUI = () => {
+      if (textComponent && colorComponent && editCancelButton && saveDeleteButton) {
+        textComponent.setDisabled(!isEditMode);
+        colorComponent.setDisabled(!isEditMode);
+  
+        if (isEditMode) {
+          editCancelButton.setTooltip('Cancel').setIcon('copy-slash');
+          saveDeleteButton.setTooltip('Save').setIcon('save').setCta();
+        } else if (isDeleteWarning) {
+          editCancelButton.setTooltip('Confirm Delete').setIcon('trash-2').setWarning();
+          saveDeleteButton.setTooltip('Cancel').setIcon('copy-slash');
+        } else {
+          editCancelButton.setTooltip('Edit').setIcon('pencil');
+          saveDeleteButton.setTooltip('Delete').setIcon('trash-2');
+        }
+      }
+    };
+  
     // Heading for the Project Name
     const setting = new Setting(projectContainerEl);
     setting.setName(project.name);
-
+  
     // Text Component
-    const textComponent = setting.addText((text) => {
+    setting.addText((text) => {
       text
         .setValue(project.name)
         .onChange((value) => {
           project.name = value;
-        })
-        .setDisabled(!isEditMode); // Start in saved mode if isEditMode is false
+        });
+      textComponent = text;
     });
-
+  
     // Color Component
-    const colorComponent = setting.addColorPicker((colorPicker) => {
+    setting.addColorPicker((colorPicker) => {
       colorPicker
         .setValue(project.color)
         .onChange((value) => {
           project.color = value;
-        })
-        .setDisabled(!isEditMode); // Start in saved mode if isEditMode is false
+        });
+      colorComponent = colorPicker;
     });
-
-    // Edit/Save Button
+  
+    // Edit/Cancel Button
     setting.addButton((button) => {
+      editCancelButton = button;
       button
-        .setTooltip(isEditMode ? 'Save' : 'Edit')
-        .setIcon(isEditMode ? 'save' : 'pencil')
         .onClick(() => {
-          if (!isEditMode) {
-            // Switch to edit mode
-            textComponent.setDisabled(false);
-            colorComponent.setDisabled(false);
-            button.setTooltip('Save').setIcon('save');
-            isEditMode = true;
+          if (isEditMode) {
+            // Cancel edit mode
+            isEditMode = false;
+            this.display();
+            logger.info(`Edit cancelled for project: ${project.name}`);
+            new Notice(`[TaskCard] Edit cancelled for project: ${project.name}.`);
+          } else if (isDeleteWarning) {
+            // Confirm delete
+            isDeleteWarning = false;
+            this.plugin.projectModule.deleteProjectById(project.id);
+            this.updateProjectsToSettings();
+            logger.info(`Project deleted: ${project.name}`);
+            new Notice(`[TaskCard] Project deleted: ${project.name}.`);
+            this.display();
           } else {
-            // Switch to saved mode
-            textComponent.setDisabled(true);
-            colorComponent.setDisabled(true);
-            button.setTooltip('Edit').setIcon('pencil');
+            // Enter edit mode
+            isEditMode = true;
             this.plugin.projectModule.updateProject(project);
             this.updateProjectsToSettings();
+          }
+          updateUI();
+        });
+    });
+  
+    // Save/Delete Button
+    setting.addButton((button) => {
+      saveDeleteButton = button;
+      button
+        .onClick(() => {
+          if (isEditMode) {
+            // Save changes
             isEditMode = false;
             logger.info(`Project updated: ${project.name}`);
             new Notice(`[TaskCard] Project updated: ${project.name}.`);
             this.display();
+          } else if (isDeleteWarning) {
+            // Cancel delete warning
+            isDeleteWarning = false;
+            this.display();
+          } else {
+            // Enter delete warning mode
+            isDeleteWarning = true;
           }
+          updateUI();
         });
     });
-
-    // Delete Button
-    setting.addButton((button) => {
-      button
-        .setIcon('trash-2')
-        .setTooltip('Delete Project')
-        .onClick(() => {
-          this.plugin.projectModule.deleteProjectById(project.id);
-          this.updateProjectsToSettings();
-          logger.info(`Project deleted: ${project.name}`);
-          new Notice(`[TaskCard] Project deleted: ${project.name}.`);
-          this.display();
-        });
-    });
+  
+    // Initialize the UI
+    updateUI();
   }
-
-
+  
+  
   cardParsingSettings() {
     let textField: any;
+    let editCancelButton: ButtonComponent;
+    let saveResetButton: ButtonComponent;
+  
     let isEditMode = false;
-
+    let isResetWarning = false;
+  
+    const updateUI = () => {
+      if (textField && editCancelButton && saveResetButton) {
+        textField.setDisabled(!isEditMode);
+  
+        if (isEditMode) {
+          editCancelButton.setTooltip('Cancel').setIcon('copy-slash');
+          saveResetButton.setTooltip('Save').setIcon('save').setCta();
+        } else if (isResetWarning) {
+          editCancelButton.setTooltip('Confirm Reset').setIcon('rotate-ccw').setWarning();
+          saveResetButton.setTooltip('Cancel').setIcon('copy-slash');
+        } else {
+          editCancelButton.setTooltip('Edit').setIcon('pencil');
+          saveResetButton.setTooltip('Reset').setIcon('rotate-ccw');
+        }
+      }
+    };
+  
     const setting = new Setting(this.containerEl);
-
+  
     setting
       .setName('Indicator Tag')
       .setDesc('The tag used to identify task cards.')
@@ -268,61 +326,65 @@ export class SettingsTab extends PluginSettingTab {
         return text
           .setPlaceholder('YourTagHere')
           .setValue(this.plugin.settings.parsingSettings.indicatorTag)
-          .setDisabled(true) // Disable the text field initially
-          .onChange(async (value: string) => {
-            // remove all the leading # from the value
+          .setDisabled(true)
+          .onChange((value: string) => {
             const indicatorTag = value.replace(/^#/, '');
-            this.plugin.writeSettings(
-              (old) => (old.parsingSettings.indicatorTag = indicatorTag)
-            );
+            this.plugin.writeSettings((old) => (old.parsingSettings.indicatorTag = indicatorTag));
           });
       });
-
-    // Add an edit/save button
+  
+    // Add an Edit/Cancel button
     setting.addButton((button) => {
+      editCancelButton = button;
       button
-        .setTooltip('Edit')
-        .setIcon('pencil')
         .onClick(() => {
-          if (!isEditMode) {
-            // Switch to edit mode
-            textField.setDisabled(false); // Enable the text field
-            button.setTooltip('Save').setIcon('save');
-            isEditMode = true;
-          } else {
-            // Switch to saved mode
-            textField.setDisabled(true); // Disable the text field
-            this.plugin.writeSettings(
-              (old) => (old.parsingSettings.indicatorTag = textField.getValue())
-            );
-            button.setTooltip('Edit').setIcon('pencil');
+          if (isEditMode) {
+            // Cancel edit mode
             isEditMode = false;
+            this.display();
+          } else if (isResetWarning) {
+            // Confirm reset
+            isResetWarning = false;
+            this.plugin.writeSettings((old) => (old.parsingSettings.indicatorTag = DefaultSettings.parsingSettings.indicatorTag));
+            textField.setValue(DefaultSettings.parsingSettings.indicatorTag);
+            logger.info(`Indicator tag reset to default.`);
+            new Notice(`[TaskCard] Indicator tag reset to default.`);
+          } else {
+            // Enter edit mode
+            isEditMode = true;
+          }
+          updateUI();
+        });
+    });
+  
+    // Add a Save/Reset button
+    setting.addButton((button) => {
+      saveResetButton = button;
+      button
+        .onClick(() => {
+          if (isEditMode) {
+            // Save changes
+            isEditMode = false;
+            this.plugin.writeSettings((old) => (old.parsingSettings.indicatorTag = textField.getValue()));
             logger.info(`Indicator tag updated: ${textField.getValue()}`);
             new Notice(`[TaskCard] Indicator tag updated: ${textField.getValue()}.`);
+          } else if (isResetWarning) {
+            // Cancel reset warning
+            isResetWarning = false;
+            this.display();
+          } else {
+            // Enter reset warning mode
+            isResetWarning = true;
           }
+          updateUI();
         });
     });
-
-    // Add a reset button
-    setting.addButton((button) => {
-      button
-        .setIcon('rotate-ccw')
-        .setWarning()
-        .setTooltip('Reset')
-        .onClick(async () => {
-          // Reset the value to the default
-          this.plugin.writeSettings(
-            (old) =>
-              (old.parsingSettings.indicatorTag =
-                DefaultSettings.parsingSettings.indicatorTag)
-          );
-          // Update the text field with the default value
-          textField.setValue(DefaultSettings.parsingSettings.indicatorTag);
-          logger.info(`Indicator tag reset to default.`);
-          new Notice(`[TaskCard] Indicator tag reset to default.`);
-        });
-    });
+  
+    // Initialize the UI
+    updateUI();
   }
+  
+  
 
   cardDisplaySettings() {
     new Setting(this.containerEl)
