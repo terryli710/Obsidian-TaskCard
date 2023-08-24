@@ -19,6 +19,7 @@
 - No direct edit method.
 - Single line mode background problem - taskcard background compatibility
 - TODO: BUG: when rerendering, all the task will be rerender to default mode. (can we memorize the display modes for each task?)
+- TODO: BUG: !!task formatting will incorrect format already formatted tasks.
 
 ## Multi-mode display in preview mode
 
@@ -33,6 +34,9 @@
 # Interaction
 
 ## Settings
+
+- TODO: BUG: when click on save, cannot switch to edit once more.
+- TODO: BUG: when generating project, except the first one, the color picker doesn't work.
 
 ## Priority
 

@@ -1,3 +1,4 @@
+import { TaskMode } from '../renderer/postProcessor';
 import { SettingStore } from '../settings';
 import { logger } from '../utils/log';
 import { camelToKebab } from '../utils/stringCaseConverter';
@@ -6,12 +7,14 @@ import { ObsidianTask } from './task';
 export class TaskFormatter {
   indicatorTag: string;
   markdownSuffix: string;
+  defaultMode: string;
 
   constructor(settingsStore: typeof SettingStore) {
     // Subscribe to the settings store
     settingsStore.subscribe((settings) => {
       this.indicatorTag = settings.parsingSettings.indicatorTag;
       this.markdownSuffix = settings.parsingSettings.markdownSuffix;
+      this.defaultMode = settings.displaySettings.defaultMode;
     });
   }
 
@@ -19,6 +22,11 @@ export class TaskFormatter {
     let markdownLine = `- [${task.completed ? 'x' : ' '}] ${task.content} #${
       this.indicatorTag
     }\n`;
+
+    // add TaskItemParams to task
+    if (!task.metadata.taskItemParams) {
+      task.metadata.taskItemParams = { mode: this.defaultMode as TaskMode };
+    }
 
     // Iterate over keys in task, but exclude 'completed' and 'content'
     for (let key in task) {
@@ -39,7 +47,7 @@ export class TaskFormatter {
 
   taskToMarkdownOneLine(task: ObsidianTask): string {
     // add suffix ' .' to task content
-    const markdown = this.taskToMarkdown(task).replace(/\n/g, '');
+    const markdown = this.taskToMarkdown(task).replace(/\n/g, ' ');
     return markdown + this.markdownSuffix;
   }
 }

@@ -28,7 +28,6 @@
             event.preventDefault();  // Prevent browser's default save behavior
             isEditing = false;
             taskSyncManager.updateObsidianTaskAttribute('content', content);
-            setMode(event, 'multi-line');
         } else if (event.key === 'Escape') {
             // Cancel editing, return to non-editing mode, and reset the description
             isEditing = false;

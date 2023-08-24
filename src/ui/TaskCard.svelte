@@ -33,11 +33,6 @@
       }
     }
 
-    function handleSetMode(event: MouseEvent | KeyboardEvent | CustomEvent) {
-      const mode = event.detail.mode ? event.detail.mode : null;
-      taskSyncManager.updateObsidianTaskAttribute('metadata', { taskItemParams: { mode: mode } });
-    }
-
     function handleCheckboxClick() {
       task.completed = !task.completed;
       // more logic to reflect the change on the taskEl
@@ -201,8 +196,7 @@
       />
     </div>
     <div class="task-card-content-project-line">
-      <Content taskSyncManager={taskSyncManager} 
-        on:setMode={handleSetMode} />
+      <Content taskSyncManager={taskSyncManager} />
       <Project taskSyncManager={taskSyncManager} params={params} />
     </div>
     <Description taskSyncManager={taskSyncManager} />

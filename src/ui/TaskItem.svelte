@@ -10,15 +10,10 @@
 
     export let taskSyncManager: ObsidianTaskSyncManager;
     export let plugin: TaskCardPlugin;
-    export let defaultParams: TaskItemParams;
+    // export let defaultParams: TaskItemParams;
     let params: TaskItemParams;
 
-
-    if (taskSyncManager.obsidianTask.metadata.taskItemParams) {
-        params = { ...taskSyncManager.obsidianTask.metadata.taskItemParams };
-    } else {
-        params = { ...defaultParams };
-    }
+    params = { ...taskSyncManager.obsidianTask.metadata.taskItemParams };
 
     function handleSwitchMode(event: MouseEvent | KeyboardEvent | CustomEvent) {
         if (event instanceof KeyboardEvent && (event.key !== 'Enter' && event.key !== ' ')) {
@@ -30,6 +25,7 @@
         if (event.detail.mode) { newMode = event.detail.mode;}
         else { newMode = params.mode === 'single-line' ? 'multi-line' : 'single-line';}
         params = { ...params, mode: newMode };
+        taskSyncManager.updateObsidianTaskItemParams('mode', newMode);
     }
 
 </script>

@@ -10,7 +10,7 @@ export class TaskMonitor {
     this.app = app;
   }
 
-  async monitorFile(file: TFile) {
+  async monitorFileToFormatTasks(file: TFile) {
     const lines = await this.getLinesFromFile(file);
     const updatedLines = this.updateTasksInLines(lines);
     await this.updateFileWithNewLines(file, updatedLines);
@@ -24,7 +24,7 @@ export class TaskMonitor {
     const mode = view.getMode();
     if (mode !== 'preview') return;
     setTimeout(() => {
-      this.monitorFile(file);
+      this.monitorFileToFormatTasks(file);
     }, 2);
   }
 
