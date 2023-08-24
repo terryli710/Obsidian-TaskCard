@@ -50,7 +50,7 @@ export class SettingsTab extends PluginSettingTab {
     super(app, plugin);
     this.plugin = plugin;
     this.settingStatus = {
-      showColorPicker: false
+      showColorPicker: false,
     };
   }
 
@@ -72,7 +72,9 @@ export class SettingsTab extends PluginSettingTab {
     this.containerEl.createEl('h3', { text: 'Project Adding' });
 
     this.newProjectSetting();
+
     const projects: Project[] = this.plugin.projectModule.getProjectsData();
+
     this.containerEl.createEl('h3', { text: 'Project Editing' });
     if (projects.length > 0) {
       const firstProject = projects[0];
@@ -171,38 +173,42 @@ export class SettingsTab extends PluginSettingTab {
     });
   }
 
-  projectEditSetting(project: Project, projectContainerEl?: HTMLElement) {
+  projectEditSetting(project, projectContainerEl?: HTMLElement) {
     if (!projectContainerEl) {
       projectContainerEl = this.containerEl;
     }
+
+    let isEditMode = false;
+
     // Heading for the Project Name
     const setting = new Setting(projectContainerEl);
     setting.setName(project.name);
 
+    // Text Component
     const textComponent = setting.addText((text) => {
       text
         .setValue(project.name)
         .onChange((value) => {
           project.name = value;
         })
-        .setDisabled(true); // Start in saved mode
+        .setDisabled(!isEditMode); // Start in saved mode if isEditMode is false
     });
 
+    // Color Component
     const colorComponent = setting.addColorPicker((colorPicker) => {
       colorPicker
         .setValue(project.color)
         .onChange((value) => {
           project.color = value;
         })
-        .setDisabled(true); // Start in saved mode
+        .setDisabled(!isEditMode); // Start in saved mode if isEditMode is false
     });
 
-    let isEditMode = false; // Flag to keep track of the current mode
-
+    // Edit/Save Button
     setting.addButton((button) => {
       button
-        .setTooltip('Edit')
-        .setIcon('pencil')
+        .setTooltip(isEditMode ? 'Save' : 'Edit')
+        .setIcon(isEditMode ? 'save' : 'pencil')
         .onClick(() => {
           if (!isEditMode) {
             // Switch to edit mode
@@ -218,11 +224,12 @@ export class SettingsTab extends PluginSettingTab {
             this.plugin.projectModule.updateProject(project);
             this.updateProjectsToSettings();
             isEditMode = false;
+            this.display();
           }
         });
     });
 
-    // add a delete button, using the delete emoji
+    // Delete Button
     setting.addButton((button) => {
       button
         .setIcon('trash-2')
@@ -234,6 +241,7 @@ export class SettingsTab extends PluginSettingTab {
         });
     });
   }
+
 
   cardParsingSettings() {
     let textField: any;

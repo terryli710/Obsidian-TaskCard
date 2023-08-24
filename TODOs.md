@@ -18,8 +18,6 @@
 - formatted attribute saving.
 - No direct edit method.
 - Single line mode background problem - taskcard background compatibility
-- TODO: BUG: when rerendering, all the task will be rerender to default mode. (can we memorize the display modes for each task?)
-- TODO: BUG: !!task formatting will incorrect format already formatted tasks.
 
 ## Multi-mode display in preview mode
 
@@ -102,7 +100,6 @@
 
 ## Labels
 
-- TODO: BUG: when adding labels, single line mode will be enabled unexpected.
 - TODO: BUG: cannot delete label;
 
 ### Functionality
@@ -126,6 +123,8 @@
 - TODO: (optional) use dots besides the label to delete.
 
 ## Project
+
+- TODO: BUG: !! cannot assign project
 
 ### Functionality
 
