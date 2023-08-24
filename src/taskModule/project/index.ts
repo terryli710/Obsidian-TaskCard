@@ -22,6 +22,10 @@ export class ProjectModule {
     return [...this.projects.values()];
   }
 
+  private sortProjectsByName(): void {
+    this.projects = new Map([...this.projects.entries()].sort((a, b) => b[0].localeCompare(a[0])));
+  }
+
   // Update or create multiple projects at once
   updateProjects(projectData: Project[]): void {
     // if empty, do nothing
@@ -31,6 +35,7 @@ export class ProjectModule {
     for (const project of projectData) {
       this.updateProject(project);
     }
+    this.sortProjectsByName();
   }
 
   // Accept update of the data using partial of the data structure
@@ -64,6 +69,7 @@ export class ProjectModule {
       this.ensureProjectData(newProject);
       this.projects.set(newProject.id, newProject);
       this.nameToIdMap.set(newProject.name, newProject.id);
+      this.sortProjectsByName();
     }
   }
 
@@ -101,6 +107,7 @@ export class ProjectModule {
     const newProject: Project = { id, name, color };
     this.projects.set(id, newProject);
     this.nameToIdMap.set(name, id);
+    this.sortProjectsByName();
     return newProject;
   }
 
@@ -131,6 +138,7 @@ export class ProjectModule {
       this.ensureProjectData(newProject);
       this.projects.set(newProject.id, newProject);
       this.nameToIdMap.set(newProject.name, newProject.id);
+      this.sortProjectsByName();
     }
     return true;
   }
