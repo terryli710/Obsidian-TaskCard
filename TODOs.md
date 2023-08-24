@@ -119,7 +119,7 @@
 
 ## Project
 
-- TODO: OPTIMIZE: project should show random color.
+- TODO: BUG: when click on the color picker, the text in the project name disappear
 - 
 
 ### Functionality

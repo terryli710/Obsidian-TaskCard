@@ -63,6 +63,7 @@ export class ProjectModule {
       const updatedProject = { ...project, ...data };
       this.ensureProjectData(updatedProject);
       this.projects.set(updatedProject.id, updatedProject);
+      this.sortProjectsByName();
     } else {
       // New project, create
       const newProject: Project = {

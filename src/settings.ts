@@ -44,6 +44,8 @@ export class SettingsTab extends PluginSettingTab {
   private plugin: TaskCardPlugin;
   private settingStatus: {
     showColorPicker: boolean;
+    newProjectName: string;
+    newProjectColor: string;
   };
 
   constructor(app: App, plugin: TaskCardPlugin) {
@@ -51,6 +53,8 @@ export class SettingsTab extends PluginSettingTab {
     this.plugin = plugin;
     this.settingStatus = {
       showColorPicker: false,
+      newProjectName: '',
+      newProjectColor: ''
     };
   }
 
@@ -110,26 +114,29 @@ export class SettingsTab extends PluginSettingTab {
   }
 
   newProjectSetting() {
-    let newProjectName = '';
-    let newProjectColor = '';
-
+    // If these variables are losing their values on a redraw, consider moving them 
+    // to the class scope to retain their values across function calls.
+    let newProjectName = this.settingStatus.newProjectName || ''; // Retrieve stored name if available
+    let newProjectColor = this.settingStatus.newProjectColor || '';
+  
     const setting = new Setting(this.containerEl).setName('Add A Project');
-
     setting.setDesc('Project names must be unique. Color picking is optional.');
-
+  
     setting.addText((text) => {
       text
         .setPlaceholder('Enter project name')
         .setValue(newProjectName) // Set the stored value
         .onChange((value) => {
           newProjectName = value;
+          this.settingStatus.newProjectName = value; // Store the value for later use
         });
     });
-
+  
     if (this.settingStatus.showColorPicker) {
       setting.addColorPicker((colorPicker) => {
         colorPicker.onChange((value) => {
           newProjectColor = value;
+          this.settingStatus.newProjectColor = value; // Store the color value if needed
         });
       });
     } else {
@@ -143,28 +150,26 @@ export class SettingsTab extends PluginSettingTab {
           });
       });
     }
-
+  
     setting.addButton((button) => {
       button
         .setTooltip('Finish')
         .setIcon('check-square')
         .onClick(() => {
           if (newProjectName) {
-            const newProject: Partial<Project> = {
+            const newProject = {
               name: newProjectName,
               color: newProjectColor
             };
             const succeeded = this.plugin.projectModule.addProject(newProject);
             if (succeeded) {
               this.updateProjectsToSettings();
+              this.settingStatus.newProjectName = '';
+              this.settingStatus.newProjectColor = '';
               this.display();
             } else {
-              logger.error(
-                `[TaskCard] Failed to add project: ${newProjectName}`
-              );
-              new Notice(
-                `[TaskCard] Failed to add project: ${newProjectName}. Project name must be unique.`
-              );
+              logger.error(`[TaskCard] Failed to add project: ${newProjectName}`);
+              new Notice(`[TaskCard] Failed to add project: ${newProjectName}. Project name must be unique.`);
             }
           }
           this.settingStatus.showColorPicker = false;
