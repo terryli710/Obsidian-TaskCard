@@ -47,6 +47,10 @@ jobs:
         run: |
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
+          
+          # Stash changes to prevent conflicts when switching branches
+          git stash
+          
           git checkout releases
           git add -f main.js manifest.json styles.css
           if git diff-index --quiet HEAD --; then
@@ -55,3 +59,6 @@ jobs:
             git commit -m "Release ${{ github.ref }}"
             git push origin releases
           fi
+          
+          # No need to apply the stashed changes, so we can drop them
+          git stash drop
