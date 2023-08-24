@@ -113,11 +113,25 @@ export class SettingsTab extends PluginSettingTab {
     });
   }
 
+
   newProjectSetting() {
     // If these variables are losing their values on a redraw, consider moving them 
     // to the class scope to retain their values across function calls.
     let newProjectName = this.settingStatus.newProjectName || ''; // Retrieve stored name if available
     let newProjectColor = this.settingStatus.newProjectColor || '';
+    let colorPickerComponent: ColorComponent;
+    let colorPickerButton: ButtonComponent;
+    let isColorPickerMode = this.settingStatus.showColorPicker || false;
+  
+    const updateUI = () => {
+      if (colorPickerButton) {
+        if (isColorPickerMode) {
+          colorPickerButton.setTooltip('Cancel').setIcon('circle-off');
+        } else {
+          colorPickerButton.setTooltip('Pick a color').setIcon('palette');
+        }
+      }
+    };
   
     const setting = new Setting(this.containerEl).setName('Add A Project');
     setting.setDesc('Project names must be unique. Color picking is optional.');
@@ -131,30 +145,42 @@ export class SettingsTab extends PluginSettingTab {
           this.settingStatus.newProjectName = value; // Store the value for later use
         });
     });
-  
-    if (this.settingStatus.showColorPicker) {
+
+    if (isColorPickerMode) {
       setting.addColorPicker((colorPicker) => {
         colorPicker.onChange((value) => {
           newProjectColor = value;
           this.settingStatus.newProjectColor = value; // Store the color value if needed
         });
       });
-    } else {
-      setting.addButton((button) => {
-        button
-          .setTooltip('Pick a color')
-          .setIcon('palette')
-          .onClick(() => {
-            this.settingStatus.showColorPicker = true;
-            this.display();
-          });
-      });
     }
   
+    // Color picker or its button
+    setting.addButton((button) => {
+      colorPickerButton = button;
+      button
+        .onClick(() => {
+          if (isColorPickerMode) {
+            // Cancel color picking
+            isColorPickerMode = false;
+            newProjectColor = ''; // Reset the selected color
+            this.settingStatus.newProjectColor = ''; // Reset the stored color
+          } else {
+            // Enter color picking mode
+            isColorPickerMode = true;
+          }
+          this.settingStatus.showColorPicker = isColorPickerMode; // Store the state
+          updateUI();
+          this.display(); // Re-render the setting to add or remove the color picker
+        });
+    });
+  
+    // Finish button
     setting.addButton((button) => {
       button
         .setTooltip('Finish')
         .setIcon('check-square')
+        .setCta()
         .onClick(() => {
           if (newProjectName) {
             const newProject = {
@@ -166,7 +192,6 @@ export class SettingsTab extends PluginSettingTab {
               this.updateProjectsToSettings();
               this.settingStatus.newProjectName = '';
               this.settingStatus.newProjectColor = '';
-              this.display();
               logger.info(`Project added: ${newProjectName}`);
               new Notice(`[TaskCard] Project added: ${newProjectName}.`);
             } else {
@@ -174,11 +199,17 @@ export class SettingsTab extends PluginSettingTab {
               new Notice(`[TaskCard] Failed to add project: ${newProjectName}. Project name must be unique.`);
             }
           }
+          // Reset color picker mode
+          isColorPickerMode = false;
           this.settingStatus.showColorPicker = false;
           this.display();
         });
     });
+  
+    // Initialize the UI components based on the initial isColorPickerMode value
+    updateUI();
   }
+  
 
   projectEditSetting(project, projectContainerEl?: HTMLElement) {
     if (!projectContainerEl) {
