@@ -133,7 +133,6 @@ export class AttributeSuggester {
     const dueRegexText = `${escapeRegExp(this.startingNotation)}\\s?due:(\\s*)${escapeRegExp(this.endingNotation)}`;
     const dueRegex = new RegExp(dueRegexText, 'g');
     const dueMatch = matchByPositionAndGroup(lineText, dueRegex, cursorPos, 1);
-    logger.debug(`dueMatch: ${dueMatch}`);
     if (!dueMatch) return suggestions; // No match
 
     // Get the due date query from the captured group

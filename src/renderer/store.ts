@@ -26,7 +26,6 @@ export class TaskStore {
     if (!view.file) { return; }
     const newFilePath = view.file.path;
     const mode = view.getMode();
-    logger.debug(`leaf-change: view mode: ${mode}, newFilePath: ${newFilePath}`);
     if (mode !== 'preview') { this.clearTaskModes(); }
     this.setFilePath(newFilePath);
   }

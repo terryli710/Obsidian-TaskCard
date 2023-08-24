@@ -82,19 +82,17 @@ export class ObsidianTaskSyncManager implements ObsidianTaskSyncProps {
 
   updateObsidianTaskAttribute(key: string, value: any): void {
     this.obsidianTask[key] = value;
-    logger.debug(`successfully set ${key} to ${value}`);
+    logger.info(`successfully set ${key} to ${value}`);
     this.updateTaskToFile();
   }
 
   updateObsidianTaskItemParams(key: string, value: any): void {
     this.obsidianTask.setTaskItemParams(key, value);
-    logger.debug(`successfully set TaskItem Param ${key} to ${value}`);
     this.updateTaskToFile();
   }
 
   clearObsidianTaskItemParams(): void {
     this.obsidianTask.clearTaskItemParams();
-    logger.debug(`successfully cleared TaskItem Params`);
     this.updateTaskToFile();
   }
 
@@ -118,7 +116,6 @@ export class ObsidianTaskSyncManager implements ObsidianTaskSyncProps {
     // check if the status is valid
     if (!this.isValidStatus(key, status)) return;
     this.taskCardStatus[key] = status as any;
-    logger.debug(`successfully set ${key} to ${status}`);
   }
 
   getTaskCardStatus(key: keyof TaskCardStatus): string {

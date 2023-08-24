@@ -46,7 +46,6 @@
 
     function setMode(event: MouseEvent | KeyboardEvent, newMode: TaskMode | null = null) {
         event.stopPropagation();
-        logger.debug(`CONTENT: set mode to ${newMode}`);
         dispatch('setMode', { mode: newMode });
     }
 
