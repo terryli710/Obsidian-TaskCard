@@ -33,8 +33,6 @@
 
 ## Settings
 
-- TODO: BUG: when generating project, except the first one, the color picker doesn't work.
-
 ## Priority
 
 ### Edit
@@ -98,8 +96,6 @@
 - dropdown menu to delete.
 
 ## Labels
-
-- TODO: BUG: cannot delete label;
 
 ### Functionality
 
