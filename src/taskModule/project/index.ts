@@ -27,8 +27,9 @@ export class ProjectModule {
   }
 
   private sortProjectsByName(): void {
-    this.projects = new Map([...this.projects.entries()].sort((a, b) => b[0].localeCompare(a[0])));
-  }
+    this.projects = new Map([...this.projects.entries()].sort((a, b) => a[1].name.localeCompare(b[1].name)));
+    logger.debug(`projects are sorted: ${JSON.stringify([...this.projects.values()])}`);
+}
 
   // Update or create multiple projects at once
   updateProjects(projectData: Project[]): void {

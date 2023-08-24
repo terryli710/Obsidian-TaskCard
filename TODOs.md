@@ -119,8 +119,8 @@
 
 ## Project
 
-- TODO: BUG: when click on the color picker, the text in the project name disappear
-- 
+- TODO: BUG: when creating project, the project ranking doesn't work correctly.
+- TODO: BUG: when edit project, the project ranking doesn't work.
 
 ### Functionality
 
