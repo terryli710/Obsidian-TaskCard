@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import { HSLToRGB, RGBToHEX, stringToHSL } from '../../utils/colorConverter';
 import { logger } from '../../utils/log';
+import { ColorPaletteManager } from '../../utils/colorPalette';
 
 export type Project = {
   id: string;
@@ -11,10 +12,13 @@ export type Project = {
 export class ProjectModule {
   private projects: Map<string, Project>;
   private nameToIdMap: Map<string, string>;
+  private ColorPaletteManager: ColorPaletteManager;
 
   constructor() {
+
     this.projects = new Map<string, Project>();
     this.nameToIdMap = new Map<string, string>();
+    this.ColorPaletteManager = new ColorPaletteManager();
   }
 
   // API to fetch the data as an array of Project objects
@@ -160,6 +164,6 @@ export class ProjectModule {
   }
 
   assignColor(name: string): string {
-    return RGBToHEX(HSLToRGB(stringToHSL(name)));
+    return this.ColorPaletteManager.assignColor(name);
   }
 }

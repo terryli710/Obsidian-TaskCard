@@ -119,9 +119,8 @@
 
 ## Project
 
-- TODO: BUG: project not sorted
-  - when selecting
-  - and in the settings.
+- TODO: OPTIMIZE: project should show random color.
+- 
 
 ### Functionality
 
