@@ -229,11 +229,11 @@ export class SettingsTab extends PluginSettingTab {
         colorComponent.setDisabled(!isEditMode);
   
         if (isEditMode) {
-          editCancelButton.setTooltip('Cancel').setIcon('copy-slash');
+          editCancelButton.setTooltip('Cancel').setIcon('x-circle');
           saveDeleteButton.setTooltip('Save').setIcon('save').setCta();
         } else if (isDeleteWarning) {
           editCancelButton.setTooltip('Confirm Delete').setIcon('trash-2').setWarning();
-          saveDeleteButton.setTooltip('Cancel').setIcon('copy-slash');
+          saveDeleteButton.setTooltip('Cancel').setIcon('x-circle');
         } else {
           editCancelButton.setTooltip('Edit').setIcon('pencil');
           saveDeleteButton.setTooltip('Delete').setIcon('trash-2');
@@ -335,11 +335,11 @@ export class SettingsTab extends PluginSettingTab {
         textField.setDisabled(!isEditMode);
   
         if (isEditMode) {
-          editCancelButton.setTooltip('Cancel').setIcon('copy-slash');
+          editCancelButton.setTooltip('Cancel').setIcon('x-circle');
           saveResetButton.setTooltip('Save').setIcon('save').setCta();
         } else if (isResetWarning) {
           editCancelButton.setTooltip('Confirm Reset').setIcon('rotate-ccw').setWarning();
-          saveResetButton.setTooltip('Cancel').setIcon('copy-slash');
+          saveResetButton.setTooltip('Cancel').setIcon('x-circle');
         } else {
           editCancelButton.setTooltip('Edit').setIcon('pencil');
           saveResetButton.setTooltip('Reset').setIcon('rotate-ccw');
@@ -378,6 +378,7 @@ export class SettingsTab extends PluginSettingTab {
             isResetWarning = false;
             this.plugin.writeSettings((old) => (old.parsingSettings.indicatorTag = DefaultSettings.parsingSettings.indicatorTag));
             textField.setValue(DefaultSettings.parsingSettings.indicatorTag);
+            this.display();
             logger.info(`Indicator tag reset to default.`);
             new Notice(`[TaskCard] Indicator tag reset to default.`);
           } else {
@@ -397,6 +398,7 @@ export class SettingsTab extends PluginSettingTab {
             // Save changes
             isEditMode = false;
             this.plugin.writeSettings((old) => (old.parsingSettings.indicatorTag = textField.getValue()));
+            this.display();
             logger.info(`Indicator tag updated: ${textField.getValue()}`);
             new Notice(`[TaskCard] Indicator tag updated: ${textField.getValue()}.`);
           } else if (isResetWarning) {
