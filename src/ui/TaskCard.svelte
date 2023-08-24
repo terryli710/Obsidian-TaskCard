@@ -141,7 +141,7 @@
               item.setTitle('Assign Project');
               item.setIcon('plus');
               item.onClick((evt: MouseEvent | KeyboardEvent) => {
-                  taskSyncManager.setTaskCardStatus('projectStatus', 'selecting');
+                  taskSyncManager.taskCardStatus.projectStatus = 'selecting';
                   if (projects.length === 0) {
                       logger.warn('No projects available');
                       new Notice(`[TaskCard] No projects available. Add one in Settings Tab.`);

@@ -27,7 +27,7 @@ export default class TaskCardPlugin extends Plugin {
   constructor(app: App, pluginManifest: PluginManifest) {
     super(app, pluginManifest);
     SettingStore.subscribe((settings) => {
-      logger.info('Settings updated', settings);
+      logger.info('Settings updated');
       this.settings = settings;
     });
     this.projectModule = new ProjectModule();

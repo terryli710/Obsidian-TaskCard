@@ -119,7 +119,9 @@
 
 ## Project
 
-- TODO: BUG: !! cannot assign project
+- TODO: BUG: project not sorted
+  - when selecting
+  - and in the settings.
 
 ### Functionality
 
