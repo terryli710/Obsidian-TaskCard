@@ -126,7 +126,7 @@ describe('taskToMarkdown', () => {
     });
     const result = taskFormatter.taskToMarkdown(task);
     expect(result).toContain(
-      '<span class=\"metadata\" style=\"display:none;\">{\"filePath\":\"/path/to/file\",\"taskItemParams\":{\"mode\":'
+      '<span class=\"metadata\" style=\"display:none;\">{\"filePath\":\"/path/to/file\",\"taskDisplayParams\":{\"mode\":'
     );
   });
 });

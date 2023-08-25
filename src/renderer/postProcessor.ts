@@ -10,9 +10,9 @@ import {
 } from '../taskModule/taskSyncManager';
 import { logger } from '../utils/log';
 
-export type TaskMode = 'single-line' | 'multi-line';
-export interface TaskItemParams {
-  mode: TaskMode |  null;
+export type TaskDisplayMode = 'single-line' | 'multi-line';
+export interface TaskDisplayParams {
+  mode: TaskDisplayMode |  null;
 }
 
 export class TaskItemSvelteAdapter extends MarkdownRenderChild {

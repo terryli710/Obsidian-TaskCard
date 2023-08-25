@@ -5,11 +5,11 @@
   import { ObsidianTaskSyncManager } from "../taskModule/taskSyncManager";
   import TaskCardPlugin from "..";
   import { tick } from "svelte";
-  import { TaskItemParams, TaskMode } from "../renderer/postProcessor";
+  import { TaskDisplayParams, TaskDisplayMode } from "../renderer/postProcessor";
 
   export let taskSyncManager: ObsidianTaskSyncManager;
   export let plugin: TaskCardPlugin;
-  export let params: TaskItemParams;
+  export let params: TaskDisplayParams;
   let due: DueDate | null;
   let dueString: string;
   due = taskSyncManager.obsidianTask.hasDue() ? taskSyncManager.obsidianTask.due : null;

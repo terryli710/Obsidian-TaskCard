@@ -87,13 +87,13 @@ export class ObsidianTaskSyncManager implements ObsidianTaskSyncProps {
     this.updateTaskToFile();
   }
 
-  updateObsidianTaskItemParams(key: string, value: any): void {
-    this.obsidianTask.setTaskItemParams(key, value);
+  updateObsidianTaskDisplayParams(key: string, value: any): void {
+    this.obsidianTask.setTaskDisplayParams(key, value);
     this.updateTaskToFile();
   }
 
-  clearObsidianTaskItemParams(): void {
-    this.obsidianTask.clearTaskItemParams();
+  clearObsidianTaskDisplayParams(): void {
+    this.obsidianTask.clearTaskDisplayParams();
     this.updateTaskToFile();
   }
 

@@ -1,4 +1,4 @@
-import { TaskMode } from '../renderer/postProcessor';
+import { TaskDisplayMode } from '../renderer/postProcessor';
 import { SettingStore } from '../settings';
 import { logger } from '../utils/log';
 import { camelToKebab } from '../utils/stringCaseConverter';
@@ -26,9 +26,9 @@ export class TaskFormatter {
     markdownLine = markdownLine.replace(/\s+/g, ' '); // remove multiple spaces
     markdownLine += '\n';
 
-    // add TaskItemParams to task
-    if (!task.metadata.taskItemParams) {
-      task.metadata.taskItemParams = { mode: this.defaultMode as TaskMode };
+    // add TaskDisplayParams to task
+    if (!task.metadata.taskDisplayParams) {
+      task.metadata.taskDisplayParams = { mode: this.defaultMode as TaskDisplayMode };
     }
 
     // Iterate over keys in task, but exclude special attributes
