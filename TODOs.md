@@ -149,6 +149,7 @@
 # Task adding and editing and deletion
 
 - dropdown menu in preview mode to do attribute adding and editing etc.
+- TODO: BUG: the autosuggest filter doesn't work.
 
 ## Task Adding
 

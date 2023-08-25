@@ -10,9 +10,9 @@ import {
 } from '../taskModule/taskSyncManager';
 import { logger } from '../utils/log';
 
-export type TaskMode = 'single-line' | 'multi-line';
-export interface TaskItemParams {
-  mode: TaskMode |  null;
+export type TaskDisplayMode = 'single-line' | 'multi-line';
+export interface TaskDisplayParams {
+  mode: TaskDisplayMode |  null;
 }
 
 export class TaskItemSvelteAdapter extends MarkdownRenderChild {
@@ -20,18 +20,12 @@ export class TaskItemSvelteAdapter extends MarkdownRenderChild {
   taskSyncManager: ObsidianTaskSyncManager;
   svelteComponent: SvelteComponent;
   plugin: TaskCardPlugin;
-  // params: TaskItemParams;
-
+  
   constructor(taskSync: ObsidianTaskSyncProps, plugin: TaskCardPlugin) {
     super(taskSync.taskItemEl);
     this.taskSync = taskSync;
     this.taskSyncManager = new ObsidianTaskSyncManager(plugin, taskSync);
     this.plugin = plugin;
-    // if (taskSync.obsidianTask.metadata.taskItemParams) {
-    //   this.params = taskSync.obsidianTask.metadata.taskItemParams;
-    // } else {
-    //   this.params = { mode: get(SettingStore).displaySettings.defaultMode as TaskMode };
-    // }
   }
 
   onload() {

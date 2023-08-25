@@ -1,9 +1,11 @@
+
 import { TaskParser } from '../src/taskModule/taskParser';
-import { ObsidianTask, DateOnly } from '../src/taskModule/task';
+import { ObsidianTask, DateOnly, TaskProperties } from '../src/taskModule/task';
 import { JSDOM } from 'jsdom';
 import { logger } from '../src/utils/log';
 import { writable } from 'svelte/store';
 import { Project, ProjectModule } from '../src/taskModule/project';
+
 
 function createTestTaskElement(document: Document): HTMLElement {
   // Create the main task element
@@ -87,9 +89,10 @@ describe('taskParser', () => {
     infoSpy.mockRestore();
   });
 
-  let mockProjectModule;
+  // let mockProjectModule: ProjectModule;
+  let mockProjectModule: ProjectModule;
   let mockSettingStore;
-  let taskParser;
+  let taskParser: TaskParser;
   let projects: Project[];
   beforeEach(() => {
     // Mock the SettingStore with controlled settings
@@ -118,6 +121,72 @@ describe('taskParser', () => {
   });
 
   describe('parseTaskEl', () => {
+
+    it('should merge labels from both hidden span and content, and remove indicatorTag', () => {
+      const dom = new JSDOM();
+      const document = dom.window.document;
+      const taskElement = createTestTaskElement(document);
+      const parsedTask = taskParser.parseTaskEl(taskElement);
+    
+      // Expecting labels to contain '#label1', '#label2' from the hidden span
+      // '#TaskCard' should be removed as it's the indicatorTag
+      expect(parsedTask.labels).toEqual(['#label1', '#label2']);
+    });
+    
+    it('should filter out duplicate labels and remove indicatorTag', () => {
+      const dom = new JSDOM();
+      const document = dom.window.document;
+      const taskElement = createTestTaskElement(document);
+    
+      // Adding another span to introduce a duplicate label
+      const duplicateLabelSpan = document.createElement('span');
+      duplicateLabelSpan.className = 'labels';
+      duplicateLabelSpan.style.display = 'none';
+      duplicateLabelSpan.textContent = '["#label1"]';
+      taskElement.appendChild(duplicateLabelSpan);
+    
+      const parsedTask = taskParser.parseTaskEl(taskElement);
+    
+      // Expecting labels to contain '#label1', '#label2'
+      // '#TaskCard' should be removed as it's the indicatorTag
+      expect(parsedTask.labels).toEqual(['#label1', '#label2']);
+    });
+    
+
+    it('should handle only hidden span labels when no content labels are present', () => {
+      const dom = new JSDOM();
+      const document = dom.window.document;
+      const taskElement = createTestTaskElement(document);
+
+      // Removing content label
+      const tagElement = taskElement.querySelector('a.tag');
+      if (tagElement) {
+        taskElement.removeChild(tagElement);
+      }
+
+      const parsedTask = taskParser.parseTaskEl(taskElement);
+
+      // Expecting labels to contain only '#label1', '#label2' from the hidden span
+      expect(parsedTask.labels).toEqual(['#label1', '#label2']);
+    });
+
+    it('should handle only content labels when no hidden span labels are present', () => {
+      const dom = new JSDOM();
+      const document = dom.window.document;
+      const taskElement = createTestTaskElement(document);
+
+      // Removing hidden span labels
+      const labelsSpan = taskElement.querySelector('span.labels');
+      if (labelsSpan) {
+        taskElement.removeChild(labelsSpan);
+      }
+
+      const parsedTask = taskParser.parseTaskEl(taskElement);
+
+      // Expecting labels to contain only '#TaskCard' from the content
+      expect(parsedTask.labels).toEqual([]);
+    });
+
     it('should parse a task element correctly', () => {
       // Create a test task element using the new task HTML structure
       const dom = new JSDOM();
@@ -125,7 +194,7 @@ describe('taskParser', () => {
       const taskElement = createTestTaskElement(document);
 
       // Expected task object
-      const expectedTask: ObsidianTask = {
+      const expectedTask = {
         id: '',
         content: 'An example task',
         priority: 4,
@@ -137,7 +206,7 @@ describe('taskParser', () => {
           color: '#f1f1f1'
         },
         sectionID: 'section-456',
-        labels: ['label1', 'label2'],
+        labels: ['#label1', '#label2'],
         completed: false,
         parent: null,
         children: [],
@@ -151,6 +220,7 @@ describe('taskParser', () => {
           filePath: '/path/to/file'
         }
       };
+      console.log(`task element: ${JSON.stringify(taskElement.innerHTML)}`);
 
       // Call the parseTaskEl method
       const parsedTask = taskParser.parseTaskEl(taskElement);
@@ -167,6 +237,7 @@ describe('taskParser', () => {
 
       // Expected task object without the id property
       const expectedTask = {
+        id: '',
         content: 'An example task',
         priority: 4,
         description: '- A multi line description.\n- the second line.',
@@ -177,7 +248,7 @@ describe('taskParser', () => {
           color: '#f1f1f1'
         },
         sectionID: 'section-456',
-        labels: ['label1', 'label2'],
+        labels: ['#label1', '#label2'],
         completed: false,
         parent: null,
         children: [],
@@ -207,7 +278,7 @@ describe('taskParser', () => {
 
       const parsedTask = taskParser.parseTaskMarkdown(taskMarkdown);
 
-      const expectedTask: Partial<ObsidianTask> = {
+      const expectedTask = {
         content: 'A simple task',
         completed: false
       };
@@ -222,10 +293,10 @@ describe('taskParser', () => {
 
       const parsedTask = taskParser.parseTaskMarkdown(taskMarkdown);
 
-      const expectedTask: Partial<ObsidianTask> = {
+      const expectedTask = {
         content: 'A completed task with',
         completed: true,
-        labels: ['some', 'Labels', 'one-more-label']
+        labels: ['#some', '#Labels', '#one-more-label']
       };
 
       expect(parsedTask).toMatchObject(expectedTask);
@@ -237,10 +308,10 @@ describe('taskParser', () => {
 
       const parsedTask = taskParser.parseTaskMarkdown(taskMarkdown);
 
-      const expectedTask: Partial<ObsidianTask> = {
+      const expectedTask = {
         content: 'A completed task with',
         completed: true,
-        labels: ['labels']
+        labels: ['#labels']
       };
       expect(parsedTask).toMatchObject(expectedTask);
     });
@@ -251,7 +322,7 @@ describe('taskParser', () => {
 
       const parsedTask = taskParser.parseTaskMarkdown(taskMarkdown);
 
-      const expectedTask: Partial<ObsidianTask> = {
+      const expectedTask = {
         content: 'Task with due date',
         completed: false,
         due: {
@@ -270,7 +341,7 @@ describe('taskParser', () => {
 
       const parsedTask = taskParser.parseTaskMarkdown(taskMarkdown);
 
-      const expectedTask: Partial<ObsidianTask> = {
+      const expectedTask = {
         content: 'Priority task',
         completed: false,
         priority: 2
@@ -296,7 +367,7 @@ describe('taskParser', () => {
 
       const parsedTask = taskParser.parseTaskMarkdown(taskMarkdown);
 
-      const expectedTask: Partial<ObsidianTask> = {
+      const expectedTask = {
         content: 'Task with description',
         description: 'A detailed description'
       };
@@ -310,7 +381,7 @@ describe('taskParser', () => {
 
       const parsedTask = taskParser.parseTaskMarkdown(taskMarkdown);
 
-      const expectedTask: Partial<ObsidianTask> = {
+      const expectedTask = {
         content: 'Ordered task',
         order: 3
       };
@@ -325,7 +396,7 @@ describe('taskParser', () => {
 
       const parsedTask = taskParser.parseTaskMarkdown(taskMarkdown);
 
-      const expectedTask: Partial<ObsidianTask> = {
+      const expectedTask = {
         content: 'Task for a project',
         project: {
           id: 'project-123',
@@ -343,7 +414,7 @@ describe('taskParser', () => {
 
       const parsedTask = taskParser.parseTaskMarkdown(taskMarkdown);
 
-      const expectedTask: Partial<ObsidianTask> = {
+      const expectedTask = {
         content: 'Task for a project',
         project: null
       };
@@ -357,7 +428,7 @@ describe('taskParser', () => {
 
       const parsedTask = taskParser.parseTaskMarkdown(taskMarkdown);
 
-      const expectedTask: Partial<ObsidianTask> = {
+      const expectedTask = {
         content: 'Task in a section',
         sectionID: 'abcd'
       };
@@ -370,9 +441,9 @@ describe('taskParser', () => {
       const taskMarkdown =
         '- [ ] Task with metadata %%*metadata:{"key1":"value1","key2":42}*%%';
 
-      const parsedTask = taskParser.parseTaskMarkdown(taskMarkdown);
+      const parsedTask = taskParser.parseTaskMarkdown(taskMarkdown, console.log);
 
-      const expectedTask: Partial<ObsidianTask> = {
+      const expectedTask = {
         content: 'Task with metadata',
         metadata: {
           key1: 'value1',
@@ -390,7 +461,7 @@ describe('taskParser', () => {
 
       const parsedTask = taskParser.parseTaskMarkdown(taskMarkdown);
 
-      const expectedTask: Partial<ObsidianTask> = {
+      const expectedTask = {
         content: 'Multi-attribute task',
         priority: 2,
         due: {

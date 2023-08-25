@@ -2,7 +2,7 @@
     import Due from './Due.svelte';
     import Project from "./Project.svelte";
     import Labels from "./Labels.svelte";
-    import { TaskItemParams, TaskMode } from "../renderer/postProcessor";
+    import { TaskDisplayParams, TaskDisplayMode } from "../renderer/postProcessor";
     import Description from './Description.svelte';
     import { logger } from '../utils/log';
     import { createEventDispatcher } from 'svelte';
@@ -18,13 +18,13 @@
 
     export let taskSyncManager: ObsidianTaskSyncManager;
     export let plugin: TaskCardPlugin;
-    export let params: TaskItemParams;
+    export let params: TaskDisplayParams;
 
     let task: ObsidianTask = taskSyncManager.obsidianTask;
 
     const dispatch = createEventDispatcher();
 
-    function switchMode(event: MouseEvent | KeyboardEvent | CustomEvent, newMode: TaskMode | null = null) {
+    function switchMode(event: MouseEvent | KeyboardEvent | CustomEvent, newMode: TaskDisplayMode | null = null) {
       event.stopPropagation();
       // logger.debug(`Switching mode to ${newMode}`);
       dispatch('switchMode', { mode: newMode });
@@ -208,7 +208,6 @@
     <div class="task-card-attribute-bottom-bar-left">
       {#if taskSyncManager.obsidianTask.hasDue() || taskSyncManager.getTaskCardStatus('dueStatus') === 'editing'}
         <Due taskSyncManager={taskSyncManager} plugin={plugin} params={params} />
-        <div class="task-card-attribute-separator"> | </div>
       {/if}
       <Labels taskSyncManager={taskSyncManager} />
     </div>

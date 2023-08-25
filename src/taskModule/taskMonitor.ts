@@ -1,5 +1,8 @@
 import { App, MarkdownView, TFile, WorkspaceLeaf } from 'obsidian';
 import TaskCardPlugin from '..';
+import { Notice } from 'obsidian';
+import { logger } from '../utils/log';
+
 
 export class TaskMonitor {
   plugin: TaskCardPlugin;
@@ -38,8 +41,14 @@ export class TaskMonitor {
   }
 
   updateTaskInLine(line: string, index: number): string {
+    function announceError(errorMsg: string): void {
+      // Show a notice popup
+      new Notice(errorMsg);
+      // Log the error
+      logger.error(errorMsg);
+    }
     if (this.plugin.taskValidator.isValidUnformattedTaskMarkdown(line)) {
-      const task = this.plugin.taskParser.parseTaskMarkdown(line);
+      const task = this.plugin.taskParser.parseTaskMarkdown(line, announceError);
       return this.plugin.taskFormatter.taskToMarkdownOneLine(task);
     }
     return line;
