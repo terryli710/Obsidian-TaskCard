@@ -128,9 +128,9 @@ describe('taskParser', () => {
       const taskElement = createTestTaskElement(document);
       const parsedTask = taskParser.parseTaskEl(taskElement);
     
-      // Expecting labels to contain 'label1', 'label2' from the hidden span
+      // Expecting labels to contain '#label1', '#label2' from the hidden span
       // '#TaskCard' should be removed as it's the indicatorTag
-      expect(parsedTask.labels).toEqual(['label1', 'label2']);
+      expect(parsedTask.labels).toEqual(['#label1', '#label2']);
     });
     
     it('should filter out duplicate labels and remove indicatorTag', () => {
@@ -147,9 +147,9 @@ describe('taskParser', () => {
     
       const parsedTask = taskParser.parseTaskEl(taskElement);
     
-      // Expecting labels to contain 'label1', 'label2'
+      // Expecting labels to contain '#label1', '#label2'
       // '#TaskCard' should be removed as it's the indicatorTag
-      expect(parsedTask.labels).toEqual(['label1', 'label2']);
+      expect(parsedTask.labels).toEqual(['#label1', '#label2']);
     });
     
 
@@ -166,8 +166,8 @@ describe('taskParser', () => {
 
       const parsedTask = taskParser.parseTaskEl(taskElement);
 
-      // Expecting labels to contain only 'label1', 'label2' from the hidden span
-      expect(parsedTask.labels).toEqual(['label1', 'label2']);
+      // Expecting labels to contain only '#label1', '#label2' from the hidden span
+      expect(parsedTask.labels).toEqual(['#label1', '#label2']);
     });
 
     it('should handle only content labels when no hidden span labels are present', () => {
@@ -206,7 +206,7 @@ describe('taskParser', () => {
           color: '#f1f1f1'
         },
         sectionID: 'section-456',
-        labels: ['label1', 'label2'],
+        labels: ['#label1', '#label2'],
         completed: false,
         parent: null,
         children: [],
@@ -248,7 +248,7 @@ describe('taskParser', () => {
           color: '#f1f1f1'
         },
         sectionID: 'section-456',
-        labels: ['label1', 'label2'],
+        labels: ['#label1', '#label2'],
         completed: false,
         parent: null,
         children: [],
@@ -296,7 +296,7 @@ describe('taskParser', () => {
       const expectedTask = {
         content: 'A completed task with',
         completed: true,
-        labels: ['some', 'Labels', 'one-more-label']
+        labels: ['#some', '#Labels', '#one-more-label']
       };
 
       expect(parsedTask).toMatchObject(expectedTask);
@@ -311,7 +311,7 @@ describe('taskParser', () => {
       const expectedTask = {
         content: 'A completed task with',
         completed: true,
-        labels: ['labels']
+        labels: ['#labels']
       };
       expect(parsedTask).toMatchObject(expectedTask);
     });

@@ -79,6 +79,15 @@ export class TaskParser {
       (label) => label !== `#${this.indicatorTag}`
     );
 
+    // Make sure the each label starts with exactly one "#"
+    task.labels = task.labels.map(label => {
+      // Remove all leading '#' characters
+      const cleanedLabel = label.replace(/^#+/, '');
+      // Add a single '#' at the beginning
+      return '#' + cleanedLabel;
+    });
+    
+
     // Isolate the task content excluding tags// Get reference to the input checkbox element
     const checkboxElement = taskEl.querySelector('input.task-list-item-checkbox');
 
@@ -98,10 +107,6 @@ export class TaskParser {
 
       task.content = content.trim();
     }
-
-
-
-
 
     const checkbox = taskEl.querySelector(
       '.task-list-item-checkbox'
@@ -175,7 +180,9 @@ export class TaskParser {
     // Extracting labels from the content line
     const [contentLabels, remainingContent] = extractTags(contentWithLabels);
     task.content = remainingContent;
-    task.labels = contentLabels.filter((label) => label !== this.indicatorTag);
+    task.labels = contentLabels.filter((label) => label !== `#${this.indicatorTag}`);
+
+    // logger.debug(` parse markdown labels: ${JSON.stringify(task.labels)}, content: ${task.content}`);
 
     // Parsing attributes
     const attributesString = taskMarkdown.slice(contentEndIndex);
@@ -210,7 +217,6 @@ export class TaskParser {
         continue;
       }
 
-      
       switch (attributeName) {
         case 'due':
           task.due = tryParseAttribute('due', this.parseDue.bind(this), attributeValue, 'other');

@@ -93,11 +93,11 @@ describe('taskToMarkdown', () => {
     const task = new ObsidianTask({
       content: 'An example task',
       completed: false,
-      labels: ['label1', 'label2']
+      labels: ['#label1', '#label2']
     });
     const result = taskFormatter.taskToMarkdown(task);
     expect(result).toContain(
-      '<span class="labels" style="display:none;">["label1","label2"]</span>\n'
+      '#label1 #label2 #TaskCard\n'
     );
   });
 

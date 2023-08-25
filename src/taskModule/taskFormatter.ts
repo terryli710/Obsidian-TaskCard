@@ -8,6 +8,7 @@ export class TaskFormatter {
   indicatorTag: string;
   markdownSuffix: string;
   defaultMode: string;
+  specialAttributes: string[] = ['completed', 'content', 'labels'];
 
   constructor(settingsStore: typeof SettingStore) {
     // Subscribe to the settings store
@@ -19,18 +20,21 @@ export class TaskFormatter {
   }
 
   taskToMarkdown(task: ObsidianTask): string {
-    let markdownLine = `- [${task.completed ? 'x' : ' '}] ${task.content} #${
-      this.indicatorTag
-    }\n`;
+    const taskPrefix = `- [${task.completed ? 'x' : ' '}]`;
+    const labelMarkdown = task.labels.join(' ');
+    logger.debug(`labelMarkdown: ${labelMarkdown}`);
+    let markdownLine = `${taskPrefix} ${task.content} ${labelMarkdown} #${this.indicatorTag}`;
+    markdownLine = markdownLine.replace(/\s+/g, ' '); // remove multiple spaces
+    markdownLine += '\n';
 
     // add TaskItemParams to task
     if (!task.metadata.taskItemParams) {
       task.metadata.taskItemParams = { mode: this.defaultMode as TaskMode };
     }
 
-    // Iterate over keys in task, but exclude 'completed' and 'content'
+    // Iterate over keys in task, but exclude special attributes
     for (let key in task) {
-      if (key === 'completed' || key === 'content') continue;
+      if (this.specialAttributes.includes(key)) continue;
 
       let value = task[key];
       if (value === undefined) {

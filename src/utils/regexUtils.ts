@@ -9,7 +9,7 @@ export function extractTags(text: string): [string[], string] {
   const tagRegex = /#([a-zA-Z_/-]+[a-zA-Z0-9_/-]*|[a-zA-Z_/-][a-zA-Z0-9_/-]+)/g;
   let matches = text.match(tagRegex) || [];
   // for the matches, get the label part (remove the #)
-  const labels = matches.map((match) => match.substring(1));
+  let labels = matches.map((match) => match.substring(1));
 
   // Remove the tags from the content and then trim any consecutive spaces greater than 2
   const remainingText = text
@@ -18,6 +18,13 @@ export function extractTags(text: string): [string[], string] {
       ' '
     )
     .trim();
+
+  labels = labels.map(label => {
+    // Remove all leading '#' characters
+    const cleanedLabel = label.replace(/^#+/, '');
+    // Add a single '#' at the beginning
+    return '#' + cleanedLabel;
+  });
 
   return [labels, remainingText];
 }
