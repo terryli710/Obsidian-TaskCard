@@ -93,6 +93,7 @@
 - `chrono` is not string enough for all the date formats.
 - Add msg to indicate user when date parsing is failed.
 - Add `sugar.js` to replace chrono.
+- TODO: BUG: !! due display in single-line mode.
 
 ### Addition
 
