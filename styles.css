@@ -42,6 +42,24 @@
   padding: 0.25em 0.5em 0.25em 0.48em;
 }
 
+.obsidian-taskcard.mode-multi-line.is-flashing {
+  box-shadow: 0px 0px 10px var(--text-highlight-bg);
+}
+
+.obsidian-taskcard-list-item {
+  position: relative;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  cursor: pointer;
+  outline: inherit;
+  background-color: inherit !important;
+}
+
+.obsidian-taskcard-list-item.is-flashing .obsidian-taskcard.mode-single-line {
+  box-shadow: 0px 0px 10px var(--text-highlight-bg);
+}
+
 .task-card-single-line {
   display: flex;
   flex-direction: row;
