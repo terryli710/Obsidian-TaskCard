@@ -87,7 +87,9 @@
       {dueDisplay}
     </div>
   {/if}
-  <div class="task-card-attribute-separator"> | </div>
+  {#if params.mode === 'multi-line'}
+    <div class="task-card-attribute-separator"> | </div>
+  {/if}
 {/if}
 
 <style>
