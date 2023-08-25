@@ -32,8 +32,8 @@ export interface TaskProperties {
   labels: string[];
   completed: boolean;
 
-  parent?: TaskProperties | null;
-  children: TaskProperties[];
+  parent?: TaskProperties | ObsidianTask | null;
+  children: TaskProperties[] | ObsidianTask[];
 
   due?: DueDate | null;
   metadata?: {

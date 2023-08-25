@@ -14,7 +14,8 @@ describe('TaskValidator', () => {
       parsingSettings: {
         indicatorTag: 'TaskCard',
         markdownStartingNotation: '%%*',
-        markdownEndingNotation: '*%%'
+        markdownEndingNotation: '*%%',
+        markdownSuffix: ' .'
       }
     });
 

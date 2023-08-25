@@ -10,7 +10,11 @@ describe('taskToMarkdown', () => {
     // Mock the SettingStore with controlled settings
     mockSettingStore = writable({
       parsingSettings: {
-        indicatorTag: 'TaskCard'
+        indicatorTag: 'TaskCard',
+        markdownSuffix: ' .',
+      },
+      displaySettings: {
+        defaultMode: 'single-line',
       }
     });
     taskFormatter = new TaskFormatter(mockSettingStore);

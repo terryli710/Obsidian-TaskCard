@@ -1,5 +1,5 @@
 import { TaskParser } from '../src/taskModule/taskParser';
-import { ObsidianTask, DateOnly } from '../src/taskModule/task';
+import { ObsidianTask, DateOnly, TaskProperties } from '../src/taskModule/task';
 import { JSDOM } from 'jsdom';
 import { logger } from '../src/utils/log';
 import { writable } from 'svelte/store';
@@ -87,9 +87,9 @@ describe('taskParser', () => {
     infoSpy.mockRestore();
   });
 
-  let mockProjectModule;
+  let mockProjectModule: ProjectModule;
   let mockSettingStore;
-  let taskParser;
+  let taskParser: TaskParser;
   let projects: Project[];
   beforeEach(() => {
     // Mock the SettingStore with controlled settings
@@ -118,6 +118,69 @@ describe('taskParser', () => {
   });
 
   describe('parseTaskEl', () => {
+
+    it('should merge labels from both hidden span and content', () => {
+      const dom = new JSDOM();
+      const document = dom.window.document;
+      const taskElement = createTestTaskElement(document);
+      const parsedTask = taskParser.parseTaskEl(taskElement);
+
+      // Expecting labels to contain both 'label1', 'label2' from the hidden span and '#TaskCard' from the content
+      expect(parsedTask.labels).toEqual(['label1', 'label2', '#TaskCard']);
+    });
+
+    it('should filter out duplicate labels', () => {
+      const dom = new JSDOM();
+      const document = dom.window.document;
+      const taskElement = createTestTaskElement(document);
+
+      // Adding another span to introduce a duplicate label
+      const duplicateLabelSpan = document.createElement('span');
+      duplicateLabelSpan.className = 'labels';
+      duplicateLabelSpan.style.display = 'none';
+      duplicateLabelSpan.textContent = '["#TaskCard"]';
+      taskElement.appendChild(duplicateLabelSpan);
+
+      const parsedTask = taskParser.parseTaskEl(taskElement);
+
+      // Expecting labels to contain 'label1', 'label2', and '#TaskCard' without any duplicates
+      expect(parsedTask.labels).toEqual(['label1', 'label2', '#TaskCard']);
+    });
+
+    it('should handle only hidden span labels when no content labels are present', () => {
+      const dom = new JSDOM();
+      const document = dom.window.document;
+      const taskElement = createTestTaskElement(document);
+
+      // Removing content label
+      const tagElement = taskElement.querySelector('a.tag');
+      if (tagElement) {
+        taskElement.removeChild(tagElement);
+      }
+
+      const parsedTask = taskParser.parseTaskEl(taskElement);
+
+      // Expecting labels to contain only 'label1', 'label2' from the hidden span
+      expect(parsedTask.labels).toEqual(['label1', 'label2']);
+    });
+
+    it('should handle only content labels when no hidden span labels are present', () => {
+      const dom = new JSDOM();
+      const document = dom.window.document;
+      const taskElement = createTestTaskElement(document);
+
+      // Removing hidden span labels
+      const labelsSpan = taskElement.querySelector('span.labels');
+      if (labelsSpan) {
+        taskElement.removeChild(labelsSpan);
+      }
+
+      const parsedTask = taskParser.parseTaskEl(taskElement);
+
+      // Expecting labels to contain only '#TaskCard' from the content
+      expect(parsedTask.labels).toEqual(['#TaskCard']);
+    });
+
     it('should parse a task element correctly', () => {
       // Create a test task element using the new task HTML structure
       const dom = new JSDOM();
@@ -125,7 +188,7 @@ describe('taskParser', () => {
       const taskElement = createTestTaskElement(document);
 
       // Expected task object
-      const expectedTask: ObsidianTask = {
+      const expectedTask: TaskProperties = {
         id: '',
         content: 'An example task',
         priority: 4,
@@ -166,7 +229,8 @@ describe('taskParser', () => {
       const taskElement = createTestTaskElement(document);
 
       // Expected task object without the id property
-      const expectedTask = {
+      const expectedTask: TaskProperties = {
+        id: '',
         content: 'An example task',
         priority: 4,
         description: '- A multi line description.\n- the second line.',

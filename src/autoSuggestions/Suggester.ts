@@ -130,7 +130,7 @@ export class AttributeSuggester {
     let suggestions: SuggestInformation[] = [];
 
     // Modify regex to capture the due date query
-    const dueRegexText = `${escapeRegExp(this.startingNotation)}\\s?due:(\\s*)${escapeRegExp(this.endingNotation)}`;
+    const dueRegexText = `${escapeRegExp(this.startingNotation)}\\s?due:(.*?)${escapeRegExp(this.endingNotation)}`;
     const dueRegex = new RegExp(dueRegexText, 'g');
     const dueMatch = matchByPositionAndGroup(lineText, dueRegex, cursorPos, 1);
     if (!dueMatch) return suggestions; // No match
@@ -179,7 +179,7 @@ export class AttributeSuggester {
     let suggestions: SuggestInformation[] = [];
 
     // Modify regex to capture the project name query
-    const projectRegexText = `${escapeRegExp(this.startingNotation)}\\s?project:(\\s*)${escapeRegExp(this.endingNotation)}`;
+    const projectRegexText = `${escapeRegExp(this.startingNotation)}\\s?project:(.*?)${escapeRegExp(this.endingNotation)}`;
     const projectRegex = new RegExp( projectRegexText, 'g');
     const projectMatch = matchByPositionAndGroup(
       lineText,

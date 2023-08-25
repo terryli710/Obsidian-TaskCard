@@ -61,14 +61,17 @@ export class TaskValidator {
   }
 
   isValidFormattedTaskMarkdown(taskMarkdown: string): boolean {
+    logger.debug('isValidFormattedTaskMarkdown: taskMarkdown', taskMarkdown);
     // at least one span element
     if (!this.hasSpanElement(taskMarkdown)) return false;
     const match = TaskValidator.formattedMarkdownPattern.exec(taskMarkdown);
+    logger.debug('isValidFormattedTaskMarkdown: match', match);
 
     if (match && match[1]) {
       const contentWithoutAttributes = match[1]
         .replace(this.getAttributePattern(), '')
         .trim();
+      logger.debug('isValidFormattedTaskMarkdown: contentWithoutAttributes', contentWithoutAttributes);
       return this.hasIndicatorTag(contentWithoutAttributes);
     }
     return false;
@@ -118,34 +121,32 @@ export class TaskValidator {
 
   private checkTaskElementClass(taskElement: HTMLElement): boolean {
     // Check if the element contains a child with the class 'task-list-item-checkbox'
-    if (!taskElement.querySelector('.task-list-item-checkbox')) {
-      return false;
-    }
+    if (!taskElement.querySelector('.task-list-item-checkbox')) return false;
 
     // Check if the element contains a child with the class 'list-bullet'
-    if (!taskElement.querySelector('.list-bullet')) {
-      return false;
-    }
+    if (!taskElement.querySelector('.list-bullet')) return false;
 
     // Check indicator tag
-    if (!this.checkTaskElementIndicatorTag(taskElement)) {
-      return false;
-    }
+    if (!this.checkTaskElementIndicatorTag(taskElement)) return false;
 
     return true;
   }
 
   private checkTaskElementIndicatorTag(taskElement: HTMLElement): boolean {
-    // Check if the element contains a child with the class 'tag' and the text `#${tagName}`
-    const tagElement = taskElement.querySelector('.tag');
-    if (
-      !tagElement ||
-      !tagElement.textContent?.includes(`#${this.indicatorTag}`)
-    ) {
-      return false;
+    // Find all elements with the class 'tag'
+    const tagElements = taskElement.querySelectorAll('.tag');
+    
+    // Loop through each tag element to see if it contains the indicator tag
+    for (const tagElement of tagElements) {
+      if (tagElement.textContent?.includes(`#${this.indicatorTag}`)) {
+        return true; // Found the indicator tag, so return true
+      }
     }
-    return true;
+    
+    // If the loop completes without finding the indicator tag, return false
+    return false;
   }
+  
 
   isValidTaskElement(taskElement: HTMLElement): boolean {
     if (!this.checkTaskElementClass(taskElement)) {

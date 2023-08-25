@@ -29,6 +29,18 @@ export class TaskParser {
     this.projectModule = projectModule;
   }
 
+
+  // New method to parse labels from task content
+  parseLabelsFromContent(taskEl: Element): string[] {
+    const tags = taskEl.querySelectorAll("a.tag");
+    const labels: string[] = [];
+    tags.forEach((tagElement) => {
+      const tagContent = tagElement.textContent || "";
+      if (tagContent) labels.push(tagContent);
+    });
+    return labels;
+  }
+
   parseTaskEl(taskEl: Element): ObsidianTask {
     function parseQuery(queryName: string, defaultValue: string = '') {
       try {
@@ -45,10 +57,6 @@ export class TaskParser {
 
     const task = new ObsidianTask();
     task.id = parseQuery('id', '') as string;
-    task.content =
-      taskEl
-        .querySelector('.task-list-item-checkbox')
-        ?.nextSibling?.textContent?.trim() || '';
     task.priority = parseQuery('priority', '1') as TaskProperties['priority'];
     task.description = parseQuery(
       'description',
@@ -60,7 +68,24 @@ export class TaskParser {
       'section-id',
       ''
     ) as TaskProperties['sectionID'];
-    task.labels = parseQuery('labels', '[]') as TaskProperties['labels'];
+    
+    // Get labels from span
+    let labelsFromSpan = parseQuery('labels', '[]') as TaskProperties['labels'];
+
+    // Get labels from content
+    let labelsFromContent = this.parseLabelsFromContent(taskEl);
+
+    // Concatenate and filter unique labels
+    task.labels = Array.from(new Set([...labelsFromSpan, ...labelsFromContent])).filter(
+      (label) => label !== this.indicatorTag
+    );
+
+    // Isolate the task content excluding tags
+    const contentElement = taskEl.querySelector('.task-list-item-checkbox')?.nextElementSibling;
+    if (contentElement) {
+      task.content = contentElement.childNodes[0].textContent?.trim() || '';
+    }
+
     const checkbox = taskEl.querySelector(
       '.task-list-item-checkbox'
     ) as HTMLInputElement;
