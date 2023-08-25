@@ -38,7 +38,6 @@
 
 - TODO: BUG: when indicator tag changes, 
   - previous cards?
-- TODO: BUG: when reset, display button as not warning
 
 
 ## Priority
@@ -129,8 +128,6 @@
 
 ## Project
 
-- TODO: OPTIMIZE: optimize addProjects -> avoid ranking repetitively.
-
 ### Functionality
 
 - color is "randomly" generated from project name.
@@ -152,6 +149,7 @@
 # Task adding and editing and deletion
 
 - dropdown menu in preview mode to do attribute adding and editing etc.
+- TODO: BUG: the autosuggest filter doesn't work.
 
 ## Task Adding
 

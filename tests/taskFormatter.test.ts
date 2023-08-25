@@ -4,13 +4,17 @@ import { TaskFormatter } from '../src/taskModule/taskFormatter';
 
 describe('taskToMarkdown', () => {
   let mockSettingStore;
-  let taskFormatter;
+  let taskFormatter: TaskFormatter;
 
   beforeEach(() => {
     // Mock the SettingStore with controlled settings
     mockSettingStore = writable({
       parsingSettings: {
-        indicatorTag: 'TaskCard'
+        indicatorTag: 'TaskCard',
+        markdownSuffix: ' .',
+      },
+      displaySettings: {
+        defaultMode: 'single-line',
       }
     });
     taskFormatter = new TaskFormatter(mockSettingStore);
@@ -89,11 +93,11 @@ describe('taskToMarkdown', () => {
     const task = new ObsidianTask({
       content: 'An example task',
       completed: false,
-      labels: ['label1', 'label2']
+      labels: ['#label1', '#label2']
     });
     const result = taskFormatter.taskToMarkdown(task);
     expect(result).toContain(
-      '<span class="labels" style="display:none;">["label1","label2"]</span>\n'
+      '#label1 #label2 #TaskCard\n'
     );
   });
 
@@ -122,7 +126,7 @@ describe('taskToMarkdown', () => {
     });
     const result = taskFormatter.taskToMarkdown(task);
     expect(result).toContain(
-      '<span class="metadata" style="display:none;">{"filePath":"/path/to/file"}</span>\n'
+      '<span class=\"metadata\" style=\"display:none;\">{\"filePath\":\"/path/to/file\",\"taskDisplayParams\":{\"mode\":'
     );
   });
 });

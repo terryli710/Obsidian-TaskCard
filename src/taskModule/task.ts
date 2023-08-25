@@ -2,7 +2,8 @@ import type { Static } from 'runtypes';
 import { String } from 'runtypes';
 import { v4 as uuidv4 } from 'uuid';
 import { Project } from './project';
-import { TaskItemParams } from '../renderer/postProcessor';
+import { TaskDisplayParams } from '../renderer/postProcessor';
+import { logger } from '../utils/log';
 
 export const DateOnly = String.withConstraint((s) =>
   /^\d{4}-\d{2}-\d{2}$/.test(s)
@@ -32,12 +33,12 @@ export interface TaskProperties {
   labels: string[];
   completed: boolean;
 
-  parent?: TaskProperties | null;
-  children: TaskProperties[];
+  parent?: TaskProperties | ObsidianTask | null;
+  children: TaskProperties[] | ObsidianTask[];
 
   due?: DueDate | null;
   metadata?: {
-    taskItemParams?: TaskItemParams | null;
+    taskDisplayParams?: TaskDisplayParams | null;
     [key: string]: any; 
   };
 }
@@ -60,7 +61,7 @@ export class ObsidianTask implements TaskProperties {
   public due?: DueDate | null;
   
   public metadata?: {
-    taskItemParams?: TaskItemParams | null;
+    taskDisplayParams?: TaskDisplayParams | null;
     [key: string]: any; 
   };
   
@@ -111,14 +112,14 @@ export class ObsidianTask implements TaskProperties {
     return !!this.due.string;
   }
 
-  setTaskItemParams(key: string, value: any): void {
-    this.metadata.taskItemParams = {
-      ...this.metadata.taskItemParams,
+  setTaskDisplayParams(key: string, value: any): void {
+    this.metadata.taskDisplayParams = {
+      ...this.metadata.taskDisplayParams,
       [key]: value
     };
   }
 
-  clearTaskItemParams(): void {
-    this.metadata.taskItemParams = null;
+  clearTaskDisplayParams(): void {
+    this.metadata.taskDisplayParams = null;
   }
 }
