@@ -198,7 +198,9 @@
       <Content taskSyncManager={taskSyncManager} />
       <Project taskSyncManager={taskSyncManager} params={params} />
     </div>
-    <Description taskSyncManager={taskSyncManager} />
+    {#if taskSyncManager.obsidianTask.hasDescription() || taskSyncManager.getTaskCardStatus('descriptionStatus') === 'editing'}
+      <Description taskSyncManager={taskSyncManager} />
+    {/if}
     <button class="task-card-menu-button mode-multi-line" on:click={(event) => showCardMenu(event)} tabindex="0">
       <MoreVertical/>
     </button>

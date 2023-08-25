@@ -10,7 +10,7 @@
 - TODO: google calendar sync?
 
 # Commands
-- TODO: FEATURE: command to set all tasks to single-line or multi-line.
+- TODO: FEATURE (hard): Add pane menu to toggle single and multi line mode
 - 
 
 # Display
