@@ -87,6 +87,14 @@ export default class TaskCardPlugin extends Plugin {
         this.taskMonitor.changeDisplayModeCommandHandler('single-line');
       }
     })
+    
+    this.addCommand({
+      id: 'task-card-multi-line-display-mode',
+      name: 'Task Card: Multi Line Display Mode',
+      callback: () => {
+        this.taskMonitor.changeDisplayModeCommandHandler('multi-line');
+      }
+    })
   }
 
   async onload() {
