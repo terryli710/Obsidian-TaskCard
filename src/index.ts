@@ -60,12 +60,7 @@ export default class TaskCardPlugin extends Plugin {
     await this.saveData(this.settings);
   }
 
-  async onload() {
-    await this.loadSettings();
-    this.projectModule.updateProjects(
-      this.settings.userMetadata.projects as Project[]
-    );
-    this.addSettingTab(new SettingsTab(this.app, this));
+  registerEvents() {
     this.registerMarkdownPostProcessor(
       this.taskCardRenderManager.getPostProcessor()
     );
@@ -81,6 +76,22 @@ export default class TaskCardPlugin extends Plugin {
     // this.registerEvent(this.app.workspace.on('window-open', () => logger.debug('window-open')));
     // this.registerEvent(this.app.workspace.on('window-close', () => logger.debug('window-close')));4
     // this.registerEvent(this.app.workspace.on('active-leaf-change', () => logger.debug('active-leaf-change')));
+
+  }
+
+  registerCommands() {
+    
+  }
+
+  async onload() {
+    await this.loadSettings();
+    this.projectModule.updateProjects(
+      this.settings.userMetadata.projects as Project[]
+    );
+    this.addSettingTab(new SettingsTab(this.app, this));
+    this.registerEvents();
+    this.registerCommands();
+
 
     logger.info('Plugin loaded.');
   }

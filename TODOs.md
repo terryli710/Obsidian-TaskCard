@@ -194,10 +194,10 @@
 ```markdown
 - [ ] An example task #TaskCard
       <span class="priority" style="display:none;">4</span>
-      <span class="description" style="display:none;">"- A multi line description.\n- the second line."</span>
+      <span class="description" style="display:none;">- A multi line description.\n- the second line.</span>
       <span class="order" style="display:none;">1</span>
       <span class="project" style="display:none;">{"id":"project-123", "name":"Project Name"}</span>
-      <span class="section-id" style="display:none;">"section-456"</span>
+      <span class="section-id" style="display:none;">section-456</span>
       <span class="labels" style="display:none;">["label1","label2"]</span>
       <span class="parent" style="display:none;">null</span>
       <span class="children" style="display:none;">[]</span>

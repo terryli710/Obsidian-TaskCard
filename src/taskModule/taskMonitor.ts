@@ -2,6 +2,7 @@ import { App, MarkdownView, TFile, Vault, WorkspaceLeaf } from 'obsidian';
 import TaskCardPlugin from '..';
 import { Notice } from 'obsidian';
 import { logger } from '../utils/log';
+import { TaskDisplayMode } from '../renderer/postProcessor';
 
 
 export class TaskMonitor {
@@ -27,6 +28,10 @@ export class TaskMonitor {
     }, 2);
   }
 
+  async changeDisplayModeCommandHandler(mode: TaskDisplayMode) {
+    await this.monitorFileToChangeTaskDisplayModes(this.app.workspace.getActiveFile(), mode);
+  }
+
   // MONITORS
 
   async monitorVaultToChangeIndicatorTags(vault: Vault, newIndicatorTag, oldIndicatorTag) {
@@ -39,11 +44,31 @@ export class TaskMonitor {
   async monitorFileToFormatTasks(file: TFile) {
     const lines = await this.getLinesFromFile(file);
     if (!lines) return;
-    const updatedLines = this.updateTasksInLines(lines);
+    const updatedLines = this.formatTaskInLines(lines);
+    await this.updateFileWithNewLines(file, updatedLines);
+  }
+
+  async monitorFileToChangeTaskDisplayModes(file: TFile, mode: TaskDisplayMode) {
+    const lines = await this.getLinesFromFile(file);
+    if (!lines) return;
+    const updatedLines = this.changeTaskDisplayModesInLines(lines, mode);
     await this.updateFileWithNewLines(file, updatedLines);
   }
 
   // HELPERS
+
+  changeTaskDisplayModesInLines(lines: string[], mode: TaskDisplayMode): string[] {
+    return lines.map((line, index) => this.changeTaskDisplayModeInLine(line, mode));
+  }
+
+  changeTaskDisplayModeInLine(line: string, mode: TaskDisplayMode): string {
+    if (this.plugin.taskValidator.isValidFormattedTaskMarkdown(line)) {
+      const task = this.plugin.taskParser.parseFormattedTaskMarkdown(line);
+      task.metadata.taskDisplayParams.mode = mode;
+      return this.plugin.taskFormatter.taskToMarkdownOneLine(task);
+    }
+    return line;
+  }
 
   async changeIndicatorTagsForFile(file: TFile, newIndicatorTag, oldIndicatorTag) {
     // iterate over all lines in the file, find formatted tasks
@@ -70,11 +95,11 @@ export class TaskMonitor {
     return await this.plugin.fileOperator.getFileLines(file.path);
   }
 
-  updateTasksInLines(lines: string[]): string[] {
-    return lines.map((line, index) => this.updateTaskInLine(line, index));
+  formatTaskInLines(lines: string[]): string[] {
+    return lines.map((line, index) => this.formatTaskInLine(line, index));
   }
 
-  updateTaskInLine(line: string, index: number): string {
+  formatTaskInLine(line: string, index: number): string {
     function announceError(errorMsg: string): void {
       // Show a notice popup
       new Notice(errorMsg);

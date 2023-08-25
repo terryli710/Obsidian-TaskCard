@@ -2,7 +2,7 @@ import { logger } from '../utils/log';
 import { escapeRegExp, extractTags } from '../utils/regexUtils';
 import { kebabToCamel } from '../utils/stringCaseConverter';
 import { toArray, toBoolean } from '../utils/typeConversion';
-import { DueDate, ObsidianTask, TaskProperties } from './task';
+import { DueDate, ObsidianTask, Order, Priority, TaskProperties } from './task';
 import { Project, ProjectModule } from './project';
 import Sugar from 'sugar';
 import { SettingStore } from '../settings';
@@ -182,7 +182,7 @@ export class TaskParser {
     task.content = remainingContent;
     task.labels = contentLabels.filter((label) => label !== `#${this.indicatorTag}`);
 
-    // logger.debug(` parse markdown labels: ${JSON.stringify(task.labels)}, content: ${task.content}`);
+
 
     // Parsing attributes
     const attributesString = taskMarkdown.slice(contentEndIndex);
@@ -246,6 +246,73 @@ export class TaskParser {
     }
   }
 
+    return task;
+  }
+
+  parseFormattedTaskMarkdown(taskMarkdown: string): ObsidianTask {
+    const task: ObsidianTask = new ObsidianTask();
+
+    // Splitting the content and the attributes
+    const contentEndIndex = taskMarkdown.indexOf('<span class=');
+    const markdownTaskContent =
+      contentEndIndex !== -1
+        ? taskMarkdown.slice(0, contentEndIndex).trim()
+        : taskMarkdown.trim();
+
+    const contentWithLabels = markdownTaskContent.slice(5).trim();
+    task.completed = markdownTaskContent.startsWith('- [x]'); // TODO: currently only supports x
+
+    // Extracting labels from the content line
+    const [contentLabels, remainingContent] = extractTags(contentWithLabels);
+    task.content = remainingContent;
+    task.labels = contentLabels.filter((label) => label !== `#${this.indicatorTag}`);
+
+    // Parsing attributes
+    const attributesString = taskMarkdown.slice(contentEndIndex);
+
+    function extractFormattedAttributes(attributeString: string): Map<string, string> {
+      // spread spans <span class="[^"]+" style="display:none;">.*?<\\/span>
+      const attributeSpan: RegExp = new RegExp(`<span class="([^"]+)" style="display:none;">(.*?)<\\/span>`, 'g');
+      const matches = [...attributeString.matchAll(attributeSpan)];
+      // extract the attributes names and values
+      const attributes: Map<string, string> = new Map();
+      for (const match of matches) {
+        // group 1 and group 2 are the attributes names and values
+        const attributeName: string = match[1].trim();
+        const attributeValue: string = match[2].trim();
+        attributes.set(attributeName, attributeValue);
+      }
+      return attributes;
+    }
+
+    const attributes = extractFormattedAttributes(attributesString);
+
+    // Helper function to parse JSON attributes
+    function parseJSONAttribute<T>(attributeValue: string | undefined, logger: any, attributeName: string, fallbackValue: T | null): T | null {
+      try {
+        return attributeValue ? (JSON.parse(attributeValue) as T) : fallbackValue;
+      } catch (e) {
+        logger.warn(`Failed to parse ${attributeName} attribute: ${e.message}`);
+        return fallbackValue;
+      }
+    }
+
+    // For string attributes
+    task.id = attributes.get('id') || '';
+    task.description = attributes.get('description') || '';
+    task.sectionID = attributes.get('section-id') || '';
+
+    // For attributes that require JSON parsing
+    task.priority = parseJSONAttribute(attributes.get('priority'), logger, 'priority', '4' as unknown as Priority);
+    task.order = parseJSONAttribute(attributes.get('order'), logger, 'order', null);
+    task.project = parseJSONAttribute(attributes.get('project'), logger, 'project', null);
+    task.due = parseJSONAttribute(attributes.get('due'), logger, 'due', null); 
+    task.metadata = parseJSONAttribute(attributes.get('metadata'), logger, 'metadata', null); 
+
+    // Optional attributes
+    task.parent = parseJSONAttribute(attributes.get('parent'), logger, 'parent', null); // Or a default parent
+    task.children = parseJSONAttribute(attributes.get('children'), logger, 'children', []); // Assuming children are in JSON array format
+  
     return task;
   }
 
