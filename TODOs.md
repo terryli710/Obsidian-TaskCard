@@ -37,12 +37,13 @@
 
 - Manually using lucide icon, because we cannot install lucide-svelte
 
+## Menu
+
+- TODO: OPTIMIZE: organize menu and add separators
+
 # Interaction
 
 ## Settings
-
-- TODO: BUG: when indicator tag changes, 
-  - previous cards?
 
 
 ## Priority
@@ -93,7 +94,6 @@
 - `chrono` is not string enough for all the date formats.
 - Add msg to indicate user when date parsing is failed.
 - Add `sugar.js` to replace chrono.
-- TODO: BUG: !! due display in single-line mode.
 
 ### Addition
 

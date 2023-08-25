@@ -131,7 +131,7 @@ export class SettingsTab extends PluginSettingTab {
         if (isColorPickerMode) {
           colorPickerButton.setTooltip('Cancel').setIcon('circle-off');
         } else {
-          colorPickerButton.setTooltip('Pick a color').setIcon('palette');
+          colorPickerButton.setTooltip('Pick a color (optional)').setIcon('palette');
         }
       }
     };
@@ -151,6 +151,7 @@ export class SettingsTab extends PluginSettingTab {
 
     if (isColorPickerMode) {
       setting.addColorPicker((colorPicker) => {
+        colorPickerComponent = colorPicker;
         colorPicker.onChange((value) => {
           newProjectColor = value;
           this.settingStatus.newProjectColor = value; // Store the color value if needed
@@ -351,15 +352,33 @@ export class SettingsTab extends PluginSettingTab {
     };
   
     const setting = new Setting(this.containerEl);
-  
+
     setting
       .setName('Indicator Tag')
-      .setDesc(`The tag used to identify task cards. 
-      Will take full effect after reloading obsidian.
-      Toggle on to convert existing tasks\' tags when indicator tag is changed.
-      Indicator tag must be a valid Obsidian tag, e.g. #TaskCard. Refer to https://help.obsidian.md/Editing+and+formatting/Tags#Tag+format
-      `);
-
+      .then((setting) => {
+        setting.descEl.appendChild(
+          createFragment((frag) => {
+            frag.appendText(
+              'The tag used to identify task cards. ' +
+              'Will take full effect after reloading obsidian. ' +
+              'Toggle on to convert existing tasks\' tags when indicator tag is changed. ' +
+              'Indicator tag must be a valid Obsidian tag, e.g. #TaskCard. Refer to '
+            );
+            frag.createEl(
+              'a',
+              {
+                text: 'Tag format',
+                href: 'https://help.obsidian.md/Editing+and+formatting/Tags#Tag+format'
+              },
+              (a) => {
+                a.setAttr('target', '_blank');
+              }
+            );
+            frag.createEl('br');
+          })
+        );
+      });
+  
     let convertTaskIndicatorTags: boolean = false
     
     setting.addToggle((toggle) => {
