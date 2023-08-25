@@ -4,7 +4,7 @@ import { TaskFormatter } from '../src/taskModule/taskFormatter';
 
 describe('taskToMarkdown', () => {
   let mockSettingStore;
-  let taskFormatter;
+  let taskFormatter: TaskFormatter;
 
   beforeEach(() => {
     // Mock the SettingStore with controlled settings
@@ -126,7 +126,7 @@ describe('taskToMarkdown', () => {
     });
     const result = taskFormatter.taskToMarkdown(task);
     expect(result).toContain(
-      '<span class="metadata" style="display:none;">{"filePath":"/path/to/file"}</span>\n'
+      '<span class=\"metadata\" style=\"display:none;\">{\"filePath\":\"/path/to/file\",\"taskItemParams\":{\"mode\":'
     );
   });
 });

@@ -6,7 +6,6 @@ import { DueDate, ObsidianTask, TaskProperties } from './task';
 import { Project, ProjectModule } from './project';
 import Sugar from 'sugar';
 import { SettingStore } from '../settings';
-import { Notice } from 'obsidian';
 
 export class TaskParser {
   indicatorTag: string;
@@ -77,14 +76,32 @@ export class TaskParser {
 
     // Concatenate and filter unique labels
     task.labels = Array.from(new Set([...labelsFromSpan, ...labelsFromContent])).filter(
-      (label) => label !== this.indicatorTag
+      (label) => label !== `#${this.indicatorTag}`
     );
 
-    // Isolate the task content excluding tags
-    const contentElement = taskEl.querySelector('.task-list-item-checkbox')?.nextElementSibling;
-    if (contentElement) {
-      task.content = contentElement.childNodes[0].textContent?.trim() || '';
+    // Isolate the task content excluding tags// Get reference to the input checkbox element
+    const checkboxElement = taskEl.querySelector('input.task-list-item-checkbox');
+
+    if (checkboxElement) {
+      let currentNode: Node | null = checkboxElement;
+      let content = '';
+
+      // Traverse through next siblings to accumulate text content
+      while ((currentNode = currentNode.nextSibling) !== null) {
+        if (currentNode.nodeType === 3) { // Node.TEXT_NODE
+          content += currentNode.textContent?.trim() + ' ';
+        }
+        if (currentNode.nodeType === 1 && (currentNode as Element).tagName === 'A') { // Node.ELEMENT_NODE
+          break;
+        }
+      }
+
+      task.content = content.trim();
     }
+
+
+
+
 
     const checkbox = taskEl.querySelector(
       '.task-list-item-checkbox'
@@ -103,8 +120,47 @@ export class TaskParser {
     return task;
   }
 
-  parseTaskMarkdown(taskMarkdown: string): ObsidianTask { // TODO: optimize this function
+  parseTaskMarkdown(taskMarkdown: string, noticeFunc: (msg: string) => void = null): ObsidianTask {
     const task: ObsidianTask = new ObsidianTask();
+    const errors: string[] = [];
+  
+    const tryParseAttribute = (
+      attributeName: string,
+      parseFunc: (val: string) => any,
+      value: string,
+      type: string
+    ) => {
+      try {
+        let parsedValue = parseFunc(value);
+        if (parsedValue === null) {
+          throw new Error(`Failed to parse ${attributeName}: ${value}`);
+        }
+
+        console.log(`Parsed ${attributeName}: ${parsedValue}`);
+
+        // Type specific parsing if needed
+        switch (type) {
+          case 'array':
+            parsedValue = toArray(parsedValue);
+            break;
+          case 'boolean':
+            parsedValue = toBoolean(parsedValue);
+            break;
+          case 'string':
+            break;
+          case 'other':
+            break;
+          default:
+            parsedValue = JSON.parse(parsedValue);
+            break;
+        }
+        return parsedValue;
+      } catch (e) {
+        errors.push(`${attributeName} attribute error: ${e.message}`);
+        return null;
+      }
+    };
+
 
     // Splitting the content and the attributes
     const contentEndIndex = taskMarkdown.indexOf(this.markdownStartingNotation);
@@ -154,69 +210,35 @@ export class TaskParser {
         continue;
       }
 
+      
       switch (attributeName) {
         case 'due':
-          try {
-            const parsedDue = this.parseDue(attributeValue);
-            if (!parsedDue) {
-              throw new Error(`Failed to parse due date: ${attributeValue}`);
-            }
-            task.due = parsedDue;
-            parsedAttributeNames.push('due');
-          } catch (e) {
-            console.error(`Failed to parse due date: ${e.message}`);
-            new Notice(`[TaskCard] Failed to parse due date: ${e.message}`);
-          }
+          task.due = tryParseAttribute('due', this.parseDue.bind(this), attributeValue, 'other');
           break;
         case 'project':
-          try {
-            const parsedProject = this.parseProject(attributeValue);
-            if (!parsedProject) {
-              throw new Error(`Failed to parse project: ${attributeValue}`);
-            }
-            task.project = parsedProject;
-            parsedAttributeNames.push('project');
-          } catch (e) {
-            console.error(
-              `Cannot find project: ${attributeValue}, error: ${e.message}`
-            );
-            new Notice(`[TaskCard] Failed to parse project: ${e.message}`);
-          }
+          task.project = tryParseAttribute('project', this.parseProject.bind(this), attributeValue, 'string');
           break;
         case 'metadata':
-          try {
-            task.metadata = JSON.parse(attributeValue);
-            parsedAttributeNames.push('metadata');
-          } catch (e) {
-            console.error(`Failed to parse metadata attribute: ${e.message}`);
-          }
+          task.metadata = tryParseAttribute('metadata', JSON.parse, attributeValue, 'other');
           break;
         default:
-          // Explicitly assert the type of the key
           const taskKey = attributeName as keyof ObsidianTask;
-
-          // Only assign the value if the key exists on ObsidianTask and parse it with the correct type
           if (taskKey in task) {
-            try {
-              if (Array.isArray(task[taskKey])) {
-                (task[taskKey] as any) = toArray(attributeValue);
-              } else if (typeof task[taskKey] === 'boolean') {
-                (task[taskKey] as any) = toBoolean(attributeValue);
-              } else if (typeof task[taskKey] === 'string') {
-                (task[taskKey] as any) = attributeValue;
-              } else {
-                (task[taskKey] as any) = JSON.parse(attributeValue);
-              }
+            const type = typeof task[taskKey];
+            (task as any)[taskKey] = tryParseAttribute(attributeName, (val) => val, attributeValue, type);
+            if (task[taskKey] !== null) {
               parsedAttributeNames.push(taskKey);
-            } catch (e) {
-              logger.error(
-                `Failed to convert value for key ${taskKey}: ${e.message}`
-              );
             }
           }
           break;
       }
     }
+
+  if (noticeFunc && errors.length > 0) {
+    for (const error of errors) {
+      noticeFunc(error);
+    }
+  }
 
     return task;
   }

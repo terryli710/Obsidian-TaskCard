@@ -7,8 +7,6 @@ import { camelToKebab } from '../utils/stringCaseConverter';
 export type SpanElements = Record<keyof ObsidianTask, HTMLElement>;
 
 export class TaskValidator {
-  private static formattedMarkdownPattern: RegExp =
-    /^\s*- \[[^\]]\](.*?)(<span class="[^"]+" style="display:none;">.*?<\/span>)+{this.markdownSuffix}?$/;
   private spanElementPattern: RegExp =
     /<span class="[^"]+" style="display:none;">(.*?)<\/span>/;
   private markdownTaskPattern: RegExp = /^\s*- \[[^\]]\]\s/;
@@ -51,6 +49,11 @@ export class TaskValidator {
     return new RegExp(markdownPatternText, 'gm');
   }
 
+  private getFormattedMarkdownPattern(): RegExp {
+    const markdownSuffix = this.markdownSuffix;
+    return new RegExp(`^\\s*- \\[[^\\]]\\] (.*?)\\s*(<span class="[^"]+" style="display:none;">.*?<\\/span>\\s*)+(${markdownSuffix})?$`);
+  }
+
 
   private hasSpanElement(markdown: string): boolean {
     if (typeof markdown !== 'string') return false;
@@ -61,17 +64,15 @@ export class TaskValidator {
   }
 
   isValidFormattedTaskMarkdown(taskMarkdown: string): boolean {
-    logger.debug('isValidFormattedTaskMarkdown: taskMarkdown', taskMarkdown);
     // at least one span element
     if (!this.hasSpanElement(taskMarkdown)) return false;
-    const match = TaskValidator.formattedMarkdownPattern.exec(taskMarkdown);
-    logger.debug('isValidFormattedTaskMarkdown: match', match);
+    const match = this.getFormattedMarkdownPattern().exec(taskMarkdown);
 
     if (match && match[1]) {
       const contentWithoutAttributes = match[1]
         .replace(this.getAttributePattern(), '')
         .trim();
-      logger.debug('isValidFormattedTaskMarkdown: contentWithoutAttributes', contentWithoutAttributes);
+      // logger.debug(`isValidFormattedTaskMarkdown: contentWithoutAttributes - ${contentWithoutAttributes}`);
       return this.hasIndicatorTag(contentWithoutAttributes);
     }
     return false;
