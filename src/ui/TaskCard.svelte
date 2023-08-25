@@ -208,7 +208,6 @@
     <div class="task-card-attribute-bottom-bar-left">
       {#if taskSyncManager.obsidianTask.hasDue() || taskSyncManager.getTaskCardStatus('dueStatus') === 'editing'}
         <Due taskSyncManager={taskSyncManager} plugin={plugin} params={params} />
-        <div class="task-card-attribute-separator"> | </div>
       {/if}
       <Labels taskSyncManager={taskSyncManager} />
     </div>

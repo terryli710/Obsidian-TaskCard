@@ -137,7 +137,6 @@ export class AttributeSuggester {
 
     // Get the due date query from the captured group
     const dueQuery = (dueMatch[1] || '').trim();
-    logger.debug(`Due query: ${dueQuery}`);
 
     const dueStringSelections = [
       'today',

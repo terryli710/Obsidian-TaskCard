@@ -72,7 +72,7 @@ export class ObsidianTaskSyncManager implements ObsidianTaskSyncProps {
 
   async updateMarkdownTaskToFile(markdownTask: string): Promise<void> {
     const [docLineStart, docLineEnd] = this.getDocLineStartEnd();
-    logger.debug(`updating markdownTask from ${docLineStart} to ${docLineEnd}`);
+    // logger.debug(`updating markdownTask from ${docLineStart} to ${docLineEnd}`);
     await this.plugin.fileOperator.updateFile(
       this.taskMetadata.sourcePath,
       markdownTask,

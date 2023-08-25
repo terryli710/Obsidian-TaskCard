@@ -3,6 +3,7 @@ import { String } from 'runtypes';
 import { v4 as uuidv4 } from 'uuid';
 import { Project } from './project';
 import { TaskItemParams } from '../renderer/postProcessor';
+import { logger } from '../utils/log';
 
 export const DateOnly = String.withConstraint((s) =>
   /^\d{4}-\d{2}-\d{2}$/.test(s)
@@ -108,6 +109,7 @@ export class ObsidianTask implements TaskProperties {
   hasDue(): boolean {
     if (!this.due) return false;
     // return if the due string is not empty
+    logger.debug(`hasDue: ${JSON.stringify(this.due)}`);
     return !!this.due.string;
   }
 

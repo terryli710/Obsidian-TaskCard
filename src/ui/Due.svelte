@@ -32,7 +32,12 @@
           event.preventDefault();
           // taskSyncManager.setTaskCardStatus('dueStatus', 'done');
           taskSyncManager.taskCardStatus.dueStatus = 'done';
-          due = plugin.taskParser.parseDue(dueString);
+          try {
+            due = plugin.taskParser.parseDue(dueString);
+          } catch (e) {
+            logger.error(e);
+          }
+          if (!due) { dueString = ''; }
           taskSyncManager.updateObsidianTaskAttribute('due', due);
           updateDueDisplay();
       } else if (event.key === 'Escape') {
@@ -82,6 +87,7 @@
       {dueDisplay}
     </div>
   {/if}
+  <div class="task-card-attribute-separator"> | </div>
 {/if}
 
 <style>

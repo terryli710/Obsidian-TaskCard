@@ -22,7 +22,6 @@ export class TaskFormatter {
   taskToMarkdown(task: ObsidianTask): string {
     const taskPrefix = `- [${task.completed ? 'x' : ' '}]`;
     const labelMarkdown = task.labels.join(' ');
-    logger.debug(`labelMarkdown: ${labelMarkdown}`);
     let markdownLine = `${taskPrefix} ${task.content} ${labelMarkdown} #${this.indicatorTag}`;
     markdownLine = markdownLine.replace(/\s+/g, ' '); // remove multiple spaces
     markdownLine += '\n';

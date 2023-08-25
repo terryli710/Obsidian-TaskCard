@@ -253,14 +253,14 @@ export class TaskParser {
     const parsedDateTime = Sugar.Date.create(dueString);
 
     // Check if the parsedDateTime is a valid date
-    if (!parsedDateTime) {
+    if (!parsedDateTime || !Sugar.Date.isValid(parsedDateTime)) {
       return null;
     }
 
     const parsedDate = Sugar.Date.format(parsedDateTime, '{yyyy}-{MM}-{dd}');
     const parsedTime = Sugar.Date.format(parsedDateTime, '{HH}:{mm}');
 
-    const isDateOnly = parsedTime === '00:00';
+    const isDateOnly = ['00:00', '23:59'].includes(parsedTime);
 
     if (isDateOnly) {
       return {
