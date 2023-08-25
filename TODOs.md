@@ -1,6 +1,6 @@
 # Releases
 
-- TODO: Add simple docs.
+- TODO: OPTIMIZE: Add simple docs.
 
 # Features
 
@@ -8,6 +8,10 @@
 - TODO: Auto added due.
 - TODO: todoist sync?
 - TODO: google calendar sync?
+
+# Commands
+- TODO: FEATURE: command to set all tasks to single-line or multi-line.
+- 
 
 # Display
 
@@ -27,6 +31,7 @@
 - TODO: OPTIMIZE: keep the window position when rerendering!!
 - TODO: BUG: line error when there's multiple text and spaces lines!!!
 - TODO: OPTIMIZE: text between two tasks will be leave out. -> they should be shown in description.
+- TODO: OPTIMIZE: multi-line description.
 
 ## Icon
 
@@ -97,9 +102,9 @@
 
 - double click and edit due string.
   - Save and discard edits.
-- TODO: the font when editing.
-- TODO: the text box when editing.
-- TODO: font size and text box size when editing.
+- TODO: OPTIMIZE: the font when editing.
+- TODO: OPTIMIZE: the text box when editing.
+- TODO: OPTIMIZE: font size and text box size when editing.
 
 ### Delete
 
@@ -109,18 +114,14 @@
 
 ### Functionality
 
-- TODO: searchable labels (currently cannot be searched).
-
 ### Addition
 
 - bottom to add label.
-- TODO: adjust bottom shape.
 
 ### Edit
 
 - right click -> dropdown to edit.
 - TODO: the css when editing.
-- TODO: (optional) use dots besides the label to edit
 
 ### Delete
 
@@ -149,7 +150,6 @@
 # Task adding and editing and deletion
 
 - dropdown menu in preview mode to do attribute adding and editing etc.
-- TODO: BUG: the autosuggest filter doesn't work.
 
 ## Task Adding
 
@@ -173,7 +173,7 @@
 ## HTML pinpointing the MD
 
 - Mostly done.
-- TODO: Description as appending paragraphs
+- TODO: OPTIMIZE: Description as appending paragraphs
 
 # Task Formats
 
