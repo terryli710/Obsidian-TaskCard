@@ -1,4 +1,4 @@
-import { App, MarkdownView, TFile, WorkspaceLeaf } from 'obsidian';
+import { App, MarkdownView, TFile, Vault, WorkspaceLeaf } from 'obsidian';
 import TaskCardPlugin from '..';
 import { Notice } from 'obsidian';
 import { logger } from '../utils/log';
@@ -13,12 +13,7 @@ export class TaskMonitor {
     this.app = app;
   }
 
-  async monitorFileToFormatTasks(file: TFile) {
-    const lines = await this.getLinesFromFile(file);
-    if (!lines) return;
-    const updatedLines = this.updateTasksInLines(lines);
-    await this.updateFileWithNewLines(file, updatedLines);
-  }
+  // HANDLERS
 
   layoutChangeHandler() {
     const file = this.app.workspace.getActiveFile();
@@ -30,6 +25,45 @@ export class TaskMonitor {
     setTimeout(() => {
       this.monitorFileToFormatTasks(file);
     }, 2);
+  }
+
+  // MONITORS
+
+  async monitorVaultToChangeIndicatorTags(vault: Vault, newIndicatorTag, oldIndicatorTag) {
+    // iterate over all markdown files in the vault
+    for (const file of vault.getMarkdownFiles()) {
+      this.changeIndicatorTagsForFile(file, newIndicatorTag, oldIndicatorTag);
+    }
+  }
+
+  async monitorFileToFormatTasks(file: TFile) {
+    const lines = await this.getLinesFromFile(file);
+    if (!lines) return;
+    const updatedLines = this.updateTasksInLines(lines);
+    await this.updateFileWithNewLines(file, updatedLines);
+  }
+
+  // HELPERS
+
+  async changeIndicatorTagsForFile(file: TFile, newIndicatorTag, oldIndicatorTag) {
+    // iterate over all lines in the file, find formatted tasks
+    const lines = await this.getLinesFromFile(file);
+    if (!lines) return;
+    const updatedLines: string[] = this.changeIndicatorTagsForLines(lines, newIndicatorTag, oldIndicatorTag);
+    await this.updateFileWithNewLines(file, updatedLines);
+  }
+
+  changeIndicatorTagsForLines(lines: string[], newIndicatorTag, oldIndicatorTag): string[] {
+    return lines.map((line, index) => this.changeIndicatorTagForLine(line, newIndicatorTag, oldIndicatorTag));
+  }
+
+  changeIndicatorTagForLine(line: string, newIndicatorTag, oldIndicatorTag) {
+    if (this.plugin.taskValidator.isValidFormattedTaskMarkdown(line, oldIndicatorTag)) {
+      // formatted task will only have one indicator tag at the correct position
+      // so we can safely replace it
+      line = line.replace(oldIndicatorTag, newIndicatorTag);
+    }
+    return line;
   }
 
   async getLinesFromFile(file: TFile): Promise<string[] | null> {

@@ -31,8 +31,10 @@ export class TaskValidator {
     });
   }
 
-  private hasIndicatorTag(contentPart: string): boolean {
-    const indicatorTagPattern = new RegExp(`#${this.indicatorTag}`);
+  private hasIndicatorTag(contentPart: string, indicatorTag: string | null = null): boolean {
+    if (typeof contentPart !== 'string') return false;
+    if (indicatorTag === null) { indicatorTag = this.indicatorTag; }
+    const indicatorTagPattern = new RegExp(`#${indicatorTag}`);
     return indicatorTagPattern.test(contentPart);
   }
 
@@ -63,7 +65,7 @@ export class TaskValidator {
     return hasSpan;
   }
 
-  isValidFormattedTaskMarkdown(taskMarkdown: string): boolean {
+  isValidFormattedTaskMarkdown(taskMarkdown: string, indicatorTag: string | null  = null): boolean {
     // at least one span element
     if (!this.hasSpanElement(taskMarkdown)) return false;
     const match = this.getFormattedMarkdownPattern().exec(taskMarkdown);
@@ -72,27 +74,26 @@ export class TaskValidator {
       const contentWithoutAttributes = match[1]
         .replace(this.getAttributePattern(), '')
         .trim();
-      // logger.debug(`isValidFormattedTaskMarkdown: contentWithoutAttributes - ${contentWithoutAttributes}`);
-      return this.hasIndicatorTag(contentWithoutAttributes);
+      return this.hasIndicatorTag(contentWithoutAttributes, indicatorTag);
     }
     return false;
   }
 
-  isValidUnformattedTaskMarkdown(taskMarkdown: string): boolean {
+  isValidUnformattedTaskMarkdown(taskMarkdown: string, indicatorTag: string | null  = null): boolean {
     const match = this.getUnformattedMarkdownPattern().exec(taskMarkdown);
     if (match && match[1]) {
       if (this.hasSpanElement(taskMarkdown)) { return false; }
       const contentWithoutAttributes = match[1]
         .replace(this.getAttributePattern(), '')
         .trim();
-      return this.hasIndicatorTag(contentWithoutAttributes);
+      return this.hasIndicatorTag(contentWithoutAttributes, indicatorTag);
     }
     return false;
   }
 
-  isMarkdownTaskWithIndicatorTag(taskMarkdown: string): boolean {
+  isMarkdownTaskWithIndicatorTag(taskMarkdown: string, indicatorTag: string | null  = null): boolean {
     return (
-      this.isMarkdownTask(taskMarkdown) && this.hasIndicatorTag(taskMarkdown)
+      this.isMarkdownTask(taskMarkdown) && this.hasIndicatorTag(taskMarkdown, indicatorTag)
     );
   }
 
