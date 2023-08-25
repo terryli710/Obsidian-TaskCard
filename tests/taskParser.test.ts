@@ -275,7 +275,7 @@ describe('taskParser', () => {
   describe('parseFormattedTaskMarkdown', () => {
     
     it('should parse a basic task correctly', () => {
-      const taskMarkdown = `- [ ] This is a task <span class="id" style="display:none;">123</span>`;
+      const taskMarkdown = `- [ ] This is a task <span class="id" style="display:none;">"123"</span>`;
       const result = taskParser.parseFormattedTaskMarkdown(taskMarkdown);
       expect(result.completed).toBe(false);
       expect(result.content).toBe('This is a task');
@@ -283,13 +283,13 @@ describe('taskParser', () => {
     });
     
     it('should parse a completed task', () => {
-      const taskMarkdown = `- [x] This is a completed task <span class="id" style="display:none;">123</span>`;
+      const taskMarkdown = `- [x] This is a completed task <span class="id" style="display:none;">"123"</span>`;
       const result = taskParser.parseFormattedTaskMarkdown(taskMarkdown);
       expect(result.completed).toBe(true);
     });
 
     it('should parse task with multiple attributes', () => {
-      const taskMarkdown = `- [ ] Task with multiple attributes <span class="id" style="display:none;">123</span><span class="priority" style="display:none;">1</span><span class="description" style="display:none;">Description here</span>`;
+      const taskMarkdown = `- [ ] Task with multiple attributes <span class="id" style="display:none;">"123"</span><span class="priority" style="display:none;">1</span><span class="description" style="display:none;">"Description here"</span>`;
       const result = taskParser.parseFormattedTaskMarkdown(taskMarkdown);
       expect(result.id).toBe('123');
       expect(result.priority).toBe(1);
@@ -297,14 +297,14 @@ describe('taskParser', () => {
     });
 
     it('should parse task with labels', () => {
-      const taskMarkdown = `- [ ] Task with #label1 #label2 <span class="id" style="display:none;">123</span>`;
+      const taskMarkdown = `- [ ] Task with #label1 #label2 <span class="id" style="display:none;">"123"</span>`;
       const result = taskParser.parseFormattedTaskMarkdown(taskMarkdown);
       expect(result.labels).toEqual(['#label1', '#label2']);
     });
 
     it('should ignore indicator tags', () => {
       // Assuming this.indicatorTag is 'indicator'
-      const taskMarkdown = `- [ ] Task with #label #TaskCard <span class="id" style="display:none;">123</span>`;
+      const taskMarkdown = `- [ ] Task with #label #TaskCard <span class="id" style="display:none;">"123"</span>`;
       const result = taskParser.parseFormattedTaskMarkdown(taskMarkdown);
       expect(result.labels).toEqual(['#label']);
     });

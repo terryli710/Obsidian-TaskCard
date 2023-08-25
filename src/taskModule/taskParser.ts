@@ -288,7 +288,7 @@ export class TaskParser {
     const attributes = extractFormattedAttributes(attributesString);
 
     // Helper function to parse JSON attributes
-    function parseJSONAttribute<T>(attributeValue: string | undefined, logger: any, attributeName: string, fallbackValue: T | null): T | null {
+    function parseJSONAttribute<T>(attributeValue: string | undefined, attributeName: string, fallbackValue: T | null): T | null {
       try {
         return attributeValue ? (JSON.parse(attributeValue) as T) : fallbackValue;
       } catch (e) {
@@ -298,20 +298,20 @@ export class TaskParser {
     }
 
     // For string attributes
-    task.id = attributes.get('id') || '';
-    task.description = attributes.get('description') || '';
-    task.sectionID = attributes.get('section-id') || '';
+    task.id = parseJSONAttribute(attributes.get('id'), 'id', '');
+    task.description = parseJSONAttribute(attributes.get('description'), 'description', '');
+    task.sectionID = parseJSONAttribute(attributes.get('sectionID'), 'sectionID', '');
 
     // For attributes that require JSON parsing
-    task.priority = parseJSONAttribute(attributes.get('priority'), logger, 'priority', '4' as unknown as Priority);
-    task.order = parseJSONAttribute(attributes.get('order'), logger, 'order', null);
-    task.project = parseJSONAttribute(attributes.get('project'), logger, 'project', null);
-    task.due = parseJSONAttribute(attributes.get('due'), logger, 'due', null); 
-    task.metadata = parseJSONAttribute(attributes.get('metadata'), logger, 'metadata', null); 
+    task.priority = parseJSONAttribute(attributes.get('priority'), 'priority', '4' as unknown as Priority);
+    task.order = parseJSONAttribute(attributes.get('order'), 'order', 0);
+    task.project = parseJSONAttribute(attributes.get('project'), 'project', null);
+    task.due = parseJSONAttribute(attributes.get('due'), 'due', null); 
+    task.metadata = parseJSONAttribute(attributes.get('metadata'), 'metadata', {}); 
 
     // Optional attributes
-    task.parent = parseJSONAttribute(attributes.get('parent'), logger, 'parent', null); // Or a default parent
-    task.children = parseJSONAttribute(attributes.get('children'), logger, 'children', []); // Assuming children are in JSON array format
+    task.parent = parseJSONAttribute(attributes.get('parent'), 'parent', null); // Or a default parent
+    task.children = parseJSONAttribute(attributes.get('children'), 'children', []); // Assuming children are in JSON array format
   
     return task;
   }

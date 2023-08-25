@@ -80,7 +80,13 @@ export default class TaskCardPlugin extends Plugin {
   }
 
   registerCommands() {
-    
+    this.addCommand({
+      id: 'task-card-single-line-display-mode',
+      name: 'Task Card: Single Line Display Mode',
+      callback: () => {
+        this.taskMonitor.changeDisplayModeCommandHandler('single-line');
+      }
+    })
   }
 
   async onload() {

@@ -192,18 +192,7 @@
 - A json field for arbitrary matadata saving
 
 ```markdown
-- [ ] An example task #TaskCard
-      <span class="priority" style="display:none;">4</span>
-      <span class="description" style="display:none;">- A multi line description.\n- the second line.</span>
-      <span class="order" style="display:none;">1</span>
-      <span class="project" style="display:none;">{"id":"project-123", "name":"Project Name"}</span>
-      <span class="section-id" style="display:none;">section-456</span>
-      <span class="labels" style="display:none;">["label1","label2"]</span>
-      <span class="parent" style="display:none;">null</span>
-      <span class="children" style="display:none;">[]</span>
-      <span class="due" style="display:none;">{"isRecurring":false,"string":"2023-08-15","date":"2024-08-15","datetime":null,"timezone":null}</span>
-      <span class="metadata" style="display:none;">{"filePath":"/path/to/file"}</span>
-      .
+- [ ] Call family #PersonalLife #Family #TaskCard<span class="id" style="display:none;">"ad36fe58-9425-4bad-9864-06ea0d80cd9c"</span><span class="priority" style="display:none;">3</span><span class="description" style="display:none;">"- Catch up with parents\n- Ask about siblings"</span><span class="order" style="display:none;">0</span><span class="project" style="display:none;">{"id":"","name":""}</span><span class="section-id" style="display:none;">""</span><span class="parent" style="display:none;">null</span><span class="children" style="display:none;">[]</span><span class="due" style="display:none;">{"isRecurring":false,"date":"2023-08-26","string":"this weekend"}</span><span class="metadata" style="display:none;">{"taskItemParams":{"mode":"single-line"},"taskDisplayParams":{"mode":"multi-line"}}</span> .
 ```
 
 - Note: in reality they are on the same line, here's just for better visualization.
