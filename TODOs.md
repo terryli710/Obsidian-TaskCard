@@ -1,6 +1,6 @@
 # Releases
 
-- TODO: Add simple docs.
+- TODO: OPTIMIZE: Add simple docs.
 
 # Features
 
@@ -8,6 +8,10 @@
 - TODO: Auto added due.
 - TODO: todoist sync?
 - TODO: google calendar sync?
+
+# Commands
+- TODO: FEATURE: command to set all tasks to single-line or multi-line.
+- 
 
 # Display
 
@@ -27,6 +31,7 @@
 - TODO: OPTIMIZE: keep the window position when rerendering!!
 - TODO: BUG: line error when there's multiple text and spaces lines!!!
 - TODO: OPTIMIZE: text between two tasks will be leave out. -> they should be shown in description.
+- TODO: OPTIMIZE: multi-line description.
 
 ## Icon
 
@@ -38,7 +43,6 @@
 
 - TODO: BUG: when indicator tag changes, 
   - previous cards?
-- TODO: BUG: when reset, display button as not warning
 
 
 ## Priority
@@ -89,6 +93,7 @@
 - `chrono` is not string enough for all the date formats.
 - Add msg to indicate user when date parsing is failed.
 - Add `sugar.js` to replace chrono.
+- TODO: BUG: !! due display in single-line mode.
 
 ### Addition
 
@@ -98,9 +103,9 @@
 
 - double click and edit due string.
   - Save and discard edits.
-- TODO: the font when editing.
-- TODO: the text box when editing.
-- TODO: font size and text box size when editing.
+- TODO: OPTIMIZE: the font when editing.
+- TODO: OPTIMIZE: the text box when editing.
+- TODO: OPTIMIZE: font size and text box size when editing.
 
 ### Delete
 
@@ -110,26 +115,20 @@
 
 ### Functionality
 
-- TODO: searchable labels (currently cannot be searched).
-
 ### Addition
 
 - bottom to add label.
-- TODO: adjust bottom shape.
 
 ### Edit
 
 - right click -> dropdown to edit.
 - TODO: the css when editing.
-- TODO: (optional) use dots besides the label to edit
 
 ### Delete
 
 - dropdown menu to delete.
 
 ## Project
-
-- TODO: OPTIMIZE: optimize addProjects -> avoid ranking repetitively.
 
 ### Functionality
 
@@ -175,7 +174,7 @@
 ## HTML pinpointing the MD
 
 - Mostly done.
-- TODO: Description as appending paragraphs
+- TODO: OPTIMIZE: Description as appending paragraphs
 
 # Task Formats
 

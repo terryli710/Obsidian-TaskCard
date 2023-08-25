@@ -2,7 +2,7 @@
 
 
 <script lang="ts">
-  import { TaskItemParams } from "../renderer/postProcessor";
+  import { TaskDisplayParams } from "../renderer/postProcessor";
   import { Project } from "../taskModule/project";
   import { ObsidianTaskSyncManager } from "../taskModule/taskSyncManager";
   import { logger } from "../utils/log";
@@ -10,7 +10,7 @@
   import { tick, afterUpdate } from "svelte";
 
   export let taskSyncManager: ObsidianTaskSyncManager;
-  export let params: TaskItemParams;
+  export let params: TaskDisplayParams;
 
   let project: Project | null = taskSyncManager.obsidianTask.hasProject() ? taskSyncManager.obsidianTask.project : null;
   let availableProjects: Project[] = [];
