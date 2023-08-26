@@ -71,7 +71,6 @@
 
 - change line vs. save hot key?
 - Add place holder to instruct people.
-- TODO: OPTIMIZE: instructions on how to save?
 
 ### Addition
 

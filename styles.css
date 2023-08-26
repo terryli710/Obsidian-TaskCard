@@ -131,7 +131,7 @@
 
 .task-card-attribute-bottom-bar-left {
   display: flex; /* Enables Flexbox for the left-aligned elements */
-  align-items: center;
+  align-items: center;  /* Center children vertically */
   overflow: hidden; /* Hide the overflow */
   flex-grow: 1; /* Takes up remaining left space */
 }
