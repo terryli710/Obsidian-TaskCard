@@ -82,84 +82,117 @@
     function showCardMenu(event) {
       event.preventDefault();
       const cardMenu = new Menu();
-      if (!taskSyncManager.obsidianTask.hasDescription()) {
-          cardMenu.addItem((item) => {
-              item.setTitle('Add Description');
-              item.setIcon('plus');
-              item.onClick((evt: MouseEvent | KeyboardEvent) => {
-                  taskSyncManager.taskCardStatus.descriptionStatus = 'editing';
-              })
-          })
+
+      // Group 0: Toggle single-line and multi-line mode
+      if (taskSyncManager.obsidianTask.metadata.taskDisplayParams.mode === 'single-line') {
+        cardMenu.addItem((item) => {
+          item.setTitle('Switch to Multi-line');
+          item.setIcon('credit-card');
+          item.onClick((evt: MouseEvent | KeyboardEvent) => {
+            switchMode(evt, 'multi-line');
+          });
+        });
       } else {
-          cardMenu.addItem((item) => {
-              item.setTitle('Delete Description');
-              item.setIcon('trash');
-              item.onClick((evt: MouseEvent | KeyboardEvent) => {
-                  taskSyncManager.updateObsidianTaskAttribute('description', '');
-              })
-          })
+        cardMenu.addItem((item) => {
+          item.setTitle('Switch to Single-line');
+          item.setIcon('list');
+          item.onClick((evt: MouseEvent | KeyboardEvent) => {
+            switchMode(evt, 'single-line');
+          });
+        });
+      }
+
+      // Separator
+      cardMenu.addSeparator();
+
+      // Group 1: Task Description and Due Date
+      if (!taskSyncManager.obsidianTask.hasDescription()) {
+        cardMenu.addItem((item) => {
+          item.setTitle('Add Description');
+          item.setIcon('plus');
+          item.onClick((evt) => {
+            taskSyncManager.taskCardStatus.descriptionStatus = 'editing';
+          });
+        });
+      } else {
+        cardMenu.addItem((item) => {
+          item.setTitle('Delete Description');
+          item.setIcon('trash');
+          item.onClick((evt) => {
+            taskSyncManager.updateObsidianTaskAttribute('description', '');
+          });
+        });
       }
 
       if (!taskSyncManager.obsidianTask.hasDue()) {
-          cardMenu.addItem((item) => {
-              item.setTitle('Add Due');
-              item.setIcon('plus');
-              item.onClick((evt: MouseEvent | KeyboardEvent) => {
-                  taskSyncManager.taskCardStatus.dueStatus = 'editing';
-              })
-          })
+        cardMenu.addItem((item) => {
+          item.setTitle('Add Due');
+          item.setIcon('plus');
+          item.onClick((evt) => {
+            taskSyncManager.taskCardStatus.dueStatus = 'editing';
+          });
+        });
       } else {
-          cardMenu.addItem((item) => {
-              item.setTitle('Delete Due');
-              item.setIcon('trash');
-              item.onClick((evt: MouseEvent | KeyboardEvent) => {
-                  taskSyncManager.updateObsidianTaskAttribute('due', null);
-              })
-          })
+        cardMenu.addItem((item) => {
+          item.setTitle('Delete Due');
+          item.setIcon('trash');
+          item.onClick((evt) => {
+            taskSyncManager.updateObsidianTaskAttribute('due', null);
+          });
+        });
       }
 
+      // Separator
+      cardMenu.addSeparator();
+
+      // Group 2: Labels and Projects
       if (taskSyncManager.obsidianTask.hasAnyLabels()) {
-          cardMenu.addItem((item) => {
-              item.setTitle('Remove All Labels');
-              item.setIcon('trash');
-              item.onClick((evt: MouseEvent | KeyboardEvent) => {
-                  taskSyncManager.updateObsidianTaskAttribute('labels', []);
-              })
-          })
+        cardMenu.addItem((item) => {
+          item.setTitle('Remove All Labels');
+          item.setIcon('trash');
+          item.onClick((evt) => {
+            taskSyncManager.updateObsidianTaskAttribute('labels', []);
+          });
+        });
       }
 
       if (taskSyncManager.obsidianTask.hasProject()) {
-          cardMenu.addItem((item) => {
-              item.setTitle('Remove Project');
-              item.setIcon('trash');
-              item.onClick((evt: MouseEvent | KeyboardEvent) => {
-                  taskSyncManager.updateObsidianTaskAttribute('project', null);
-              })
-          })
+        cardMenu.addItem((item) => {
+          item.setTitle('Remove Project');
+          item.setIcon('trash');
+          item.onClick((evt) => {
+            taskSyncManager.updateObsidianTaskAttribute('project', null);
+          });
+        });
       } else {
-          cardMenu.addItem((item) => {
-              item.setTitle('Assign Project');
-              item.setIcon('plus');
-              item.onClick((evt: MouseEvent | KeyboardEvent) => {
-                  taskSyncManager.taskCardStatus.projectStatus = 'selecting';
-                  if (projects.length === 0) {
-                      logger.warn('No projects available');
-                      new Notice(`[TaskCard] No projects available. Add one in Settings Tab.`);
-                  }
-              })
-          })
+        cardMenu.addItem((item) => {
+          item.setTitle('Assign Project');
+          item.setIcon('plus');
+          item.onClick((evt) => {
+            taskSyncManager.taskCardStatus.projectStatus = 'selecting';
+            if (projects.length === 0) {
+              logger.warn('No projects available');
+              new Notice(`[TaskCard] No projects available. Add one in Settings Tab.`);
+            }
+          });
+        });
       }
 
+      // Separator
+      cardMenu.addSeparator();
+
+      // Group 3: Delete Task
       cardMenu.addItem((item) => {
-          item.setTitle('Delete Task');
-          item.setIcon('trash');
-          item.onClick((evt: MouseEvent | KeyboardEvent) => {
-              taskSyncManager.deleteTask();
-          })
-      })
+        item.setTitle('Delete Task');
+        item.setIcon('trash');
+        item.onClick((evt) => {
+          taskSyncManager.deleteTask();
+        });
+      });
 
       cardMenu.showAtPosition({ x: event.clientX, y: event.clientY });
     }
+
 
 </script>
 

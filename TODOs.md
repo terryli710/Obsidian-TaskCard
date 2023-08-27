@@ -102,9 +102,6 @@
 
 - double click and edit due string.
   - Save and discard edits.
-- TODO: OPTIMIZE: the font when editing.
-- TODO: OPTIMIZE: the text box when editing.
-- TODO: OPTIMIZE: font size and text box size when editing.
 
 ### Delete
 
@@ -121,7 +118,6 @@
 ### Edit
 
 - right click -> dropdown to edit.
-- TODO: the css when editing.
 
 ### Delete
 
