@@ -161,8 +161,6 @@
     box-sizing: border-box;
     width: auto;
     height: auto;
-    min-width: 50px;
-    max-width: 200px;
     font-family: var(--font-text);
   }
 

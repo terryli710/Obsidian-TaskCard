@@ -149,79 +149,30 @@
   font-size: var(--font-ui-medium);
 }
 
-.task-card-labels {
-  display: flex;
-  flex-wrap: nowrap; /* Prevents wrapping */
-  overflow: scroll; /* Truncates any labels that don't fit */
-  white-space: nowrap; /* Keeps labels on a single line */
-  align-items: center;
-  gap: 4px;
-  flex-grow: 1; /* Make it take up all available space */
-  font-size: var(--font-ui-medium);
-}
-
-.task-card-labels a {
-  text-decoration: none;
-  flex-shrink: 0;
-}
-
-.task-card-labels button:hover {
-  background-color: var(
-    --background-modifier-hover
-  ); /* Change the background color on hover */
-}
-
-.more-labels-symbol {
-  display: inline-block;
-}
-
-input.task-card-label-input {
-  display: inline-block;
-  padding: 1px 10px;
-  border-radius: 1000px; /* Rounded corners */
-  border: var(--border-width) solid var(--background-modifier-border);
-  width: auto;
-  font-size: var(--font-ui-small);
-  white-space: nowrap;
-}
-
-input.task-card-label-input:focus {
-  outline: none; /* Remove the default outline */
-  box-shadow: none; /* Remove the default box-shadow */
-  border: calc(0.75 * var(--border-width)) solid
-    var(--background-modifier-border); /* Add a custom border */
-}
-
 .task-card-icon {
   align-self: center;
   width: var(--icon-xs);
   height: var(--icon-xs);
 }
 
-.task-card-round-button {
+.task-card-button {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: none;
+  box-shadow: none !important;
   background: none;
   padding: 0;
   cursor: pointer;
   width: calc(var(--icon-xs) + 10px);
   height: calc(var(--icon-xs) + 10px);
-  border-radius: 50%;
   overflow: hidden; /* Hide overflow */
   min-width: calc(var(--icon-xs) + 10px); /* Set minimum width */
   min-height: calc(var(--icon-xs) + 10px); /* Set minimum height */
   flex-shrink: 0; /* Prevent shrinking */
-  background-color: var(--interactive-normal);
 }
 
-.task-card-round-button:hover {
-  background-color: var(--background-modifier-hover);
-}
-
-.task-card-round-button:active {
-  background-color: var(--background-modifier-active-hover);
+.task-card-button:hover {
+  background: var(--background-modifier-hover);
 }
 
 .task-card-menu-button:hover svg {

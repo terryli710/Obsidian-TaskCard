@@ -214,7 +214,7 @@
       <Labels taskSyncManager={taskSyncManager} />
     </div>
     <div class="task-card-attribute-bottom-bar-right">
-      <button class="task-card-round-button" on:click={(event) => switchMode(event, 'single-line')}>
+      <button class="task-card-button mode-toggle-button" on:click={(event) => switchMode(event, 'single-line')}>
         <ChevronsDownUp/>
       </button>
     </div>
@@ -266,6 +266,11 @@
   .task-card-menu-button:hover {
     background: none !important;
     box-shadow: none !important;
+    color: var(--text-accent);
+  }
+
+  button.mode-toggle-button {
+    border-radius: var(--radius-m);
   }
 
 </style>
