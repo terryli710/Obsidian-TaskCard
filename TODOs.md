@@ -1,13 +1,13 @@
 # Releases
 
-- TODO: OPTIMIZE: Add simple docs.
-
 # Features
 
 - TODO: Aggregate by project, due and other filters (potentially achievable by dataview?).
 - TODO: Auto added due.
-- TODO: todoist sync?
 - TODO: google calendar sync?
+- TODO: subtasks?
+- TODO: todoist sync?
+- TODO: recurring task?
 
 # Commands
 - 

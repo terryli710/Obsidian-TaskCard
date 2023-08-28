@@ -41,7 +41,7 @@
     }
 
     .task-card-label-input-left-part {
-        background-color: var(--background-secondary-alt);
+        background-color: var(--background-secondary);
         border-top-left-radius: 2em;
         border-bottom-left-radius: 2em;
         border-top-right-radius: var(--radius-s);
