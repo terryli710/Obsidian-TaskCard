@@ -10,7 +10,6 @@
 - TODO: google calendar sync?
 
 # Commands
-- TODO: FEATURE (hard): Add pane menu to toggle single and multi line mode
 - 
 
 # Display
@@ -38,8 +37,6 @@
 - Manually using lucide icon, because we cannot install lucide-svelte
 
 ## Menu
-
-- TODO: OPTIMIZE: organize menu and add separators
 
 # Interaction
 
