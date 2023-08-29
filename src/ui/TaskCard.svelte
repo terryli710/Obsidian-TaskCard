@@ -258,6 +258,7 @@
 
   .task-card-checkbox {
     border: var(--border-width) solid;
+    border-color: var(--checkbox-border-color);
   }
 
   /* Apply color to checkbox based on priority */

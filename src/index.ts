@@ -1,4 +1,4 @@
-import { App, MarkdownView, Plugin } from 'obsidian';
+import { App, MarkdownRenderer, MarkdownView, Plugin } from 'obsidian';
 import type { PluginManifest, Workspace, WorkspaceLeaf } from 'obsidian';
 import type { TaskCardSettings } from './settings';
 import { SettingStore, SettingsTab } from './settings';
@@ -7,11 +7,14 @@ import AttributeSuggest from './autoSuggestions/EditorSuggestions';
 import { Project, ProjectModule } from './taskModule/project';
 import { TaskParser } from './taskModule/taskParser';
 import { TaskValidator } from './taskModule/taskValidator';
-import { TaskCardRenderManager } from './renderer/index';
+import { StaticTaskListRenderManager, TaskCardRenderManager } from './renderer/index';
 import { FileOperator } from './renderer/fileOperator';
 import { TaskFormatter } from './taskModule/taskFormatter';
 import { TaskMonitor } from './taskModule/taskMonitor';
-// import { TaskStore } from './renderer/store';
+// import { Query, getAPI } from "obsidian-dataview";
+// import { Sources, TagSource } from 'obsidian-dataview/lib/data-index/source';
+// import { Fields, VariableField } from 'obsidian-dataview/lib/expression/field';
+
 
 export default class TaskCardPlugin extends Plugin {
   public settings: TaskCardSettings;
@@ -20,6 +23,7 @@ export default class TaskCardPlugin extends Plugin {
   public taskFormatter: TaskFormatter;
   public taskValidator: TaskValidator;
   public taskCardRenderManager: TaskCardRenderManager;
+  public staticTaskListRenderManager: StaticTaskListRenderManager;
   public fileOperator: FileOperator;
   public taskMonitor: TaskMonitor;
   // public taskStore: TaskStore;
@@ -61,10 +65,6 @@ export default class TaskCardPlugin extends Plugin {
   }
 
   registerEvents() {
-    this.registerMarkdownPostProcessor(
-      this.taskCardRenderManager.getPostProcessor()
-    );
-    this.registerEditorSuggest(new AttributeSuggest(this.app));
     this.registerEvent(
       this.app.workspace.on(
         'layout-change', 
@@ -97,18 +97,27 @@ export default class TaskCardPlugin extends Plugin {
     })
   }
 
+  registerPostProcessors() {
+    this.registerMarkdownPostProcessor(
+      this.taskCardRenderManager.getPostProcessor()
+    );
+    
+    this.registerMarkdownCodeBlockProcessor('taskcard', 
+      this.staticTaskListRenderManager.getCodeBlockProcessor());
+    
+  }
+
   async onload() {
     await this.loadSettings();
     this.projectModule.updateProjects(
       this.settings.userMetadata.projects as Project[]
     );
     this.addSettingTab(new SettingsTab(this.app, this));
+    this.registerEditorSuggest(new AttributeSuggest(this.app));
+    this.registerPostProcessors();
     this.registerEvents();
     this.registerCommands();
 
-
     logger.info('Plugin loaded.');
   }
-
-
 }

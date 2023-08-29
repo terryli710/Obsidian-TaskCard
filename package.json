@@ -44,6 +44,7 @@
     "lucide-svelte": "^0.268.0",
     "marked": "^6.0.0",
     "obsidian": "latest",
+    "obsidian-dataview": "^0.5.56",
     "prettier": "^3.0.0",
     "sugar": "^2.0.6",
     "svelte": "^4.1.1",
