@@ -39,62 +39,60 @@ export class TaskParser {
     });
     return labels;
   }
-
+  
   parseTaskEl(taskEl: Element): ObsidianTask {
-    function parseQuery(queryName: string, defaultValue: string = '') {
+    function parseAttributes(): any {
       try {
-        const spanElement = taskEl.querySelector(`span.${queryName}`);
+        const spanElement = taskEl.querySelector('span[style="display:none"]');
         if (spanElement) {
-          return JSON.parse(spanElement.textContent || defaultValue);
+          return JSON.parse(spanElement.textContent || '{}');
         }
-        return JSON.parse(defaultValue);
+        return {};
       } catch (e) {
-        console.warn(`Failed to parse ${queryName} (got): ${e}`);
-        return defaultValue;
+        console.warn(`Failed to parse attributes: ${e}`);
+        return {};
       }
     }
-
+  
     const task = new ObsidianTask();
-    task.id = parseQuery('id', '') as string;
-    task.priority = parseQuery('priority', '1') as TaskProperties['priority'];
-    task.description = parseQuery(
-      'description',
-      '""'
-    ) as TaskProperties['description'];
-    task.order = parseQuery('order', '0') as TaskProperties['order'];
-    task.project = parseQuery('project', 'null') as Project | null;
-    task.sectionID = parseQuery(
-      'section-id',
-      ''
-    ) as TaskProperties['sectionID'];
-    
-    // Get labels from span
-    let labelsFromSpan = parseQuery('labels', '[]') as TaskProperties['labels'];
-
+    const attributes = parseAttributes();
+  
+    task.id = attributes.id || '';
+    task.priority = attributes.priority || '1';
+    task.description = attributes.description || '';
+    task.order = attributes.order || 0;
+    task.project = attributes.project || null;
+    task.sectionID = attributes.sectionID || '';
+    task.labels = attributes.labels || [];
+    task.parent = attributes.parent || null;
+    task.children = attributes.children || [];
+    task.due = attributes.due || null;
+    task.metadata = attributes.metadata || {};
+  
     // Get labels from content
     let labelsFromContent = this.parseLabelsFromContent(taskEl);
-
+  
     // Concatenate and filter unique labels
-    task.labels = Array.from(new Set([...labelsFromSpan, ...labelsFromContent])).filter(
+    task.labels = Array.from(new Set([...task.labels, ...labelsFromContent])).filter(
       (label) => label !== `#${this.indicatorTag}`
     );
-
-    // Make sure the each label starts with exactly one "#"
-    task.labels = task.labels.map(label => {
+  
+    // Make sure each label starts with exactly one "#"
+    task.labels = task.labels.map((label) => {
       // Remove all leading '#' characters
       const cleanedLabel = label.replace(/^#+/, '');
       // Add a single '#' at the beginning
       return '#' + cleanedLabel;
     });
-    
-
-    // Isolate the task content excluding tags// Get reference to the input checkbox element
+  
+    // Isolate the task content excluding tags
+    // Get reference to the input checkbox element
     const checkboxElement = taskEl.querySelector('input.task-list-item-checkbox');
-
+  
     if (checkboxElement) {
       let currentNode: Node | null = checkboxElement;
       let content = '';
-
+  
       // Traverse through next siblings to accumulate text content
       while ((currentNode = currentNode.nextSibling) !== null) {
         if (currentNode.nodeType === 3) { // Node.TEXT_NODE
@@ -104,26 +102,18 @@ export class TaskParser {
           break;
         }
       }
-
+  
       task.content = content.trim();
     }
-
+  
     const checkbox = taskEl.querySelector(
       '.task-list-item-checkbox'
     ) as HTMLInputElement;
     task.completed = checkbox?.checked || false;
-
-    // note: currently will always be null, as the relationship is already represented by indent in the document.
-    task.parent = parseQuery('parent', 'null') as ObsidianTask['parent'] | null;
-    task.children = parseQuery('children', '[]') as
-      | ObsidianTask['children']
-      | [];
-
-    task.due = parseQuery('due', 'null') as DueDate | null;
-    task.metadata = parseQuery('metadata', '{}') as TaskProperties['metadata'];
-
+  
     return task;
   }
+  
 
   parseTaskMarkdown(taskMarkdown: string, noticeFunc: (msg: string) => void = null): ObsidianTask {
     const task: ObsidianTask = new ObsidianTask();
@@ -251,70 +241,60 @@ export class TaskParser {
 
   parseFormattedTaskMarkdown(taskMarkdown: string): ObsidianTask {
     const task: ObsidianTask = new ObsidianTask();
-
+  
     // Splitting the content and the attributes
-    const contentEndIndex = taskMarkdown.indexOf('<span class=');
+    const contentEndIndex = taskMarkdown.indexOf('<span style="display:none">');
     const markdownTaskContent =
       contentEndIndex !== -1
         ? taskMarkdown.slice(0, contentEndIndex).trim()
         : taskMarkdown.trim();
-
+  
     const contentWithLabels = markdownTaskContent.slice(5).trim();
     task.completed = markdownTaskContent.startsWith('- [x]'); // TODO: currently only supports x
-
+  
     // Extracting labels from the content line
     const [contentLabels, remainingContent] = extractTags(contentWithLabels);
     task.content = remainingContent;
     task.labels = contentLabels.filter((label) => label !== `#${this.indicatorTag}`);
-
+  
     // Parsing attributes
     const attributesString = taskMarkdown.slice(contentEndIndex);
-
-    function extractFormattedAttributes(attributeString: string): Map<string, string> {
-      // spread spans <span class="[^"]+" style="display:none;">.*?<\\/span>
-      const attributeSpan: RegExp = new RegExp(`<span class="([^"]+)" style="display:none;">(.*?)<\\/span>`, 'g');
-      const matches = [...attributeString.matchAll(attributeSpan)];
-      // extract the attributes names and values
-      const attributes: Map<string, string> = new Map();
-      for (const match of matches) {
-        // group 1 and group 2 are the attributes names and values
-        const attributeName: string = match[1].trim();
-        const attributeValue: string = match[2].trim();
-        attributes.set(attributeName, attributeValue);
-      }
-      return attributes;
-    }
-
-    const attributes = extractFormattedAttributes(attributesString);
-
+  
     // Helper function to parse JSON attributes
-    function parseJSONAttribute<T>(attributeValue: string | undefined, attributeName: string, fallbackValue: T | null): T | null {
+    function parseJSONAttribute<T>(attributeValue: any, attributeName: string, fallbackValue: T | null): T | null {
       try {
-        return attributeValue ? (JSON.parse(attributeValue) as T) : fallbackValue;
+        return attributeValue !== undefined ? attributeValue : fallbackValue;
       } catch (e) {
         logger.warn(`Failed to parse ${attributeName} attribute: ${e.message}`);
         return fallbackValue;
       }
     }
-
-    // For string attributes
-    task.id = parseJSONAttribute(attributes.get('id'), 'id', '');
-    task.description = parseJSONAttribute(attributes.get('description'), 'description', '');
-    task.sectionID = parseJSONAttribute(attributes.get('sectionID'), 'sectionID', '');
-
-    // For attributes that require JSON parsing
-    task.priority = parseJSONAttribute(attributes.get('priority'), 'priority', '4' as unknown as Priority);
-    task.order = parseJSONAttribute(attributes.get('order'), 'order', 0);
-    task.project = parseJSONAttribute(attributes.get('project'), 'project', null);
-    task.due = parseJSONAttribute(attributes.get('due'), 'due', null); 
-    task.metadata = parseJSONAttribute(attributes.get('metadata'), 'metadata', {}); 
-
-    // Optional attributes
-    task.parent = parseJSONAttribute(attributes.get('parent'), 'parent', null); // Or a default parent
-    task.children = parseJSONAttribute(attributes.get('children'), 'children', []); // Assuming children are in JSON array format
+  
+    // Extracting and parsing the JSON attributes
+    const attributeSpanMatch = attributesString.match(/<span style="display:none">(.*?)<\/span>/);
+    if (attributeSpanMatch && attributeSpanMatch[1]) {
+      const allAttributes = JSON.parse(attributeSpanMatch[1]);
+  
+      // For string attributes
+      task.id = parseJSONAttribute(allAttributes['id'], 'id', '');
+      task.description = parseJSONAttribute(allAttributes['description'], 'description', '');
+      task.sectionID = parseJSONAttribute(allAttributes['sectionID'], 'sectionID', '');
+  
+      // For attributes that require JSON parsing
+      task.priority = parseJSONAttribute(allAttributes['priority'], 'priority', '4' as unknown as Priority);
+      task.order = parseJSONAttribute(allAttributes['order'], 'order', 0);
+      task.project = parseJSONAttribute(allAttributes['project'], 'project', null);
+      task.due = parseJSONAttribute(allAttributes['due'], 'due', null); 
+      task.metadata = parseJSONAttribute(allAttributes['metadata'], 'metadata', {}); 
+  
+      // Optional attributes
+      task.parent = parseJSONAttribute(allAttributes['parent'], 'parent', null); // Or a default parent
+      task.children = parseJSONAttribute(allAttributes['children'], 'children', []); // Assuming children are in JSON array format
+    }
   
     return task;
   }
+  
 
   parseDue(dueString: string): DueDate | null {
     const parsedDateTime = Sugar.Date.create(dueString);

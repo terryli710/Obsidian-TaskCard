@@ -23,6 +23,12 @@ export class FileOperator {
     if (!content) return null;
     return content.split('\n');
   }
+  
+  async getLineFromFile(filePath: string, lineNumber: number): Promise<string | null> {
+    const fileLines = await this.getFileLines(filePath);
+    if (!fileLines || fileLines.length < lineNumber) return null;
+    return fileLines[lineNumber - 1];
+  }
 
   async getMarkdownBetweenLines(
     filePath: string,
@@ -48,4 +54,5 @@ export class FileOperator {
     // logger.debug(`newContent: ${newContent}, lineStart: ${lineStart}, lineEnd: ${lineEnd}`);
     await this.app.vault.modify(file as TFile, newFileLines.join('\n'));
   }
+
 }

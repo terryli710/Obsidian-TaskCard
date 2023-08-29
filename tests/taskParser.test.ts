@@ -38,36 +38,28 @@ function createTestTaskElement(document: Document): HTMLElement {
   tagLink.rel = 'noopener';
   tagLink.textContent = '#TaskCard';
   taskElement.appendChild(tagLink);
-
-  // Helper function to create hidden span elements
-  const createHiddenSpan = (className: string, content: string) => {
-    const span = document.createElement('span');
-    span.className = className;
-    span.style.display = 'none';
-    span.textContent = content;
-    taskElement.appendChild(span);
+  // Create a single hidden span element containing all attributes as a JSON object
+  const attributes = {
+    priority: 4,
+    description: '- A multi line description.\\n- the second line.',
+    order: 1,
+    project: { id: 'project-123', name: 'Project Name', color: '#f1f1f1' },
+    sectionID: 'section-456',
+    labels: ['label1', 'label2'],
+    parent: null,
+    children: [],
+    due: {
+      isRecurring: false,
+      string: '2023-08-15',
+      date: '2024-08-15',
+      timezone: null
+    },
+    metadata: { filePath: '/path/to/file' }
   };
-
-  // Add the hidden span elements
-  createHiddenSpan('priority', '4');
-  createHiddenSpan(
-    'description',
-    '"- A multi line description.\\n- the second line."'
-  );
-  createHiddenSpan('order', '1');
-  createHiddenSpan(
-    'project',
-    '{"id":"project-123", "name":"Project Name", "color":"#f1f1f1"}'
-  );
-  createHiddenSpan('section-id', '"section-456"');
-  createHiddenSpan('labels', '["label1","label2"]');
-  createHiddenSpan('parent', 'null');
-  createHiddenSpan('children', '[]');
-  createHiddenSpan(
-    'due',
-    '{"isRecurring":false,"string":"2023-08-15","date":"2024-08-15","timezone":null}'
-  );
-  createHiddenSpan('metadata', '{"filePath":"/path/to/file"}');
+  const attributesSpan = document.createElement('span');
+  attributesSpan.style.display = 'none';
+  attributesSpan.textContent = JSON.stringify(attributes);
+  taskElement.appendChild(attributesSpan);
 
   return taskElement;
 }
@@ -275,7 +267,7 @@ describe('taskParser', () => {
   describe('parseFormattedTaskMarkdown', () => {
     
     it('should parse a basic task correctly', () => {
-      const taskMarkdown = `- [ ] This is a task <span class="id" style="display:none;">"123"</span>`;
+      const taskMarkdown = `- [ ] This is a task <span style="display:none">{"id":"123"}</span>`;
       const result = taskParser.parseFormattedTaskMarkdown(taskMarkdown);
       expect(result.completed).toBe(false);
       expect(result.content).toBe('This is a task');
@@ -283,13 +275,13 @@ describe('taskParser', () => {
     });
     
     it('should parse a completed task', () => {
-      const taskMarkdown = `- [x] This is a completed task <span class="id" style="display:none;">"123"</span>`;
+      const taskMarkdown = `- [x] This is a completed task <span style="display:none">{"id":"123"}</span>`;
       const result = taskParser.parseFormattedTaskMarkdown(taskMarkdown);
       expect(result.completed).toBe(true);
     });
 
     it('should parse task with multiple attributes', () => {
-      const taskMarkdown = `- [ ] Task with multiple attributes <span class="id" style="display:none;">"123"</span><span class="priority" style="display:none;">1</span><span class="description" style="display:none;">"Description here"</span>`;
+      const taskMarkdown = `- [ ] Task with multiple attributes <span style="display:none">{"id":"123","priority":1,"description":"Description here"}</span>`;
       const result = taskParser.parseFormattedTaskMarkdown(taskMarkdown);
       expect(result.id).toBe('123');
       expect(result.priority).toBe(1);
@@ -297,36 +289,37 @@ describe('taskParser', () => {
     });
 
     it('should parse task with labels', () => {
-      const taskMarkdown = `- [ ] Task with #label1 #label2 <span class="id" style="display:none;">"123"</span>`;
+      const taskMarkdown = `- [ ] Task with #label1 #label2 <span style="display:none">{"id":"123"}</span>`;
       const result = taskParser.parseFormattedTaskMarkdown(taskMarkdown);
       expect(result.labels).toEqual(['#label1', '#label2']);
     });
 
     it('should ignore indicator tags', () => {
-      // Assuming this.indicatorTag is 'indicator'
-      const taskMarkdown = `- [ ] Task with #label #TaskCard <span class="id" style="display:none;">"123"</span>`;
+      // Assuming this.indicatorTag is 'TaskCard'
+      const taskMarkdown = `- [ ] Task with #label #TaskCard <span style="display:none">{"id":"123"}</span>`;
       const result = taskParser.parseFormattedTaskMarkdown(taskMarkdown);
       expect(result.labels).toEqual(['#label']);
     });
 
     it('should handle tasks with no attributes', () => {
-      const taskMarkdown = `- [ ] Task with no attributes`;
+      const taskMarkdown = `- [ ] Task with no attributes <span style="display:none">{}</span>`;
       const result = taskParser.parseFormattedTaskMarkdown(taskMarkdown);
-      expect(result.id).toBe('');
+      expect(result.id).toBe(undefined);
     });
 
     it('should handle malformed tasks gracefully', () => {
-      const taskMarkdown = `- [ ] Malformed task <span class="id" style="display:none;">`;
+      const taskMarkdown = `- [ ] Malformed task <span style="display:none">`;
       const result = taskParser.parseFormattedTaskMarkdown(taskMarkdown);
-      expect(result.id).toBe('');
+      expect(result.id).toBe(undefined);
     });
 
     it('should parse metadata correctly', () => {
-      const taskMarkdown = `- [ ] Task with metadata <span class="metadata" style="display:none;">{"filePath":"/path/to/file"}</span>`;
+      const taskMarkdown = `- [ ] Task with metadata <span style="display:none">{"metadata":{"filePath":"/path/to/file"}}</span>`;
       const result = taskParser.parseFormattedTaskMarkdown(taskMarkdown);
       expect(result.metadata.filePath).toBe('/path/to/file');
     });
-  });
+});
+
 
 
   describe('parseTaskMarkdown', () => {
