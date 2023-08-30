@@ -319,8 +319,53 @@ describe('taskParser', () => {
       const result = taskParser.parseFormattedTaskMarkdown(taskMarkdown);
       expect(result.metadata.filePath).toBe('/path/to/file');
     });
-});
+  });
 
+
+  describe('parseExtractedFormattedTaskMarkdown', () => {
+    it('should correctly parse a complete task', () => {
+      const taskMarkdown = '- [ ] Exercise #PersonalLife #Health #TaskCard{"id":"69c7847e-b182-4353-8676-d29450dedbdb","priority":1,"description":"- Cardio for 30 mins\\\\n- Weight lifting for 20 mins","order":0,"project":{"id":"bdedc03b-88e8-4a1e-b566-fe12d3d925e7","name":"HealthPlan","color":"#f45fe3"},"sectionID":"","parent":null,"children":[],"due":null,"metadata":{}} .';
+      const parsedTask = taskParser.parseExtractedFormattedTaskMarkdown(taskMarkdown);
+      expect(parsedTask.completed).toBe(false);
+      expect(parsedTask.content).toBe('Exercise');
+      expect(parsedTask.labels).toEqual(['#PersonalLife', '#Health']);
+      expect(parsedTask.id).toBe('69c7847e-b182-4353-8676-d29450dedbdb');
+      expect(parsedTask.priority).toBe(1);
+      expect(parsedTask.description).toBe('- Cardio for 30 mins\\n- Weight lifting for 20 mins');
+      expect(parsedTask.order).toBe(0);
+      expect(parsedTask.project).toEqual({"id":"bdedc03b-88e8-4a1e-b566-fe12d3d925e7","name":"HealthPlan","color":"#f45fe3"});
+      expect(parsedTask.sectionID).toBe('');
+      expect(parsedTask.parent).toBe(null);
+      expect(parsedTask.children).toEqual([]);
+      expect(parsedTask.due).toBe(null);
+      expect(parsedTask.metadata).toEqual({});
+    });
+  
+    it('should handle tasks without metadata', () => {
+      const taskMarkdown = '- [ ] Exercise #PersonalLife #Health #TaskCard{"id":"","priority":4,"description":"","order":0,"project":{"id":"","name":"","color":""},"sectionID":"","parent":null,"children":[],"due":null,"metadata":{}} .';
+      const parsedTask = taskParser.parseExtractedFormattedTaskMarkdown(taskMarkdown);
+      expect(parsedTask.completed).toBe(false);
+      expect(parsedTask.content).toBe('Exercise');
+      expect(parsedTask.labels).toEqual(['#PersonalLife', '#Health']);
+      expect(parsedTask.id).toBe('');
+      expect(parsedTask.priority).toBe(4);
+      // ... (other default values)
+    });
+  
+    it('should handle completed tasks', () => {
+      const taskMarkdown = '- [x] Exercise #PersonalLife #Health #TaskCard{"id":"","priority":4,"description":"","order":0,"project":{"id":"","name":"","color":""},"sectionID":"","parent":null,"children":[],"due":null,"metadata":{}} .';
+      const parsedTask = taskParser.parseExtractedFormattedTaskMarkdown(taskMarkdown);
+      expect(parsedTask.completed).toBe(true);
+    });
+  
+    it('should handle tasks with only metadata', () => {
+      const taskMarkdown = '- [ ] #TaskCard{"id":"69c7847e-b182-4353-8676-d29450dedbdb"} .';
+      const parsedTask = taskParser.parseExtractedFormattedTaskMarkdown(taskMarkdown);
+      expect(parsedTask.completed).toBe(false);
+      expect(parsedTask.content).toBe('');
+      expect(parsedTask.labels).toEqual([]);
+    });
+  });
 
 
   describe('parseTaskMarkdown', () => {
@@ -527,3 +572,7 @@ describe('taskParser', () => {
     });
   });
 });
+  function parseFormattedTaskMarkdown(taskMarkdown: string) {
+    throw new Error('Function not implemented.');
+  }
+

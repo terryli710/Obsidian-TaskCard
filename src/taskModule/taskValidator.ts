@@ -61,7 +61,6 @@ export class TaskValidator {
     if (typeof markdown !== 'string') return false;
   
     const hasSpan = this.spanElementPattern.test(markdown);
-    logger.debug(`markdown: ${markdown}, has span element: ${hasSpan}`);
     return hasSpan;
   }
 
@@ -80,10 +79,24 @@ export class TaskValidator {
     return false;
   }
 
+  selectHiddenSpans(taskEl: HTMLElement): HTMLElement[] | null {
+    // Get all span elements
+    const allSpans = taskEl.querySelectorAll('span');
+
+    // Filter those that have 'display:none' in their style attribute
+    const hiddenSpans = Array.from(allSpans).filter(span => {
+      const style = span.getAttribute('style');
+      return style && style.replace(/\s/g, '').includes('display:none');
+    });
+
+    return hiddenSpans;
+  }
+
   isValidTaskElement(taskElement: HTMLElement): boolean {
     // Check for a single span element with or without class, containing an object of attributes
-    const singleSpanElement = taskElement.querySelector('span[style="display:none"]');
-    logger.debug(`singleSpanElement: ${singleSpanElement}`);
+    const hiddenSpans = this.selectHiddenSpans(taskElement);
+    if (hiddenSpans.length === 0) { return false; }
+    const singleSpanElement = hiddenSpans[0];
     if (!singleSpanElement || !/^\{.*\}$/.test(singleSpanElement.textContent || '')) {
       return false;
     }

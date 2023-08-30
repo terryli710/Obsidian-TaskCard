@@ -38,11 +38,26 @@ export class TaskParser {
     });
     return labels;
   }
+
+  selectHiddenSpans(taskEl: HTMLElement): HTMLElement[] {
+    // Get all span elements
+    const allSpans = taskEl.querySelectorAll('span');
+
+    // Filter those that have 'display:none' in their style attribute
+    const hiddenSpans = Array.from(allSpans).filter(span => {
+      const style = span.getAttribute('style');
+      return style && style.replace(/\s/g, '').includes('display:none');
+    });
+
+    return hiddenSpans;
+  }
   
   parseTaskEl(taskEl: Element): ObsidianTask {
     function parseAttributes(): any {
       try {
-        const spanElement = taskEl.querySelector('span[style="display:none"]');
+        const hiddenSpans = this.selectHiddenSpans(taskEl);
+        if (hiddenSpans.length === 0) { return null; }
+        const spanElement = hiddenSpans[0];
         if (spanElement) {
           return JSON.parse(spanElement.textContent || '{}');
         }
@@ -54,7 +69,7 @@ export class TaskParser {
     }
   
     const task = new ObsidianTask();
-    const attributes = parseAttributes();
+    const attributes = parseAttributes.bind(this)();
     if (attributes === null) { return task; }
   
     task.id = attributes.id || '';
@@ -162,7 +177,6 @@ export class TaskParser {
       }
     };
 
-
     // Splitting the content and the attributes
     const contentEndIndex = taskMarkdown.indexOf(this.markdownStartingNotation);
     const markdownTaskContent =
@@ -177,8 +191,6 @@ export class TaskParser {
     const [contentLabels, remainingContent] = extractTags(contentWithLabels);
     task.content = remainingContent;
     task.labels = contentLabels.filter((label) => label !== `#${this.indicatorTag}`);
-
-
 
     // Parsing attributes
     const attributesString = taskMarkdown.slice(contentEndIndex);
@@ -245,6 +257,7 @@ export class TaskParser {
     return task;
   }
 
+
   parseFormattedTaskMarkdown(taskMarkdown: string): ObsidianTask {
     const task: ObsidianTask = new ObsidianTask();
   
@@ -297,9 +310,59 @@ export class TaskParser {
       task.parent = parseJSONAttribute(allAttributes['parent'], 'parent', null); // Or a default parent
       task.children = parseJSONAttribute(allAttributes['children'], 'children', []); // Assuming children are in JSON array format
     }
-  
+    
     return task;
   }
+
+  parseExtractedFormattedTaskMarkdown(taskMarkdown: string): ObsidianTask {
+    const task = new ObsidianTask();
+  
+    if (!taskMarkdown) {
+      logger.warn(`Failed to parse task: ${taskMarkdown}`);
+      return task;
+    }
+  
+    taskMarkdown = taskMarkdown.trim();
+  
+    // Single regex to capture task part, content, labels, indicator tag, and metadata
+    const regex = new RegExp(`- \\[(.)\\] (.+)\\s+#${this.indicatorTag}({.+})`);
+    const match = taskMarkdown.match(regex);
+  
+    if (!match || !match[1] || !match[2] || !match[3]) {
+      logger.warn(`Failed to parse task: ${taskMarkdown}`);
+      return task;
+    } 
+
+    const contentWithLabels = match[2].trim();
+  
+    // Extracting labels from the content line
+    const [contentLabels, remainingContent] = extractTags(contentWithLabels);
+    task.content = remainingContent;
+    task.labels = contentLabels.filter((label) => label !== `#${this.indicatorTag}`);
+    // Extracting completion status
+    task.completed = match[1] !== ' ';
+
+    // Extracting JSON metadata
+    const metadata = JSON.parse(match[3].replace('#TaskCard', ''));
+
+    // For string attributes
+    task.id = metadata.id || '';
+    task.description = metadata.description || '';
+    task.sectionID = metadata.sectionID || '';
+
+    // For attributes that require JSON parsing
+    task.priority = metadata.priority || 4;
+    task.order = metadata.order || 0;
+    task.project = metadata.project || null;
+    task.due = metadata.due || null;
+    task.metadata = metadata.metadata || {};
+
+    // Optional attributes
+    task.parent = metadata.parent || null;
+    task.children = metadata.children || [];
+
+    return task;
+}
   
 
   parseDue(dueString: string): DueDate | null {

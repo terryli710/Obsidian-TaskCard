@@ -4,7 +4,7 @@ import { getAPI } from 'obsidian-dataview';
 import { FileOperator } from './fileOperator';
 
 
-interface MarkdownTaskMetadata {
+export interface MarkdownTaskMetadata {
     originalText: string;
     filePath: string;
     lineNumber: number;
@@ -64,7 +64,7 @@ export class StaticTaskListRenderManager {
 
             const query = await api.tryQuery('TASK FROM #TaskCard WHERE !completed AND contains(text, "#TaskCard") AND contains(text, "#Family")');
             const mdTaskMetadataList = await this.extractMarkdownTaskMetadata(query);
-            el.innerHTML = `<strong>${JSON.stringify(JSON.stringify(mdTaskMetadataList))}</strong>`;
+            el.innerHTML = `<strong>${JSON.stringify(mdTaskMetadataList)}</strong>`;
         };
     }
 }
