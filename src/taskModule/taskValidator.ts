@@ -53,7 +53,7 @@ export class TaskValidator {
 
   private getFormattedMarkdownPattern(): RegExp {
     const markdownSuffix = this.markdownSuffix;
-    return new RegExp(`^\\s*- \\[[^\\]]\\] (.*?)\\s*(<span class="[^"]+" style="display:none;">.*?<\\/span>\\s*)+(${markdownSuffix})?$`);
+    return new RegExp(`^\\s*- \\[[^\\]]\\] (.*?)\\s*(<span style="display:none;">\\{.*?\\}<\\/span>)\\s*(${markdownSuffix})?$`);
   }
 
 
@@ -66,10 +66,11 @@ export class TaskValidator {
   }
 
   isValidFormattedTaskMarkdown(taskMarkdown: string, indicatorTag: string | null  = null): boolean {
-    // at least one span element
-    if (!this.hasSpanElement(taskMarkdown)) return false;
-    const match = this.getFormattedMarkdownPattern().exec(taskMarkdown);
+    // Check for a single span element with or without class, containing an object of attributes
+    const singleSpanPattern = /<span(?: class="[^"]+")? style="display:none;">\{.*?\}<\/span>/;
+    if (!singleSpanPattern.test(taskMarkdown)) return false;
 
+    const match = this.getFormattedMarkdownPattern().exec(taskMarkdown);
     if (match && match[1]) {
       const contentWithoutAttributes = match[1]
         .replace(this.getAttributePattern(), '')
@@ -77,6 +78,19 @@ export class TaskValidator {
       return this.hasIndicatorTag(contentWithoutAttributes, indicatorTag);
     }
     return false;
+  }
+
+  isValidTaskElement(taskElement: HTMLElement): boolean {
+    // Check for a single span element with or without class, containing an object of attributes
+    logger.debug(`taskElement: ${taskElement.outerHTML}, has span element: ${taskElement.querySelector('span[style="display: none;"]')}, indicator tag: ${this.checkTaskElementIndicatorTag(taskElement)}`);
+    const singleSpanElement = taskElement.querySelector('span[style="display: none;"]');
+    logger.debug(`taskElement: ${taskElement.outerHTML}, has single span element: ${singleSpanElement}`);
+    if (!singleSpanElement || !/^\{.*\}$/.test(singleSpanElement.textContent || '')) {
+      return false;
+    }
+
+    // Check for the presence of the indicator tag
+    return this.checkTaskElementIndicatorTag(taskElement);
   }
 
   isValidUnformattedTaskMarkdown(taskMarkdown: string, indicatorTag: string | null  = null): boolean {
@@ -148,19 +162,7 @@ export class TaskValidator {
     // If the loop completes without finding the indicator tag, return false
     return false;
   }
-  
 
-  isValidTaskElement(taskElement: HTMLElement): boolean {
-    if (!this.checkTaskElementClass(taskElement)) {
-      return false;
-    }
-
-    const spans: SpanElements = this.getTaskElementSpans(taskElement);
-    return (
-      Object.values(spans).length > 0 &&
-      Object.values(spans).some((span) => span !== null)
-    );
-  }
 
   isCompleteTaskElement(taskElement: HTMLElement): boolean {
     if (!this.checkTaskElementClass(taskElement)) {
