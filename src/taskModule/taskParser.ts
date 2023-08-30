@@ -260,24 +260,28 @@ export class TaskParser {
 
   parseFormattedTaskMarkdown(taskMarkdown: string): ObsidianTask {
     const task: ObsidianTask = new ObsidianTask();
+    
+    // Global regex to capture task part, content, labels, and metadata
+    const regex = new RegExp(`- \\[(.)\\] (.+?)(?:\\s*<span style="display:none">({.+})<\\/span>)`);
+    const match = taskMarkdown.trim().match(regex);
+    
+    if (!match || !match[1] || !match[2] || !match[3]) {
+      logger.warn(`Failed to parse task: ${taskMarkdown}`);
+      return task;
+    }
   
-    // Splitting the content and the attributes
-    const contentEndIndex = taskMarkdown.indexOf('<span style="display:none">');
-    const markdownTaskContent =
-      contentEndIndex !== -1
-        ? taskMarkdown.slice(0, contentEndIndex).trim()
-        : taskMarkdown.trim();
+    // Extracting completion status
+    task.completed = match[1] !== ' ';
   
-    const contentWithLabels = markdownTaskContent.slice(5).trim();
-    task.completed = markdownTaskContent.startsWith('- [x]'); // TODO: currently only supports x
+    // Extracting content
+    task.content = match[2].trim();
+
+    const contentWithLabels = match[2].trim();
   
     // Extracting labels from the content line
     const [contentLabels, remainingContent] = extractTags(contentWithLabels);
     task.content = remainingContent;
     task.labels = contentLabels.filter((label) => label !== `#${this.indicatorTag}`);
-  
-    // Parsing attributes
-    const attributesString = taskMarkdown.slice(contentEndIndex);
   
     // Helper function to parse JSON attributes
     function parseJSONAttribute<T>(attributeValue: any, attributeName: string, fallbackValue: T | null): T | null {
@@ -290,26 +294,26 @@ export class TaskParser {
     }
   
     // Extracting and parsing the JSON attributes
-    const attributeSpanMatch = attributesString.match(/<span style="display:none">(.*?)<\/span>/);
-    if (attributeSpanMatch && attributeSpanMatch[1]) {
-      const allAttributes = JSON.parse(attributeSpanMatch[1]);
-  
-      // For string attributes
-      task.id = parseJSONAttribute(allAttributes['id'], 'id', '');
-      task.description = parseJSONAttribute(allAttributes['description'], 'description', '');
-      task.sectionID = parseJSONAttribute(allAttributes['sectionID'], 'sectionID', '');
-  
-      // For attributes that require JSON parsing
-      task.priority = parseJSONAttribute(allAttributes['priority'], 'priority', '4' as unknown as Priority);
-      task.order = parseJSONAttribute(allAttributes['order'], 'order', 0);
-      task.project = parseJSONAttribute(allAttributes['project'], 'project', null);
-      task.due = parseJSONAttribute(allAttributes['due'], 'due', null); 
-      task.metadata = parseJSONAttribute(allAttributes['metadata'], 'metadata', {}); 
-  
-      // Optional attributes
-      task.parent = parseJSONAttribute(allAttributes['parent'], 'parent', null); // Or a default parent
-      task.children = parseJSONAttribute(allAttributes['children'], 'children', []); // Assuming children are in JSON array format
+    const metadata = JSON.parse(match[3]);
+    if (!metadata) {
+      logger.warn(`Failed to parse metadata: ${match[3]}`);
+      return task;
     }
+    // For string attributes
+    task.id = parseJSONAttribute(metadata['id'], 'id', '');
+    task.description = parseJSONAttribute(metadata['description'], 'description', '');
+    task.sectionID = parseJSONAttribute(metadata['sectionID'], 'sectionID', '');
+
+    // For attributes that require JSON parsing
+    task.priority = parseJSONAttribute(metadata['priority'], 'priority', '4' as unknown as Priority);
+    task.order = parseJSONAttribute(metadata['order'], 'order', 0);
+    task.project = parseJSONAttribute(metadata['project'], 'project', null);
+    task.due = parseJSONAttribute(metadata['due'], 'due', null); 
+    task.metadata = parseJSONAttribute(metadata['metadata'], 'metadata', {}); 
+
+    // Optional attributes
+    task.parent = parseJSONAttribute(metadata['parent'], 'parent', null); // Or a default parent
+    task.children = parseJSONAttribute(metadata['children'], 'children', []); // Assuming children are in JSON array format
     
     return task;
   }
@@ -343,7 +347,11 @@ export class TaskParser {
     task.completed = match[1] !== ' ';
 
     // Extracting JSON metadata
-    const metadata = JSON.parse(match[3].replace('#TaskCard', ''));
+    const metadata = JSON.parse(match[3]);
+    if (!metadata) {
+      logger.warn(`Failed to parse metadata: ${match[3]}`);
+      return task;
+    }
 
     // For string attributes
     task.id = metadata.id || '';
