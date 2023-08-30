@@ -34,7 +34,7 @@ describe('TaskValidator', () => {
     span.className = 'cm-html-embed';
     span.tabIndex = -1;
     span.contentEditable = 'false';
-    span.innerHTML = `<span style="display:none;" class="${className}">${content}</span>`;
+    span.innerHTML = `<span style="display:none" class="${className}">${content}</span>`;
     return span;
   };
 
@@ -104,12 +104,12 @@ describe('TaskValidator', () => {
 
   describe('isValidFormattedTaskMarkdown', () => {
     it('should validate correctly formatted task markdown with single span', () => {
-      const formattedTask = `- [ ] An example task #TaskCard <span style="display:none;">{"priority": 4, "description": "- A multi line description.\\n- the second line."}</span>`;
+      const formattedTask = `- [ ] An example task #TaskCard <span style="display:none">{"priority": 4, "description": "- A multi line description.\\n- the second line."}</span>`;
       expect(taskValidator.isValidFormattedTaskMarkdown(formattedTask)).toBe(true);
     });
 
     it('should invalidate incorrectly formatted task markdown', () => {
-      const incorrectFormattedTask = `- [ ] Missing TaskCard tag <span style="display:none;">{"priority": 4}</span>`;
+      const incorrectFormattedTask = `- [ ] Missing TaskCard tag <span style="display:none">{"priority": 4}</span>`;
       expect(taskValidator.isValidFormattedTaskMarkdown(incorrectFormattedTask)).toBe(false);
     });
   });

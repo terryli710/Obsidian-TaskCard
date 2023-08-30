@@ -184,7 +184,7 @@
 - A json field for arbitrary matadata saving
 
 ```markdown
-- [ ] Call family #PersonalLife #Family #TaskCard<span class="id" style="display:none;">"ad36fe58-9425-4bad-9864-06ea0d80cd9c"</span><span class="priority" style="display:none;">3</span><span class="description" style="display:none;">"- Catch up with parents\n- Ask about siblings"</span><span class="order" style="display:none;">0</span><span class="project" style="display:none;">{"id":"","name":""}</span><span class="section-id" style="display:none;">""</span><span class="parent" style="display:none;">null</span><span class="children" style="display:none;">[]</span><span class="due" style="display:none;">{"isRecurring":false,"date":"2023-08-26","string":"this weekend"}</span><span class="metadata" style="display:none;">{"taskItemParams":{"mode":"single-line"},"taskDisplayParams":{"mode":"multi-line"}}</span> .
+- [ ] Call family #PersonalLife #Family #TaskCard<span class="id" style="display:none">"ad36fe58-9425-4bad-9864-06ea0d80cd9c"</span><span class="priority" style="display:none">3</span><span class="description" style="display:none">"- Catch up with parents\n- Ask about siblings"</span><span class="order" style="display:none">0</span><span class="project" style="display:none">{"id":"","name":""}</span><span class="section-id" style="display:none">""</span><span class="parent" style="display:none">null</span><span class="children" style="display:none">[]</span><span class="due" style="display:none">{"isRecurring":false,"date":"2023-08-26","string":"this weekend"}</span><span class="metadata" style="display:none">{"taskItemParams":{"mode":"single-line"},"taskDisplayParams":{"mode":"multi-line"}}</span> .
 ```
 
 - Note: in reality they are on the same line, here's just for better visualization.
@@ -199,22 +199,22 @@
     <input data-line="0" type="checkbox" class="task-list-item-checkbox" />An
     example task
     <a href="#TaskCard" class="tag" target="_blank" rel="noopener">#TaskCard</a>
-    <span style="display:none;" class="priority">4</span>
-    <span style="display:none;" class="description"
+    <span style="display:none" class="priority">4</span>
+    <span style="display:none" class="description"
       >"- A multi line description.\n- the second line."</span
     >
-    <span style="display:none;" class="order">1</span>
-    <span style="display:none;" class="project"
+    <span style="display:none" class="order">1</span>
+    <span style="display:none" class="project"
       >{"id":"project-123", "name":"Project Name"}</span
     >
-    <span style="display:none;" class="section-id">"section-456"</span>
-    <span style="display:none;" class="labels">["label1","label2"]</span>
-    <span style="display:none;" class="parent">null</span>
-    <span style="display:none;" class="children">[]</span>
-    <span style="display:none;" class="due"
+    <span style="display:none" class="section-id">"section-456"</span>
+    <span style="display:none" class="labels">["label1","label2"]</span>
+    <span style="display:none" class="parent">null</span>
+    <span style="display:none" class="children">[]</span>
+    <span style="display:none" class="due"
       >{"isRecurring":false,"string":"2023-08-15","date":"2024-08-15","datetime":null,"timezone":null}</span
     >
-    <span style="display:none;" class="metadata"
+    <span style="display:none" class="metadata"
       >{"filePath":"/path/to/file"}</span
     >
   </li>
@@ -222,48 +222,48 @@
 ```
 
 ```html
-<li data-line="0" data-task="" class="task-list-item" style="display: none;">
+<li data-line="0" data-task="" class="task-list-item" style="display:none">
   <div class="list-bullet"></div>
   <input data-line="0" type="checkbox" class="task-list-item-checkbox" />An
   example task
   <a href="#TaskCard" class="tag" target="_blank" rel="noopener">#TaskCard</a
-  ><span style="display:none;" class="priority">4</span
-  ><span style="display:none;" class="description"
+  ><span style="display:none" class="priority">4</span
+  ><span style="display:none" class="description"
     >"- A multi line description.\n- the second line."</span
-  ><span style="display:none;" class="order">1</span
-  ><span style="display:none;" class="project"
+  ><span style="display:none" class="order">1</span
+  ><span style="display:none" class="project"
     >{"id":"project-123", "name":"Project Name", "color":"#f1f1f1"}</span
-  ><span style="display:none;" class="section-id">"section-456"</span
-  ><span style="display:none;" class="labels">["label1","label2"]</span
-  ><span style="display:none;" class="parent">null</span
-  ><span style="display:none;" class="children">[]</span
-  ><span style="display:none;" class="due"
+  ><span style="display:none" class="section-id">"section-456"</span
+  ><span style="display:none" class="labels">["label1","label2"]</span
+  ><span style="display:none" class="parent">null</span
+  ><span style="display:none" class="children">[]</span
+  ><span style="display:none" class="due"
     >{"isRecurring":false,"string":"2023-08-15","date":"2024-08-15","datetime":null,"timezone":null}</span
-  ><span style="display:none;" class="metadata"
+  ><span style="display:none" class="metadata"
     >{"filePath":"/path/to/file"}</span
   >
 </li>
 ```
 
 ```html
-<li data-line="0" data-task="" class="task-list-item" style="display: none;">
+<li data-line="0" data-task="" class="task-list-item" style="display:none">
   <div class="list-bullet"></div>
   <input data-line="0" type="checkbox" class="task-list-item-checkbox" />An
   example task
   <a href="#TaskCard" class="tag" target="_blank" rel="noopener">#TaskCard</a
-  ><span style="display:none;" class="priority">4</span
-  ><span style="display:none;" class="description"
+  ><span style="display:none" class="priority">4</span
+  ><span style="display:none" class="description"
     >"- A multi line description.\n- the second line."</span
-  ><span style="display:none;" class="order">1</span
-  ><span style="display:none;" class="project"
+  ><span style="display:none" class="order">1</span
+  ><span style="display:none" class="project"
     >{"id":"project-123", "name":"Project Name", "color":"#f1f1f1"}</span
-  ><span style="display:none;" class="section-id">"section-456"</span
-  ><span style="display:none;" class="labels">["label1","label2"]</span
-  ><span style="display:none;" class="parent">null</span
-  ><span style="display:none;" class="children">[]</span
-  ><span style="display:none;" class="due"
+  ><span style="display:none" class="section-id">"section-456"</span
+  ><span style="display:none" class="labels">["label1","label2"]</span
+  ><span style="display:none" class="parent">null</span
+  ><span style="display:none" class="children">[]</span
+  ><span style="display:none" class="due"
     >{"isRecurring":false,"string":"2023-08-15","date":"2024-08-15","datetime":null,"timezone":null}</span
-  ><span style="display:none;" class="metadata"
+  ><span style="display:none" class="metadata"
     >{"filePath":"/path/to/file"}</span
   >
 </li>
@@ -294,19 +294,19 @@
     <input data-line="0" type="checkbox" class="task-list-item-checkbox" />An
     example task
     <a href="#TaskCard" class="tag" target="_blank" rel="noopener">#TaskCard</a
-    ><span style="display:none;" class="priority">4</span
-    ><span style="display:none;" class="description"
+    ><span style="display:none" class="priority">4</span
+    ><span style="display:none" class="description"
       >"- A multi line description.\n- the second line."</span
-    ><span style="display:none;" class="order">1</span
-    ><span style="display:none;" class="project"
+    ><span style="display:none" class="order">1</span
+    ><span style="display:none" class="project"
       >{"id":"project-123", "name":"Project Name"}</span
-    ><span style="display:none;" class="section-id">"section-456"</span
-    ><span style="display:none;" class="labels">["label1","label2"]</span
-    ><span style="display:none;" class="parent">null</span
-    ><span style="display:none;" class="children">[]</span
-    ><span style="display:none;" class="due"
+    ><span style="display:none" class="section-id">"section-456"</span
+    ><span style="display:none" class="labels">["label1","label2"]</span
+    ><span style="display:none" class="parent">null</span
+    ><span style="display:none" class="children">[]</span
+    ><span style="display:none" class="due"
       >{"isRecurring":false,"string":"2023-08-15","date":"2024-08-15","datetime":null,"timezone":null}</span
-    ><span style="display:none;" class="metadata"
+    ><span style="display:none" class="metadata"
       >{"filePath":"/path/to/file"}</span
     >
   </li>
@@ -315,19 +315,19 @@
     <input data-line="1" type="checkbox" class="task-list-item-checkbox" />An
     example task
     <a href="#TaskCard" class="tag" target="_blank" rel="noopener">#TaskCard</a
-    ><span style="display:none;" class="priority">4</span
-    ><span style="display:none;" class="description"
+    ><span style="display:none" class="priority">4</span
+    ><span style="display:none" class="description"
       >"- A multi line description.\n- the second line."</span
-    ><span style="display:none;" class="order">1</span
-    ><span style="display:none;" class="project"
+    ><span style="display:none" class="order">1</span
+    ><span style="display:none" class="project"
       >{"id":"project-123", "name":"Project Name"}</span
-    ><span style="display:none;" class="section-id">"section-456"</span
-    ><span style="display:none;" class="labels">["label1","label2"]</span
-    ><span style="display:none;" class="parent">null</span
-    ><span style="display:none;" class="children">[]</span
-    ><span style="display:none;" class="due"
+    ><span style="display:none" class="section-id">"section-456"</span
+    ><span style="display:none" class="labels">["label1","label2"]</span
+    ><span style="display:none" class="parent">null</span
+    ><span style="display:none" class="children">[]</span
+    ><span style="display:none" class="due"
       >{"isRecurring":false,"string":"2023-08-15","date":"2024-08-15","datetime":null,"timezone":null}</span
-    ><span style="display:none;" class="metadata"
+    ><span style="display:none" class="metadata"
       >{"filePath":"/path/to/file"}</span
     ><br />
     Some normal content
@@ -348,24 +348,24 @@
 
 ```html
 <ul class="contains-task-list has-list-bullet">
-  <li data-line="0" data-task="" class="task-list-item" style="display: none;">
+  <li data-line="0" data-task="" class="task-list-item" style="display:none">
     <div class="list-bullet"></div>
     <input data-line="0" type="checkbox" class="task-list-item-checkbox" />An
     example task
     <a href="#TaskCard" class="tag" target="_blank" rel="noopener">#TaskCard</a
-    ><span style="display:none;" class="priority">4</span
-    ><span style="display:none;" class="description"
+    ><span style="display:none" class="priority">4</span
+    ><span style="display:none" class="description"
       >"- A multi line description.\n- the second line."</span
-    ><span style="display:none;" class="order">1</span
-    ><span style="display:none;" class="project"
+    ><span style="display:none" class="order">1</span
+    ><span style="display:none" class="project"
       >{"id":"project-123", "name":"Project Name"}</span
-    ><span style="display:none;" class="section-id">"section-456"</span
-    ><span style="display:none;" class="labels">["label1","label2"]</span
-    ><span style="display:none;" class="parent">null</span
-    ><span style="display:none;" class="children">[]</span
-    ><span style="display:none;" class="due"
+    ><span style="display:none" class="section-id">"section-456"</span
+    ><span style="display:none" class="labels">["label1","label2"]</span
+    ><span style="display:none" class="parent">null</span
+    ><span style="display:none" class="children">[]</span
+    ><span style="display:none" class="due"
       >{"isRecurring":false,"string":"2023-08-15","date":"2024-08-15","datetime":null,"timezone":null}</span
-    ><span style="display:none;" class="metadata"
+    ><span style="display:none" class="metadata"
       >{"filePath":"/path/to/file"}</span
     >
   </li>

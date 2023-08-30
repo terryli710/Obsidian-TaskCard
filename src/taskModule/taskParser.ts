@@ -42,7 +42,7 @@ export class TaskParser {
   parseTaskEl(taskEl: Element): ObsidianTask {
     function parseAttributes(): any {
       try {
-        const spanElement = taskEl.querySelector('span[style="display: none;"]');
+        const spanElement = taskEl.querySelector('span[style="display:none"]');
         if (spanElement) {
           return JSON.parse(spanElement.textContent || '{}');
         }

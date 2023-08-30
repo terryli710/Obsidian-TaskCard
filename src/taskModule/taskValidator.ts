@@ -8,7 +8,7 @@ export type SpanElements = Record<keyof ObsidianTask, HTMLElement>;
 
 export class TaskValidator {
   private spanElementPattern: RegExp =
-    /<span class="[^"]+" style="display:none;">(.*?)<\/span>/;
+    /<span( class="[^"]+")? style="display:none">(.*?)<\/span>/;
   private markdownTaskPattern: RegExp = /^\s*- \[[^\]]\]\s/;
   private indicatorTag: string;
   private startingNotation: string;
@@ -53,7 +53,7 @@ export class TaskValidator {
 
   private getFormattedMarkdownPattern(): RegExp {
     const markdownSuffix = this.markdownSuffix;
-    return new RegExp(`^\\s*- \\[[^\\]]\\] (.*?)\\s*(<span style="display:none;">\\{.*?\\}<\\/span>)\\s*(${markdownSuffix})?$`);
+    return new RegExp(`^\\s*- \\[[^\\]]\\] (.*?)\\s*(<span( class="[^"]+")? style="display:none">\\{.*?\\}<\\/span>)\\s*(${markdownSuffix})?$`);
   }
 
 
@@ -61,13 +61,13 @@ export class TaskValidator {
     if (typeof markdown !== 'string') return false;
   
     const hasSpan = this.spanElementPattern.test(markdown);
-  
+    logger.debug(`markdown: ${markdown}, has span element: ${hasSpan}`);
     return hasSpan;
   }
 
   isValidFormattedTaskMarkdown(taskMarkdown: string, indicatorTag: string | null  = null): boolean {
     // Check for a single span element with or without class, containing an object of attributes
-    const singleSpanPattern = /<span(?: class="[^"]+")? style="display:none;">\{.*?\}<\/span>/;
+    const singleSpanPattern = /<span(?: class="[^"]+")? style="display:none">\{.*?\}<\/span>/;
     if (!singleSpanPattern.test(taskMarkdown)) return false;
 
     const match = this.getFormattedMarkdownPattern().exec(taskMarkdown);
@@ -82,9 +82,8 @@ export class TaskValidator {
 
   isValidTaskElement(taskElement: HTMLElement): boolean {
     // Check for a single span element with or without class, containing an object of attributes
-    logger.debug(`taskElement: ${taskElement.outerHTML}, has span element: ${taskElement.querySelector('span[style="display: none;"]')}, indicator tag: ${this.checkTaskElementIndicatorTag(taskElement)}`);
-    const singleSpanElement = taskElement.querySelector('span[style="display: none;"]');
-    logger.debug(`taskElement: ${taskElement.outerHTML}, has single span element: ${singleSpanElement}`);
+    const singleSpanElement = taskElement.querySelector('span[style="display:none"]');
+    logger.debug(`singleSpanElement: ${singleSpanElement}`);
     if (!singleSpanElement || !/^\{.*\}$/.test(singleSpanElement.textContent || '')) {
       return false;
     }
