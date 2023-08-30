@@ -74,12 +74,15 @@ export class TaskParser {
     
     // Conditional label setting
     if (attributes.labels && attributes.labels.length > 0) {
-      task.labels = Array.from(new Set([...task.labels, ...labelsFromContent])).filter(
-        (label) => label !== `#${this.indicatorTag}`
-      );
+      task.labels = [...task.labels, ...labelsFromContent];
     } else {
       task.labels = labelsFromContent;
     }
+
+    // Remove duplicate labels and remove indicator tag from labels
+    task.labels = Array.from(new Set(task.labels)).filter(
+      (label) => label !== `#${this.indicatorTag}`
+    );
   
     // Make sure each label starts with exactly one "#"
     task.labels = task.labels.map((label) => {
