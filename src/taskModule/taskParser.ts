@@ -28,7 +28,6 @@ export class TaskParser {
     this.projectModule = projectModule;
   }
 
-
   // New method to parse labels from task content
   parseLabelsFromContent(taskEl: Element): string[] {
     const tags = taskEl.querySelectorAll("a.tag");
@@ -43,19 +42,20 @@ export class TaskParser {
   parseTaskEl(taskEl: Element): ObsidianTask {
     function parseAttributes(): any {
       try {
-        const spanElement = taskEl.querySelector('span[style="display:none"]');
+        const spanElement = taskEl.querySelector('span[style="display: none;"]');
         if (spanElement) {
           return JSON.parse(spanElement.textContent || '{}');
         }
-        return {};
+        return null;
       } catch (e) {
         console.warn(`Failed to parse attributes: ${e}`);
-        return {};
+        return null;
       }
     }
   
     const task = new ObsidianTask();
     const attributes = parseAttributes();
+    if (attributes === null) { return task; }
   
     task.id = attributes.id || '';
     task.priority = attributes.priority || '1';
@@ -71,11 +71,15 @@ export class TaskParser {
   
     // Get labels from content
     let labelsFromContent = this.parseLabelsFromContent(taskEl);
-  
-    // Concatenate and filter unique labels
-    task.labels = Array.from(new Set([...task.labels, ...labelsFromContent])).filter(
-      (label) => label !== `#${this.indicatorTag}`
-    );
+    
+    // Conditional label setting
+    if (attributes.labels && attributes.labels.length > 0) {
+      task.labels = Array.from(new Set([...task.labels, ...labelsFromContent])).filter(
+        (label) => label !== `#${this.indicatorTag}`
+      );
+    } else {
+      task.labels = labelsFromContent;
+    }
   
     // Make sure each label starts with exactly one "#"
     task.labels = task.labels.map((label) => {
@@ -112,8 +116,7 @@ export class TaskParser {
     task.completed = checkbox?.checked || false;
   
     return task;
-  }
-  
+  }  
 
   parseTaskMarkdown(taskMarkdown: string, noticeFunc: (msg: string) => void = null): ObsidianTask {
     const task: ObsidianTask = new ObsidianTask();

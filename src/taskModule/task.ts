@@ -122,4 +122,5 @@ export class ObsidianTask implements TaskProperties {
   clearTaskDisplayParams(): void {
     this.metadata.taskDisplayParams = null;
   }
+
 }
