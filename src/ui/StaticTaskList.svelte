@@ -1,17 +1,18 @@
 
 
 <script lang="ts">
-    import { MarkdownTaskMetadata } from "../renderer/StaticTaskListRenderer";
+    import { MarkdownTaskMetadata } from "../renderer/staticTaskListRenderer";
+    import { ObsidianTask } from "../taskModule/task";
     import StaticTaskItem from './StaticTaskItem.svelte';
 
-    export let mdTaskMetadataList: MarkdownTaskMetadata[];
+    export let taskListInfo: {task: ObsidianTask, markdownTaskMetadata: MarkdownTaskMetadata}[];
 
 
 </script>
 
 <ul class="contain-task-list has-list-bullet">
-    {#each mdTaskMetadataList as markdownTaskMetadata}
-        <StaticTaskItem {markdownTaskMetadata} />
+    {#each taskListInfo as taskItemInfo}
+        <StaticTaskItem {taskItemInfo} />
     {/each}
 </ul>
 

@@ -329,11 +329,11 @@ export class TaskParser {
     taskMarkdown = taskMarkdown.trim();
   
     // Single regex to capture task part, content, labels, indicator tag, and metadata
-    const regex = new RegExp(`- \\[(.)\\] (.+)\\s+#${this.indicatorTag}({.+})`);
+    const regex = new RegExp(`- \\[(.)\\] (.+)\\s+#${this.indicatorTag}({.+})<\\/span>`);
     const match = taskMarkdown.match(regex);
   
     if (!match || !match[1] || !match[2] || !match[3]) {
-      logger.warn(`Failed to parse task: ${taskMarkdown}`);
+      logger.warn(`Failed to parse task: ${taskMarkdown}, match: ${match}`);
       return task;
     } 
 

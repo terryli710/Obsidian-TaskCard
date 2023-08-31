@@ -56,6 +56,10 @@ export class TaskValidator {
     return new RegExp(`^\\s*- \\[[^\\]]\\] (.*?)\\s*(<span( class="[^"]+")? style="display:none">\\{.*?\\}<\\/span>)\\s*(${markdownSuffix})?$`);
   }
 
+  private getExtractedFormattedMarkdownPattern(): RegExp {
+    return new RegExp(`^\\s*- \\[[^\\]]\\] (.*?)\\s*\\{.*?\\}<\\/span>\\s*(${this.markdownSuffix})?$`, 'gm');
+  }
+
 
   private hasSpanElement(markdown: string): boolean {
     if (typeof markdown !== 'string') return false;
@@ -70,6 +74,17 @@ export class TaskValidator {
     if (!singleSpanPattern.test(taskMarkdown)) return false;
 
     const match = this.getFormattedMarkdownPattern().exec(taskMarkdown);
+    if (match && match[1]) {
+      const contentWithoutAttributes = match[1]
+        .replace(this.getAttributePattern(), '')
+        .trim();
+      return this.hasIndicatorTag(contentWithoutAttributes, indicatorTag);
+    }
+    return false;
+  }
+
+  isValidExtractedFormattedTaskMarkdown(taskMarkdown: string, indicatorTag: string | null  = null): boolean {
+    const match = this.getExtractedFormattedMarkdownPattern().exec(taskMarkdown);
     if (match && match[1]) {
       const contentWithoutAttributes = match[1]
         .replace(this.getAttributePattern(), '')

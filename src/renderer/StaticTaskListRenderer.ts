@@ -2,6 +2,9 @@ import { MarkdownPostProcessorContext } from "obsidian";
 import { logger } from "../utils/log";
 import { getAPI } from 'obsidian-dataview';
 import { FileOperator } from './fileOperator';
+import { ObsidianTask } from '../taskModule/task';
+import TaskCardPlugin from "..";
+import { StaticTaskListSvelteAdapter } from "./staticTaskListSvleteAdapter";
 
 
 export interface MarkdownTaskMetadata {
@@ -17,12 +20,12 @@ interface CodeBlockProcessor {
   }
 
 export class StaticTaskListRenderManager {
-    fileOperator: FileOperator
-    constructor(fileOperator: FileOperator) {
-        this.fileOperator = fileOperator
+      plugin: TaskCardPlugin;
+      constructor(plugin: TaskCardPlugin) {
+        this.plugin = plugin;
     }
 
-    async extractMarkdownTaskMetadata(queryResult: any, fileOperator: FileOperator = this.fileOperator): Promise<MarkdownTaskMetadata[]> {
+    async extractMarkdownTaskMetadata(queryResult: any, fileOperator: FileOperator = this.plugin.fileOperator): Promise<MarkdownTaskMetadata[]> {
         const mdTaskMetadataList: MarkdownTaskMetadata[] = [];
       
         for (const task of queryResult.values) {
@@ -33,6 +36,10 @@ export class StaticTaskListRenderManager {
       
           // Use FileOperator to get the original text
           const originalText = await fileOperator.getLineFromFile(filePath, lineNumber);
+
+          const isValid = this.plugin.taskValidator.isValidFormattedTaskMarkdown(originalText);
+          console.log(`isValid: ${isValid} for originalText: ${originalText}`);
+          if (!isValid) { continue; }
       
           if (originalText !== null) {
             const markdownTaskMetadata: MarkdownTaskMetadata = {
@@ -41,7 +48,7 @@ export class StaticTaskListRenderManager {
               lineNumber,
               startPosition,
               endPosition,
-            };
+            }
       
             mdTaskMetadataList.push(markdownTaskMetadata);
           }
@@ -54,17 +61,17 @@ export class StaticTaskListRenderManager {
     getCodeBlockProcessor(): CodeBlockProcessor {
         return async (source, el, ctx) => {
             const api = getAPI();
-            // const markdown = await api.markdownTaskList(
-            //     api.pages('#TaskCard').file.tasks
-            //     .where((task) => !task.completed)
-            //     .where((task) => task.text.includes('#TaskCard'))
-            //     .where((task) => task.text.includes('#Family'))
-            // );
-            // logger.debug(`markdown: ${markdown}`);
-
             const query = await api.tryQuery('TASK FROM #TaskCard WHERE !completed AND contains(text, "#TaskCard") AND contains(text, "#Family")');
             const mdTaskMetadataList = await this.extractMarkdownTaskMetadata(query);
-            el.innerHTML = `<strong>${JSON.stringify(mdTaskMetadataList)}</strong>`;
+            let taskListInfo: {task: ObsidianTask, markdownTaskMetadata: MarkdownTaskMetadata}[] = [];
+            for (const markdownTaskMetadata of mdTaskMetadataList) {
+              logger.debug(`markdownTaskMetadata.originalText: ${markdownTaskMetadata.originalText}`);
+              const task = this.plugin.taskParser.parseFormattedTaskMarkdown(markdownTaskMetadata.originalText);
+              taskListInfo.push({task, markdownTaskMetadata});
+            }
+            // el.innerHTML = `<strong>${JSON.stringify(mdTaskMetadataList)}</strong>`;
+            const processor = new StaticTaskListSvelteAdapter(el, taskListInfo);
+            processor.onload();
         };
     }
 }

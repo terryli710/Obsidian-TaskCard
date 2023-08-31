@@ -48,7 +48,6 @@ import {
         el: HTMLElement,
         ctx: MarkdownPostProcessorContext
       ) => {
-        logger.debug(` el: outerHTML: ${el.outerHTML}`);
         const taskSyncs: ObsidianTaskSyncProps[] = await this.constructTaskSync(el, ctx);
   
         for (const taskSync of taskSyncs) {
