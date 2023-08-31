@@ -2,12 +2,12 @@
 
 # Features
 
-- TODO: Aggregate by project, due and other filters (potentially achievable by dataview?).
 - TODO: Auto added due.
 - TODO: google calendar sync?
 - TODO: subtasks?
 - TODO: todoist sync?
 - TODO: recurring task?
+- TODO: date parsing - date only?
 
 # Commands
 - 

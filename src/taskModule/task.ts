@@ -43,7 +43,6 @@ export interface TaskProperties {
   };
 }
 
-
 export class ObsidianTask implements TaskProperties {
   public id: string;
   public content: string;
@@ -55,8 +54,8 @@ export class ObsidianTask implements TaskProperties {
   public labels: string[];
   public completed: boolean;
 
-  public parent?: ObsidianTask | null;
-  public children: ObsidianTask[];
+  public parent?: TaskProperties | ObsidianTask | null;
+  public children: TaskProperties[] | ObsidianTask[];
 
   public due?: DueDate | null;
   
@@ -123,4 +122,54 @@ export class ObsidianTask implements TaskProperties {
     this.metadata.taskDisplayParams = null;
   }
 
+  toTaskProps(): TaskProperties {
+    return this;
+  }
+
+}
+
+
+export interface TextPosition {
+  line: number;
+  col: number;
+}
+
+export interface DocPosition {
+  filePath: string,
+  start: TextPosition,
+  end: TextPosition,
+}
+
+
+export interface PositionedTaskProperties extends TaskProperties {
+  docPosition: DocPosition;
+}
+
+
+export class PositionedObsidianTask extends ObsidianTask implements PositionedTaskProperties {
+  public docPosition: DocPosition;
+
+  constructor(props?: Partial<PositionedObsidianTask>) {
+    super(props);
+    this.docPosition = props?.docPosition || { filePath: '', start: { line: 0, col: 0 }, end: { line: 0, col: 0 } };
+  }
+
+  toPositionedTaskProps(): PositionedTaskProperties {
+    return {
+      ...this.toTaskProps(),
+      docPosition: this.docPosition
+    };
+  }
+
+  static fromObsidianTaskAndDocPosition(task: ObsidianTask, position: DocPosition): PositionedTaskProperties {
+    return new PositionedObsidianTask({
+      ...(task.toTaskProps() as Partial<PositionedObsidianTask>),
+      docPosition: position
+    });
+  }
+
+  toUnanchoredObsidianTask(): ObsidianTask {
+    const { docPosition, ...taskProps } = this.toPositionedTaskProps();
+    return new ObsidianTask(taskProps as Partial<ObsidianTask>);
+  }
 }

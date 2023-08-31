@@ -26,7 +26,6 @@
   let task = taskItemInfo.task;
   let dueDisplay = '';
   let labelModule = new LabelModule();
-  logger.debug(`task.description: ${task.description}`);
   let descriptionMarkdown = marked(task.description);
 
   labelModule.setLabels(task.labels);
@@ -39,8 +38,8 @@
   async function toggleCompleteOfTask(completed: boolean, markdownTaskMetadata: MarkdownTaskMetadata) {
   // Get the line from the file
   const line = await plugin.fileOperator.getLineFromFile(
-    markdownTaskMetadata.filePath,
-    markdownTaskMetadata.lineNumber + 1
+    markdownTaskMetadata.docPosition.filePath,
+    markdownTaskMetadata.docPosition.start.line + 1,
   );
 
   // Determine the symbol to use based on the 'completed' flag
@@ -51,8 +50,8 @@
 
   // Update the line in the file
   plugin.fileOperator.updateLineInFile(
-    markdownTaskMetadata.filePath,
-    markdownTaskMetadata.lineNumber + 1,
+    markdownTaskMetadata.docPosition.filePath,
+    markdownTaskMetadata.docPosition.start.line + 1,
     updatedLine
   );
 }
@@ -84,19 +83,18 @@
     const selectionState = {
           eState: {
               cursor: {
-                  from: { line: taskItemInfo.markdownTaskMetadata.lineNumber, 
+                  from: { line: taskItemInfo.markdownTaskMetadata.docPosition.start.line, 
                           ch: 0 },
-                  to: { line: taskItemInfo.markdownTaskMetadata.lineNumber + 1, 
+                  to: { line: taskItemInfo.markdownTaskMetadata.docPosition.start.line + 1, 
                         ch: 0 },
               },
-              line: taskItemInfo.markdownTaskMetadata.lineNumber,
+              line: taskItemInfo.markdownTaskMetadata.docPosition.start.line,
           },
       };
     
-    logger.debug(`selectionState: ${JSON.stringify(selectionState)}`);
     plugin.app.workspace.openLinkText(
-      taskItemInfo.markdownTaskMetadata.filePath,
-      taskItemInfo.markdownTaskMetadata.filePath,
+      taskItemInfo.markdownTaskMetadata.docPosition.filePath,
+      taskItemInfo.markdownTaskMetadata.docPosition.filePath,
       event.ctrlKey || (event.metaKey && Platform.isMacOS),
       selectionState
     )

@@ -2,7 +2,7 @@ import { MarkdownPostProcessorContext } from "obsidian";
 import { logger } from "../utils/log";
 import { getAPI } from 'obsidian-dataview';
 import { FileOperator } from './fileOperator';
-import { ObsidianTask } from '../taskModule/task';
+import { ObsidianTask, DocPosition, TextPosition } from '../taskModule/task';
 import TaskCardPlugin from "..";
 import { StaticTaskListSvelteAdapter } from "./staticTaskListSvleteAdapter";
 import { QueryResult, TaskResult } from "obsidian-dataview/lib/api/plugin-api";
@@ -10,10 +10,7 @@ import { QueryResult, TaskResult } from "obsidian-dataview/lib/api/plugin-api";
 
 export interface MarkdownTaskMetadata {
     originalText: string;
-    filePath: string;
-    lineNumber: number;
-    startPosition: { line: number; col: number; offset: number };
-    endPosition: { line: number; col: number; offset: number };
+    docPosition: DocPosition;
   }
 
 interface CodeBlockProcessor {
@@ -31,9 +28,9 @@ export class StaticTaskListRenderManager {
       
         for (const task of queryResult.values) {
           const filePath = task.path;
-          const lineNumber = task.line;
-          const startPosition = task.position.start;
-          const endPosition = task.position.end;
+          // const lineNumber = task.line;
+          const startPosition: TextPosition = { line: task.position.start.line, col: task.position.start.col };
+          const endPosition: TextPosition = { line: task.position.end.line, col: task.position.end.col };
           const originalText = `- [${task.status}] ` + task.text;
 
           // Use FileOperator to get the original text
@@ -44,11 +41,12 @@ export class StaticTaskListRenderManager {
 
           if (originalText !== null) {
             const markdownTaskMetadata: MarkdownTaskMetadata = {
-              originalText,
-              filePath,
-              lineNumber,
-              startPosition,
-              endPosition,
+              originalText: originalText,
+              docPosition: {
+                filePath: filePath,
+                start: startPosition,
+                end: endPosition
+              }
             }
 
             mdTaskMetadataList.push(markdownTaskMetadata);
@@ -61,7 +59,6 @@ export class StaticTaskListRenderManager {
 
     getCodeBlockProcessor(): CodeBlockProcessor {
         const codeBlockProcessor: CodeBlockProcessor = async (source, el, ctx) => {
-          logger.debug(`source: ${source}`);
             const api = getAPI();
             const query: QueryResult = await api.tryQuery(source);
             const mdTaskMetadataList = await this.extractMarkdownTaskMetadata(query);

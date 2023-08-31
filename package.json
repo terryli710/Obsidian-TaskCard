@@ -46,6 +46,7 @@
     "obsidian": "latest",
     "obsidian-dataview": "^0.5.56",
     "prettier": "^3.0.0",
+    "sqlite3": "^5.1.6",
     "sugar": "^2.0.6",
     "svelte": "^4.1.1",
     "svelte-jester": "^3.0.0",

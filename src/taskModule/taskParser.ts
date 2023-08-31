@@ -305,8 +305,6 @@ export class TaskParser {
     task.description = parseJSONAttribute(metadata['description'], 'description', '').replace(/\\n/g, '\n');
     task.sectionID = parseJSONAttribute(metadata['sectionID'], 'sectionID', '');
 
-    logger.debug(`metadata.description: ${JSON.stringify(metadata['description'])}; task.description: ${JSON.stringify(task.description)}`);
-
     // For attributes that require JSON parsing
     task.priority = parseJSONAttribute(metadata['priority'], 'priority', '4' as unknown as Priority);
     task.order = parseJSONAttribute(metadata['order'], 'order', 0);
@@ -397,7 +395,7 @@ export class TaskParser {
       } as DueDate;
     } else {
       return {
-        isRecurring: true,
+        isRecurring: false,
         date: parsedDate,
         time: parsedTime,
         string: dueString

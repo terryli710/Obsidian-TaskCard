@@ -80,7 +80,6 @@
     })
 
     function showCardMenu(event) {
-      logger.debug(`show card menu called`)
       event.preventDefault();
       const cardMenu = new Menu();
 
