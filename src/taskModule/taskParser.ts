@@ -299,10 +299,13 @@ export class TaskParser {
       logger.warn(`Failed to parse metadata: ${match[3]}`);
       return task;
     }
+
     // For string attributes
     task.id = parseJSONAttribute(metadata['id'], 'id', '');
-    task.description = parseJSONAttribute(metadata['description'], 'description', '');
+    task.description = parseJSONAttribute(metadata['description'], 'description', '').replace(/\\\\/g, '\\').replace(/\\\\n/g, '\n'); // correctly format the description
     task.sectionID = parseJSONAttribute(metadata['sectionID'], 'sectionID', '');
+
+    logger.debug(`metadata.description: ${JSON.stringify(metadata['description'])}; task.description: ${JSON.stringify(task.description)}`);
 
     // For attributes that require JSON parsing
     task.priority = parseJSONAttribute(metadata['priority'], 'priority', '4' as unknown as Priority);

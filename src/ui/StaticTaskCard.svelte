@@ -26,15 +26,36 @@
   let task = taskItemInfo.task;
   let dueDisplay = '';
   let labelModule = new LabelModule();
-
+  logger.debug(`task.description: ${task.description}`);
   let descriptionMarkdown = marked(task.description);
 
   labelModule.setLabels(task.labels);
 
   function handleCheckboxClick() {
     task.completed = !task.completed;
-    // TODO: update the original task
+    toggleCompleteOfTask(task.completed, taskItemInfo.markdownTaskMetadata);
   }
+
+  async function toggleCompleteOfTask(completed: boolean, markdownTaskMetadata: MarkdownTaskMetadata) {
+  // Get the line from the file
+  const line = await plugin.fileOperator.getLineFromFile(
+    markdownTaskMetadata.filePath,
+    markdownTaskMetadata.lineNumber
+  );
+
+  // Determine the symbol to use based on the 'completed' flag
+  const symbol = completed ? 'x' : ' ';
+
+  // Use a regular expression to find the task's current completion symbol and replace it
+  const updatedLine = line.replace(/- \[[^\]]\]/, `- [${symbol}]`);
+
+  // Update the line in the file
+  plugin.fileOperator.updateLineInFile(
+    markdownTaskMetadata.filePath,
+    markdownTaskMetadata.lineNumber,
+    updatedLine
+  );
+}
 
   function updateDueDisplay(): string {
     if (!task.due) {
@@ -81,7 +102,6 @@
     )
   }
 
-  logger.debug(`task.hasProject(): ${task.hasProject()}`);
 </script>
 
 {#if taskDisplayParams.mode === 'single-line'}
@@ -322,18 +342,38 @@
   }
 
   /* Maintain border color on hover */
+  .task-card-checkbox.priority-4:hover {
+    border-color: var(--checkbox-border-color-hover);
+  }
+
   .task-card-checkbox.priority-1:hover {
-    border-color: var(--color-red);
+    background-color: rgba(var(--color-red-rgb), 0.1);
   }
   .task-card-checkbox.priority-2:hover {
-    border-color: var(--color-orange);
+    background-color: rgba(var(--color-orange-rgb), 0.1);
   }
   .task-card-checkbox.priority-3:hover {
-    border-color: var(--color-yellow);
+    background-color: rgba(var(--color-yellow-rgb), 0.1);
   }
-  .task-card-checkbox:hover {
-    border-width: calc( 2 * var(--border-width));
-    background-color: var(--background-modifier-hover);
+
+  input[type=checkbox].task-card-checkbox.priority-1:checked {
+    background-color: rgba(var(--color-red-rgb), 0.7);
+  }
+  input[type=checkbox].task-card-checkbox.priority-2:checked {
+    background-color: rgba(var(--color-orange-rgb), 0.7);
+  }
+  input[type=checkbox].task-card-checkbox.priority-3:checked {
+    background-color: rgba(var(--color-yellow-rgb), 0.7);
+  }
+
+  input[type=checkbox].task-card-checkbox.priority-1:checked:hover {
+    background-color: rgba(var(--color-red-rgb), 0.9);
+  }
+  input[type=checkbox].task-card-checkbox.priority-2:checked:hover {
+    background-color: rgba(var(--color-orange-rgb), 0.9);
+  }
+  input[type=checkbox].task-card-checkbox.priority-3:checked:hover {
+    background-color: rgba(var(--color-yellow-rgb), 0.9);
   }
 
   .task-card-description {
@@ -380,6 +420,10 @@
     background-color: var(--background-modifier-hover);
     border-radius: var(--radius-m);
     cursor: pointer;
+  }
+
+  button.mode-toggle-button {
+    border-radius: var(--radius-m);
   }
   
 </style>

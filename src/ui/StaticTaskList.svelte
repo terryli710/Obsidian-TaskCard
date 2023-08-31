@@ -5,9 +5,11 @@
     import { ObsidianTask } from "../taskModule/task";
     import StaticTaskItem from './StaticTaskItem.svelte';
     import TaskCardPlugin from "..";
+    import { logger } from "../utils/log";
 
     export let taskListInfo: {task: ObsidianTask, markdownTaskMetadata: MarkdownTaskMetadata}[];
     export let plugin: TaskCardPlugin;
+    logger.debug(`plugin.fileOperator: ${plugin.fileOperator}`);
 </script>
 
 <ul class="contain-task-list has-list-bullet">

@@ -26,23 +26,22 @@ export class StaticTaskListRenderManager {
         this.plugin = plugin;
     }
 
-    async extractMarkdownTaskMetadata(queryResult: QueryResult, fileOperator: FileOperator = this.plugin.fileOperator): Promise<MarkdownTaskMetadata[]> {
+    async extractMarkdownTaskMetadata(queryResult: QueryResult): Promise<MarkdownTaskMetadata[]> {
         const mdTaskMetadataList: MarkdownTaskMetadata[] = [];
       
         for (const task of queryResult.values) {
           const filePath = task.path;
-          const lineNumber = task.line;
+          const lineNumber = task.line + 1;
           const startPosition = task.position.start;
           const endPosition = task.position.end;
           const originalText = `- [${task.status}] ` + task.text;
-      
+
           // Use FileOperator to get the original text
           // const originalText = await fileOperator.getLineFromFile(filePath, lineNumber);
 
           const isValid = this.plugin.taskValidator.isValidFormattedTaskMarkdown(originalText);
-          console.log(`isValid: ${isValid} for originalText: ${originalText}`);
           if (!isValid) { continue; }
-      
+
           if (originalText !== null) {
             const markdownTaskMetadata: MarkdownTaskMetadata = {
               originalText,
@@ -51,11 +50,11 @@ export class StaticTaskListRenderManager {
               startPosition,
               endPosition,
             }
-      
+
             mdTaskMetadataList.push(markdownTaskMetadata);
           }
         }
-      
+
         return mdTaskMetadataList;
       }
 
@@ -65,7 +64,6 @@ export class StaticTaskListRenderManager {
           logger.debug(`source: ${source}`);
             const api = getAPI();
             const query: QueryResult = await api.tryQuery(source);
-            logger.debug(`query: ${JSON.stringify(query)}`);
             const mdTaskMetadataList = await this.extractMarkdownTaskMetadata(query);
             let taskListInfo: {task: ObsidianTask, markdownTaskMetadata: MarkdownTaskMetadata}[] = [];
             for (const markdownTaskMetadata of mdTaskMetadataList) {

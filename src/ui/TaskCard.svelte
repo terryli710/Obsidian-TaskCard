@@ -265,17 +265,33 @@
 
   /* Maintain border color on hover */
   .task-card-checkbox.priority-1:hover {
-    border-color: var(--color-red);
+    background-color: rgba(var(--color-red-rgb), 0.1);
   }
   .task-card-checkbox.priority-2:hover {
-    border-color: var(--color-orange);
+    background-color: rgba(var(--color-orange-rgb), 0.1);
   }
   .task-card-checkbox.priority-3:hover {
-    border-color: var(--color-yellow);
+    background-color: rgba(var(--color-yellow-rgb), 0.1);
   }
-  .task-card-checkbox:hover {
-    border-width: calc( 2 * var(--border-width));
-    background-color: var(--background-modifier-hover);
+
+  input[type=checkbox].task-card-checkbox.priority-1:checked {
+    background-color: rgba(var(--color-red-rgb), 0.7);
+  }
+  input[type=checkbox].task-card-checkbox.priority-2:checked {
+    background-color: rgba(var(--color-orange-rgb), 0.7);
+  }
+  input[type=checkbox].task-card-checkbox.priority-3:checked {
+    background-color: rgba(var(--color-yellow-rgb), 0.7);
+  }
+
+  input[type=checkbox].task-card-checkbox.priority-1:checked:hover {
+    background-color: rgba(var(--color-red-rgb), 0.9);
+  }
+  input[type=checkbox].task-card-checkbox.priority-2:checked:hover {
+    background-color: rgba(var(--color-orange-rgb), 0.9);
+  }
+  input[type=checkbox].task-card-checkbox.priority-3:checked:hover {
+    background-color: rgba(var(--color-yellow-rgb), 0.9);
   }
 
   .task-card-menu-button {

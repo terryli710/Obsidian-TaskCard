@@ -55,4 +55,13 @@ export class FileOperator {
     await this.app.vault.modify(file as TFile, newFileLines.join('\n'));
   }
 
+  async updateLineInFile(filePath: string, lineNumber: number, newContent: string): Promise<void> {
+    const file = await this.app.vault.getAbstractFileByPath(filePath);
+    if (!file) return;
+    const fileLines = await this.getFileLines(filePath);
+    const newFileLines: string[] = [...fileLines];
+    newFileLines[lineNumber - 1] = newContent;
+    await this.app.vault.modify(file as TFile, newFileLines.join('\n'));
+  }
+
 }
