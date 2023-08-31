@@ -5,6 +5,7 @@ import { FileOperator } from './fileOperator';
 import { ObsidianTask } from '../taskModule/task';
 import TaskCardPlugin from "..";
 import { StaticTaskListSvelteAdapter } from "./staticTaskListSvleteAdapter";
+import { QueryResult, TaskResult } from "obsidian-dataview/lib/api/plugin-api";
 
 
 export interface MarkdownTaskMetadata {
@@ -25,7 +26,7 @@ export class StaticTaskListRenderManager {
         this.plugin = plugin;
     }
 
-    async extractMarkdownTaskMetadata(queryResult: any, fileOperator: FileOperator = this.plugin.fileOperator): Promise<MarkdownTaskMetadata[]> {
+    async extractMarkdownTaskMetadata(queryResult: QueryResult, fileOperator: FileOperator = this.plugin.fileOperator): Promise<MarkdownTaskMetadata[]> {
         const mdTaskMetadataList: MarkdownTaskMetadata[] = [];
       
         for (const task of queryResult.values) {
@@ -33,9 +34,10 @@ export class StaticTaskListRenderManager {
           const lineNumber = task.line;
           const startPosition = task.position.start;
           const endPosition = task.position.end;
+          const originalText = `- [${task.status}] ` + task.text;
       
           // Use FileOperator to get the original text
-          const originalText = await fileOperator.getLineFromFile(filePath, lineNumber);
+          // const originalText = await fileOperator.getLineFromFile(filePath, lineNumber);
 
           const isValid = this.plugin.taskValidator.isValidFormattedTaskMarkdown(originalText);
           console.log(`isValid: ${isValid} for originalText: ${originalText}`);
@@ -60,8 +62,10 @@ export class StaticTaskListRenderManager {
 
     getCodeBlockProcessor(): CodeBlockProcessor {
         return async (source, el, ctx) => {
+          logger.debug(`source: ${source}`);
             const api = getAPI();
-            const query = await api.tryQuery('TASK FROM #TaskCard WHERE !completed AND contains(text, "#TaskCard") AND contains(text, "#Family")');
+            const query: QueryResult = await api.tryQuery(source);
+            logger.debug(`query: ${JSON.stringify(query)}`);
             const mdTaskMetadataList = await this.extractMarkdownTaskMetadata(query);
             let taskListInfo: {task: ObsidianTask, markdownTaskMetadata: MarkdownTaskMetadata}[] = [];
             for (const markdownTaskMetadata of mdTaskMetadataList) {

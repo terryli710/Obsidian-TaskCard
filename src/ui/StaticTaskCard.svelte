@@ -63,12 +63,12 @@
     const selectionState = {
           eState: {
               cursor: {
-                  from: { line: taskItemInfo.markdownTaskMetadata.lineNumber - 1, 
+                  from: { line: taskItemInfo.markdownTaskMetadata.lineNumber, 
                           ch: 0 },
-                  to: { line: taskItemInfo.markdownTaskMetadata.lineNumber, 
+                  to: { line: taskItemInfo.markdownTaskMetadata.lineNumber + 1, 
                         ch: 0 },
               },
-              line: taskItemInfo.markdownTaskMetadata.lineNumber - 1,
+              line: taskItemInfo.markdownTaskMetadata.lineNumber,
           },
       };
     
