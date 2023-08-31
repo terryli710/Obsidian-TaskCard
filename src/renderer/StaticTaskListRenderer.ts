@@ -61,7 +61,7 @@ export class StaticTaskListRenderManager {
 
 
     getCodeBlockProcessor(): CodeBlockProcessor {
-        return async (source, el, ctx) => {
+        const codeBlockProcessor: CodeBlockProcessor = async (source, el, ctx) => {
           logger.debug(`source: ${source}`);
             const api = getAPI();
             const query: QueryResult = await api.tryQuery(source);
@@ -75,5 +75,6 @@ export class StaticTaskListRenderManager {
             const processor = new StaticTaskListSvelteAdapter(this.plugin, el, taskListInfo);
             processor.onload();
         };
+        return codeBlockProcessor;
     }
 }

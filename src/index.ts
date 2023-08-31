@@ -11,7 +11,7 @@ import { StaticTaskListRenderManager, TaskCardRenderManager } from './renderer/i
 import { FileOperator } from './renderer/fileOperator';
 import { TaskFormatter } from './taskModule/taskFormatter';
 import { TaskMonitor } from './taskModule/taskMonitor';
-// import { Query, getAPI } from "obsidian-dataview";
+// import { DataviewApi, getAPI } from "obsidian-dataview";
 // import { Sources, TagSource } from 'obsidian-dataview/lib/data-index/source';
 // import { Fields, VariableField } from 'obsidian-dataview/lib/expression/field';
 
@@ -26,7 +26,7 @@ export default class TaskCardPlugin extends Plugin {
   public staticTaskListRenderManager: StaticTaskListRenderManager;
   public fileOperator: FileOperator;
   public taskMonitor: TaskMonitor;
-  // public taskStore: TaskStore;
+  // public dataviewAPI: DataviewApi;
 
   constructor(app: App, pluginManifest: PluginManifest) {
     super(app, pluginManifest);
@@ -34,6 +34,7 @@ export default class TaskCardPlugin extends Plugin {
       logger.info(`Settings updated: ${JSON.stringify(settings)}`);
       this.settings = settings;
     });
+    // this.dataviewAPI = getAPI();
     this.projectModule = new ProjectModule();
     this.taskParser = new TaskParser(SettingStore, this.projectModule);
     this.taskFormatter = new TaskFormatter(SettingStore);
@@ -42,7 +43,6 @@ export default class TaskCardPlugin extends Plugin {
     this.fileOperator = new FileOperator(this, this.app);
     this.taskMonitor = new TaskMonitor(this, this.app);
     this.staticTaskListRenderManager = new StaticTaskListRenderManager(this);
-    // this.taskStore = new TaskStore();
   }
 
   async loadSettings() {
@@ -71,6 +71,7 @@ export default class TaskCardPlugin extends Plugin {
         'layout-change', 
         this.taskMonitor.layoutChangeHandler.bind(this.taskMonitor))
     );
+  
 
     // this.registerEvent(this.app.workspace.on('file-open', () => logger.debug('file-open')));
     // this.registerEvent(this.app.workspace.on('layout-change', () => logger.debug('layout-change')));
@@ -102,10 +103,14 @@ export default class TaskCardPlugin extends Plugin {
     this.registerMarkdownPostProcessor(
       this.taskCardRenderManager.getPostProcessor()
     );
-    
-    this.registerMarkdownCodeBlockProcessor('taskcard', 
-      this.staticTaskListRenderManager.getCodeBlockProcessor());
-    
+
+    //@ts-ignore
+    this.registerEvent(this.app.metadataCache.on("dataview:index-ready", () => {
+      logger.debug('dataview:index-ready');
+      this.registerMarkdownCodeBlockProcessor('taskcard', 
+        this.staticTaskListRenderManager.getCodeBlockProcessor());
+    }));
+
   }
 
   async onload() {
