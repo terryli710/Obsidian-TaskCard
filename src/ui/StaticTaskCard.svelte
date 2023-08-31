@@ -139,7 +139,13 @@
   </div>
 {:else}
   <!-- mode = multi-line -->
-  <div class="task-card-major-block">
+  <div 
+    class="task-card-major-block"
+    role="button" 
+    tabindex="0" 
+    on:click={linkToTask}
+    on:keydown={linkToTask}
+  >
     <div class="task-card-checkbox-wrapper">
       <input
         type="checkbox"
@@ -358,6 +364,22 @@
   .task-card-labels a {
     text-decoration: none;
     flex-shrink: 0;
+  }
+
+  .task-card-major-block {
+    display: grid;
+    grid-template-columns: auto 1fr; /* Checkbox takes only the space it needs, rest for content and description */
+    grid-template-rows: auto auto; /* Two rows for content and description */
+    width: 100%;
+    align-items: center;
+    margin: 0 -3px;
+    padding: 0 3px;
+  }
+
+  .task-card-major-block:hover {
+    background-color: var(--background-modifier-hover);
+    border-radius: var(--radius-m);
+    cursor: pointer;
   }
   
 </style>

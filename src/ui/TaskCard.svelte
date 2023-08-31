@@ -298,4 +298,12 @@
     border-radius: var(--radius-m);
   }
 
+  .task-card-major-block {
+    display: grid;
+    grid-template-columns: auto 1fr; /* Checkbox takes only the space it needs, rest for content and description */
+    grid-template-rows: auto auto; /* Two rows for content and description */
+    width: 100%;
+    align-items: center;
+  }
+
 </style>
