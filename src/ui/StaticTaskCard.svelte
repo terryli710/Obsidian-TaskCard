@@ -1,5 +1,6 @@
 <script lang="ts">
   import ChevronsDownUp from '../components/icons/ChevronsDownUp.svelte';
+  import ChevronsUpDown from '../components/icons/ChevronsUpDown.svelte';
   import {
     TaskDisplayMode,
     TaskDisplayParams
@@ -8,6 +9,10 @@
   import { LabelModule } from '../taskModule/labels';
   import { ObsidianTask } from '../taskModule/task';
   import { displayDate, displayTime } from '../utils/dateTimeFormatter';
+  import { logger } from '../utils/log';
+  import { marked } from 'marked';
+  marked.use({ mangle: false, headerIds: false, langPrefix: '' });
+  
 
   export let taskItemInfo: {
     task: ObsidianTask;
@@ -18,6 +23,8 @@
   let task = taskItemInfo.task;
   let dueDisplay = '';
   let labelModule = new LabelModule();
+
+  let descriptionMarkdown = marked(task.description);
 
   labelModule.setLabels(task.labels);
 
@@ -46,45 +53,67 @@
     event.stopPropagation();
     taskDisplayParams.mode = newMode;
   }
+
+  function linkToTask(event: MouseEvent | KeyboardEvent | CustomEvent) {
+    event.stopPropagation();
+    // TODO
+  }
+
+  logger.debug(`task.hasProject(): ${task.hasProject()}`);
 </script>
 
 {#if taskDisplayParams.mode === 'single-line'}
   <div class="task-card-single-line">
-    <div class="static-task-card-button">
-      <div class="task-card-single-line-left-container">
+    <div class="static-task-card-container">
+      <!-- Left Element: Checkbox -->
+      <div class="static-task-card-left">
         <input
           type="checkbox"
           class={`task-card-checkbox priority-${task.priority}`}
           checked={task.completed}
           on:click|stopPropagation={handleCheckboxClick}
         />
-        <div class="task-card-content">{task.content}</div>
       </div>
-      <div class="task-card-single-line-right-container">
-        <!-- Due -->
-        {#if task.hasDue()}
-          <div
-            class="task-card-due mode-single-line"
-            role="button"
-            tabindex="0"
-          >
-            <div class="due-display">
-              {dueDisplay}
+  
+      <!-- Middle Element: Content and Project -->
+      <div 
+        class="static-task-card-middle"
+        role="button" 
+        tabindex="0" 
+        on:click={linkToTask}
+        on:keydown={linkToTask}
+      >
+        <div class="static-task-card-content">{task.content}</div>
+        <div class="static-task-card-middle-right">
+          <!-- Due -->
+          {#if task.hasDue()}
+            <div class="task-card-due mode-single-line}" role="button" tabindex="0">
+              <div class="due-display">
+                {dueDisplay}
+              </div>
             </div>
-          </div>
-        {/if}
-        <!-- Project -->
-        <div class="task-card-project">
-          {#if task.hasProject()}
-            <span
-              class="project-color"
-              style="background-color: {task.project.color};"
-            />
           {/if}
+          <div class="task-card-project">
+            {#if task.hasProject()}
+              <span
+                class="project-color"
+                style="background-color: {task.project.color};"
+              />
+            {/if}
+          </div>
         </div>
       </div>
-    </div>
-    <!-- TODO: add a multi-line icon -->
+  
+      <!-- Right Element: Button -->
+      <div class="static-task-card-right">
+        <button
+          class="task-card-button mode-toggle-button"
+          on:click={(event) => switchMode(event, 'multi-line')}
+        >
+          <ChevronsUpDown />
+        </button>
+      </div>
+    </div>    
   </div>
 {:else}
   <!-- mode = multi-line -->
@@ -125,19 +154,23 @@
     <!-- Description -->
     {#if task.hasDescription()}
       <div class="task-card-description" role="button" tabindex="0">
-        {@html task.description}
+        {@html descriptionMarkdown}
       </div>
     {/if}
   </div>
 
   <div class="task-card-attribute-bottom-bar">
     <div class="task-card-attribute-bottom-bar-left">
+      <!-- Due -->
       {#if task.hasDue()}
         <div class="task-card-due mode-multi-line}" role="button" tabindex="0">
           <div class="due-display">
             {dueDisplay}
           </div>
         </div>
+        {#if taskDisplayParams.mode === 'multi-line'}
+          <div class="task-card-attribute-separator"> | </div>
+        {/if}
       {/if}
       <!-- Labels -->
       <div class="task-card-labels">
@@ -160,3 +193,149 @@
     </div>
   </div>
 {/if}
+
+
+<style>
+  .static-task-card-content {
+    padding-left: 0.25em;
+    padding-right: 0.25em;
+    font-size: var(--font-text-size);
+    flex-grow: 1; /* Make it take up all available space */
+  }
+  .static-task-card-container {
+    display: flex;
+    align-items: center;
+    width: 100%; /* Ensure it takes up all available space */
+  }
+
+  .static-task-card-left {
+    flex-shrink: 0;
+    display: flex; /* Added */
+    align-items: center; /* Center align items vertically */
+  }
+
+  .static-task-card-middle {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: row; /* Changed from column to row */
+    justify-content: space-between; /* Added */
+    align-items: center; /* Added */
+    cursor: pointer;
+    border-radius: var(--radius-s);
+  }
+
+  .static-task-card-middle:hover {
+    background-color: var(--background-modifier-hover);
+  }
+
+  .static-task-card-right {
+    flex-shrink: 0;
+    align-self: flex-end;
+    display: flex; /* Added */
+    align-items: center; /* Center align items vertically */
+    margin-left: 4px;
+  }
+
+  .project-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  .task-card-project {
+    flex-shrink: 0;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    font-size: var(--font-ui-small);
+  }
+
+  .project-color {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    padding: 4px;
+    border-radius: 50%;
+    margin: 4px;
+    border: var(--border-width) solid var(--background-primary);
+  }
+
+  .task-card-due {
+    display: inline;
+    padding: var(--tag-padding-y) var(--tag-padding-x);
+    border: var(--border-width) solid var(--background-modifier-border);
+    width: auto;
+    border-radius: var(--tag-radius);
+    font-size: calc(var(--font-ui-medium) * 0.875);
+    color: var(--text-accent);
+    white-space: nowrap;
+    line-height: 1;
+  }
+
+  .static-task-card-middle-right {
+    display: flex;
+    align-items: center;
+  }
+
+  .task-card-checkbox {
+    border: var(--border-width) solid;
+    border-color: var(--checkbox-border-color);
+  }
+
+  /* Apply color to checkbox based on priority */
+  .task-card-checkbox.priority-1 {
+    border-color: var(--color-red);
+  }
+  .task-card-checkbox.priority-2 {
+    border-color: var(--color-orange);
+  }
+  .task-card-checkbox.priority-3 {
+    border-color: var(--color-yellow);
+  }
+
+  /* Maintain border color on hover */
+  .task-card-checkbox.priority-1:hover {
+    border-color: var(--color-red);
+  }
+  .task-card-checkbox.priority-2:hover {
+    border-color: var(--color-orange);
+  }
+  .task-card-checkbox.priority-3:hover {
+    border-color: var(--color-yellow);
+  }
+  .task-card-checkbox:hover {
+    cursor: pointer;
+    border-width: calc( 2 * var(--border-width));
+  }
+
+  .task-card-description {
+    grid-column: 2;
+    grid-row: 2;
+    font-size: var(--font-smallest);
+    line-height: var(--line-height-tight);
+    color: var(--text-faint);
+    border-radius: 5px; /* Rounded square */
+    margin: 0.1em; /* Padding for the content */
+    padding: 0.22em; /* Padding for the content */
+    word-wrap: break-word; /* To break words if too long */
+    white-space: normal; /* To auto change lines */
+  }
+
+  .task-card-labels {
+    display: flex;
+    padding: 2px 0;
+    flex-wrap: nowrap; /* Prevents wrapping */
+    overflow: scroll; /* Truncates any labels that don't fit */
+    white-space: nowrap; /* Keeps labels on a single line */
+    align-items: center;
+    gap: 4px;
+    flex-grow: 1; /* Make it take up all available space */
+    font-size: var(--font-ui-medium);
+  }
+
+  .task-card-labels a {
+    text-decoration: none;
+    flex-shrink: 0;
+  }
+  
+</style>

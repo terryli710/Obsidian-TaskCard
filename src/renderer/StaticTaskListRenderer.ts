@@ -65,7 +65,6 @@ export class StaticTaskListRenderManager {
             const mdTaskMetadataList = await this.extractMarkdownTaskMetadata(query);
             let taskListInfo: {task: ObsidianTask, markdownTaskMetadata: MarkdownTaskMetadata}[] = [];
             for (const markdownTaskMetadata of mdTaskMetadataList) {
-              logger.debug(`markdownTaskMetadata.originalText: ${markdownTaskMetadata.originalText}`);
               const task = this.plugin.taskParser.parseFormattedTaskMarkdown(markdownTaskMetadata.originalText);
               taskListInfo.push({task, markdownTaskMetadata});
             }

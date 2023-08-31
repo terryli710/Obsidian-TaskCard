@@ -80,27 +80,18 @@
     })
 
     function showCardMenu(event) {
+      logger.debug(`show card menu called`)
       event.preventDefault();
       const cardMenu = new Menu();
 
       // Group 0: Toggle single-line and multi-line mode
-      if (taskSyncManager.obsidianTask.metadata.taskDisplayParams.mode === 'single-line') {
-        cardMenu.addItem((item) => {
-          item.setTitle('Switch to Multi-line');
-          item.setIcon('credit-card');
-          item.onClick((evt: MouseEvent | KeyboardEvent) => {
-            switchMode(evt, 'multi-line');
-          });
-        });
-      } else {
-        cardMenu.addItem((item) => {
+      cardMenu.addItem((item) => {
           item.setTitle('Switch to Single-line');
           item.setIcon('list');
           item.onClick((evt: MouseEvent | KeyboardEvent) => {
             switchMode(evt, 'single-line');
           });
         });
-      }
 
       // Separator
       cardMenu.addSeparator();

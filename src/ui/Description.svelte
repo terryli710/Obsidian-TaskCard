@@ -94,7 +94,6 @@
         padding: 0.22em; /* Padding for the content */
         word-wrap: break-word; /* To break words if too long */
         white-space: normal; /* To auto change lines */
-
     }
 
     .task-card-description:hover {
