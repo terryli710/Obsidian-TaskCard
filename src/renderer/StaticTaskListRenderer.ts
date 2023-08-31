@@ -68,8 +68,7 @@ export class StaticTaskListRenderManager {
               const task = this.plugin.taskParser.parseFormattedTaskMarkdown(markdownTaskMetadata.originalText);
               taskListInfo.push({task, markdownTaskMetadata});
             }
-            // el.innerHTML = `<strong>${JSON.stringify(mdTaskMetadataList)}</strong>`;
-            const processor = new StaticTaskListSvelteAdapter(el, taskListInfo);
+            const processor = new StaticTaskListSvelteAdapter(this.plugin, el, taskListInfo);
             processor.onload();
         };
     }

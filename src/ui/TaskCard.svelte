@@ -274,8 +274,8 @@
     border-color: var(--color-yellow);
   }
   .task-card-checkbox:hover {
-    cursor: pointer;
     border-width: calc( 2 * var(--border-width));
+    background-color: var(--background-modifier-hover);
   }
 
   .task-card-menu-button {

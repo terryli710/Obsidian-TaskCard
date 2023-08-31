@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { Platform, Workspace } from 'obsidian';
   import ChevronsDownUp from '../components/icons/ChevronsDownUp.svelte';
   import ChevronsUpDown from '../components/icons/ChevronsUpDown.svelte';
   import {
@@ -11,6 +12,7 @@
   import { displayDate, displayTime } from '../utils/dateTimeFormatter';
   import { logger } from '../utils/log';
   import { marked } from 'marked';
+    import TaskCardPlugin from '..';
   marked.use({ mangle: false, headerIds: false, langPrefix: '' });
   
 
@@ -18,6 +20,7 @@
     task: ObsidianTask;
     markdownTaskMetadata: MarkdownTaskMetadata;
   };
+  export let plugin: TaskCardPlugin;
 
   let taskDisplayParams: TaskDisplayParams = { mode: 'single-line' };
   let task = taskItemInfo.task;
@@ -54,9 +57,28 @@
     taskDisplayParams.mode = newMode;
   }
 
-  function linkToTask(event: MouseEvent | KeyboardEvent | CustomEvent) {
+  function linkToTask(event: MouseEvent | KeyboardEvent) {
     event.stopPropagation();
-    // TODO
+
+    const selectionState = {
+          eState: {
+              cursor: {
+                  from: { line: taskItemInfo.markdownTaskMetadata.lineNumber - 1, 
+                          ch: 0 },
+                  to: { line: taskItemInfo.markdownTaskMetadata.lineNumber, 
+                        ch: 0 },
+              },
+              line: taskItemInfo.markdownTaskMetadata.lineNumber - 1,
+          },
+      };
+    
+    logger.debug(`selectionState: ${JSON.stringify(selectionState)}`);
+    plugin.app.workspace.openLinkText(
+      taskItemInfo.markdownTaskMetadata.filePath,
+      taskItemInfo.markdownTaskMetadata.filePath,
+      event.ctrlKey || (event.metaKey && Platform.isMacOS),
+      selectionState
+    )
   }
 
   logger.debug(`task.hasProject(): ${task.hasProject()}`);
@@ -304,8 +326,8 @@
     border-color: var(--color-yellow);
   }
   .task-card-checkbox:hover {
-    cursor: pointer;
     border-width: calc( 2 * var(--border-width));
+    background-color: var(--background-modifier-hover);
   }
 
   .task-card-description {

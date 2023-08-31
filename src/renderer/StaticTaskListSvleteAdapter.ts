@@ -1,19 +1,24 @@
-import { MarkdownRenderChild } from "obsidian";
+import { MarkdownRenderChild, Workspace } from "obsidian";
 import { SvelteComponent } from 'svelte';
 import StaticTaskList from '../ui/StaticTaskList.svelte';
 import { MarkdownTaskMetadata } from "./staticTaskListRenderer";
 import { ObsidianTask } from "../taskModule/task";
+import TaskCardPlugin from "..";
 
 
 export class StaticTaskListSvelteAdapter extends MarkdownRenderChild {
+    plugin: TaskCardPlugin
     svelteComponent: SvelteComponent
     codeBlockEl: HTMLElement
     taskListInfo: {task: ObsidianTask, markdownTaskMetadata: MarkdownTaskMetadata}[]
 
-    constructor(codeBlockEl: HTMLElement, 
+    constructor(
+        plugin: TaskCardPlugin,
+        codeBlockEl: HTMLElement, 
         taskListInfo: {task: ObsidianTask, 
             markdownTaskMetadata: MarkdownTaskMetadata}[]) {
         super(codeBlockEl);
+        this.plugin = plugin
         this.codeBlockEl = codeBlockEl
         this.taskListInfo = taskListInfo
     }
@@ -22,7 +27,8 @@ export class StaticTaskListSvelteAdapter extends MarkdownRenderChild {
         this.svelteComponent = new StaticTaskList({
             target: this.codeBlockEl,
             props: {
-                taskListInfo: this.taskListInfo
+                taskListInfo: this.taskListInfo,
+                plugin: this.plugin
             }
         })
     }
