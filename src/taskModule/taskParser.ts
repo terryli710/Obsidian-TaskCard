@@ -302,7 +302,7 @@ export class TaskParser {
 
     // For string attributes
     task.id = parseJSONAttribute(metadata['id'], 'id', '');
-    task.description = parseJSONAttribute(metadata['description'], 'description', '').replace(/\\\\/g, '\\').replace(/\\\\n/g, '\n'); // correctly format the description
+    task.description = parseJSONAttribute(metadata['description'], 'description', '').replace(/\\n/g, '\n');
     task.sectionID = parseJSONAttribute(metadata['sectionID'], 'sectionID', '');
 
     logger.debug(`metadata.description: ${JSON.stringify(metadata['description'])}; task.description: ${JSON.stringify(task.description)}`);
