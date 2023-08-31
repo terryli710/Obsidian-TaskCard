@@ -40,7 +40,7 @@
   // Get the line from the file
   const line = await plugin.fileOperator.getLineFromFile(
     markdownTaskMetadata.filePath,
-    markdownTaskMetadata.lineNumber
+    markdownTaskMetadata.lineNumber + 1
   );
 
   // Determine the symbol to use based on the 'completed' flag
@@ -52,7 +52,7 @@
   // Update the line in the file
   plugin.fileOperator.updateLineInFile(
     markdownTaskMetadata.filePath,
-    markdownTaskMetadata.lineNumber,
+    markdownTaskMetadata.lineNumber + 1,
     updatedLine
   );
 }

@@ -31,7 +31,7 @@ export class StaticTaskListRenderManager {
       
         for (const task of queryResult.values) {
           const filePath = task.path;
-          const lineNumber = task.line + 1;
+          const lineNumber = task.line;
           const startPosition = task.position.start;
           const endPosition = task.position.end;
           const originalText = `- [${task.status}] ` + task.text;
