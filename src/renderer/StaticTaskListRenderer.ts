@@ -6,6 +6,7 @@ import { ObsidianTask, DocPosition, TextPosition, PositionedObsidianTask, Positi
 import TaskCardPlugin from "..";
 import { StaticTaskListSvelteAdapter } from "./staticTaskListSvleteAdapter";
 import { QueryResult, TaskResult } from "obsidian-dataview/lib/api/plugin-api";
+import { filterTaskItems } from './filters';
 
 
 export interface MarkdownTaskMetadata {
@@ -59,29 +60,9 @@ export class StaticTaskListRenderManager {
 
     getCodeBlockProcessor(): CodeBlockProcessor {
         const codeBlockProcessor: CodeBlockProcessor = async (source, el, ctx) => {
-
-          let filteredTasksProps: PositionedTaskProperties[] = [];
-            // TODO: source can somehow becomes a function for filtering the task
-            function demoFilter(positionedObsidianTask: PositionedObsidianTask): boolean {
-                // if task has due and has tag Family
-                if (positionedObsidianTask.hasDue() && positionedObsidianTask.labels.contains('#Family')) {
-                    return true;
-                }
-                return false;
-            }
-
-            const handleFilteredTasks = (err: Error, rows: PositionedTaskProperties[]): void => {
-              if (err) {
-                  console.error('An error occurred:', err);
-                  return;
-              }
-            
-              filteredTasksProps = rows;
-            };
-
-            const filteredTasks: PositionedObsidianTask[] = filteredTasksProps.map(taskProps => new PositionedObsidianTask(taskProps));
-
-            this.plugin.cache.taskCache.database.filterWithFunction('', demoFilter, handleFilteredTasks);
+            const exampleFilter = {}
+            const filteredTasksProps = await this.plugin.cache.taskCache.queryTasks(exampleFilter)
+            const filteredTasks = filteredTasksProps.map((taskProps) => new PositionedObsidianTask(taskProps))
             const processor = new StaticTaskListSvelteAdapter(this.plugin, el, filteredTasks);
             processor.onload();
         };
