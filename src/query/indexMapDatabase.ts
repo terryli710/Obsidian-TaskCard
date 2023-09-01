@@ -12,8 +12,8 @@ export type LogicalExpression<T> = {
 };
 
 export class IndexedMapDatabase<T> {
-  private data: Map<string, T> = new Map();
-  private indices: { [key: string]: Map<any, Set<string>> } = {};
+  protected data: Map<string, T> = new Map();
+  protected indices: { [key: string]: Map<any, Set<string>> } = {};
 
   createIndex(fieldName: string, extractor: IndexExtractor<T>): void {
     const index = new Map<any, Set<string>>();
@@ -39,7 +39,43 @@ export class IndexedMapDatabase<T> {
       this.updateIndices(id, item);
     });
   }
+
+  // Method to update the whole database, clear previous tasks, and update new tasks
+  updateDatabase(newItems: Array<{ id: string, item: T }>): void {
+    // Clear existing data and indices
+    this.clearAllTasks();
+
+    // Bulk store new items
+    this.bulkStore(newItems);
+  }
+
+  // Method to clear all tasks
+  clearAllTasks(): void {
+    // Clear the main data map
+    this.data.clear();
+
+    // Clear all indices
+    for (const index of Object.values(this.indices)) {
+      index.clear();
+    }
+  }
+
+  refreshTasksByAttribute(attribute: string, value: any, newTasks: Array<{ id: string, item: T }>): void {
+    // Find tasks with the specific attribute and value
+    const index = this.indices[attribute];
+    const idsToDelete = index.get(value) || new Set();
   
+    // Delete old tasks
+    idsToDelete.forEach(id => {
+      this.data.delete(id);
+    });
+  
+    // Clear the index entry
+    index.delete(value);
+  
+    // Add new tasks
+    this.bulkStore(newTasks);
+  }
 
   store(id: string, item: T): void {
     this.data.set(id, item);

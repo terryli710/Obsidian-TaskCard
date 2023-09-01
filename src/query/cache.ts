@@ -4,6 +4,8 @@ import TaskCardPlugin from '..';
 import { getAPI } from 'obsidian-dataview';
 import { QueryResult } from 'obsidian-dataview/lib/api/plugin-api';
 import { logger } from '../utils/log';
+import { SettingStore } from '../settings';
+
 
 import { IndexedMapDatabase, LogicalExpression } from './indexMapDatabase';
 
@@ -39,48 +41,99 @@ export interface TaskRow {
 export class PositionedTaskCache {
     database: TaskDatabase;
     private plugin: TaskCardPlugin;
-    initialized: boolean = false;
+    indicatorTag: string;
+    status: {
+      initialized: boolean
+      refreshTimeStamp: number
+    }
 
     constructor(plugin: TaskCardPlugin) {
         this.plugin = plugin;
         this.database = new TaskDatabase();
-        this.initializeDatabase();
+        this.initializeAndRefreshAllTasks();
+        SettingStore.subscribe((settings) => {
+          this.indicatorTag = settings.parsingSettings.indicatorTag;
+        });
     }
 
-    async initializeDatabase() {
-        const queryResult: QueryResult = await getAPI().tryQuery('TASK FROM #TaskCard WHERE contains(text, "#TaskCard")')
-        const taskList = this.parseQueryResult(queryResult);
-        logger.info(`TaskCache: Found ${taskList.length} tasks`);
-        this.database.bulkStore(taskList.map(task => ({ id: task.id, item: task })));
+    async initializeAndRefreshAllTasks() {
+      const taskList = await this.fetchTasksFromAPI();
+      this.database.updateDatabase(taskList.map(task => ({ id: task.id, item: task })));
+      this.updateStatus(taskList.length, true);
+    }
+    
+    async refreshTasksByAttribute(attribute: string, value: any) {
+      const taskList = await this.fetchTasksFromAPI(attribute, value);
+      this.database.refreshTasksByAttribute(attribute, value, taskList.map(task => ({ id: task.id, item: task })));
+      this.updateStatus(taskList.length);
+    }
+    
+    private async fetchTasksFromAPI(attribute?: string, value?: any): Promise<PositionedTaskProperties[]> {
+      const dataviewAPI = await getAPI();
+      let query = `TASK FROM #${this.indicatorTag} WHERE contains(text, "#${this.indicatorTag}")`;
+      if (attribute && value) {
+        query += ` AND ${attribute} = "${value}"`;
+      }
+      const queryResult: QueryResult = await dataviewAPI.tryQuery(query);
+      return this.parseQueryResult(queryResult);
+    }
+
+    async refreshTasksByFileList(fileList: string[]) {
+      const taskList = await this.fetchTasksFromFileList(fileList);
+      this.database.refreshTasksByFileList(fileList, taskList.map(task => ({ id: task.id, item: task })));
+      this.updateStatus(taskList.length);
+    }
+    
+    private async fetchTasksFromFileList(fileList?: string[]): Promise<PositionedTaskProperties[]> {
+      const dataviewAPI = await getAPI();
+      
+      let fromClause = `#${this.indicatorTag}`;
+      
+      if (fileList && fileList.length > 0) {
+        const filePathsQuery = fileList.map(f => `"${f.replace('.md', '')}"`).join(' OR ');
+        fromClause += ` AND (${filePathsQuery})`;
+      }
+      
+      const query = `TASK FROM ${fromClause} WHERE contains(text, "#${this.indicatorTag}")`;
+      const queryResult: QueryResult = await dataviewAPI.tryQuery(query);
+      
+      return this.parseQueryResult(queryResult);
+    }
+    
+    
+    private updateStatus(taskCount: number, initialized: boolean = false) {
+      logger.info(`TaskCache: ${initialized ? 'Found' : 'Refreshed'} ${taskCount} tasks`);
+      this.status = {
+        initialized: true,
+        refreshTimeStamp: Date.now()
+      };
     }
 
     parseQueryResult(queryResult: QueryResult): PositionedTaskProperties[] {
         const positionedTasks: PositionedTaskProperties[] = [];
         for (const task of queryResult.values) {
             const filePath = task.path;
-            // const lineNumber = task.line;
             const startPosition: TextPosition = { line: task.position.start.line, col: task.position.start.col };
             const endPosition: TextPosition = { line: task.position.end.line, col: task.position.end.col };
             const originalText = `- [${task.status}] ` + task.text;
             const docPosition = { filePath: filePath, start: startPosition, end: endPosition }
+            // if not valid formatted task, skip
+            if (!this.plugin.taskValidator.isValidFormattedTaskMarkdown(originalText)) { continue; }
             const obsidianTask = this.plugin.taskParser.parseFormattedTaskMarkdown(originalText);
+            // if content failed to parse, then this task is meaningless, we will skip it
+            if (obsidianTask.content.length === 0) { continue; }
             positionedTasks.push(PositionedObsidianTask.fromObsidianTaskAndDocPosition(obsidianTask, docPosition));
         }
         return positionedTasks;
     }
 
     async queryTasks(query: MultipleAttributeTaskQuery): Promise<PositionedTaskProperties[]> {
-        // Ensure the database is initialized
-        if (!this.initialized) {
-            await this.initializeDatabase();
-        }
-
         // Perform the query
         return this.database.queryTasksByMultipleAttributes(query);
     }
 
-    
 }
+
 
 export class TaskDatabase extends IndexedMapDatabase<PositionedTaskProperties> {
   constructor() {
@@ -125,5 +178,29 @@ export class TaskDatabase extends IndexedMapDatabase<PositionedTaskProperties> {
     };
 
     return this.queryByComplexLogic(expression);
+  }
+
+  refreshTasksByFileList(fileList: string[], newTasks: Array<{ id: string, item: PositionedTaskProperties }>): void {
+    const index = this.indices['filePath']; // Now accessible because it's protected in the parent class
+    const idsToDelete = new Set<string>();
+
+    // Collect all task IDs that belong to any of the files in the list
+    fileList.forEach(filePath => {
+      const ids = index.get(filePath) || new Set();
+      ids.forEach(id => idsToDelete.add(id));
+    });
+
+    // Delete old tasks
+    idsToDelete.forEach(id => {
+      this.data.delete(id);
+    });
+
+    // Clear the index entries for these file paths
+    fileList.forEach(filePath => {
+      index.delete(filePath);
+    });
+
+    // Add new tasks
+    this.bulkStore(newTasks);
   }
 }
