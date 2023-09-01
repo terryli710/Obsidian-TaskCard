@@ -3,18 +3,20 @@ import { SettingStore } from "../settings";
 import { Project } from "../taskModule/project";
 import { MultipleAttributeTaskQuery } from "./cache";
 
+export interface TaskQueryOptions {
+    priorityOptions: number[];
+    projectOptions: string[];
+    labelOptions: string[];
+    completedOptions: string[];
+}
+
 
 export class QuerySyncManager {
     plugin: TaskCardPlugin;
     blockLanguage: string;
     source: string;
     taskQuery: MultipleAttributeTaskQuery;
-    options: {
-        priorityOptions: number[];
-        projectOptions: string[];
-        labelOptions: string[];
-        completedOptions: string[];
-    }
+    options: TaskQueryOptions;
     codeBlockMetadata: {
         sourcePath: string;
         lineStart: number;
@@ -31,12 +33,25 @@ export class QuerySyncManager {
         this.source = source;
         this.codeBlockMetadata = codeBlockMetadata;
         this.taskQuery = this.queryParser(this.source);
+        this.options = {
+            priorityOptions: [],
+            projectOptions: [],
+            labelOptions: [],
+            completedOptions: []
+        }
         this.initOptions();
     }
 
     queryParser(source: string): MultipleAttributeTaskQuery {
         const lines = source.split('\n');
-        const query: MultipleAttributeTaskQuery = {};
+        const query: MultipleAttributeTaskQuery = {
+            priorityQuery: null,
+            projectQuery: null,
+            labelQuery: null,
+            completedQuery: null,
+            dueDateTimeQuery: null,
+            filePathQuery: null
+        };
     
         for (const line of lines) {
             const [key, value] = line.split(':').map(str => str.trim());

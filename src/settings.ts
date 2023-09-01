@@ -12,6 +12,7 @@ export interface TaskCardSettings {
     markdownEndingNotation: string;
     indicatorTag: string;
     markdownSuffix: string;
+    blockLanguage: string
   };
   displaySettings: {
     defaultMode: string;
@@ -27,7 +28,8 @@ export const DefaultSettings: TaskCardSettings = {
     markdownStartingNotation: '%%*',
     markdownEndingNotation: '*%%',
     indicatorTag: 'TaskCard',
-    markdownSuffix: ' .'
+    markdownSuffix: ' .',
+    blockLanguage: 'taskcard'
   },
   displaySettings: {
     defaultMode: 'single-line'

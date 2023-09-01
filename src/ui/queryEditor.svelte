@@ -1,8 +1,10 @@
+
+
 <script lang="ts">
     import { MultipleAttributeTaskQuery } from "../query/cache";
-    import { QuerySyncManager } from "../query/querySyncManager";
+    import { QuerySyncManager, TaskQueryOptions } from "../query/querySyncManager";
 
-    export let options: Partial<MultipleAttributeTaskQuery>;
+    export let options: TaskQueryOptions;
     export let query: MultipleAttributeTaskQuery = {
         priorityQuery: null,
         projectQuery: null,
@@ -13,37 +15,59 @@
     };
     export let querySyncManager: QuerySyncManager;
 
-    const priorities = ['High', 'Medium', 'Low']; // Fixed number of priorities
-
     // Function to save the query
     function saveQuery() {
+        // Post-processing to convert empty arrays or strings to null
+        for (const key in query) {
+            if (Array.isArray(query[key]) && query[key].length === 0) {
+                query[key] = null;
+            } else if (typeof query[key] === 'string' && query[key].trim() === '') {
+                query[key] = null;
+            }
+        }
         querySyncManager.updateTaskQueryToFile(query);
     }
 </script>
-  
+
 <div>
+    <!-- Completed -->
+    <label>Completed:</label>
+    <select multiple bind:value={query.completedQuery}>
+        {#if options && options.completedOptions}
+            {#each options.completedOptions as completed}
+            <option value={completed}>{completed}</option>
+            {/each}
+        {/if}
+    </select>
+
     <!-- Priority -->
     <label>Priority:</label>
     <select multiple bind:value={query.priorityQuery}>
-        {#each priorities as priority}
-        <option value={priority}>{priority}</option>
-        {/each}
+        {#if options && options.priorityOptions}
+            {#each options.priorityOptions as priority}
+            <option value={priority}>{priority}</option>
+            {/each}
+        {/if}
     </select>
 
     <!-- Project -->
     <label>Project:</label>
     <select multiple bind:value={query.projectQuery}>
-        {#each options.projectQuery as project}
-        <option value={project}>{project}</option>
-        {/each}
+        {#if options && options.projectOptions}
+            {#each options.projectOptions as project}
+            <option value={project}>{project}</option>
+            {/each}
+        {/if}
     </select>
 
     <!-- Label -->
     <label>Label:</label>
     <select multiple bind:value={query.labelQuery}>
-        {#each options.labelQuery as label}
-        <option value={label}>{label}</option>
-        {/each}
+        {#if options && options.labelOptions}
+            {#each options.labelOptions as label}
+            <option value={label}>{label}</option>
+            {/each}
+        {/if}
     </select>
 
     <!-- Due Date Time -->
@@ -57,4 +81,7 @@
     <!-- Save Button -->
     <button on:click={saveQuery}>Save</button>
 </div>
-  
+
+<style>
+
+</style>
