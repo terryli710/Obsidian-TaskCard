@@ -1,12 +1,10 @@
 import { MarkdownPostProcessorContext } from "obsidian";
-import { logger } from "../utils/log";
-import { getAPI } from 'obsidian-dataview';
-import { FileOperator } from './fileOperator';
 import { ObsidianTask, DocPosition, TextPosition, PositionedObsidianTask, PositionedTaskProperties } from '../taskModule/task';
 import TaskCardPlugin from "..";
 import { StaticTaskListSvelteAdapter } from "./staticTaskListSvleteAdapter";
 import { QueryResult, TaskResult } from "obsidian-dataview/lib/api/plugin-api";
-import { filterTaskItems } from './filters';
+import { MultipleAttributeTaskQuery } from "../query/cache";
+import { logger } from "../utils/log";
 
 
 export interface MarkdownTaskMetadata {
@@ -60,7 +58,14 @@ export class StaticTaskListRenderManager {
 
     getCodeBlockProcessor(): CodeBlockProcessor {
         const codeBlockProcessor: CodeBlockProcessor = async (source, el, ctx) => {
-            const exampleFilter = {}
+          logger.debug(`CodeBlockProcessor: ${source}, ctx: ${JSON.stringify(ctx)}, ctx.getSectionInfo: ${JSON.stringify(ctx.getSectionInfo(el))}`);
+            const exampleFilter: MultipleAttributeTaskQuery = {
+              // priorityQuery: [1, 2],
+              // projectQuery: ['CS101', 'HealthPlan'],
+              // labelQuery: ['#Healthy', '#Family'],
+              // completedQuery: [false],
+              // dueDateTimeQuery: ['sep 6', 'sep 9'],
+            }
             const filteredTasksProps = await this.plugin.cache.taskCache.queryTasks(exampleFilter)
             const filteredTasks = filteredTasksProps.map((taskProps) => new PositionedObsidianTask(taskProps))
             const processor = new StaticTaskListSvelteAdapter(this.plugin, el, filteredTasks);

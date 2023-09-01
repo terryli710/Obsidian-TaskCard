@@ -1,10 +1,10 @@
 import { PositionedTaskProperties, DocPosition, Priority, DueDate, ObsidianTask, TextPosition, PositionedObsidianTask } from '../taskModule/task';
-import { Project } from '../taskModule/project';
 import TaskCardPlugin from '..';
 import { getAPI } from 'obsidian-dataview';
 import { QueryResult } from 'obsidian-dataview/lib/api/plugin-api';
 import { logger } from '../utils/log';
 import { SettingStore } from '../settings';
+import Sugar from 'sugar';
 
 
 import { IndexedMapDatabase, LogicalExpression } from './indexMapDatabase';
@@ -50,10 +50,10 @@ export class PositionedTaskCache {
     constructor(plugin: TaskCardPlugin) {
         this.plugin = plugin;
         this.database = new TaskDatabase();
-        this.initializeAndRefreshAllTasks();
         SettingStore.subscribe((settings) => {
           this.indicatorTag = settings.parsingSettings.indicatorTag;
         });
+        this.initializeAndRefreshAllTasks();
     }
 
     async initializeAndRefreshAllTasks() {
@@ -62,18 +62,20 @@ export class PositionedTaskCache {
       this.updateStatus(taskList.length, true);
     }
     
-    async refreshTasksByAttribute(attribute: string, value: any) {
-      const taskList = await this.fetchTasksFromAPI(attribute, value);
-      this.database.refreshTasksByAttribute(attribute, value, taskList.map(task => ({ id: task.id, item: task })));
-      this.updateStatus(taskList.length);
-    }
+    // async refreshTasksByAttribute(attribute: string, value: any) {
+    //   const taskList = await this.fetchTasksFromAPI(attribute, value);
+    //   this.database.refreshTasksByAttribute(attribute, value, taskList.map(task => ({ id: task.id, item: task })));
+    //   logger.info(`refreshTasksByAttribute ${attribute} ${value}, ${taskList.length} tasks refreshed`);
+    //   this.updateStatus(taskList.length);
+    // }
     
     private async fetchTasksFromAPI(attribute?: string, value?: any): Promise<PositionedTaskProperties[]> {
       const dataviewAPI = await getAPI();
       let query = `TASK FROM #${this.indicatorTag} WHERE contains(text, "#${this.indicatorTag}")`;
-      if (attribute && value) {
-        query += ` AND ${attribute} = "${value}"`;
-      }
+      // if (attribute && value) {
+      //   query += ` AND ${attribute} = "${value}"`;
+      // } // TODO: disabled for now
+      // logger.debug(`fetchTasksFromAPI: ${query}`);
       const queryResult: QueryResult = await dataviewAPI.tryQuery(query);
       return this.parseQueryResult(queryResult);
     }
@@ -95,6 +97,7 @@ export class PositionedTaskCache {
       }
       
       const query = `TASK FROM ${fromClause} WHERE contains(text, "#${this.indicatorTag}")`;
+      // logger.debug(`fetchTasksFromFileList: ${query}`);
       const queryResult: QueryResult = await dataviewAPI.tryQuery(query);
       
       return this.parseQueryResult(queryResult);

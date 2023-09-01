@@ -28,6 +28,16 @@ export class IndexedMapDatabase<T> {
   }
 
 
+  // Method to get all possible values of an index
+  getAllIndexValues(fieldName: string): any[] | null {
+    const index = this.indices[fieldName];
+    if (!index) {
+      return null; // Return null if the index does not exist
+    }
+    return Array.from(index.keys()); // Convert Set to Array and return
+  }
+
+
   bulkStore(items: Array<{ id: string, item: T }>): void {
     // Add items to the main data map
     items.forEach(({ id, item }) => {

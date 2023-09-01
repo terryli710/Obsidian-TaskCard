@@ -69,7 +69,13 @@ export default class TaskCardPlugin extends Plugin {
         'layout-change', 
         this.taskMonitor.layoutChangeHandler.bind(this.taskMonitor))
     );
-  
+
+    // @ts-ignore
+    this.registerEvent(this.app.metadataCache.on("dataview:metadata-change",
+    (type, file, oldPath?) => { 
+      // update cache tasks
+      this.cache.taskCache.refreshTasksByFileList([file.path]);
+    }));
 
     // this.registerEvent(this.app.workspace.on('file-open', () => logger.debug('file-open')));
     // this.registerEvent(this.app.workspace.on('layout-change', () => logger.debug('layout-change')));
