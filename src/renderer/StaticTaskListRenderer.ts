@@ -2,7 +2,7 @@ import { MarkdownPostProcessorContext } from "obsidian";
 import { logger } from "../utils/log";
 import { getAPI } from 'obsidian-dataview';
 import { FileOperator } from './fileOperator';
-import { ObsidianTask, DocPosition, TextPosition } from '../taskModule/task';
+import { ObsidianTask, DocPosition, TextPosition, PositionedObsidianTask, PositionedTaskProperties } from '../taskModule/task';
 import TaskCardPlugin from "..";
 import { StaticTaskListSvelteAdapter } from "./staticTaskListSvleteAdapter";
 import { QueryResult, TaskResult } from "obsidian-dataview/lib/api/plugin-api";
@@ -59,15 +59,30 @@ export class StaticTaskListRenderManager {
 
     getCodeBlockProcessor(): CodeBlockProcessor {
         const codeBlockProcessor: CodeBlockProcessor = async (source, el, ctx) => {
-            const api = getAPI();
-            const query: QueryResult = await api.tryQuery(source);
-            const mdTaskMetadataList = await this.extractMarkdownTaskMetadata(query);
-            let taskListInfo: {task: ObsidianTask, markdownTaskMetadata: MarkdownTaskMetadata}[] = [];
-            for (const markdownTaskMetadata of mdTaskMetadataList) {
-              const task = this.plugin.taskParser.parseFormattedTaskMarkdown(markdownTaskMetadata.originalText);
-              taskListInfo.push({task, markdownTaskMetadata});
+
+          let filteredTasksProps: PositionedTaskProperties[] = [];
+            // TODO: source can somehow becomes a function for filtering the task
+            function demoFilter(positionedObsidianTask: PositionedObsidianTask): boolean {
+                // if task has due and has tag Family
+                if (positionedObsidianTask.hasDue() && positionedObsidianTask.labels.contains('#Family')) {
+                    return true;
+                }
+                return false;
             }
-            const processor = new StaticTaskListSvelteAdapter(this.plugin, el, taskListInfo);
+
+            const handleFilteredTasks = (err: Error, rows: PositionedTaskProperties[]): void => {
+              if (err) {
+                  console.error('An error occurred:', err);
+                  return;
+              }
+            
+              filteredTasksProps = rows;
+            };
+
+            const filteredTasks: PositionedObsidianTask[] = filteredTasksProps.map(taskProps => new PositionedObsidianTask(taskProps));
+
+            this.plugin.cache.taskCache.database.filterWithFunction('', demoFilter, handleFilteredTasks);
+            const processor = new StaticTaskListSvelteAdapter(this.plugin, el, filteredTasks);
             processor.onload();
         };
         return codeBlockProcessor;

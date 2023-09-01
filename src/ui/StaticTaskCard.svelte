@@ -8,22 +8,20 @@
   } from '../renderer/postProcessor';
   import { MarkdownTaskMetadata } from '../renderer/staticTaskListRenderer';
   import { LabelModule } from '../taskModule/labels';
-  import { ObsidianTask } from '../taskModule/task';
+  import { DocPosition, ObsidianTask, PositionedObsidianTask } from '../taskModule/task';
   import { displayDate, displayTime } from '../utils/dateTimeFormatter';
   import { logger } from '../utils/log';
   import { marked } from 'marked';
-    import TaskCardPlugin from '..';
+  import TaskCardPlugin from '..';
   marked.use({ mangle: false, headerIds: false, langPrefix: '' });
   
 
-  export let taskItemInfo: {
-    task: ObsidianTask;
-    markdownTaskMetadata: MarkdownTaskMetadata;
-  };
+  export let taskItem: PositionedObsidianTask;
   export let plugin: TaskCardPlugin;
 
   let taskDisplayParams: TaskDisplayParams = { mode: 'single-line' };
-  let task = taskItemInfo.task;
+  let task = taskItem;
+  let docPosition = taskItem.docPosition;
   let dueDisplay = '';
   let labelModule = new LabelModule();
   let descriptionMarkdown = marked(task.description);
@@ -32,14 +30,14 @@
 
   function handleCheckboxClick() {
     task.completed = !task.completed;
-    toggleCompleteOfTask(task.completed, taskItemInfo.markdownTaskMetadata);
+    toggleCompleteOfTask(task.completed, taskItem.docPosition);
   }
 
-  async function toggleCompleteOfTask(completed: boolean, markdownTaskMetadata: MarkdownTaskMetadata) {
+  async function toggleCompleteOfTask(completed: boolean, docPosition: DocPosition) {
   // Get the line from the file
   const line = await plugin.fileOperator.getLineFromFile(
-    markdownTaskMetadata.docPosition.filePath,
-    markdownTaskMetadata.docPosition.start.line + 1,
+    docPosition.filePath,
+    docPosition.start.line + 1,
   );
 
   // Determine the symbol to use based on the 'completed' flag
@@ -50,8 +48,8 @@
 
   // Update the line in the file
   plugin.fileOperator.updateLineInFile(
-    markdownTaskMetadata.docPosition.filePath,
-    markdownTaskMetadata.docPosition.start.line + 1,
+    docPosition.filePath,
+    docPosition.start.line + 1,
     updatedLine
   );
 }
@@ -83,18 +81,18 @@
     const selectionState = {
           eState: {
               cursor: {
-                  from: { line: taskItemInfo.markdownTaskMetadata.docPosition.start.line, 
+                  from: { line: docPosition.start.line, 
                           ch: 0 },
-                  to: { line: taskItemInfo.markdownTaskMetadata.docPosition.start.line + 1, 
+                  to: { line: docPosition.start.line + 1, 
                         ch: 0 },
               },
-              line: taskItemInfo.markdownTaskMetadata.docPosition.start.line,
+              line: docPosition.start.line,
           },
       };
     
     plugin.app.workspace.openLinkText(
-      taskItemInfo.markdownTaskMetadata.docPosition.filePath,
-      taskItemInfo.markdownTaskMetadata.docPosition.filePath,
+      docPosition.filePath,
+      docPosition.filePath,
       event.ctrlKey || (event.metaKey && Platform.isMacOS),
       selectionState
     )

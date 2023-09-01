@@ -1,6 +1,10 @@
 import { Database } from 'sqlite3';
-import { PositionedTaskProperties, DocPosition, Priority, DueDate } from '../taskModule/task';
+import { PositionedTaskProperties, DocPosition, Priority, DueDate, ObsidianTask, TextPosition, PositionedObsidianTask } from '../taskModule/task';
 import { Project } from '../taskModule/project';
+import TaskCardPlugin from '..';
+import { getAPI } from 'obsidian-dataview';
+import { QueryResult } from 'obsidian-dataview/lib/api/plugin-api';
+import { logger } from '../utils/log';
 
 
 export interface TaskRow {
@@ -21,6 +25,41 @@ export interface TaskRow {
     startCol: number;
     endLine: number;
     endCol: number;
+}
+
+
+export class PositionedTaskCache {
+    database: PositionedTaskDatabase;
+    private plugin: TaskCardPlugin;
+    initialized: boolean = false;
+
+    constructor(plugin: TaskCardPlugin) {
+        this.plugin = plugin;
+        this.database = new PositionedTaskDatabase();
+        this.initializeDatabase();
+    }
+
+    async initializeDatabase() {
+        const queryResult: QueryResult = await getAPI().tryQuery('TASK FROM #TaskCard WHERE contains(text, "#TaskCard")')
+        const taskList = this.parseQueryResult(queryResult);
+        logger.info(`TaskCache: Found ${taskList.length} tasks`);
+        this.database.storeMultiple(taskList);
+    }
+
+    parseQueryResult(queryResult: QueryResult): PositionedTaskProperties[] {
+        const positionedTasks: PositionedTaskProperties[] = [];
+        for (const task of queryResult.values) {
+            const filePath = task.path;
+            // const lineNumber = task.line;
+            const startPosition: TextPosition = { line: task.position.start.line, col: task.position.start.col };
+            const endPosition: TextPosition = { line: task.position.end.line, col: task.position.end.col };
+            const originalText = `- [${task.status}] ` + task.text;
+            const docPosition = { filePath: filePath, start: startPosition, end: endPosition }
+            const obsidianTask = this.plugin.taskParser.parseFormattedTaskMarkdown(originalText);
+            positionedTasks.push(PositionedObsidianTask.fromObsidianTaskAndDocPosition(obsidianTask, docPosition));
+        }
+        return positionedTasks;
+    }
 }
 
 
@@ -65,6 +104,30 @@ export class PositionedTaskDatabase {
         const { filePath, start, end } = task.docPosition;
         stmt.run(task.id, task.content, task.priority, task.description, task.order, task.project, task.sectionID, JSON.stringify(task.labels), task.completed, task.parent?.id, task.due, JSON.stringify(task.metadata), filePath, start.line, start.col, end.line, end.col);
         stmt.finalize();
+    }
+
+    // Method to store multiple tasks efficiently
+    storeMultiple(tasks: PositionedTaskProperties[]) {
+        // Start a transaction
+        this.db.serialize(() => {
+            this.db.run('BEGIN TRANSACTION');
+
+            const stmt = this.db.prepare(`
+                INSERT OR REPLACE INTO tasks 
+                (id, content, priority, description, order, project, sectionID, labels, completed, parentID, due, metadata, filePath, startLine, startCol, endLine, endCol) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `);
+
+            for (const task of tasks) {
+                const { filePath, start, end } = task.docPosition;
+                stmt.run(task.id, task.content, task.priority, task.description, task.order, task.project, task.sectionID, JSON.stringify(task.labels), task.completed, task.parent?.id, task.due, JSON.stringify(task.metadata), filePath, start.line, start.col, end.line, end.col);
+            }
+
+            stmt.finalize();
+
+            // Commit the transaction
+            this.db.run('COMMIT');
+        });
     }
 
     update(task: PositionedTaskProperties) {
@@ -175,7 +238,6 @@ export class PositionedTaskDatabase {
     });
 
     }
-    
     
 
 }

@@ -11,9 +11,7 @@ import { StaticTaskListRenderManager, TaskCardRenderManager } from './renderer/i
 import { FileOperator } from './renderer/fileOperator';
 import { TaskFormatter } from './taskModule/taskFormatter';
 import { TaskMonitor } from './taskModule/taskMonitor';
-// import { DataviewApi, getAPI } from "obsidian-dataview";
-// import { Sources, TagSource } from 'obsidian-dataview/lib/data-index/source';
-// import { Fields, VariableField } from 'obsidian-dataview/lib/expression/field';
+import { TaskCardCache } from './query';
 
 
 export default class TaskCardPlugin extends Plugin {
@@ -26,7 +24,7 @@ export default class TaskCardPlugin extends Plugin {
   public staticTaskListRenderManager: StaticTaskListRenderManager;
   public fileOperator: FileOperator;
   public taskMonitor: TaskMonitor;
-  // public dataviewAPI: DataviewApi;
+  public cache: TaskCardCache;
 
   constructor(app: App, pluginManifest: PluginManifest) {
     super(app, pluginManifest);
@@ -34,7 +32,6 @@ export default class TaskCardPlugin extends Plugin {
       logger.info(`Settings updated: ${JSON.stringify(settings)}`);
       this.settings = settings;
     });
-    // this.dataviewAPI = getAPI();
     this.projectModule = new ProjectModule();
     this.taskParser = new TaskParser(SettingStore, this.projectModule);
     this.taskFormatter = new TaskFormatter(SettingStore);
@@ -43,6 +40,7 @@ export default class TaskCardPlugin extends Plugin {
     this.fileOperator = new FileOperator(this, this.app);
     this.taskMonitor = new TaskMonitor(this, this.app);
     this.staticTaskListRenderManager = new StaticTaskListRenderManager(this);
+    this.cache = new TaskCardCache(this);
   }
 
   async loadSettings() {

@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Project } from './project';
 import { TaskDisplayParams } from '../renderer/postProcessor';
 import { logger } from '../utils/log';
+import { isToday } from '../utils/dateTimeFormatter';
 
 export const DateOnly = String.withConstraint((s) =>
   /^\d{4}-\d{2}-\d{2}$/.test(s)
@@ -168,8 +169,12 @@ export class PositionedObsidianTask extends ObsidianTask implements PositionedTa
     });
   }
 
-  toUnanchoredObsidianTask(): ObsidianTask {
+  toObsidianTask(): ObsidianTask {
     const { docPosition, ...taskProps } = this.toPositionedTaskProps();
     return new ObsidianTask(taskProps as Partial<ObsidianTask>);
+  }
+
+  toDocPosition(): DocPosition {
+    return this.docPosition;
   }
 }
