@@ -45,12 +45,12 @@ export class QuerySyncManager {
     queryParser(source: string): MultipleAttributeTaskQuery {
         const lines = source.split('\n');
         const query: MultipleAttributeTaskQuery = {
-            priorityQuery: null,
-            projectQuery: null,
-            labelQuery: null,
-            completedQuery: null,
-            dueDateTimeQuery: null,
-            filePathQuery: null
+            priorityQuery: [],
+            projectQuery: [],
+            labelQuery: [],
+            completedQuery: [],
+            dueDateTimeQuery: ['', ''],
+            filePathQuery: '',
         };
     
         for (const line of lines) {

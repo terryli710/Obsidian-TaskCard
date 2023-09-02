@@ -7,15 +7,15 @@ import { SettingStore } from '../settings';
 import Sugar from 'sugar';
 
 
-import { IndexedMapDatabase, LogicalExpression } from './indexMapDatabase';
+import { IndexedMapDatabase, LogicalExpression, LogicalOperator } from './indexMapDatabase';
 
 export interface MultipleAttributeTaskQuery {
-    priorityQuery?: number[] | null;
-    projectQuery?: string[] | null;
-    labelQuery?: string[] | null;
-    completedQuery?: boolean[] | null;
-    dueDateTimeQuery?: [string, string] | null;
-    filePathQuery?: string | null;
+    priorityQuery?: number[];
+    projectQuery?: string[];
+    labelQuery?: string[];
+    completedQuery?: boolean[];
+    dueDateTimeQuery?: [string, string];
+    filePathQuery?: string;
 }
 
 export interface TaskRow {
@@ -153,22 +153,22 @@ export class TaskDatabase extends IndexedMapDatabase<PositionedTaskProperties> {
   }
 
   queryTasksByMultipleAttributes({
-    priorityQuery = null,
-    projectQuery = null,
-    labelQuery = null,
-    completedQuery = null,
-    dueDateTimeQuery = null,
-    filePathQuery = null
+    priorityQuery = [],
+      projectQuery = [],
+      labelQuery = [],
+      completedQuery = [],
+      dueDateTimeQuery = ['', ''],
+      filePathQuery = '',
   }: MultipleAttributeTaskQuery): PositionedTaskProperties[] {
-    const expression: LogicalExpression<PositionedTaskProperties> = {
-      operator: 'AND',
+    const expression = {
+      operator: 'AND' as LogicalOperator,
       operands: [
-        task => priorityQuery ? priorityQuery.includes(task.priority) : true,
-        task => projectQuery ? projectQuery.includes(task.project.name) : true,
-        task => labelQuery ? labelQuery.some(label => task.labels.includes(label)) : true,
-        task => completedQuery ? completedQuery.includes(task.completed) : true,
+        task => priorityQuery && priorityQuery.length > 0 ? priorityQuery.includes(task.priority) : true,
+        task => projectQuery && projectQuery.length > 0 ? projectQuery.includes(task.project.name) : true,
+        task => labelQuery && labelQuery.length > 0 ? labelQuery.some(label => task.labels.includes(label)) : true,
+        task => completedQuery && completedQuery.length > 0 ? completedQuery.includes(task.completed) : true,
         task => {
-          if (!dueDateTimeQuery) return true;
+          if (!dueDateTimeQuery || (dueDateTimeQuery.length === 2 && dueDateTimeQuery[0] === '' && dueDateTimeQuery[1] === '')) return true;
           const [start, end] = dueDateTimeQuery;
           if (task.due) {
             const taskDateTime = Sugar.Date.create(task.due.string);
@@ -176,7 +176,7 @@ export class TaskDatabase extends IndexedMapDatabase<PositionedTaskProperties> {
           }
           return false;
         },
-        task => filePathQuery ? task.docPosition.filePath.startsWith(filePathQuery) : true
+        task => filePathQuery && filePathQuery !== '' ? task.docPosition.filePath.startsWith(filePathQuery) : true
       ]
     };
 
