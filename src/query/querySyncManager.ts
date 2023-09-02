@@ -129,7 +129,7 @@ export class QuerySyncManager {
             this.codeBlockMetadata.sourcePath, 
             newQuery, 
             this.codeBlockMetadata.lineStart, 
-            this.codeBlockMetadata.lineEnd
+            this.codeBlockMetadata.lineEnd + 1
         );
     }
 }
