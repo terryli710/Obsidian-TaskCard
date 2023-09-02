@@ -16,6 +16,7 @@ export class QuerySyncManager {
     blockLanguage: string;
     source: string;
     taskQuery: MultipleAttributeTaskQuery;
+    defaultQuery: MultipleAttributeTaskQuery;
     options: TaskQueryOptions;
     codeBlockMetadata: {
         sourcePath: string;
@@ -39,6 +40,14 @@ export class QuerySyncManager {
             labelOptions: [],
             completedOptions: []
         }
+        this.defaultQuery = {
+            priorityQuery: [],
+            projectQuery: [],
+            labelQuery: [],
+            completedQuery: [],
+            dueDateTimeQuery: ['', ''],
+            filePathQuery: '',
+        };
         this.initOptions();
     }
 
@@ -89,6 +98,16 @@ export class QuerySyncManager {
         this.options.labelOptions = this.plugin.cache.taskCache.database.getAllIndexValues('label');
     }
 
+    // Method to set default query values
+    setDefaultQueryValues(query: MultipleAttributeTaskQuery) {
+        for (const key in this.defaultQuery) {
+            if (query[key] === undefined || query[key] === null) {
+                query[key] = this.defaultQuery[key];
+            }
+        }
+        return query;
+    }
+
     queryFormatter(query: MultipleAttributeTaskQuery): string {
         let source = "";
         
@@ -124,7 +143,8 @@ export class QuerySyncManager {
     }
 
     updateTaskQueryToFile(taskQuery: MultipleAttributeTaskQuery) {
-        const newQuery = this.formatCodeBlock(this.queryFormatter(taskQuery));
+        const filledQuery = this.setDefaultQueryValues(taskQuery);
+        const newQuery = this.formatCodeBlock(this.queryFormatter(filledQuery));
         this.plugin.fileOperator.updateFile(
             this.codeBlockMetadata.sourcePath, 
             newQuery, 
