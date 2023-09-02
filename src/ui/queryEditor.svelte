@@ -28,7 +28,6 @@
             }
         }
         logger.debug(`queryEditor.svelte: query = ${JSON.stringify(query)}`);
-        logger.debug(`update to line number ${querySyncManager.codeBlockMetadata.lineStart}, ${querySyncManager.codeBlockMetadata.lineEnd}`);
         querySyncManager.updateTaskQueryToFile(query);
     }
 </script>

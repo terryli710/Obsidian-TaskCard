@@ -83,6 +83,13 @@ export class QuerySyncManager {
         return query;
     }
 
+    private getLabelsFromDatabase(): string[] {
+        const labels = this.plugin.cache.taskCache.database
+            .getAllIndexValues('labels')
+            .reduce((acc, val) => acc.concat(val), []);
+        return Array.from(new Set(labels));
+    }
+
     private initOptions() {
         this.options.completedOptions = ['true', 'false'];
         this.options.priorityOptions = [1, 2, 3, 4];
@@ -91,11 +98,11 @@ export class QuerySyncManager {
                 return project.name
             })
         })
-        this.options.labelOptions = this.plugin.cache.taskCache.database.getAllIndexValues('label');
+        this.options.labelOptions = this.getLabelsFromDatabase();
     }
 
     refreshOptions() {
-        this.options.labelOptions = this.plugin.cache.taskCache.database.getAllIndexValues('label');
+        this.options.labelOptions = this.getLabelsFromDatabase();
     }
 
     // Method to set default query values

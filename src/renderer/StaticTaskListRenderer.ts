@@ -69,8 +69,8 @@ export class StaticTaskListRenderManager {
           const processor = new QueryEditorSvelteAdapter(this.plugin, blockLanguage, source, el, ctx);
           processor.onload();
           // const exampleFilter: MultipleAttributeTaskQuery = {
-          //   // priorityQuery: [1, 2],
-          //   // projectQuery: ['CS101', 'HealthPlan'],
+          //   // priorityQuery: [4],
+          //   // projectQuery: ['CS101', 'HealthPlan', 'BookClub'],
           //   // labelQuery: ['#Healthy', '#Family'],
           //   // completedQuery: [false],
           //   // dueDateTimeQuery: ['sep 6', 'sep 9'],
