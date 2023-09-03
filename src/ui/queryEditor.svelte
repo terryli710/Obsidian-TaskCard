@@ -16,6 +16,29 @@
     };
     export let querySyncManager: QuerySyncManager;
 
+    let selectedCompleted = [];
+    let selectedPriority = [];
+
+    function toggleSelected(type, value) {
+        console.log(`toggleSelected: type = ${type}, value = ${value}`);
+        let selectedArray;
+        if (type === 'completed') {
+            selectedArray = selectedCompleted;
+            query.completedQuery = selectedArray;
+        } else if (type === 'priority') {
+            selectedArray = selectedPriority;
+            query.priorityQuery = selectedArray;
+        }
+
+        const index = selectedArray.indexOf(value);
+        if (index === -1) {
+            selectedArray.push(value);
+        } else {
+            selectedArray.splice(index, 1);
+        }
+    }
+
+
     logger.debug(`queryEditor.svelte: query = ${JSON.stringify(query)}, options = ${JSON.stringify(options)}`);
     // Function to save the query
     function saveQuery() {
@@ -32,30 +55,25 @@
     }
 </script>
 
-
 <div class="form-container">
     <!-- Completed -->
     <div class="form-group">
-        <label for="completed">Completed:</label>
-        <select id="completed" multiple bind:value={query.completedQuery}>
-            {#if options?.completedOptions && options.completedOptions.length > 0}
-                {#each options.completedOptions as completed}
-                <option value={completed}>{completed}</option>
-                {/each}
-            {/if}
-        </select>
+        <label class="title-completed" for="completed">Completed:</label>
+        <div id="completed" class="button-group">
+            <button class="toggle-button {selectedCompleted.includes('Yes') ? 'selected' : ''}" on:click={() => toggleSelected('completed', 'yes')}>Yes</button>
+            <button class="toggle-button {selectedCompleted.includes('No') ? 'selected' : ''}" on:click={() => toggleSelected('completed', 'no')}>No</button>
+        </div>
     </div>
 
     <!-- Priority -->
     <div class="form-group">
-        <label for="priority">Priority:</label>
-        <select id="priority" multiple bind:value={query.priorityQuery}>
-            {#if options?.priorityOptions && options.priorityOptions.length > 0}
-                {#each options.priorityOptions as priority}
-                <option value={priority}>{priority}</option>
-                {/each}
-            {/if}
-        </select>
+        <label class="title-priority" for="priority">Priority:</label>
+        <div id="priority" class="button-group">
+            <button class="toggle-button {selectedPriority.includes(1) ? 'selected' : ''}" on:click={() => toggleSelected('priority', 1)}>High</button>
+            <button class="toggle-button {selectedPriority.includes(2) ? 'selected' : ''}" on:click={() => toggleSelected('priority', 2)}>Medium</button>
+            <button class="toggle-button {selectedPriority.includes(3) ? 'selected' : ''}" on:click={() => toggleSelected('priority', 3)}>Low</button>
+            <button class="toggle-button {selectedPriority.includes(4) ? 'selected' : ''}" on:click={() => toggleSelected('priority', 4)}>None</button>
+        </div>
     </div>
 
     <!-- Project -->
@@ -64,7 +82,7 @@
         <select id="project" multiple bind:value={query.projectQuery}>
             {#if options?.projectOptions && options.projectOptions.length > 0}
                 {#each options.projectOptions as project}
-                <option value={project}>{project}</option>
+                <option value={project}>{project.name}</option>
                 {/each}
             {/if}
         </select>
@@ -102,6 +120,7 @@
 
 
 <style>
+    /* General Styles */
     .form-container {
         width: 100%;
         max-width: 600px;
@@ -120,14 +139,28 @@
         font-weight: bold;
     }
 
-    select, input {
-        width: 100%;
-        padding: 10px;
-        border: 1px solid #ccc;
-        border-radius: 4px;
+    /* Button Group Styles */
+    .button-group {
+        display: flex;
+        gap: 10px;
     }
 
-    button {
+    .toggle-button {
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 20px;
+        background: #f1f1f1;
+        cursor: pointer;
+        transition: background 0.3s ease;
+    }
+
+    .toggle-button.selected {
+        background: #007bff;
+        color: white;
+    }
+
+    /* Save Button Styles */
+    .save-button {
         padding: 10px 20px;
         background-color: #007bff;
         color: white;
@@ -136,7 +169,12 @@
         cursor: pointer;
     }
 
-    button:hover {
+    .save-button:hover {
         background-color: #0056b3;
+    }
+
+    .title-completed, .title-priority, .title-project, .title-label, .title-dueDateTime, .title-filePath {
+        font-size: 1.2em;
+        color: #333;
     }
 </style>

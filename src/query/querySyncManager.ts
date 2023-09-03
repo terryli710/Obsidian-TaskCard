@@ -5,7 +5,7 @@ import { MultipleAttributeTaskQuery } from "./cache";
 
 export interface TaskQueryOptions {
     priorityOptions: number[];
-    projectOptions: string[];
+    projectOptions: Project[];
     labelOptions: string[];
     completedOptions: string[];
 }
@@ -94,9 +94,7 @@ export class QuerySyncManager {
         this.options.completedOptions = ['true', 'false'];
         this.options.priorityOptions = [1, 2, 3, 4];
         SettingStore.subscribe((settings) => {
-            this.options.projectOptions = settings.userMetadata.projects.map((project: Project) => {
-                return project.name
-            })
+            this.options.projectOptions = settings.userMetadata.projects;
         })
         this.options.labelOptions = this.getLabelsFromDatabase();
     }
