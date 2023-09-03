@@ -4,9 +4,11 @@
     import { MultipleAttributeTaskQuery } from "../query/cache";
     import { QuerySyncManager, TaskQueryOptions } from "../query/querySyncManager";
     import { logger } from "../utils/log";
+    import FixedOptionsSelect from "./selections/FixedOptionsSelect.svelte";
+    import TagSelect from "./selections/TagSelect.svelte";
 
     export let options: TaskQueryOptions;
-    export let intialQuery: MultipleAttributeTaskQuery = {
+    export let query: MultipleAttributeTaskQuery = {
         priorityQuery: [],
         projectQuery: [],
         labelQuery: [],
@@ -15,18 +17,8 @@
         filePathQuery: '',
     };
 
-    let query: MultipleAttributeTaskQuery = intialQuery;
-
+    logger.debug(`query: ${JSON.stringify(query)}`);
     export let querySyncManager: QuerySyncManager;
-
-    let numberOfToggles: number = 0;
-
-    let priorityMapping = {
-        1: 'High',
-        2: 'Medium',
-        3: 'Low',
-        4: 'None'
-    };
 
     // Function to save the query
     function saveQuery() {
@@ -41,134 +33,66 @@
         querySyncManager.updateTaskQueryToFile(query);
     }
 
-    function toggleSelected(type, value, event) {
-        // Check if the event is a "select event"
-        if (!isSelectEvent(event)) { 
-            return; 
-        }
-        numberOfToggles++;
-
-        // Determine which query array to modify
-        let selectedArray;
-        if (type === 'completed') {
-            selectedArray = query.completedQuery;
-        } else if (type === 'priority') {
-            selectedArray = query.priorityQuery;
-        }
-
-        // If the array is undefined, exit the function
-        if (!selectedArray) {
-            console.error("Invalid type provided:", type);
-            return;
-        }
-
-        // Check if the value already exists in the array
-        const index = selectedArray.indexOf(value);
-
-        // Add or remove the value from the array
-        if (index === -1) {
-            selectedArray.push(value);
-        } else {
-            selectedArray.splice(index, 1);
-        }
-
-        // If the array is empty, clear the event target value (optional)
-        if (selectedArray.length === 0) {
-            event.target.value = '';
-        }
-
-        // Log for debugging
-        logger.debug("Updated query:", query);
-    }
-
-    function isSelectedChoice(type, value) {
-        logger.debug(`query.completedQuery.includes(value): ${query.completedQuery.includes(value)}`);
-        if (type === 'completed') {
-            return query.completedQuery.includes(value);
-        } else if (type === 'priority') {
-            return query.priorityQuery.includes(value);
+        
+    // Function to handle selection updates
+    function handleSelection(event, queryName) {
+        const selectedValues = event.detail;
+        logger.debug(`Selected values: ${selectedValues}`);
+        // Update the appropriate query based on queryName
+        if (queryName === 'completed') {
+            query.completedQuery = selectedValues;
+        } else if (queryName === 'project') {
+            query.projectQuery = selectedValues;
         }
     }
 
-    function isSelectEvent(event) {
-        // return true if is mount click or "Enter" key
-        return event.type === 'click' || event.key === 'Enter';
-    }
+    // choices
+    const completedChoices = [
+        { value: true, displayText: 'Yes' }, 
+        { value: false, displayText: 'No' }];
 
 </script>
 
 
 <ul class="query-editor">
     <!-- Completed -->
-    <li class="query-section">
-        <div class="query-section-title">Completed:</div>
-        <div class="fixed-choice-selections">
-            <ul class="fixed-choice-list">
-                <li class="fix-chioce-item">
-                    <button 
-                        class="fix-chioce-item" class:is-selected={isSelectedChoice('completed', true)}
-                        on:click={(evt) => toggleSelected('completed', true, evt)}
-                        on:keydown={(evt) => toggleSelected('completed', true, evt)}
-                    >yes</button>
-                </li>
-                <li class="fix-chioce-item">
-                    <button 
-                        class="fix-chioce-item"
-                        on:click={(evt) => toggleSelected('completed', false, evt)}
-                        on:keydown={(evt) => toggleSelected('completed', false, evt)}
-                    >no</button>
-                </li>
-            </ul>
-        </div>
-    </li>
+    <FixedOptionsSelect choices={completedChoices} initialChoices={query.completedQuery} on:selected={(evt) => handleSelection(evt, 'completed')} />
 
     <!-- Priority -->
-    <li class="query-section">
+    <div class="query-section">
         <div class="query-section-title">Priority:</div>
-        <div class="fixed-choice-selections">
-            <ul class="fixed-choice-list">
-                {#each [1, 2, 3, 4] as priority}
-                    <li class="fix-chioce-item">
-                        <button 
-                            class="{query.priorityQuery.includes(priority) ? 'is-selected' : ''}"
-                            on:click={(evt) => toggleSelected('priority', priority, evt)}
-                            on:keydown={(evt) => toggleSelected('priority', priority, evt)}
-                        >
-                            {priorityMapping[priority]}
-                        </button> 
-                    </li>
-                {/each}
-            </ul>
-        </div>
-    </li>
+        <select class="fixed-choice-selections" multiple bind:value={query.priorityQuery}>
+            <option value="1">High</option>
+            <option value="2">Medium</option>
+            <option value="3">Low</option>
+            <option value="4">None</option>
+        </select>
+    </div>
 
     <!-- Project -->
-    <li class="query-section">
+    <div class="query-section">
         <div class="query-section-title">Project:</div>
-        <div class="project-choice-selections">
-            <ul class="project-choice-list">
-                {#if options?.projectOptions && options.projectOptions.length > 0}
-                    {#each options.projectOptions as project}
-                    <li class="project-chioce-item">{project.name}</li>
-                    {/each}
-                {/if}
-            </ul>
-        </div>
-    </li>
+        <select class="project-choice-selections" multiple bind:value={query.projectQuery}>
+        {#if options?.projectOptions && options.projectOptions.length > 0}
+            {#each options.projectOptions as project}
+            <option value={project}>{project.name}</option>
+            {/each}
+        {/if}
+        </select>
+    </div>
 
     <!-- Label -->
-    <li class="query-section">
+    <div class="query-section">
         <div class="query-section-title">Label:</div>
-        <div class="label-choice-selections">
-            <ul class="label-choice-list">
-                {#if options?.labelOptions && options.labelOptions.length > 0}
-                    {#each options.labelOptions as label}
-                    <li class="label-chioce-item">{label}</li>
-                    {/each}
-                {/if}
-            </ul>
-        </div>
-    </li>
+        <select class="label-choice-selections" multiple bind:value={query.labelQuery}>
+        {#if options?.labelOptions && options.labelOptions.length > 0}
+            {#each options.labelOptions as label}
+            <option value={label}>{label}</option>
+            {/each}
+        {/if}
+        </select>
+    </div>
+
 
     <li class="query-section">
         <div class="query-section-title">Due Date Time:</div>
@@ -196,8 +120,5 @@
 
 
 <style>
-    .is-selected {
-        background-color: blue;
-    }
     
 </style>
