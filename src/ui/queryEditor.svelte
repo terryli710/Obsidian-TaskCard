@@ -54,6 +54,18 @@
         }
         querySyncManager.updateTaskQueryToFile(query);
     }
+
+    function resetQuery() {
+        query = {
+            priorityQuery: [],
+            projectQuery: [],
+            labelQuery: [],
+            completedQuery: [],
+            dueDateTimeQuery: ['', ''],
+            filePathQuery: '',
+        };
+        querySyncManager.updateTaskQueryToFile(query);
+    }
         
     // Function to handle selection updates
     function handleSelection(event, queryName) {
@@ -229,9 +241,10 @@
         </div>
     </li>
 
-    <class class="button-menu">
-        <button on:click={saveQuery}>Save</button>
-    </class>
+    <div class="button-menu">
+        <button class="save-button" on:click={saveQuery}>Save</button>
+        <button class="reset-button" on:click={resetQuery}>Reset</button>
+    </div>
 
 
 </ul>
@@ -282,8 +295,11 @@
         display: flex;
         flex-direction: row;
         align-items: flex-start;
-        margin: 0.5em;
         flex-grow: 1;
+        background-color: var(--background-primary-alt);
+        border-radius: 12px;
+        padding: 15px;
+        margin: 8px;
     }
 
     input {
@@ -341,6 +357,27 @@
 
     .file-path-displayer.invalid-path {
         color: var(--text-error);
+    }
+
+    .button-menu {
+        display: flex;
+        justify-content: space-between;
+        margin: 8px;
+    }
+
+    .save-button, .reset-button {
+        width: 48%; /* Takes up nearly half the width, leaving a small gap in between */
+        padding: 10px;
+        font-size: 16px;
+    }
+
+    .reset-button {
+        background-color: var(--color-red);
+        color: var(--text-on-accent);
+    }
+
+    .save-button {
+        color: var(--text-normal);
     }
 
 </style>
