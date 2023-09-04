@@ -210,7 +210,11 @@
                         bind:value={filePath} 
                         on:input={(evt) => handleFilePathInput(evt)}
                     />
-                    <span class="file-path-displayer">{query.filePathQuery}</span>
+                    <span 
+                        class="file-path-displayer {query.filePathQuery ? 'valid-path' : 'invalid-path'}"
+                    >
+                        {query.filePathQuery ? query.filePathQuery : 'invalid path'}
+                    </span>
                 </div>
             </div>
         </div>
@@ -230,12 +234,15 @@
     .query-section {
         display: flex;
         flex-direction: column;
+        align-items: flex-start;
     }
 
     .header {
         display: flex;
         align-items: center;
         justify-content: space-between;
+        width: 100%;
+        flex-grow: 1;
     }
 
     .inline-title-wrapper {
@@ -267,6 +274,7 @@
         flex-direction: row;
         align-items: flex-start;
         margin: 0.5em;
+        flex-grow: 1;
     }
 
     input {
@@ -278,6 +286,7 @@
         font-size: calc(var(--font-ui-smaller) * 0.9);
         text-align: left;
         word-wrap: break-word;
+        width: 100%;
     }
 
     .time-displayer.valid-date {
@@ -293,10 +302,34 @@
         flex-direction: column;
         align-items: center;
         margin: 0.5em;
+        width: 55%;
+    }
+
+    .file-path-input-component {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin: 0.5em;
+        width: 100%;
     }
 
     .file-path-input {
-        width: 90%;
+        width: 300px;
+    }
+
+    .file-path-displayer {
+        font-size: calc(var(--font-ui-smaller) * 0.9);
+        text-align: left;
+        word-wrap: break-word;
+        min-width: 300px;
+    }
+
+    .file-path-displayer.valid-path {
+        color: var(--text-success);
+    }
+
+    .file-path-displayer.invalid-path {
+        color: var(--text-error);
     }
 
 
