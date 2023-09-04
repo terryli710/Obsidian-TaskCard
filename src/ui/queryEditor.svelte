@@ -4,11 +4,10 @@
     import { MultipleAttributeTaskQuery } from "../query/cache";
     import { QuerySyncManager, TaskQueryOptions } from "../query/querySyncManager";
     import { logger } from "../utils/log";
-    import Calendar from './calendar/Calendar.svelte';
     import FixedOptionsSelect from "./selections/FixedOptionsSelect.svelte";
     import ProjectSelection from "./selections/ProjectSelection.svelte";
     import TagSelect from "./selections/TagSelect.svelte";
-    import moment from 'moment';
+    import Sugar from "sugar";
 
     export let options: TaskQueryOptions;
     export let query: MultipleAttributeTaskQuery = {
@@ -21,14 +20,15 @@
     };
     export let querySyncManager: QuerySyncManager;
 
-    let startDate = new Date(query.dueDateTimeQuery[0]);
-    let endDate = new Date(query.dueDateTimeQuery[1]);
+    let startDate = query.dueDateTimeQuery[0] ? new Date(query.dueDateTimeQuery[0]) : new Date();
+    let endDate = query.dueDateTimeQuery[1] ? new Date(query.dueDateTimeQuery[1]) : new Date();
 
-    let startMoment = moment(startDate);
-    let endMoment = moment(endDate);
+    let startDateString = startDate.toLocaleString();
+    let endDateString = endDate.toLocaleString();
 
     // Function to save the query
     function saveQuery() {
+        saveDate();
         // Post-processing to convert empty arrays or strings to null
         for (const key in query) {
             if (Array.isArray(query[key]) && query[key].length === 0) {
@@ -56,16 +56,41 @@
         }
     }
 
-    function handleDateSelection(event, queryName) {
-        const selectedValue = event.detail;
-        logger.debug(`Date selected value: ${selectedValue}`);
-        if (queryName = 'startDate') {
-            query.dueDateTimeQuery[0] = selectedValue;
-        } else if (queryName = 'endDate') {
-            query.dueDateTimeQuery[1] = selectedValue;
+    function saveDate() {
+        query.dueDateTimeQuery[0] = startDate.toLocaleString();
+        query.dueDateTimeQuery[1] = endDate.toLocaleString();
+    }
+
+    function isValidDate(date: Date) {
+        return date instanceof Date && !isNaN(date.getTime());
+    }
+
+    function handleDateInput(event: any, queryName: 'startDate' | 'endDate') {
+        // Validate queryName
+        if (!['startDate', 'endDate'].includes(queryName)) {
+            return;
         }
 
+        // Determine the value based on queryName
+        const value = queryName === 'startDate' ? startDateString : endDateString;
+
+        // Parse the date string
+        const time = Sugar.Date.create(value);
+
+        // Validate the parsed time
+        if (!time || !isValidDate(time)) {
+            logger.error(`Invalid date string: ${value}`);
+            return;
+        }
+
+        // Assign the parsed time to the appropriate variable
+        if (queryName === 'startDate') {
+            startDate = time;
+        } else {
+            endDate = time;
+        }
     }
+
 
     // choices
     const completedChoices = [
@@ -128,14 +153,22 @@
                 <div class="inline-description">To filter by due date</div>
             </div>
             <div class="separator"></div>
-            <Calendar 
-                displayedMonth={startMoment || undefined}
-                on:selected={(evt) => handleDateSelection(evt, 'startDate')}
-            />
-            <Calendar 
-                displayedMonth={endMoment || undefined}
-                on:selected={(evt) => handleDateSelection(evt, 'endDate')}
-            />
+            <div class="input-wrapper">
+                <input id="startDateInput" 
+                    type="text" placeholder="Enter start date" 
+                    bind:value={startDateString}
+                    on:input={(evt) => handleDateInput(evt, 'startDate')}
+                >
+                <span class="time-displayer">{startDate}</span>
+            </div>
+            <div class="input-wrapper">
+                <input id="endDateInput" 
+                    type="text" placeholder="Enter end date" 
+                    bind:value={endDateString}
+                    on:input={(evt) => handleDateInput(evt, 'endDate')}
+                >
+                <span class="time-displayer">{endDate}</span>
+            </div>
         </div>
     </li>
 
@@ -156,6 +189,59 @@
 
 
 <style>
+
+    .query-section {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .inline-title-wrapper {
+        flex: 0 0 30%;
+        margin: 0;
+        padding: 0;
+        line-height: 1.5;
+        font-size: 1.2em;
+        text-align: left;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .inline-title {
+        color: var(--text-normal);
+        font-size: var(--font-ui-medium);
+        line-height: var(--line-height-tight);
+    }
+
+    .inline-description {
+        color: var(--text-muted);
+        font-size: var(--font-ui-smaller);
+        padding-top: var(--size-4-1);
+        line-height: var(--line-height-tight);
+    }
+
+    .input-wrapper {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    input {
+        width: 100%;
+        margin-bottom: 5px;
+    }
+
+    .time-displayer {
+        color: gray;
+        font-size: 0.8em;
+        text-align: left;
+        word-wrap: break-word;
+    }
 
 
 </style>

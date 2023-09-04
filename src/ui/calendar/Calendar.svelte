@@ -1,4 +1,4 @@
-<svelte:options immutable />
+<!-- <svelte:options immutable />
 
 <script lang="ts">
   import type { Moment } from "moment";
@@ -74,4 +74,4 @@
   {onClickWeek}
   bind:displayedMonth
   localeData={today.localeData()}
-/>
+/> -->
