@@ -51,23 +51,22 @@
         { value: true, displayText: 'Yes' }, 
         { value: false, displayText: 'No' }];
 
+    const priorityChoices = [
+        { value: 1, displayText: 'High' }, 
+        { value: 2, displayText: 'Medium' }, 
+        { value: 3, displayText: 'Low' }, 
+        { value: 4, displayText: 'None' }
+    ];
+
 </script>
 
 
 <ul class="query-editor">
     <!-- Completed -->
-    <FixedOptionsSelect choices={completedChoices} initialChoices={query.completedQuery} on:selected={(evt) => handleSelection(evt, 'completed')} />
+    <FixedOptionsSelect title="Completed" description="To include completed or uncompleted tasks" choices={completedChoices} initialChoices={query.completedQuery} on:selected={(evt) => handleSelection(evt, 'completed')} />
 
     <!-- Priority -->
-    <div class="query-section">
-        <div class="query-section-title">Priority:</div>
-        <select class="fixed-choice-selections" multiple bind:value={query.priorityQuery}>
-            <option value="1">High</option>
-            <option value="2">Medium</option>
-            <option value="3">Low</option>
-            <option value="4">None</option>
-        </select>
-    </div>
+    <FixedOptionsSelect title="Priority" description="To filter teh priority of the task" choices={priorityChoices} initialChoices={query.priorityQuery} on:selected={(evt) => handleSelection(evt, 'priority')} />
 
     <!-- Project -->
     <div class="query-section">
