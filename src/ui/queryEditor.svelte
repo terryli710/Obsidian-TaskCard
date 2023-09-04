@@ -52,7 +52,8 @@
                 query[key] = null;
             }
         }
-        querySyncManager.updateTaskQueryToFile(query);
+        // switch to save mode
+        querySyncManager.updateTaskQueryToFile(query, false);
     }
 
     function resetQuery() {

@@ -1,6 +1,7 @@
 import TaskCardPlugin from "..";
 import { SettingStore } from "../settings";
 import { Project } from "../taskModule/project";
+import { PositionedObsidianTask } from "../taskModule/task";
 import { logger } from "../utils/log";
 import { MultipleAttributeTaskQuery } from "./cache";
 
@@ -18,6 +19,7 @@ export class QuerySyncManager {
     source: string;
     taskQuery: MultipleAttributeTaskQuery;
     defaultQuery: MultipleAttributeTaskQuery;
+    editMode: boolean = true;
     options: TaskQueryOptions;
     codeBlockMetadata: {
         sourcePath: string;
@@ -49,7 +51,7 @@ export class QuerySyncManager {
             dueDateTimeQuery: ['', ''],
             filePathQuery: '',
         };
-        this.initOptions();
+        // this.initOptions();
     }
 
     queryParser(source: string): MultipleAttributeTaskQuery {
@@ -81,6 +83,8 @@ export class QuerySyncManager {
                 query.dueDateTimeQuery = JSON.parse(value);
             } else if (key === 'file') {
                 query.filePathQuery = value.replace(/['"]+/g, '');
+            } else if (key === 'editMode') {
+                this.editMode = JSON.parse(value);
             }
         }
     
@@ -101,6 +105,11 @@ export class QuerySyncManager {
             this.options.projectOptions = settings.userMetadata.projects;
         })
         this.options.labelOptions = this.getLabelsFromDatabase();
+    }
+
+    getOptions(): TaskQueryOptions {
+        this.initOptions();
+        return this.options;
     }
 
     refreshOptions() {
@@ -143,6 +152,10 @@ export class QuerySyncManager {
         if (query.filePathQuery !== undefined && query.filePathQuery !== null) {
             source += `file: "${query.filePathQuery}"\n`;
         }
+
+        if (this.editMode !== undefined && this.editMode !== null) {
+            source += `editMode: ${JSON.stringify(this.editMode)}\n`;
+        }
         
         return source.trim(); // Remove the trailing newline
         }
@@ -151,7 +164,8 @@ export class QuerySyncManager {
         return `\`\`\`${this.blockLanguage}\n${queryString}\n\`\`\``;
     }
 
-    updateTaskQueryToFile(taskQuery: MultipleAttributeTaskQuery) {
+    updateTaskQueryToFile(taskQuery: MultipleAttributeTaskQuery, editMode: boolean = true) {
+        this.editMode = editMode;
         const filledQuery = this.setDefaultQueryValues(taskQuery);
         const newQuery = this.formatCodeBlock(this.queryFormatter(filledQuery));
         this.plugin.fileOperator.updateFile(
@@ -160,5 +174,15 @@ export class QuerySyncManager {
             this.codeBlockMetadata.lineStart, 
             this.codeBlockMetadata.lineEnd + 1
         );
+    }
+
+    toEditMode() {
+        this.updateTaskQueryToFile(this.taskQuery, true);
+    }
+
+    async getFilteredTasks(): Promise<PositionedObsidianTask[]> {
+        const filteredTasksProps = await this.plugin.cache.taskCache.queryTasks(this.taskQuery)
+        const filteredTasks = filteredTasksProps.map((taskProps) => new PositionedObsidianTask(taskProps))
+        return filteredTasks
     }
 }

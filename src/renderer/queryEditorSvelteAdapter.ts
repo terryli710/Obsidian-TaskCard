@@ -2,10 +2,9 @@ import { SvelteComponent } from "svelte"
 import TaskCardPlugin from ".."
 import { MultipleAttributeTaskQuery } from "../query/cache"
 import QueryEditor from "../ui/QueryEditor.svelte"
+import StaticTaskList from '../ui/StaticTaskList.svelte';
 import { QuerySyncManager } from "../query/querySyncManager"
 import { MarkdownPostProcessorContext, MarkdownSectionInformation } from "obsidian"
-import { logger } from "../utils/log"
-
 
 
 export class QueryEditorSvelteAdapter {
@@ -42,17 +41,28 @@ export class QueryEditorSvelteAdapter {
         )
     }
 
-    onload() {
-        logger.debug(`QueryEditorSvelteAdapter.onload, options: ${JSON.stringify(this.querySyncManager.options)}`)
-        logger.debug(`QueryEditorSvelteAdapter.onload, query: ${JSON.stringify(this.querySyncManager.taskQuery)}`)
-        this.svelteComponent = new QueryEditor({
-            target: this.codeBlockEl,
-            props: {
-                options: this.querySyncManager.options,
-                query: this.querySyncManager.taskQuery,
-                querySyncManager: this.querySyncManager,
-                paths: this.plugin.fileOperator.getAllFilesAndFolders(),
-            }
-        })
+    async onload() {
+
+        if (this.querySyncManager.editMode) {
+            this.svelteComponent = new QueryEditor({
+                target: this.codeBlockEl,
+                props: {
+                    options: this.querySyncManager.getOptions(),
+                    query: this.querySyncManager.taskQuery,
+                    querySyncManager: this.querySyncManager,
+                    paths: this.plugin.fileOperator.getAllFilesAndFolders(),
+                }
+            })
+        } else {
+            this.svelteComponent = new StaticTaskList({
+                target: this.codeBlockEl,
+                props: {
+                    taskList: await this.querySyncManager.getFilteredTasks(),
+                    plugin: this.plugin,
+                    querySyncManager: this.querySyncManager
+                }
+            })
+        }
+
     }
 }
