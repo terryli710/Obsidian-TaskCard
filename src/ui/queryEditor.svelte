@@ -80,13 +80,12 @@
         // Validate the parsed time
         if (!time || !isValidDate(time)) {
             logger.error(`Invalid date string: ${value}`);
-            return;
         }
 
         // Assign the parsed time to the appropriate variable
         if (queryName === 'startDate') {
             startDate = time;
-        } else {
+        } else if (queryName === 'endDate') {
             endDate = time;
         }
     }
@@ -154,20 +153,30 @@
             </div>
             <div class="separator"></div>
             <div class="input-wrapper">
-                <input id="startDateInput" 
-                    type="text" placeholder="Enter start date" 
-                    bind:value={startDateString}
-                    on:input={(evt) => handleDateInput(evt, 'startDate')}
-                >
-                <span class="time-displayer">{startDate}</span>
-            </div>
-            <div class="input-wrapper">
-                <input id="endDateInput" 
-                    type="text" placeholder="Enter end date" 
-                    bind:value={endDateString}
-                    on:input={(evt) => handleDateInput(evt, 'endDate')}
-                >
-                <span class="time-displayer">{endDate}</span>
+                <div class="date-input-component">
+                    <input id="startDateInput" 
+                        type="text" placeholder="Enter start date" 
+                        bind:value={startDateString}
+                        on:input={(evt) => handleDateInput(evt, 'startDate')}
+                    >
+                    <span 
+                        class="time-displayer {isValidDate(startDate) ? 'valid-date' : 'invalid-date'}"
+                    >
+                        {startDate}
+                    </span>
+                </div>
+                <div class="date-input-component">
+                    <input id="endDateInput" 
+                        type="text" placeholder="Enter end date" 
+                        bind:value={endDateString}
+                        on:input={(evt) => handleDateInput(evt, 'endDate')}
+                    >
+                    <span 
+                        class="time-displayer {isValidDate(endDate) ? 'valid-date' : 'invalid-date'}"
+                    >
+                        {endDate}
+                    </span>
+                </div>
             </div>
         </div>
     </li>
@@ -227,8 +236,9 @@
 
     .input-wrapper {
         display: flex;
-        flex-direction: column;
+        flex-direction: row;
         align-items: flex-start;
+        margin: 0.5em;
     }
 
     input {
@@ -237,10 +247,24 @@
     }
 
     .time-displayer {
-        color: gray;
-        font-size: 0.8em;
+        font-size: calc(var(--font-ui-smaller) * 0.9);
         text-align: left;
         word-wrap: break-word;
+    }
+
+    .time-displayer.valid-date {
+        color: var(--text-success);
+    }
+
+    .time-displayer.invalid-date {
+        color: var(--text-error);
+    }
+
+    .date-input-component {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin: 0.5em;
     }
 
 

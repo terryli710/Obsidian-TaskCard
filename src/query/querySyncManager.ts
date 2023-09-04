@@ -1,6 +1,7 @@
 import TaskCardPlugin from "..";
 import { SettingStore } from "../settings";
 import { Project } from "../taskModule/project";
+import { logger } from "../utils/log";
 import { MultipleAttributeTaskQuery } from "./cache";
 
 export interface TaskQueryOptions {
@@ -63,7 +64,10 @@ export class QuerySyncManager {
         };
     
         for (const line of lines) {
-            const [key, value] = line.split(':').map(str => str.trim());
+            const indexOfFirstColon = line.indexOf(':');
+
+            const key = line.substring(0, indexOfFirstColon).trim();
+            const value = line.substring(indexOfFirstColon + 1).trim();
         
             if (key === 'priority') {
                 query.priorityQuery = JSON.parse(value);
