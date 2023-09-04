@@ -48,6 +48,7 @@
   },
   "dependencies": {
     "@mapbox/node-pre-gyp": "github:mapbox/node-pre-gyp",
+    "date-picker-svelte": "^2.6.0",
     "lucide-svelte": "^0.268.0",
     "marked": "^6.0.0",
     "obsidian": "latest",

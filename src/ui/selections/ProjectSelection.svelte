@@ -49,7 +49,7 @@
         <div class="choices-wrapper">
             {#each choices as choice}
                 <button 
-                    class="project-selection-button tag {selectedTags.includes(choice.name) ? 'selected' : ''}" 
+                    class="project-selection-button {selectedTags.includes(choice.name) ? 'selected' : ''}" 
                     on:click={(evt) => toggleTag(choice.name, evt)}
                     on:keydown={(evt) => toggleTag(choice.name, evt)}>
                     <div class="project-choice">
@@ -117,20 +117,18 @@
         justify-content: flex-start;
     }
     
-    .tag {
+    button.project-selection-button {
         margin: 5px;
-        /* Removed flex-grow: 1 */
+        height: var(--line-height-tight);
+        padding: 0px 4px;
+        border-radius: 10px;
+        align-items: center;
+        vertical-align: middle;
     }
-    
-    .tag.selected {
+
+    .project-selection-button.selected {
         background-color: var(--interactive-accent);
         color: var(--text-on-accent);
-    }
-    
-    .project-selection-button {
-        margin: 5px;
-        padding: 4px;
-        border-radius: 10px;
     }
     
     .project-choice {
@@ -140,7 +138,7 @@
     }
 
     .project-name {
-        padding: 4px;
+        padding: 0px 4px;
     }
     
     .project-color {
@@ -150,7 +148,7 @@
         padding: 4px;
         border-radius: 50%;
         margin: 4px;
-        border: var(--border-width) solid var(--background-primary);
+        border: var(--border-width) solid rgba(0, 0, 0, 0);
     }
     
 </style>

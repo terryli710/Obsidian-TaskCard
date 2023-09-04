@@ -44,6 +44,10 @@
             query.completedQuery = selectedValues;
         } else if (queryName === 'project') {
             query.projectQuery = selectedValues;
+        } else if (queryName === 'priority') {
+            query.priorityQuery = selectedValues;
+        } else if (queryName === 'label') {
+            query.labelQuery = selectedValues;
         }
     }
 
