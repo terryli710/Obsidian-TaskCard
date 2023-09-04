@@ -67,14 +67,11 @@ export class FileOperator {
   getAllFilesAndFolders(): string[] {
     const mdFiles = this.app.vault.getMarkdownFiles();
     const mdPaths = mdFiles.map((file) => file.path);
-    const mdRootPath = this.getVaultRoot();
 
     // Initialize a Set to store the unique relative paths
     let relativePaths: Set<string> = new Set();
-    
     // Loop through each Markdown file to get its path relative to the root
-    mdPaths.forEach((fullPath) => {
-      const relativePath = fullPath.replace(mdRootPath, '');
+    mdPaths.forEach((relativePath) => {
       relativePaths.add(relativePath);
       
       // Add folders in between

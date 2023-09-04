@@ -22,13 +22,24 @@
     export let querySyncManager: QuerySyncManager;
     export let paths: string[] = [];
 
-    let startDate = query.dueDateTimeQuery[0] ? new Date(query.dueDateTimeQuery[0]) : new Date();
-    let endDate = query.dueDateTimeQuery[1] ? new Date(query.dueDateTimeQuery[1]) : new Date();
+    let startDate = query.dueDateTimeQuery[0] ? new Date(query.dueDateTimeQuery[0]) : null;
+    let endDate = query.dueDateTimeQuery[1] ? new Date(query.dueDateTimeQuery[1]) : null;
 
-    let startDateString = startDate.toLocaleString();
-    let endDateString = endDate.toLocaleString();
+    let startDateString = startDate? startDate.toLocaleString() : '';
+    let endDateString = endDate? endDate.toLocaleString() : '';
 
     let filePath = query.filePathQuery;
+
+    let dueDateEnabled = false;
+    let filePathEnabled = false;
+
+    function toggleFilter(filterType) {
+        if (filterType === 'dueDate') {
+            dueDateEnabled = !dueDateEnabled;
+        } else if (filterType === 'filePath') {
+            filePathEnabled = !filePathEnabled;
+        }
+    }
 
     // Function to save the query
     function saveQuery() {
@@ -61,8 +72,8 @@
     }
 
     function saveDate() {
-        query.dueDateTimeQuery[0] = startDate.toLocaleString();
-        query.dueDateTimeQuery[1] = endDate.toLocaleString();
+        query.dueDateTimeQuery[0] = isValidDate(startDate) ? startDate.toLocaleString() : '';
+        query.dueDateTimeQuery[1] = isValidDate(endDate) ? endDate.toLocaleString() : '';
     }
 
     function isValidDate(date: Date) {
@@ -164,7 +175,6 @@
                 <div class="inline-title">Due Date</div>
                 <div class="inline-description">To filter by due date</div>
             </div>
-            <div class="separator"></div>
             <div class="input-wrapper">
                 <div class="date-input-component">
                     <input id="startDateInput" 
@@ -173,9 +183,9 @@
                         on:input={(evt) => handleDateInput(evt, 'startDate')}
                     >
                     <span 
-                        class="time-displayer {isValidDate(startDate) ? 'valid-date' : 'invalid-date'}"
+                        class="time-displayer {isValidDate(startDate) ? 'valid-date' : (startDateString ? 'invalid-date' : '')}"
                     >
-                        {startDate}
+                        {startDate ? startDate : (startDateString ? 'invalid date' : 'empty date')}
                     </span>
                 </div>
                 <div class="date-input-component">
@@ -185,9 +195,9 @@
                         on:input={(evt) => handleDateInput(evt, 'endDate')}
                     >
                     <span 
-                        class="time-displayer {isValidDate(endDate) ? 'valid-date' : 'invalid-date'}"
+                        class="time-displayer {isValidDate(endDate) ? 'valid-date' : (endDateString ? 'invalid-date' : '')}"
                     >
-                        {endDate}
+                        {endDate ? endDate : (endDateString ? 'invalid date' : 'empty date')}
                     </span>
                 </div>
             </div>
@@ -200,7 +210,6 @@
                 <div class="inline-title">File Path</div>
                 <div class="inline-description">Filter task in a specific folder or file</div>
             </div>
-            <div class="separator"></div>
             <div class="input-wrapper">
                 <div class="file-path-input-component">
                     <input 
@@ -211,10 +220,10 @@
                         on:input={(evt) => handleFilePathInput(evt)}
                     />
                     <span 
-                        class="file-path-displayer {query.filePathQuery ? 'valid-path' : 'invalid-path'}"
+                        class="file-path-displayer {query.filePathQuery ? 'valid-path' : (filePath ? 'invalid-path' : '')}"
                     >
-                        {query.filePathQuery ? query.filePathQuery : 'invalid path'}
-                    </span>
+                        {query.filePathQuery ? query.filePathQuery : (filePath ? 'invalid path' : 'empty path')}
+                </span>
                 </div>
             </div>
         </div>
@@ -283,6 +292,7 @@
     }
 
     .time-displayer {
+        color: var(--text-faint);
         font-size: calc(var(--font-ui-smaller) * 0.9);
         text-align: left;
         word-wrap: break-word;
@@ -318,6 +328,7 @@
     }
 
     .file-path-displayer {
+        color: var(--text-faint);
         font-size: calc(var(--font-ui-smaller) * 0.9);
         text-align: left;
         word-wrap: break-word;
@@ -331,6 +342,5 @@
     .file-path-displayer.invalid-path {
         color: var(--text-error);
     }
-
 
 </style>
