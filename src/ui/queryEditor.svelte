@@ -5,6 +5,7 @@
     import { QuerySyncManager, TaskQueryOptions } from "../query/querySyncManager";
     import { logger } from "../utils/log";
     import FixedOptionsSelect from "./selections/FixedOptionsSelect.svelte";
+    import ProjectSelection from "./selections/ProjectSelection.svelte";
     import TagSelect from "./selections/TagSelect.svelte";
 
     export let options: TaskQueryOptions;
@@ -69,28 +70,10 @@
     <FixedOptionsSelect title="Priority" description="To filter teh priority of the task" choices={priorityChoices} initialChoices={query.priorityQuery} on:selected={(evt) => handleSelection(evt, 'priority')} />
 
     <!-- Project -->
-    <div class="query-section">
-        <div class="query-section-title">Project:</div>
-        <select class="project-choice-selections" multiple bind:value={query.projectQuery}>
-        {#if options?.projectOptions && options.projectOptions.length > 0}
-            {#each options.projectOptions as project}
-            <option value={project}>{project.name}</option>
-            {/each}
-        {/if}
-        </select>
-    </div>
+    <ProjectSelection title="Project" description="To filter by project" choices={options?.projectOptions} initialChoices={query.projectQuery} on:selected={(evt) => handleSelection(evt, 'project')} />
 
     <!-- Label -->
-    <div class="query-section">
-        <div class="query-section-title">Label:</div>
-        <select class="label-choice-selections" multiple bind:value={query.labelQuery}>
-        {#if options?.labelOptions && options.labelOptions.length > 0}
-            {#each options.labelOptions as label}
-            <option value={label}>{label}</option>
-            {/each}
-        {/if}
-        </select>
-    </div>
+    <TagSelect title="Label" description="To filter by label" choices={options?.labelOptions} initialChoices={query.labelQuery} on:selected={(evt) => handleSelection(evt, 'label')} />
 
 
     <li class="query-section">

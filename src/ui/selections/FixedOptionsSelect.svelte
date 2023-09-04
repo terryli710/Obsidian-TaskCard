@@ -45,7 +45,6 @@
 </script>
 
 
-
 <div class="container">
     <div class="header">
         <div class="inline-title-wrapper">
@@ -107,7 +106,7 @@
 
 .choices-wrapper {
     flex: 1;
-    background-color: #f2f2f2;
+    background-color: var(--background-primary-alt);
     border-radius: 12px;
     padding: 15px;
     margin: 8px;
