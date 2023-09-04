@@ -8,6 +8,7 @@
     import ProjectSelection from "./selections/ProjectSelection.svelte";
     import TagSelect from "./selections/TagSelect.svelte";
     import Sugar from "sugar";
+    import { filePathSuggest } from "../utils/filePathSuggester";
 
     export let options: TaskQueryOptions;
     export let query: MultipleAttributeTaskQuery = {
@@ -19,12 +20,15 @@
         filePathQuery: '',
     };
     export let querySyncManager: QuerySyncManager;
+    export let paths: string[] = [];
 
     let startDate = query.dueDateTimeQuery[0] ? new Date(query.dueDateTimeQuery[0]) : new Date();
     let endDate = query.dueDateTimeQuery[1] ? new Date(query.dueDateTimeQuery[1]) : new Date();
 
     let startDateString = startDate.toLocaleString();
     let endDateString = endDate.toLocaleString();
+
+    let filePath = query.filePathQuery;
 
     // Function to save the query
     function saveQuery() {
@@ -87,6 +91,15 @@
             startDate = time;
         } else if (queryName === 'endDate') {
             endDate = time;
+        }
+    }
+
+    function handleFilePathInput(event: any) {
+        const matches = filePathSuggest(filePath, paths);
+        if (matches.length > 0) {
+            query.filePathQuery = matches[0];
+        } else {
+            query.filePathQuery = '';
         }
     }
 
@@ -182,9 +195,24 @@
     </li>
 
     <li class="query-section">
-        <div class="query-section-title">File Path:</div>
-        <div class="query-input-area">
-            <input type="text" placeholder="File Path" bind:value={query.filePathQuery} />
+        <div class="header">
+            <div class="inline-title-wrapper">
+                <div class="inline-title">File Path</div>
+                <div class="inline-description">Filter task in a specific folder or file</div>
+            </div>
+            <div class="separator"></div>
+            <div class="input-wrapper">
+                <div class="file-path-input-component">
+                    <input 
+                        class="file-path-input" 
+                        type="text" 
+                        placeholder="File/Folder Path" 
+                        bind:value={filePath} 
+                        on:input={(evt) => handleFilePathInput(evt)}
+                    />
+                    <span class="file-path-displayer">{query.filePathQuery}</span>
+                </div>
+            </div>
         </div>
     </li>
 
@@ -265,6 +293,10 @@
         flex-direction: column;
         align-items: center;
         margin: 0.5em;
+    }
+
+    .file-path-input {
+        width: 90%;
     }
 
 

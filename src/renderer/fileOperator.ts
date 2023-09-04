@@ -64,4 +64,34 @@ export class FileOperator {
     await this.app.vault.modify(file as TFile, newFileLines.join('\n'));
   }
 
+  getAllFilesAndFolders(): string[] {
+    const mdFiles = this.app.vault.getMarkdownFiles();
+    const mdPaths = mdFiles.map((file) => file.path);
+    const mdRootPath = this.getVaultRoot();
+
+    // Initialize a Set to store the unique relative paths
+    let relativePaths: Set<string> = new Set();
+    
+    // Loop through each Markdown file to get its path relative to the root
+    mdPaths.forEach((fullPath) => {
+      const relativePath = fullPath.replace(mdRootPath, '');
+      relativePaths.add(relativePath);
+      
+      // Add folders in between
+      let folderPath = '';
+      const pathParts = relativePath.split('/');
+      for (let i = 0; i < pathParts.length - 1; i++) {
+        folderPath += pathParts[i] + '/';
+        relativePaths.add(folderPath);
+      }
+    });
+    
+    // Convert the Set back to an array of strings
+    return Array.from(relativePaths);
+  }
+
+  getVaultRoot(): string {
+    return this.app.vault.getRoot().path;
+  }
+
 }

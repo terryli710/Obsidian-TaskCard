@@ -50,7 +50,8 @@ export class QueryEditorSvelteAdapter {
             props: {
                 options: this.querySyncManager.options,
                 query: this.querySyncManager.taskQuery,
-                querySyncManager: this.querySyncManager
+                querySyncManager: this.querySyncManager,
+                paths: this.plugin.fileOperator.getAllFilesAndFolders(),
             }
         })
     }
