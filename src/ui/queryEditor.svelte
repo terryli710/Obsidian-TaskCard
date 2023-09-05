@@ -33,6 +33,8 @@
     let dueDateEnabled = false;
     let filePathEnabled = false;
 
+    let lowerPaths = paths.map((path) => path.toLowerCase());
+
     function toggleFilter(filterType) {
         if (filterType === 'dueDate') {
             dueDateEnabled = !dueDateEnabled;
@@ -119,7 +121,7 @@
     }
 
     function handleFilePathInput(event: any) {
-        const matches = filePathSuggest(filePath, paths);
+        const matches = filePathSuggest(filePath.toLowerCase(), lowerPaths);
         if (matches.length > 0) {
             query.filePathQuery = matches[0];
         } else {
