@@ -28,7 +28,6 @@ export class TaskParser {
     this.projectModule = projectModule;
   }
 
-
   // New method to parse labels from task content
   parseLabelsFromContent(taskEl: Element): string[] {
     const tags = taskEl.querySelectorAll("a.tag");
@@ -40,61 +39,82 @@ export class TaskParser {
     return labels;
   }
 
+  selectHiddenSpans(taskEl: HTMLElement): HTMLElement[] {
+    // Get all span elements
+    const allSpans = taskEl.querySelectorAll('span');
+
+    // Filter those that have 'display:none' in their style attribute
+    const hiddenSpans = Array.from(allSpans).filter(span => {
+      const style = span.getAttribute('style');
+      return style && style.replace(/\s/g, '').includes('display:none');
+    });
+
+    return hiddenSpans;
+  }
+  
   parseTaskEl(taskEl: Element): ObsidianTask {
-    function parseQuery(queryName: string, defaultValue: string = '') {
+    function parseAttributes(): any {
       try {
-        const spanElement = taskEl.querySelector(`span.${queryName}`);
+        const hiddenSpans = this.selectHiddenSpans(taskEl);
+        if (hiddenSpans.length === 0) { return null; }
+        const spanElement = hiddenSpans[0];
         if (spanElement) {
-          return JSON.parse(spanElement.textContent || defaultValue);
+          return JSON.parse(spanElement.textContent || '{}');
         }
-        return JSON.parse(defaultValue);
+        return null;
       } catch (e) {
-        console.warn(`Failed to parse ${queryName} (got): ${e}`);
-        return defaultValue;
+        console.warn(`Failed to parse attributes: ${e}`);
+        return null;
       }
     }
-
+  
     const task = new ObsidianTask();
-    task.id = parseQuery('id', '') as string;
-    task.priority = parseQuery('priority', '1') as TaskProperties['priority'];
-    task.description = parseQuery(
-      'description',
-      '""'
-    ) as TaskProperties['description'];
-    task.order = parseQuery('order', '0') as TaskProperties['order'];
-    task.project = parseQuery('project', 'null') as Project | null;
-    task.sectionID = parseQuery(
-      'section-id',
-      ''
-    ) as TaskProperties['sectionID'];
-    
-    // Get labels from span
-    let labelsFromSpan = parseQuery('labels', '[]') as TaskProperties['labels'];
-
+    const attributes = parseAttributes.bind(this)();
+    if (attributes === null) { return task; }
+  
+    task.id = attributes.id || '';
+    task.priority = attributes.priority || '1';
+    task.description = attributes.description || '';
+    task.order = attributes.order || 0;
+    task.project = attributes.project || null;
+    task.sectionID = attributes.sectionID || '';
+    task.labels = attributes.labels || [];
+    task.parent = attributes.parent || null;
+    task.children = attributes.children || [];
+    task.due = attributes.due || null;
+    task.metadata = attributes.metadata || {};
+  
     // Get labels from content
     let labelsFromContent = this.parseLabelsFromContent(taskEl);
+    
+    // Conditional label setting
+    if (attributes.labels && attributes.labels.length > 0) {
+      task.labels = [...task.labels, ...labelsFromContent];
+    } else {
+      task.labels = labelsFromContent;
+    }
 
-    // Concatenate and filter unique labels
-    task.labels = Array.from(new Set([...labelsFromSpan, ...labelsFromContent])).filter(
+    // Remove duplicate labels and remove indicator tag from labels
+    task.labels = Array.from(new Set(task.labels)).filter(
       (label) => label !== `#${this.indicatorTag}`
     );
-
-    // Make sure the each label starts with exactly one "#"
-    task.labels = task.labels.map(label => {
+  
+    // Make sure each label starts with exactly one "#"
+    task.labels = task.labels.map((label) => {
       // Remove all leading '#' characters
       const cleanedLabel = label.replace(/^#+/, '');
       // Add a single '#' at the beginning
       return '#' + cleanedLabel;
     });
-    
-
-    // Isolate the task content excluding tags// Get reference to the input checkbox element
+  
+    // Isolate the task content excluding tags
+    // Get reference to the input checkbox element
     const checkboxElement = taskEl.querySelector('input.task-list-item-checkbox');
-
+  
     if (checkboxElement) {
       let currentNode: Node | null = checkboxElement;
       let content = '';
-
+  
       // Traverse through next siblings to accumulate text content
       while ((currentNode = currentNode.nextSibling) !== null) {
         if (currentNode.nodeType === 3) { // Node.TEXT_NODE
@@ -104,26 +124,17 @@ export class TaskParser {
           break;
         }
       }
-
+  
       task.content = content.trim();
     }
-
+  
     const checkbox = taskEl.querySelector(
       '.task-list-item-checkbox'
     ) as HTMLInputElement;
     task.completed = checkbox?.checked || false;
-
-    // note: currently will always be null, as the relationship is already represented by indent in the document.
-    task.parent = parseQuery('parent', 'null') as ObsidianTask['parent'] | null;
-    task.children = parseQuery('children', '[]') as
-      | ObsidianTask['children']
-      | [];
-
-    task.due = parseQuery('due', 'null') as DueDate | null;
-    task.metadata = parseQuery('metadata', '{}') as TaskProperties['metadata'];
-
+  
     return task;
-  }
+  }  
 
   parseTaskMarkdown(taskMarkdown: string, noticeFunc: (msg: string) => void = null): ObsidianTask {
     const task: ObsidianTask = new ObsidianTask();
@@ -166,7 +177,6 @@ export class TaskParser {
       }
     };
 
-
     // Splitting the content and the attributes
     const contentEndIndex = taskMarkdown.indexOf(this.markdownStartingNotation);
     const markdownTaskContent =
@@ -181,8 +191,6 @@ export class TaskParser {
     const [contentLabels, remainingContent] = extractTags(contentWithLabels);
     task.content = remainingContent;
     task.labels = contentLabels.filter((label) => label !== `#${this.indicatorTag}`);
-
-
 
     // Parsing attributes
     const attributesString = taskMarkdown.slice(contentEndIndex);
@@ -249,72 +257,122 @@ export class TaskParser {
     return task;
   }
 
+
   parseFormattedTaskMarkdown(taskMarkdown: string): ObsidianTask {
     const task: ObsidianTask = new ObsidianTask();
+    
+    // Global regex to capture task part, content, labels, and metadata
+    const regex = new RegExp(`- \\[(.)\\] (.+?)(?:\\s*<span style="display:none">({.+})<\\/span>)`);
+    const match = taskMarkdown.trim().match(regex);
+    
+    if (!match || !match[1] || !match[2] || !match[3]) {
+      logger.warn(`Failed to parse task: ${taskMarkdown}`);
+      return task;
+    }
+  
+    // Extracting completion status
+    task.completed = match[1] !== ' ';
+  
+    // Extracting content
+    task.content = match[2].trim();
 
-    // Splitting the content and the attributes
-    const contentEndIndex = taskMarkdown.indexOf('<span class=');
-    const markdownTaskContent =
-      contentEndIndex !== -1
-        ? taskMarkdown.slice(0, contentEndIndex).trim()
-        : taskMarkdown.trim();
-
-    const contentWithLabels = markdownTaskContent.slice(5).trim();
-    task.completed = markdownTaskContent.startsWith('- [x]'); // TODO: currently only supports x
-
+    const contentWithLabels = match[2].trim();
+  
     // Extracting labels from the content line
     const [contentLabels, remainingContent] = extractTags(contentWithLabels);
     task.content = remainingContent;
     task.labels = contentLabels.filter((label) => label !== `#${this.indicatorTag}`);
-
-    // Parsing attributes
-    const attributesString = taskMarkdown.slice(contentEndIndex);
-
-    function extractFormattedAttributes(attributeString: string): Map<string, string> {
-      // spread spans <span class="[^"]+" style="display:none;">.*?<\\/span>
-      const attributeSpan: RegExp = new RegExp(`<span class="([^"]+)" style="display:none;">(.*?)<\\/span>`, 'g');
-      const matches = [...attributeString.matchAll(attributeSpan)];
-      // extract the attributes names and values
-      const attributes: Map<string, string> = new Map();
-      for (const match of matches) {
-        // group 1 and group 2 are the attributes names and values
-        const attributeName: string = match[1].trim();
-        const attributeValue: string = match[2].trim();
-        attributes.set(attributeName, attributeValue);
-      }
-      return attributes;
-    }
-
-    const attributes = extractFormattedAttributes(attributesString);
-
+  
     // Helper function to parse JSON attributes
-    function parseJSONAttribute<T>(attributeValue: string | undefined, attributeName: string, fallbackValue: T | null): T | null {
+    function parseJSONAttribute<T>(attributeValue: any, attributeName: string, fallbackValue: T | null): T | null {
       try {
-        return attributeValue ? (JSON.parse(attributeValue) as T) : fallbackValue;
+        return attributeValue !== undefined ? attributeValue : fallbackValue;
       } catch (e) {
         logger.warn(`Failed to parse ${attributeName} attribute: ${e.message}`);
         return fallbackValue;
       }
     }
+  
+    // Extracting and parsing the JSON attributes
+    const metadata = JSON.parse(match[3]);
+    if (!metadata) {
+      logger.warn(`Failed to parse metadata: ${match[3]}`);
+      return task;
+    }
 
     // For string attributes
-    task.id = parseJSONAttribute(attributes.get('id'), 'id', '');
-    task.description = parseJSONAttribute(attributes.get('description'), 'description', '');
-    task.sectionID = parseJSONAttribute(attributes.get('sectionID'), 'sectionID', '');
+    task.id = parseJSONAttribute(metadata['id'], 'id', '');
+    task.description = parseJSONAttribute(metadata['description'], 'description', '').replace(/\\n/g, '\n');
+    task.sectionID = parseJSONAttribute(metadata['sectionID'], 'sectionID', '');
 
     // For attributes that require JSON parsing
-    task.priority = parseJSONAttribute(attributes.get('priority'), 'priority', '4' as unknown as Priority);
-    task.order = parseJSONAttribute(attributes.get('order'), 'order', 0);
-    task.project = parseJSONAttribute(attributes.get('project'), 'project', null);
-    task.due = parseJSONAttribute(attributes.get('due'), 'due', null); 
-    task.metadata = parseJSONAttribute(attributes.get('metadata'), 'metadata', {}); 
+    task.priority = parseJSONAttribute(metadata['priority'], 'priority', '4' as unknown as Priority);
+    task.order = parseJSONAttribute(metadata['order'], 'order', 0);
+    task.project = parseJSONAttribute(metadata['project'], 'project', null);
+    task.due = parseJSONAttribute(metadata['due'], 'due', null); 
+    task.metadata = parseJSONAttribute(metadata['metadata'], 'metadata', {}); 
 
     // Optional attributes
-    task.parent = parseJSONAttribute(attributes.get('parent'), 'parent', null); // Or a default parent
-    task.children = parseJSONAttribute(attributes.get('children'), 'children', []); // Assuming children are in JSON array format
-  
+    task.parent = parseJSONAttribute(metadata['parent'], 'parent', null); // Or a default parent
+    task.children = parseJSONAttribute(metadata['children'], 'children', []); // Assuming children are in JSON array format
+    
     return task;
   }
+
+  parseExtractedFormattedTaskMarkdown(taskMarkdown: string): ObsidianTask {
+    const task = new ObsidianTask();
+  
+    if (!taskMarkdown) {
+      logger.warn(`Failed to parse task: ${taskMarkdown}`);
+      return task;
+    }
+  
+    taskMarkdown = taskMarkdown.trim();
+  
+    // Single regex to capture task part, content, labels, indicator tag, and metadata
+    const regex = new RegExp(`- \\[(.)\\] (.+)\\s+#${this.indicatorTag}({.+})<\\/span>`);
+    const match = taskMarkdown.match(regex);
+  
+    if (!match || !match[1] || !match[2] || !match[3]) {
+      logger.warn(`Failed to parse task: ${taskMarkdown}, match: ${match}`);
+      return task;
+    } 
+
+    const contentWithLabels = match[2].trim();
+  
+    // Extracting labels from the content line
+    const [contentLabels, remainingContent] = extractTags(contentWithLabels);
+    task.content = remainingContent;
+    task.labels = contentLabels.filter((label) => label !== `#${this.indicatorTag}`);
+    // Extracting completion status
+    task.completed = match[1] !== ' ';
+
+    // Extracting JSON metadata
+    const metadata = JSON.parse(match[3]);
+    if (!metadata) {
+      logger.warn(`Failed to parse metadata: ${match[3]}`);
+      return task;
+    }
+
+    // For string attributes
+    task.id = metadata.id || '';
+    task.description = metadata.description || '';
+    task.sectionID = metadata.sectionID || '';
+
+    // For attributes that require JSON parsing
+    task.priority = metadata.priority || 4;
+    task.order = metadata.order || 0;
+    task.project = metadata.project || null;
+    task.due = metadata.due || null;
+    task.metadata = metadata.metadata || {};
+
+    // Optional attributes
+    task.parent = metadata.parent || null;
+    task.children = metadata.children || [];
+
+    return task;
+}
+  
 
   parseDue(dueString: string): DueDate | null {
     const parsedDateTime = Sugar.Date.create(dueString);
@@ -337,7 +395,7 @@ export class TaskParser {
       } as DueDate;
     } else {
       return {
-        isRecurring: true,
+        isRecurring: false,
         date: parsedDate,
         time: parsedTime,
         string: dueString

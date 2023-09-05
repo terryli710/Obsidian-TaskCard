@@ -25,31 +25,31 @@ export class TaskFormatter {
     let markdownLine = `${taskPrefix} ${task.content} ${labelMarkdown} #${this.indicatorTag}`;
     markdownLine = markdownLine.replace(/\s+/g, ' '); // remove multiple spaces
     markdownLine += '\n';
-
-    // add TaskDisplayParams to task
-    if (!task.metadata.taskDisplayParams) {
-      task.metadata.taskDisplayParams = { mode: this.defaultMode as TaskDisplayMode };
-    }
-
+  
+    // Initialize an empty object to hold all attributes
+    const allAttributes: { [key: string]: any } = {};
+  
     // Iterate over keys in task, but exclude special attributes
     for (let key in task) {
       if (this.specialAttributes.includes(key)) continue;
-
+  
       let value = task[key];
       if (value === undefined) {
         value = null;
       }
-      value = JSON.stringify(value);
-
-      let kebabCaseKey = camelToKebab(key);
-      markdownLine += `<span class="${kebabCaseKey}" style="display:none;">${value}</span>\n`;
+      allAttributes[key] = value;
     }
+  
+    // Add the attributes object to the markdown line
+    markdownLine += `<span style="display:none">${JSON.stringify(allAttributes)}</span>\n`;
+  
     return markdownLine;
   }
-
+  
   taskToMarkdownOneLine(task: ObsidianTask): string {
     // add suffix ' .' to task content
     const markdown = this.taskToMarkdown(task).replace(/\n/g, '');
     return markdown + this.markdownSuffix;
   }
+  
 }

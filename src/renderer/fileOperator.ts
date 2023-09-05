@@ -23,6 +23,12 @@ export class FileOperator {
     if (!content) return null;
     return content.split('\n');
   }
+  
+  async getLineFromFile(filePath: string, lineNumber: number): Promise<string | null> {
+    const fileLines = await this.getFileLines(filePath);
+    if (!fileLines || fileLines.length < lineNumber) return null;
+    return fileLines[lineNumber - 1];
+  }
 
   async getMarkdownBetweenLines(
     filePath: string,
@@ -48,4 +54,41 @@ export class FileOperator {
     // logger.debug(`newContent: ${newContent}, lineStart: ${lineStart}, lineEnd: ${lineEnd}`);
     await this.app.vault.modify(file as TFile, newFileLines.join('\n'));
   }
+
+  async updateLineInFile(filePath: string, lineNumber: number, newContent: string): Promise<void> {
+    const file = await this.app.vault.getAbstractFileByPath(filePath);
+    if (!file) return;
+    const fileLines = await this.getFileLines(filePath);
+    const newFileLines: string[] = [...fileLines];
+    newFileLines[lineNumber - 1] = newContent;
+    await this.app.vault.modify(file as TFile, newFileLines.join('\n'));
+  }
+
+  getAllFilesAndFolders(): string[] {
+    const mdFiles = this.app.vault.getMarkdownFiles();
+    const mdPaths = mdFiles.map((file) => file.path);
+
+    // Initialize a Set to store the unique relative paths
+    let relativePaths: Set<string> = new Set();
+    // Loop through each Markdown file to get its path relative to the root
+    mdPaths.forEach((relativePath) => {
+      relativePaths.add(relativePath);
+      
+      // Add folders in between
+      let folderPath = '';
+      const pathParts = relativePath.split('/');
+      for (let i = 0; i < pathParts.length - 1; i++) {
+        folderPath += pathParts[i] + '/';
+        relativePaths.add(folderPath);
+      }
+    });
+    
+    // Convert the Set back to an array of strings
+    return Array.from(relativePaths);
+  }
+
+  getVaultRoot(): string {
+    return this.app.vault.getRoot().path;
+  }
+
 }

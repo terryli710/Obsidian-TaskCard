@@ -26,7 +26,7 @@ describe('taskToMarkdown', () => {
       completed: false
     });
     const result = taskFormatter.taskToMarkdown(task);
-    expect(result).toContain('- [ ] An example task #TaskCard\n');
+    expect(result).toContain('- [ ] An example task');
   });
 
   it('should format a task with priority', () => {
@@ -36,9 +36,7 @@ describe('taskToMarkdown', () => {
       priority: 4
     });
     const result = taskFormatter.taskToMarkdown(task);
-    expect(result).toContain(
-      '<span class="priority" style="display:none;">4</span>\n'
-    );
+    expect(result).toContain('"priority":4');
   });
 
   it('should format a task with description', () => {
@@ -48,9 +46,7 @@ describe('taskToMarkdown', () => {
       description: '- A multi line description.\n- the second line.'
     });
     const result = taskFormatter.taskToMarkdown(task);
-    expect(result).toContain(
-      '<span class="description" style="display:none;">"- A multi line description.\\n- the second line."</span>\n'
-    );
+    expect(result).toContain('"description":"- A multi line description.\\n- the second line."');
   });
 
   it('should format a task with order', () => {
@@ -60,9 +56,7 @@ describe('taskToMarkdown', () => {
       order: 1
     });
     const result = taskFormatter.taskToMarkdown(task);
-    expect(result).toContain(
-      '<span class="order" style="display:none;">1</span>\n'
-    );
+    expect(result).toContain('"order":1');
   });
 
   it('should format a task with project', () => {
@@ -72,9 +66,7 @@ describe('taskToMarkdown', () => {
       project: { id: 'project-123', name: 'Project Name' }
     });
     const result = taskFormatter.taskToMarkdown(task);
-    expect(result).toContain(
-      '<span class="project" style="display:none;">{"id":"project-123","name":"Project Name"}</span>\n'
-    );
+    expect(result).toContain('"project":{"id":"project-123","name":"Project Name"}');
   });
 
   it('should format a task with sectionID', () => {
@@ -84,9 +76,7 @@ describe('taskToMarkdown', () => {
       sectionID: 'section-456'
     });
     const result = taskFormatter.taskToMarkdown(task);
-    expect(result).toContain(
-      '<span class="section-id" style="display:none;">"section-456"</span>\n'
-    );
+    expect(result).toContain('"sectionID":"section-456"');
   });
 
   it('should format a task with labels', () => {
@@ -96,9 +86,7 @@ describe('taskToMarkdown', () => {
       labels: ['#label1', '#label2']
     });
     const result = taskFormatter.taskToMarkdown(task);
-    expect(result).toContain(
-      '#label1 #label2 #TaskCard\n'
-    );
+    expect(result).toContain('#label1 #label2');
   });
 
   it('should format a task with due date', () => {
@@ -113,9 +101,7 @@ describe('taskToMarkdown', () => {
       }
     });
     const result = taskFormatter.taskToMarkdown(task);
-    expect(result).toContain(
-      '<span class="due" style="display:none;">{"isRecurring":false,"date":"2024-08-15","string":"2023-08-15","timezone":null}</span>\n'
-    );
+    expect(result).toContain('"due":{"isRecurring":false,"date":"2024-08-15","string":"2023-08-15","timezone":null}');
   });
 
   it('should format a task with metadata', () => {
@@ -125,8 +111,6 @@ describe('taskToMarkdown', () => {
       metadata: { filePath: '/path/to/file' }
     });
     const result = taskFormatter.taskToMarkdown(task);
-    expect(result).toContain(
-      '<span class=\"metadata\" style=\"display:none;\">{\"filePath\":\"/path/to/file\",\"taskDisplayParams\":{\"mode\":'
-    );
+    expect(result).toContain('"metadata":{"filePath":"/path/to/file"}');
   });
 });

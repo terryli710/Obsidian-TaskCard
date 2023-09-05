@@ -84,23 +84,13 @@
       const cardMenu = new Menu();
 
       // Group 0: Toggle single-line and multi-line mode
-      if (taskSyncManager.obsidianTask.metadata.taskDisplayParams.mode === 'single-line') {
-        cardMenu.addItem((item) => {
-          item.setTitle('Switch to Multi-line');
-          item.setIcon('credit-card');
-          item.onClick((evt: MouseEvent | KeyboardEvent) => {
-            switchMode(evt, 'multi-line');
-          });
-        });
-      } else {
-        cardMenu.addItem((item) => {
+      cardMenu.addItem((item) => {
           item.setTitle('Switch to Single-line');
           item.setIcon('list');
           item.onClick((evt: MouseEvent | KeyboardEvent) => {
             switchMode(evt, 'single-line');
           });
         });
-      }
 
       // Separator
       cardMenu.addSeparator();
@@ -258,6 +248,7 @@
 
   .task-card-checkbox {
     border: var(--border-width) solid;
+    border-color: var(--checkbox-border-color);
   }
 
   /* Apply color to checkbox based on priority */
@@ -273,17 +264,33 @@
 
   /* Maintain border color on hover */
   .task-card-checkbox.priority-1:hover {
-    border-color: var(--color-red);
+    background-color: rgba(var(--color-red-rgb), 0.1);
   }
   .task-card-checkbox.priority-2:hover {
-    border-color: var(--color-orange);
+    background-color: rgba(var(--color-orange-rgb), 0.1);
   }
   .task-card-checkbox.priority-3:hover {
-    border-color: var(--color-yellow);
+    background-color: rgba(var(--color-yellow-rgb), 0.1);
   }
-  .task-card-checkbox:hover {
-    cursor: pointer;
-    border-width: calc( 2 * var(--border-width));
+
+  input[type=checkbox].task-card-checkbox.priority-1:checked {
+    background-color: rgba(var(--color-red-rgb), 0.7);
+  }
+  input[type=checkbox].task-card-checkbox.priority-2:checked {
+    background-color: rgba(var(--color-orange-rgb), 0.7);
+  }
+  input[type=checkbox].task-card-checkbox.priority-3:checked {
+    background-color: rgba(var(--color-yellow-rgb), 0.7);
+  }
+
+  input[type=checkbox].task-card-checkbox.priority-1:checked:hover {
+    background-color: rgba(var(--color-red-rgb), 0.9);
+  }
+  input[type=checkbox].task-card-checkbox.priority-2:checked:hover {
+    background-color: rgba(var(--color-orange-rgb), 0.9);
+  }
+  input[type=checkbox].task-card-checkbox.priority-3:checked:hover {
+    background-color: rgba(var(--color-yellow-rgb), 0.9);
   }
 
   .task-card-menu-button {
@@ -304,6 +311,14 @@
 
   button.mode-toggle-button {
     border-radius: var(--radius-m);
+  }
+
+  .task-card-major-block {
+    display: grid;
+    grid-template-columns: auto 1fr; /* Checkbox takes only the space it needs, rest for content and description */
+    grid-template-rows: auto auto; /* Two rows for content and description */
+    width: 100%;
+    align-items: center;
   }
 
 </style>

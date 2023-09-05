@@ -113,7 +113,7 @@
       </div>
     </div>
   {/if}
-  {#if params.mode === 'multi-line'}
+  {#if params.mode !== 'single-line'}
     <div class="task-card-attribute-separator"> | </div>
   {/if}
 {/if}

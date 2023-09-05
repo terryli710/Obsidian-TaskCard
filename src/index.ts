@@ -1,4 +1,4 @@
-import { App, MarkdownView, Plugin } from 'obsidian';
+import { App, MarkdownRenderer, MarkdownView, Plugin } from 'obsidian';
 import type { PluginManifest, Workspace, WorkspaceLeaf } from 'obsidian';
 import type { TaskCardSettings } from './settings';
 import { SettingStore, SettingsTab } from './settings';
@@ -7,11 +7,12 @@ import AttributeSuggest from './autoSuggestions/EditorSuggestions';
 import { Project, ProjectModule } from './taskModule/project';
 import { TaskParser } from './taskModule/taskParser';
 import { TaskValidator } from './taskModule/taskValidator';
-import { TaskCardRenderManager } from './renderer/index';
+import { StaticTaskListRenderManager, TaskCardRenderManager } from './renderer/index';
 import { FileOperator } from './renderer/fileOperator';
 import { TaskFormatter } from './taskModule/taskFormatter';
 import { TaskMonitor } from './taskModule/taskMonitor';
-// import { TaskStore } from './renderer/store';
+import { TaskCardCache } from './query';
+
 
 export default class TaskCardPlugin extends Plugin {
   public settings: TaskCardSettings;
@@ -20,9 +21,10 @@ export default class TaskCardPlugin extends Plugin {
   public taskFormatter: TaskFormatter;
   public taskValidator: TaskValidator;
   public taskCardRenderManager: TaskCardRenderManager;
+  public staticTaskListRenderManager: StaticTaskListRenderManager;
   public fileOperator: FileOperator;
   public taskMonitor: TaskMonitor;
-  // public taskStore: TaskStore;
+  public cache: TaskCardCache;
 
   constructor(app: App, pluginManifest: PluginManifest) {
     super(app, pluginManifest);
@@ -37,7 +39,8 @@ export default class TaskCardPlugin extends Plugin {
     this.taskCardRenderManager = new TaskCardRenderManager(this);
     this.fileOperator = new FileOperator(this, this.app);
     this.taskMonitor = new TaskMonitor(this, this.app);
-    // this.taskStore = new TaskStore();
+    this.staticTaskListRenderManager = new StaticTaskListRenderManager(this);
+    this.cache = new TaskCardCache(this);
   }
 
   async loadSettings() {
@@ -61,15 +64,18 @@ export default class TaskCardPlugin extends Plugin {
   }
 
   registerEvents() {
-    this.registerMarkdownPostProcessor(
-      this.taskCardRenderManager.getPostProcessor()
-    );
-    this.registerEditorSuggest(new AttributeSuggest(this.app));
     this.registerEvent(
       this.app.workspace.on(
         'layout-change', 
         this.taskMonitor.layoutChangeHandler.bind(this.taskMonitor))
     );
+
+    // @ts-ignore
+    this.registerEvent(this.app.metadataCache.on("dataview:metadata-change",
+    (type, file, oldPath?) => { 
+      // update cache tasks
+      this.cache.taskCache.refreshTasksByFileList([file.path]);
+    }));
 
     // this.registerEvent(this.app.workspace.on('file-open', () => logger.debug('file-open')));
     // this.registerEvent(this.app.workspace.on('layout-change', () => logger.debug('layout-change')));
@@ -97,18 +103,31 @@ export default class TaskCardPlugin extends Plugin {
     })
   }
 
+  registerPostProcessors() {
+    this.registerMarkdownPostProcessor(
+      this.taskCardRenderManager.getPostProcessor()
+    );
+
+    //@ts-ignore
+    this.registerEvent(this.app.metadataCache.on("dataview:index-ready", () => {
+      logger.debug('dataview:index-ready');
+      this.registerMarkdownCodeBlockProcessor('taskcard', 
+        this.staticTaskListRenderManager.getCodeBlockProcessor());
+    }));
+
+  }
+
   async onload() {
     await this.loadSettings();
     this.projectModule.updateProjects(
       this.settings.userMetadata.projects as Project[]
     );
     this.addSettingTab(new SettingsTab(this.app, this));
+    this.registerEditorSuggest(new AttributeSuggest(this.app));
+    this.registerPostProcessors();
     this.registerEvents();
     this.registerCommands();
 
-
     logger.info('Plugin loaded.');
   }
-
-
 }

@@ -8,6 +8,7 @@ export function extractTags(text: string): [string[], string] {
   // Regular expression to detect valid tags based on the provided rules
   const tagRegex = /#([a-zA-Z_/-]+[a-zA-Z0-9_/-]*|[a-zA-Z_/-][a-zA-Z0-9_/-]+)/g;
   let matches = text.match(tagRegex) || [];
+  if (matches.length === 0) { return [[], text]; }
   // for the matches, get the label part (remove the #)
   let labels = matches.map((match) => match.substring(1));
 
