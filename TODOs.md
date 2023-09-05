@@ -8,6 +8,7 @@
 - TODO: todoist sync?
 - TODO: recurring task?
 - TODO: date parsing - date only?
+- TODO: hover link behavior
 
 # Commands
 - 

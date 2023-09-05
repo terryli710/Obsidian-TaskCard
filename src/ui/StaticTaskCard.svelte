@@ -117,6 +117,7 @@
         class="static-task-card-middle"
         role="button" 
         tabindex="0" 
+        title="{docPosition.filePath}"
         on:click={linkToTask}
         on:keydown={linkToTask}
       >
@@ -158,6 +159,7 @@
     class="task-card-major-block"
     role="button" 
     tabindex="0" 
+    title="{docPosition.filePath}"
     on:click={linkToTask}
     on:keydown={linkToTask}
   >

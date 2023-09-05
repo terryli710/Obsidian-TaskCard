@@ -159,7 +159,7 @@
     <!-- Priority -->
     <FixedOptionsSelect 
         title="Priority" 
-        description="To filter teh priority of the task" 
+        description="To filter the priority of the task" 
         choices={priorityChoices} 
         initialChoices={query.priorityQuery} 
         on:selected={(evt) => handleSelection(evt, 'priority')} 
@@ -223,7 +223,7 @@
         <div class="header">
             <div class="inline-title-wrapper">
                 <div class="inline-title">File Path</div>
-                <div class="inline-description">Filter task in a specific folder or file</div>
+                <div class="inline-description">Filter task in a file or folder</div>
             </div>
             <div class="input-wrapper">
                 <div class="file-path-input-component">
