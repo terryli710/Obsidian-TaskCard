@@ -4,7 +4,7 @@ import TaskCardPlugin from "..";
 import { QueryResult } from "obsidian-dataview/lib/api/plugin-api";
 import { logger } from "../utils/log";
 import { SettingStore } from "../settings";
-import { QueryEditorSvelteAdapter } from './queryEditorSvelteAdapter';
+import { QueryAndTaskListSvelteAdapter } from './queryAndTaskListSvelteAdapter';
 
 
 export interface MarkdownTaskMetadata {
@@ -62,8 +62,7 @@ export class StaticTaskListRenderManager {
           SettingStore.subscribe((settings) => {
             blockLanguage = settings.parsingSettings.blockLanguage;  
           })
-          logger.debug(`CodeBlockProcessor: ${source}, ctx: ${JSON.stringify(ctx)}, ctx.getSectionInfo: ${JSON.stringify(ctx.getSectionInfo(el))}`);
-          const processor = new QueryEditorSvelteAdapter(this.plugin, blockLanguage, source, el, ctx);
+          const processor = new QueryAndTaskListSvelteAdapter(this.plugin, blockLanguage, source, el, ctx);
           processor.onload();
         };
         return codeBlockProcessor;

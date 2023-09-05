@@ -6,7 +6,7 @@ import { QuerySyncManager } from "../query/querySyncManager"
 import { MarkdownPostProcessorContext, MarkdownSectionInformation } from "obsidian"
 
 
-export class QueryEditorSvelteAdapter {
+export class QueryAndTaskListSvelteAdapter {
     plugin: TaskCardPlugin
     svelteComponent: SvelteComponent
     codeBlockEl: HTMLElement
