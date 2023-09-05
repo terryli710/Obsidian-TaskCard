@@ -49,12 +49,12 @@
         display: flex;
         align-items: center;
         padding: 0 5px;
-        margin: 1.5px;
+        /* margin: 1.5px; */
         height: 21.5px;
     }
 
     .task-card-label-input-prefix {
-        color: var(--text-faint);
+        color: var(--text-accent);
         font-size: calc(var(--font-ui-medium) * 0.875);
         line-height: 1;
     }
