@@ -114,10 +114,10 @@ export class IndexedMapDatabase<T> {
         });
         return ids;
       }
-
+  
       const { operator, operands } = expr;
-      let resultIds: Set<string> = new Set();
-
+      let resultIds: Set<string> = new Set(this.data.keys());  // Initialize to all task IDs
+  
       if (operator === 'NOT') {
         const ids = evaluateExpression(operands[0]);
         this.data.forEach((_, id) => {
@@ -127,24 +127,21 @@ export class IndexedMapDatabase<T> {
         });
         return resultIds;
       }
-
+  
       operands.forEach(operand => {
         const ids = evaluateExpression(operand);
         if (operator === 'AND') {
-          if (resultIds.size === 0) {
-            resultIds = new Set(ids);
-          } else {
-            resultIds = new Set([...resultIds].filter(id => ids.has(id)));
-          }
+          resultIds = new Set([...resultIds].filter(id => ids.has(id)));
         } else if (operator === 'OR') {
           resultIds = new Set([...resultIds, ...ids]);
         }
       });
-
+  
       return resultIds;
     };
-
+  
     const finalIds = evaluateExpression(expression);
     return Array.from(finalIds).map(id => this.data.get(id)!).filter(Boolean);
   }
+  
 }
