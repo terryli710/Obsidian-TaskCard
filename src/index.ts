@@ -110,7 +110,6 @@ export default class TaskCardPlugin extends Plugin {
 
     //@ts-ignore
     this.registerEvent(this.app.metadataCache.on("dataview:index-ready", () => {
-      logger.debug('dataview:index-ready');
       this.registerMarkdownCodeBlockProcessor('taskcard', 
         this.staticTaskListRenderManager.getCodeBlockProcessor());
     }));

@@ -180,7 +180,6 @@ export class TaskDatabase extends IndexedMapDatabase<PositionedTaskProperties> {
       ]
     };
     const filteredTasks = this.queryByComplexLogic(expression);
-    logger.debug(`queryTasksByMultipleAttributes: expression: ${JSON.stringify(expression)}, filteredTasks: ${filteredTasks.length}`);
     return filteredTasks;
   }
 

@@ -181,7 +181,6 @@ export class QuerySyncManager {
     }
 
     async getFilteredTasks(): Promise<PositionedObsidianTask[]> {
-        logger.debug(`taskQuery: ${JSON.stringify(this.taskQuery)}`);
         const filteredTasksProps = await this.plugin.cache.taskCache.queryTasks(this.taskQuery)
         const filteredTasks = filteredTasksProps.map((taskProps) => new PositionedObsidianTask(taskProps))
         return filteredTasks
