@@ -8,7 +8,6 @@
 - TODO: todoist sync?
 - TODO: recurring task?
 - TODO: date parsing - date only?
-- TODO: hover link behavior
 
 # Commands
 - 
@@ -22,6 +21,8 @@
 - formatted attribute saving.
 - No direct edit method.
 - Single line mode background problem - taskcard background compatibility
+- TODO: optimize the appearance.
+- 
 
 ## Multi-mode display in preview mode
 

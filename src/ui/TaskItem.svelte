@@ -39,16 +39,18 @@
 
 {#if params.mode === "single-line"}
     <li class="obsidian-taskcard-list-item" data-line={dataLine}>
-        <button class="obsidian-taskcard task-list-item mode-single-line"
+        <div class="obsidian-taskcard task-list-item mode-single-line"
             on:click={handleSwitchMode} 
             on:keydown={handleSwitchMode}
+            role="button"
+            tabindex="0"
         >
             <TaskCard 
                 taskSyncManager={taskSyncManager} 
                 plugin={plugin} 
                 params={params} 
             />
-        </button>
+        </div>
     </li>
 {:else}
     <li 
