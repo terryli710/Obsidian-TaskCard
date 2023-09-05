@@ -1,8 +1,7 @@
-import { MarkdownPostProcessorContext, MarkdownSectionInformation } from 'obsidian';
-import { ObsidianTask, DocPosition, TextPosition, PositionedObsidianTask, PositionedTaskProperties } from '../taskModule/task';
+import { MarkdownPostProcessorContext } from 'obsidian';
+import { DocPosition, TextPosition } from '../taskModule/task';
 import TaskCardPlugin from "..";
-import { QueryResult, TaskResult } from "obsidian-dataview/lib/api/plugin-api";
-import { MultipleAttributeTaskQuery } from "../query/cache";
+import { QueryResult } from "obsidian-dataview/lib/api/plugin-api";
 import { logger } from "../utils/log";
 import { SettingStore } from "../settings";
 import { QueryEditorSvelteAdapter } from './queryEditorSvelteAdapter';

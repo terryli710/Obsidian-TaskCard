@@ -35,7 +35,6 @@
 
     $: dispatch('selected', selectedTags);
 
-    logger.debug(`Selected tags: ${selectedTags}`);
 </script>
 
 

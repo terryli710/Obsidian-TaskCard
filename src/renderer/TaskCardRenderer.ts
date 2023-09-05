@@ -6,14 +6,12 @@ import {
   } from 'obsidian';
   import TaskCardPlugin from '..';
   import {
-    filterTaskItems,
     getIndicesOfFilter,
     isTaskItemEl,
     isTaskList
   } from './filters';
   import { TaskValidator } from '../taskModule/taskValidator';
   import { TaskItemSvelteAdapter } from './postProcessor';
-  import { logger } from '../utils/log';
   import { ObsidianTaskSyncProps } from '../taskModule/taskSyncManager';
   
   export interface TaskItemData {

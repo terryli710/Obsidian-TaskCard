@@ -8,7 +8,6 @@ import {
   ObsidianTaskSyncManager,
   ObsidianTaskSyncProps
 } from '../taskModule/taskSyncManager';
-import { logger } from '../utils/log';
 
 
 export class TaskItemSvelteAdapter extends MarkdownRenderChild {

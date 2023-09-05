@@ -62,20 +62,9 @@ export class PositionedTaskCache {
       this.updateStatus(taskList.length, true);
     }
     
-    // async refreshTasksByAttribute(attribute: string, value: any) {
-    //   const taskList = await this.fetchTasksFromAPI(attribute, value);
-    //   this.database.refreshTasksByAttribute(attribute, value, taskList.map(task => ({ id: task.id, item: task })));
-    //   logger.info(`refreshTasksByAttribute ${attribute} ${value}, ${taskList.length} tasks refreshed`);
-    //   this.updateStatus(taskList.length);
-    // }
-    
     private async fetchTasksFromAPI(attribute?: string, value?: any): Promise<PositionedTaskProperties[]> {
       const dataviewAPI = await getAPI();
       let query = `TASK FROM #${this.indicatorTag} WHERE contains(text, "#${this.indicatorTag}")`;
-      // if (attribute && value) {
-      //   query += ` AND ${attribute} = "${value}"`;
-      // } // TODO: disabled for now
-      // logger.debug(`fetchTasksFromAPI: ${query}`);
       const queryResult: QueryResult = await dataviewAPI.tryQuery(query);
       return this.parseQueryResult(queryResult);
     }
