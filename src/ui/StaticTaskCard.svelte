@@ -6,7 +6,6 @@
     TaskDisplayMode,
     TaskDisplayParams
   } from '../renderer/postProcessor';
-  import { MarkdownTaskMetadata } from '../renderer/staticTaskListRenderer';
   import { LabelModule } from '../taskModule/labels';
   import { DocPosition, ObsidianTask, PositionedObsidianTask } from '../taskModule/task';
   import { displayDate, displayTime } from '../utils/dateTimeFormatter';

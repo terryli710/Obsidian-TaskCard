@@ -7,7 +7,7 @@ import { SettingStore } from '../settings';
 import Sugar from 'sugar';
 
 
-import { IndexedMapDatabase, LogicalExpression, LogicalOperator } from './indexMapDatabase';
+import { IndexedMapDatabase, LogicalOperator } from './indexMapDatabase';
 
 export interface MultipleAttributeTaskQuery {
     priorityQuery?: number[];
@@ -168,12 +168,31 @@ export class TaskDatabase extends IndexedMapDatabase<PositionedTaskProperties> {
         task => labelQuery && labelQuery.length > 0 ? labelQuery.some(label => task.labels.includes(label)) : true,
         task => completedQuery && completedQuery.length > 0 ? completedQuery.includes(task.completed) : true,
         task => {
-          if (!dueDateTimeQuery || (dueDateTimeQuery.length === 2 && dueDateTimeQuery[0] === '' && dueDateTimeQuery[1] === '')) return true;
+          // Case 3: If both start and end are empty strings, return true for all tasks
+          if (!dueDateTimeQuery || (dueDateTimeQuery.length === 2 && dueDateTimeQuery[0] === '' && dueDateTimeQuery[1] === '')) {
+            return true;
+          }
           const [start, end] = dueDateTimeQuery;
+        
+          // If the task has a due date
           if (task.due) {
             const taskDateTime = Sugar.Date.create(task.due.string);
-            return Sugar.Date.isBetween(taskDateTime, start, end) || Sugar.Date.is(taskDateTime, start);
+        
+            // Case 1: If no start date is provided, filter tasks due before the end date
+            if (start === '') {
+              return Sugar.Date.isBefore(taskDateTime, end) || Sugar.Date.is(taskDateTime, end);
+            }
+        
+            // Case 2: If no end date is provided, filter tasks due after the start date
+            if (end === '') {
+              return Sugar.Date.isAfter(taskDateTime, start) || Sugar.Date.is(taskDateTime, start);
+            }
+        
+            // Default case: Filter tasks that are due between the start and end dates (inclusive)
+            return Sugar.Date.isBetween(taskDateTime, start, end) || Sugar.Date.is(taskDateTime, start) || Sugar.Date.is(taskDateTime, end);
           }
+        
+          // If the task has no due date, it doesn't meet any of the filtering conditions
           return false;
         },
         task => filePathQuery && filePathQuery !== '' ? task.docPosition.filePath.startsWith(filePathQuery) : true

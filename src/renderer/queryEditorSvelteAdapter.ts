@@ -1,7 +1,6 @@
 import { SvelteComponent } from "svelte"
 import TaskCardPlugin from ".."
-import { MultipleAttributeTaskQuery } from "../query/cache"
-import QueryEditor from "../ui/QueryEditor.svelte"
+import QueryEditor from "../ui/QueryEditor.svelte";
 import StaticTaskList from '../ui/StaticTaskList.svelte';
 import { QuerySyncManager } from "../query/querySyncManager"
 import { MarkdownPostProcessorContext, MarkdownSectionInformation } from "obsidian"
