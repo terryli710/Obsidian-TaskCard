@@ -202,8 +202,8 @@
 
     .divider {
       height: 1px;
-      margin: 2px 0;
-      background-color: var(--background-modifier-border);
+      margin: 3px 0;
+      background-color: transparent;
     }
 
   .project-color {
