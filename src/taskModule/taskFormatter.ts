@@ -46,7 +46,10 @@ export class TaskFormatter {
     taskMarkdown += this.markdownSuffix;
 
     // Add description
-    taskMarkdown += `\n${task.description}`;
+    if (task.description.length > 0) {
+      // for each line, add 2 spaces
+      taskMarkdown += `\n  ${task.description.replace(/\n/g, '\n  ')}`;
+    }
   
     return taskMarkdown;
   }

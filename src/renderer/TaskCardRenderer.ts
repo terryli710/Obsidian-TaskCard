@@ -42,9 +42,6 @@
         el: HTMLElement,
         ctx: MarkdownPostProcessorContext
       ) => {
-
-        logger.debug(`HTML element: ${el.outerHTML}`);
-        logger.debug(`convert to markdown: ${htmlToMarkdown(el.outerHTML)}`);
         const taskSyncs: ObsidianTaskSyncProps[] = await this.constructTaskSync(el, ctx);
   
         for (const taskSync of taskSyncs) {
@@ -79,17 +76,20 @@
           mdSectionInfo.lineStart,
           mdSectionInfo.lineEnd + 1
         );
-      const lineNumbers: number[] = taskItemsIndices.map((index) =>
-        getLineNumberOfListItem(section, index, mdSectionContent)
+      // const lineNumbers: number[] = taskItemsIndices.map((index) =>
+      //   getLineNumberOfListItem(section, index, mdSectionContent)
+      // );
+
+      const lineStartEndNumbers: { startLine: number, endLine: number }[] = taskItemsIndices.map((index) =>
+        getLineNumbersOfListItem(section, index, mdSectionContent)
       );
   
-      // logger.debug(`lineNumbers: ${JSON.stringify(lineNumbers)}, section line start: ${mdSectionInfo.lineStart}`);
   
       const taskSyncs: ObsidianTaskSyncProps[] = taskItemsIndices.map(
         (index, i) => {
           const taskItemEl: HTMLElement = section.children[index] as HTMLElement;
-          const lineStartInSection = lineNumbers[i];
-          const lineEndsInSection = lineNumbers[i] + 1; // currently just 1 line
+          const lineStartInSection = lineStartEndNumbers[i].startLine;
+          const lineEndsInSection = lineStartEndNumbers[i].endLine;
           const obsidianTask = this.plugin.taskParser.parseTaskEl(taskItemEl);
           return {
             obsidianTask: obsidianTask,
@@ -142,3 +142,39 @@
     return lineNumber;
   }
   
+  export function getLineNumbersOfListItem(
+    ul: HTMLElement,
+    index: number,
+    content: string
+  ): { startLine: number, endLine: number } {
+    let startLine = 0;
+    let endLine = 0;
+    const originalLines = content.split('\n');
+    let originalLineIndex = 0;
+  
+    // Loop through each list item up to the specified index
+    for (let i = 0; i <= index; i++) {
+      const markdown = htmlToMarkdown(ul.children[i].innerHTML);
+      const lines = markdown.split('\n').filter((line) => line.trim() !== '');
+  
+      // If we're at the specified index, set the startLine
+      if (i === index) {
+        startLine = endLine;
+      }
+  
+      // Update the end line number
+      endLine += lines.length;
+  
+      originalLineIndex += lines.length;
+      // Count any empty lines that follow the current list item in the original content
+      while (
+        originalLines.length > originalLineIndex &&
+        originalLines[originalLineIndex].trim() === ''
+      ) {
+        endLine++;
+        originalLineIndex++;
+      }
+    }
+  
+    return { startLine, endLine };
+  }

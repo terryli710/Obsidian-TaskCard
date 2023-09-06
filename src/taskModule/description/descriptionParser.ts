@@ -1,3 +1,4 @@
+import { logger } from "../../utils/log";
 
 
 // Fallback function to replace htmlToMarkdown from Obsidian
@@ -23,10 +24,22 @@ export class DescriptionParser {
     }
 
     static parseDescriptionFromTaskEl(taskElement: HTMLElement): string {
+        // Check if taskElement is null or undefined
+        if (!taskElement) { return ""; }
+      
+        // Find the ul element within taskElement
         const ulElement = taskElement.querySelector('ul');
-        return htmlToMarkdown(ulElement.outerHTML);
-    
-    }
+        // Check if ulElement is null or undefined
+        if (!ulElement) { return ""; }
+      
+        // Convert the ul element to Markdown
+        try {
+          return htmlToMarkdown(ulElement.outerHTML);
+        } catch (error) {
+          throw new Error(`Failed to convert HTML to Markdown: ${error.message}`);
+        }
+      }
+      
 
     static progressOfDescription(description: string): [number, number] {
         const taskRegex = /^(?:\s*)-\s\[(.)\]\s.+/gm;

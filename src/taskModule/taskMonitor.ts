@@ -41,7 +41,8 @@ export class TaskMonitor {
     }
   }
 
-  async monitorFileToFormatTasks(file: TFile) {
+  // HACK: currently don't have to parse description as it doesn't affect anything
+  async monitorFileToFormatTasks(file: TFile) { 
     const lines = await this.getLinesFromFile(file);
     if (!lines) return;
     const updatedLines = this.formatTaskInLines(lines);

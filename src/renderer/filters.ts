@@ -26,7 +26,7 @@ export function isTaskItemEl(
   if (el.tagName !== 'LI' || el.children.length === 0) {
     return false;
   }
-  logger.debug(`isValidTaskElement: ${taskValidator.isValidTaskElement(el)}`);
+
   return taskValidator.isValidTaskElement(el as HTMLElement);
 }
 
