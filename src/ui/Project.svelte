@@ -8,7 +8,6 @@
   import { logger } from "../utils/log";
   import { SettingStore } from "../settings";
   import { tick, afterUpdate } from "svelte";
-    import { prepareSimpleSearch } from "obsidian";
 
   export let taskSyncManager: ObsidianTaskSyncManager;
   export let params: TaskDisplayParams;

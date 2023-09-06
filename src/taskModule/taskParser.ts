@@ -6,12 +6,15 @@ import { DueDate, ObsidianTask, Order, Priority, TaskProperties } from './task';
 import { Project, ProjectModule } from './project';
 import Sugar from 'sugar';
 import { SettingStore } from '../settings';
+import { DescriptionParser } from './description';
+
 
 export class TaskParser {
   indicatorTag: string;
   markdownStartingNotation: string;
   markdownEndingNotation: string;
   projectModule: ProjectModule;
+  descriptionParser: DescriptionParser
 
   constructor(
     settingsStore: typeof SettingStore,
@@ -52,7 +55,7 @@ export class TaskParser {
     return hiddenSpans;
   }
   
-  parseTaskEl(taskEl: Element): ObsidianTask {
+  parseTaskEl(taskEl: HTMLElement): ObsidianTask {
     function parseAttributes(): any {
       try {
         const hiddenSpans = this.selectHiddenSpans(taskEl);
@@ -74,7 +77,7 @@ export class TaskParser {
   
     task.id = attributes.id || '';
     task.priority = attributes.priority || '1';
-    task.description = attributes.description || '';
+    task.description = (attributes.description || '') + (DescriptionParser.parseDescriptionFromTaskEl(taskEl) || '');
     task.order = attributes.order || 0;
     task.project = attributes.project || null;
     task.sectionID = attributes.sectionID || '';
@@ -177,6 +180,13 @@ export class TaskParser {
       }
     };
 
+    // if taskMarkdown is multi-line, split it
+    if (taskMarkdown.includes('\n')) {
+      const lines = taskMarkdown.split('\n');
+      task.description = lines.slice(1).join('\n'); // From the second line to the last line, joined by '\n'
+      taskMarkdown = lines[0]; // The first line
+    }
+
     // Splitting the content and the attributes
     const contentEndIndex = taskMarkdown.indexOf(this.markdownStartingNotation);
     const markdownTaskContent =
@@ -260,6 +270,13 @@ export class TaskParser {
 
   parseFormattedTaskMarkdown(taskMarkdown: string): ObsidianTask {
     const task: ObsidianTask = new ObsidianTask();
+
+    // if taskMarkdown is multi-line, split it
+    if (taskMarkdown.includes('\n')) {
+      const lines = taskMarkdown.split('\n');
+      task.description = lines.slice(1).join('\n'); // From the second line to the last line, joined by '\n'
+      taskMarkdown = lines[0]; // The first line
+    }
     
     // Global regex to capture task part, content, labels, and metadata
     const regex = new RegExp(`- \\[(.)\\] (.+?)(?:\\s*<span style="display:none">({.+})<\\/span>)`);
@@ -302,7 +319,7 @@ export class TaskParser {
 
     // For string attributes
     task.id = parseJSONAttribute(metadata['id'], 'id', '');
-    task.description = parseJSONAttribute(metadata['description'], 'description', '').replace(/\\n/g, '\n');
+    task.description += parseJSONAttribute(metadata['description'], 'description', '').replace(/\\n/g, '\n');
     task.sectionID = parseJSONAttribute(metadata['sectionID'], 'sectionID', '');
 
     // For attributes that require JSON parsing
@@ -319,59 +336,59 @@ export class TaskParser {
     return task;
   }
 
-  parseExtractedFormattedTaskMarkdown(taskMarkdown: string): ObsidianTask {
-    const task = new ObsidianTask();
+//   parseExtractedFormattedTaskMarkdown(taskMarkdown: string): ObsidianTask {
+//     const task = new ObsidianTask();
   
-    if (!taskMarkdown) {
-      logger.warn(`Failed to parse task: ${taskMarkdown}`);
-      return task;
-    }
+//     if (!taskMarkdown) {
+//       logger.warn(`Failed to parse task: ${taskMarkdown}`);
+//       return task;
+//     }
   
-    taskMarkdown = taskMarkdown.trim();
+//     taskMarkdown = taskMarkdown.trim();
   
-    // Single regex to capture task part, content, labels, indicator tag, and metadata
-    const regex = new RegExp(`- \\[(.)\\] (.+)\\s+#${this.indicatorTag}({.+})<\\/span>`);
-    const match = taskMarkdown.match(regex);
+//     // Single regex to capture task part, content, labels, indicator tag, and metadata
+//     const regex = new RegExp(`- \\[(.)\\] (.+)\\s+#${this.indicatorTag}({.+})<\\/span>`);
+//     const match = taskMarkdown.match(regex);
   
-    if (!match || !match[1] || !match[2] || !match[3]) {
-      logger.warn(`Failed to parse task: ${taskMarkdown}, match: ${match}`);
-      return task;
-    } 
+//     if (!match || !match[1] || !match[2] || !match[3]) {
+//       logger.warn(`Failed to parse task: ${taskMarkdown}, match: ${match}`);
+//       return task;
+//     } 
 
-    const contentWithLabels = match[2].trim();
+//     const contentWithLabels = match[2].trim();
   
-    // Extracting labels from the content line
-    const [contentLabels, remainingContent] = extractTags(contentWithLabels);
-    task.content = remainingContent;
-    task.labels = contentLabels.filter((label) => label !== `#${this.indicatorTag}`);
-    // Extracting completion status
-    task.completed = match[1] !== ' ';
+//     // Extracting labels from the content line
+//     const [contentLabels, remainingContent] = extractTags(contentWithLabels);
+//     task.content = remainingContent;
+//     task.labels = contentLabels.filter((label) => label !== `#${this.indicatorTag}`);
+//     // Extracting completion status
+//     task.completed = match[1] !== ' ';
 
-    // Extracting JSON metadata
-    const metadata = JSON.parse(match[3]);
-    if (!metadata) {
-      logger.warn(`Failed to parse metadata: ${match[3]}`);
-      return task;
-    }
+//     // Extracting JSON metadata
+//     const metadata = JSON.parse(match[3]);
+//     if (!metadata) {
+//       logger.warn(`Failed to parse metadata: ${match[3]}`);
+//       return task;
+//     }
 
-    // For string attributes
-    task.id = metadata.id || '';
-    task.description = metadata.description || '';
-    task.sectionID = metadata.sectionID || '';
+//     // For string attributes
+//     task.id = metadata.id || '';
+//     task.description = metadata.description || '';
+//     task.sectionID = metadata.sectionID || '';
 
-    // For attributes that require JSON parsing
-    task.priority = metadata.priority || 4;
-    task.order = metadata.order || 0;
-    task.project = metadata.project || null;
-    task.due = metadata.due || null;
-    task.metadata = metadata.metadata || {};
+//     // For attributes that require JSON parsing
+//     task.priority = metadata.priority || 4;
+//     task.order = metadata.order || 0;
+//     task.project = metadata.project || null;
+//     task.due = metadata.due || null;
+//     task.metadata = metadata.metadata || {};
 
-    // Optional attributes
-    task.parent = metadata.parent || null;
-    task.children = metadata.children || [];
+//     // Optional attributes
+//     task.parent = metadata.parent || null;
+//     task.children = metadata.children || [];
 
-    return task;
-}
+//     return task;
+// }
   
 
   parseDue(dueString: string): DueDate | null {

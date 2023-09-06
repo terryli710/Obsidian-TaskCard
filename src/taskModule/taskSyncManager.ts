@@ -98,7 +98,7 @@ export class ObsidianTaskSyncManager implements ObsidianTaskSyncProps {
   }
 
   updateTaskToFile(): void {
-    const markdownTask = this.plugin.taskFormatter.taskToMarkdownOneLine(
+    const markdownTask = this.plugin.taskFormatter.taskToMarkdown(
       this.obsidianTask
     );
     this.updateMarkdownTaskToFile(markdownTask);

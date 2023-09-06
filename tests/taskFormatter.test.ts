@@ -46,7 +46,7 @@ describe('taskToMarkdown', () => {
       description: '- A multi line description.\n- the second line.'
     });
     const result = taskFormatter.taskToMarkdown(task);
-    expect(result).toContain('"description":"- A multi line description.\\n- the second line."');
+    expect(result).toContain('- A multi line description.\n- the second line.');
   });
 
   it('should format a task with order', () => {

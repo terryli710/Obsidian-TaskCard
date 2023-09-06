@@ -256,10 +256,10 @@
     border-color: var(--color-red);
   }
   .task-card-checkbox.priority-2 {
-    border-color: var(--color-orange);
+    border-color: var(--color-yellow);
   }
   .task-card-checkbox.priority-3 {
-    border-color: var(--color-yellow);
+    border-color: var(--color-cyan);
   }
 
   /* Maintain border color on hover */
@@ -267,30 +267,30 @@
     background-color: rgba(var(--color-red-rgb), 0.1);
   }
   .task-card-checkbox.priority-2:hover {
-    background-color: rgba(var(--color-orange-rgb), 0.1);
+    background-color: rgba(var(--color-yellow-rgb), 0.1);
   }
   .task-card-checkbox.priority-3:hover {
-    background-color: rgba(var(--color-yellow-rgb), 0.1);
+    background-color: rgba(var(--color-cyan-rgb), 0.1);
   }
 
   input[type=checkbox].task-card-checkbox.priority-1:checked {
     background-color: rgba(var(--color-red-rgb), 0.7);
   }
   input[type=checkbox].task-card-checkbox.priority-2:checked {
-    background-color: rgba(var(--color-orange-rgb), 0.7);
+    background-color: rgba(var(--color-yellow-rgb), 0.7);
   }
   input[type=checkbox].task-card-checkbox.priority-3:checked {
-    background-color: rgba(var(--color-yellow-rgb), 0.7);
+    background-color: rgba(var(--color-cyan-rgb), 0.7);
   }
 
   input[type=checkbox].task-card-checkbox.priority-1:checked:hover {
     background-color: rgba(var(--color-red-rgb), 0.9);
   }
   input[type=checkbox].task-card-checkbox.priority-2:checked:hover {
-    background-color: rgba(var(--color-orange-rgb), 0.9);
+    background-color: rgba(var(--color-yellow-rgb), 0.9);
   }
   input[type=checkbox].task-card-checkbox.priority-3:checked:hover {
-    background-color: rgba(var(--color-yellow-rgb), 0.9);
+    background-color: rgba(var(--color-cyan-rgb), 0.9);
   }
 
   .task-card-menu-button {

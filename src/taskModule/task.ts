@@ -65,7 +65,6 @@ export class ObsidianTask implements TaskProperties {
     [key: string]: any; 
   };
   
-
   constructor(props?: Partial<ObsidianTask>) {
     this.id = props?.id || uuidv4();
     this.content = props?.content || '';

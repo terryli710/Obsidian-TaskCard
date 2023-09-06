@@ -1,0 +1,1 @@
+export { DescriptionParser } from './descriptionParser';

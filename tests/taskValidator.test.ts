@@ -22,89 +22,89 @@ describe('TaskValidator', () => {
     taskValidator = new TaskValidator(mockSettingStore);
   });
 
-  const createImg = () => {
-    const img = document.createElement('img');
-    img.className = 'cm-widgetBuffer';
-    img.setAttribute('aria-hidden', 'true');
-    return img;
-  };
+  // const createImg = () => {
+  //   const img = document.createElement('img');
+  //   img.className = 'cm-widgetBuffer';
+  //   img.setAttribute('aria-hidden', 'true');
+  //   return img;
+  // };
 
-  const createSpanWithEmbed = (className: string, content: string) => {
-    const span = document.createElement('span');
-    span.className = 'cm-html-embed';
-    span.tabIndex = -1;
-    span.contentEditable = 'false';
-    span.innerHTML = `<span style="display:none" class="${className}">${content}</span>`;
-    return span;
-  };
+  // const createSpanWithEmbed = (className: string, content: string) => {
+  //   const span = document.createElement('span');
+  //   span.className = 'cm-html-embed';
+  //   span.tabIndex = -1;
+  //   span.contentEditable = 'false';
+  //   span.innerHTML = `<span style="display:none" class="${className}">${content}</span>`;
+  //   return span;
+  // };
 
-  function createMockTaskElement(includeAllAttributes: boolean = true): HTMLElement {
-    const dom = new JSDOM();
-    const document = dom.window.document;
+  // function createMockTaskElement(includeAllAttributes: boolean = true): HTMLElement {
+  //   const dom = new JSDOM();
+  //   const document = dom.window.document;
   
-    // Create the main task element
-    const taskElement = document.createElement('li');
-    taskElement.setAttribute('data-line', '0');
-    taskElement.setAttribute('data-task', '');
-    taskElement.className = 'task-list-item';
-    taskElement.style.display = 'none';
+  //   // Create the main task element
+  //   const taskElement = document.createElement('li');
+  //   taskElement.setAttribute('data-line', '0');
+  //   taskElement.setAttribute('data-task', '');
+  //   taskElement.className = 'task-list-item';
+  //   taskElement.style.display = 'none';
   
-    // Create the list bullet
-    const listBullet = document.createElement('div');
-    listBullet.className = 'list-bullet';
-    taskElement.appendChild(listBullet);
+  //   // Create the list bullet
+  //   const listBullet = document.createElement('div');
+  //   listBullet.className = 'list-bullet';
+  //   taskElement.appendChild(listBullet);
   
-    // Create the checkbox
-    const checkbox = document.createElement('input');
-    checkbox.setAttribute('data-line', '0');
-    checkbox.type = 'checkbox';
-    checkbox.className = 'task-list-item-checkbox';
-    taskElement.appendChild(checkbox);
+  //   // Create the checkbox
+  //   const checkbox = document.createElement('input');
+  //   checkbox.setAttribute('data-line', '0');
+  //   checkbox.type = 'checkbox';
+  //   checkbox.className = 'task-list-item-checkbox';
+  //   taskElement.appendChild(checkbox);
   
-    // Add the task content
-    taskElement.appendChild(document.createTextNode('An example task '));
+  //   // Add the task content
+  //   taskElement.appendChild(document.createTextNode('An example task '));
   
-    // Create the tag link
-    const tagLink = document.createElement('a');
-    tagLink.href = '#TaskCard';
-    tagLink.className = 'tag';
-    tagLink.target = '_blank';
-    tagLink.rel = 'noopener';
-    tagLink.textContent = '#TaskCard';
-    taskElement.appendChild(tagLink);
+  //   // Create the tag link
+  //   const tagLink = document.createElement('a');
+  //   tagLink.href = '#TaskCard';
+  //   tagLink.className = 'tag';
+  //   tagLink.target = '_blank';
+  //   tagLink.rel = 'noopener';
+  //   tagLink.textContent = '#TaskCard';
+  //   taskElement.appendChild(tagLink);
   
-    // Create a single hidden span element containing all attributes as a JSON object
-    const attributes = {
-      id: 'task-001',
-      priority: includeAllAttributes || Math.random() > 0.5 ? 4 : null,
-      description: includeAllAttributes || Math.random() > 0.5 ? '- A multi line description.\n- the second line.' : null,
-      order: includeAllAttributes || Math.random() > 0.5 ? 1 : null,
-      project: includeAllAttributes || Math.random() > 0.5 ? { id: 'project-123', name: 'Project Name' } : null,
-      sectionID: includeAllAttributes || Math.random() > 0.5 ? 'section-456' : null,
-      labels: includeAllAttributes || Math.random() > 0.5 ? ['label1', 'label2'] : null,
-      parent: null,
-      children: [],
-      due: includeAllAttributes || Math.random() > 0.5 ? {
-        isRecurring: false,
-        string: '2023-08-15',
-        date: '2024-08-15',
-        timezone: null
-      } : null,
-      metadata: includeAllAttributes || Math.random() > 0.5 ? { filePath: '/path/to/file' } : null
-    };
+  //   // Create a single hidden span element containing all attributes as a JSON object
+  //   const attributes = {
+  //     id: 'task-001',
+  //     priority: includeAllAttributes || Math.random() > 0.5 ? 4 : null,
+  //     description: includeAllAttributes || Math.random() > 0.5 ? '- A multi line description.\n- the second line.' : null,
+  //     order: includeAllAttributes || Math.random() > 0.5 ? 1 : null,
+  //     project: includeAllAttributes || Math.random() > 0.5 ? { id: 'project-123', name: 'Project Name' } : null,
+  //     sectionID: includeAllAttributes || Math.random() > 0.5 ? 'section-456' : null,
+  //     labels: includeAllAttributes || Math.random() > 0.5 ? ['label1', 'label2'] : null,
+  //     parent: null,
+  //     children: [],
+  //     due: includeAllAttributes || Math.random() > 0.5 ? {
+  //       isRecurring: false,
+  //       string: '2023-08-15',
+  //       date: '2024-08-15',
+  //       timezone: null
+  //     } : null,
+  //     metadata: includeAllAttributes || Math.random() > 0.5 ? { filePath: '/path/to/file' } : null
+  //   };
   
-    const attributesSpan = document.createElement('span');
-    attributesSpan.style.display = 'none';
-    attributesSpan.textContent = JSON.stringify(attributes);
-    taskElement.appendChild(attributesSpan);
+  //   const attributesSpan = document.createElement('span');
+  //   attributesSpan.style.display = 'none';
+  //   attributesSpan.textContent = JSON.stringify(attributes);
+  //   taskElement.appendChild(attributesSpan);
   
-    return taskElement;
-  }
+  //   return taskElement;
+  // }
   
 
   describe('isValidFormattedTaskMarkdown', () => {
     it('should validate correctly formatted task markdown with single span', () => {
-      const formattedTask = `- [ ] An example task #TaskCard <span style="display:none">{"priority": 4, "description": "- A multi line description.\\n- the second line."}</span>`;
+      const formattedTask = `- [ ] An example task #TaskCard <span style="display:none">{"priority": 4}</span>\n  - A multi line description.\n - the second line.`;
       expect(taskValidator.isValidFormattedTaskMarkdown(formattedTask)).toBe(true);
     });
 

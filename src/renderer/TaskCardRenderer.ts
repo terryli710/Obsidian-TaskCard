@@ -1,4 +1,4 @@
-import {
+  import {
     MarkdownPostProcessor,
     MarkdownPostProcessorContext,
     MarkdownSectionInformation,
@@ -13,6 +13,7 @@ import {
   import { TaskValidator } from '../taskModule/taskValidator';
   import { TaskItemSvelteAdapter } from './postProcessor';
   import { ObsidianTaskSyncProps } from '../taskModule/taskSyncManager';
+  import { logger } from '../utils/log';
   
   export interface TaskItemData {
     // HTML information about the TaskItem
@@ -25,11 +26,6 @@ import {
   }
   
   export class TaskCardRenderManager {
-    // - Post Processor = input el and MarkdownPostProcessorContext
-    // 1. filter the elements;
-    // 2. pin point the markdown text for the filtered element;
-    // 3. render the filtered element using customized svelte component;
-    // 4. methods to call for editing the attributes of the tasks;
     private plugin: TaskCardPlugin;
     private taskItemFilter: (elems: HTMLElement) => boolean;
     constructor(plugin: TaskCardPlugin) {
@@ -46,6 +42,9 @@ import {
         el: HTMLElement,
         ctx: MarkdownPostProcessorContext
       ) => {
+
+        logger.debug(`HTML element: ${el.outerHTML}`);
+        logger.debug(`convert to markdown: ${htmlToMarkdown(el.outerHTML)}`);
         const taskSyncs: ObsidianTaskSyncProps[] = await this.constructTaskSync(el, ctx);
   
         for (const taskSync of taskSyncs) {

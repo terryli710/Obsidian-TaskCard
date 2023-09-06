@@ -1,10 +1,12 @@
+
+/** @type {import('ts-jest').JestConfigWithTsJest} */
 module.exports = {
   preset: 'ts-jest/presets/js-with-ts',
   testEnvironment: 'jest-environment-node',
   verbose: true,
   transform: {
-    '^.+\\.svelte$': 'svelte-jester',
-    '^.+\\.ts$': 'esbuild-jest',
+    '^.+\\.svelte$': ['svelte-jester', { preprocess: true }],
+    '^.+\\.ts$': 'ts-jest',
     '^.+\\.js$': 'esbuild-jest'
   },
   moduleFileExtensions: ['js', 'svelte', 'ts'],

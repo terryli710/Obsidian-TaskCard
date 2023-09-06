@@ -65,7 +65,7 @@ export class TaskMonitor {
     if (this.plugin.taskValidator.isValidFormattedTaskMarkdown(line)) {
       const task = this.plugin.taskParser.parseFormattedTaskMarkdown(line);
       task.metadata.taskDisplayParams.mode = mode;
-      return this.plugin.taskFormatter.taskToMarkdownOneLine(task);
+      return this.plugin.taskFormatter.taskToMarkdown(task);
     }
     return line;
   }
@@ -108,7 +108,7 @@ export class TaskMonitor {
     }
     if (this.plugin.taskValidator.isValidUnformattedTaskMarkdown(line)) {
       const task = this.plugin.taskParser.parseTaskMarkdown(line, announceError);
-      return this.plugin.taskFormatter.taskToMarkdownOneLine(task);
+      return this.plugin.taskFormatter.taskToMarkdown(task);
     }
     return line;
   }

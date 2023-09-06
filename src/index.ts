@@ -1,4 +1,4 @@
-import { App, MarkdownRenderer, MarkdownView, Plugin } from 'obsidian';
+import { App, Plugin } from 'obsidian';
 import type { PluginManifest, Workspace, WorkspaceLeaf } from 'obsidian';
 import type { TaskCardSettings } from './settings';
 import { SettingStore, SettingsTab } from './settings';

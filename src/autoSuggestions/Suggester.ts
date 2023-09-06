@@ -27,13 +27,21 @@ export class AttributeSuggester {
         'order',
         'sectionID',
         'completed',
-        'labels'
+        'labels',
+        'description',
+        'metadata'
       ];
   
-      // Filter out the non-inputtable attributes
-      this.inputtableAttributes = Object.keys(new ObsidianTask()).filter(
-        (attr) => !this.nonInputtableAttributes.includes(attr)
-      );
+      // // Filter out the non-inputtable attributes
+      // this.inputtableAttributes = Object.keys(new ObsidianTask()).filter(
+      //   (attr) => !this.nonInputtableAttributes.includes(attr)
+      // );
+
+      this.inputtableAttributes = [
+        'priority',
+        'due',
+        'project',
+      ]
     });
   }
 
