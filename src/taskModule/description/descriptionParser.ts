@@ -23,15 +23,20 @@ export class DescriptionParser {
     constructor() {
     }
 
-    static parseDescriptionFromTaskEl(taskElement: HTMLElement): string {
+    static extractDescriptionEl(taskElement: HTMLElement): HTMLElement {
         // Check if taskElement is null or undefined
-        if (!taskElement) { return ""; }
-      
+        if (!taskElement) { return null; }
         // Find the ul element within taskElement
         const ulElement = taskElement.querySelector('ul');
         // Check if ulElement is null or undefined
+        if (!ulElement) { return null; }
+        return ulElement;
+    }
+
+    static parseDescriptionFromTaskEl(taskElement: HTMLElement): string {
+        const ulElement = DescriptionParser.extractDescriptionEl(taskElement);
         if (!ulElement) { return ""; }
-      
+
         // Convert the ul element to Markdown
         try {
           return htmlToMarkdown(ulElement.outerHTML);
@@ -42,6 +47,7 @@ export class DescriptionParser {
       
 
     static progressOfDescription(description: string): [number, number] {
+      if (!description || description.trim().length === 0) { return [0, 0]; }
         const taskRegex = /^(?:\s*)-\s\[(.)\]\s.+/gm;
         
         // Initialize counters for total tasks and finished tasks

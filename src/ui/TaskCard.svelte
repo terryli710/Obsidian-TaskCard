@@ -15,12 +15,15 @@
     import MoreVertical from '../components/icons/MoreVertical.svelte';
     import { Menu, Notice } from 'obsidian';
     import { SettingStore } from '../settings';
+    import { DescriptionParser } from '../taskModule/description';
+    import CircularProgressBar from '../components/CircularProgressBar.svelte';
 
     export let taskSyncManager: ObsidianTaskSyncManager;
     export let plugin: TaskCardPlugin;
     export let params: TaskDisplayParams;
 
     let task: ObsidianTask = taskSyncManager.obsidianTask;
+    let descriptionProgress = DescriptionParser.progressOfDescription(taskSyncManager.obsidianTask.description);
 
     const dispatch = createEventDispatcher();
 
@@ -199,6 +202,9 @@
       <div class="task-card-content">{task.content}</div>
     </div>
     <div class="task-card-single-line-right-container">
+      {#if descriptionProgress[1] * descriptionProgress[0] > 0 && !task.completed }
+        <CircularProgressBar value={descriptionProgress[0]} max={descriptionProgress[1]} showDigits={false} />
+      {/if}
       {#if taskSyncManager.obsidianTask.hasDue()}
         <Due taskSyncManager={taskSyncManager} plugin={plugin} params={params} />
       {/if}
