@@ -1,8 +1,6 @@
 
 
 <script lang='ts'>
-  import { onMount } from 'svelte';
-  import { logger } from '../utils/log';
   import { Menu } from 'obsidian';
   import Plus from '../components/icons/Plus.svelte';
   import { LabelModule } from '../taskModule/labels';
