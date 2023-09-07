@@ -1,4 +1,4 @@
-import { MarkdownSectionInformation } from 'obsidian';
+import { MarkdownPostProcessorContext, MarkdownSectionInformation } from 'obsidian';
 import { ObsidianTask } from './task';
 import TaskCardPlugin from '..';
 import { logger } from '../utils/log';
@@ -15,6 +15,8 @@ export interface ObsidianTaskSyncProps {
   taskItemEl: HTMLElement | null; // the HTML element to represent the task
   taskMetadata: {
     // metadata about the task, position in a file.
+    sectionEl: HTMLElement;
+    ctx: MarkdownPostProcessorContext;
     sourcePath: string;
     mdSectionInfo: MarkdownSectionInformation | null;
     lineStartInSection: number | null;
@@ -27,6 +29,8 @@ export class ObsidianTaskSyncManager implements ObsidianTaskSyncProps {
   public taskCardStatus: TaskCardStatus;
   public taskItemEl: HTMLElement | null;
   public taskMetadata: {
+    sectionEl: HTMLElement;
+    ctx: MarkdownPostProcessorContext;
     sourcePath: string;
     mdSectionInfo: MarkdownSectionInformation | null;
     lineStartInSection: number | null;
@@ -44,6 +48,8 @@ export class ObsidianTaskSyncManager implements ObsidianTaskSyncProps {
     };
     this.taskItemEl = props?.taskItemEl || null;
     this.taskMetadata = props?.taskMetadata || {
+      sectionEl: null,
+      ctx: null,
       sourcePath: null,
       mdSectionInfo: null,
       lineStartInSection: null,
@@ -52,7 +58,12 @@ export class ObsidianTaskSyncManager implements ObsidianTaskSyncProps {
     this.plugin = plugin;
   }
 
+  refreshMetadata(): void {
+    this.taskMetadata.mdSectionInfo = this.taskMetadata.ctx.getSectionInfo(this.taskMetadata.sectionEl);
+  }
+
   getDocLineStartEnd(): [number, number] {
+    this.refreshMetadata();
     return [
       this.taskMetadata.lineStartInSection + this.taskMetadata.mdSectionInfo.lineStart, 
       this.taskMetadata.lineEndsInSection + this.taskMetadata.mdSectionInfo.lineStart
@@ -72,7 +83,6 @@ export class ObsidianTaskSyncManager implements ObsidianTaskSyncProps {
 
   async updateMarkdownTaskToFile(markdownTask: string): Promise<void> {
     const [docLineStart, docLineEnd] = this.getDocLineStartEnd();
-    // logger.debug(`updating markdownTask from ${docLineStart} to ${docLineEnd}`);
     await this.plugin.fileOperator.updateFile(
       this.taskMetadata.sourcePath,
       markdownTask,

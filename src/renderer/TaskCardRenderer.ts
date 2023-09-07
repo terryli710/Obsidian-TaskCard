@@ -101,6 +101,8 @@
             markdownTask: null,
             taskItemEl: taskItemEl,
             taskMetadata: {
+              sectionEl: section,
+              ctx: ctx,
               sourcePath: sourcePath,
               mdSectionInfo: mdSectionInfo,
               lineStartInSection: lineStartInSection,
@@ -111,6 +113,8 @@
       );
       return taskSyncs;
     }
+
+
   }
   
   export function getLineNumberOfListItem(
@@ -177,4 +181,5 @@
     }
   
     return { startLine, endLine };
+
   }
