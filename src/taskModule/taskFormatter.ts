@@ -8,7 +8,7 @@ export class TaskFormatter {
   indicatorTag: string;
   markdownSuffix: string;
   defaultMode: string;
-  specialAttributes: string[] = ['completed', 'content', 'labels'];
+  specialAttributes: string[] = ['completed', 'content', 'labels', 'description'];
 
   constructor(settingsStore: typeof SettingStore) {
     // Subscribe to the settings store
@@ -22,9 +22,8 @@ export class TaskFormatter {
   taskToMarkdown(task: ObsidianTask): string {
     const taskPrefix = `- [${task.completed ? 'x' : ' '}]`;
     const labelMarkdown = task.labels.join(' ');
-    let markdownLine = `${taskPrefix} ${task.content} ${labelMarkdown} #${this.indicatorTag}`;
-    markdownLine = markdownLine.replace(/\s+/g, ' '); // remove multiple spaces
-    markdownLine += '\n';
+    let taskMarkdown = `${taskPrefix} ${task.content} ${labelMarkdown} #${this.indicatorTag}`;
+    taskMarkdown = taskMarkdown.replace(/\s+/g, ' '); // remove multiple spaces
   
     // Initialize an empty object to hold all attributes
     const allAttributes: { [key: string]: any } = {};
@@ -41,15 +40,18 @@ export class TaskFormatter {
     }
   
     // Add the attributes object to the markdown line
-    markdownLine += `<span style="display:none">${JSON.stringify(allAttributes)}</span>\n`;
+    taskMarkdown += `<span style="display:none">${JSON.stringify(allAttributes)}</span>`;
+
+    // add suffix to task content
+    taskMarkdown += this.markdownSuffix;
+
+    // Add description
+    if (task.description.length > 0) {
+      // for each line, add 2 spaces
+      taskMarkdown += `\n  ${task.description.replace(/\n/g, '\n  ')}`;
+    }
   
-    return markdownLine;
-  }
-  
-  taskToMarkdownOneLine(task: ObsidianTask): string {
-    // add suffix ' .' to task content
-    const markdown = this.taskToMarkdown(task).replace(/\n/g, '');
-    return markdown + this.markdownSuffix;
+    return taskMarkdown;
   }
   
 }

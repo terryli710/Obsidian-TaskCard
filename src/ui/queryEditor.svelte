@@ -73,7 +73,6 @@
     // Function to handle selection updates
     function handleSelection(event, queryName) {
         const selectedValues = event.detail;
-        logger.debug(`Selected values: ${selectedValues}`);
         // Update the appropriate query based on queryName
         if (queryName === 'completed') {
             query.completedQuery = selectedValues;

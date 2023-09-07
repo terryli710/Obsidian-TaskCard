@@ -36,7 +36,7 @@
         display: flex;
         border-radius: 2em;
         overflow: hidden;
-        height: 23px; /* TODO: hardcoded */
+        font-size: var(--font-ui-medium);
         border: var(--border-width) solid var(--text-accent);
     }
 
@@ -49,20 +49,18 @@
         display: flex;
         align-items: center;
         padding: 0 5px;
-        /* margin: 1.5px; */
-        height: 21.5px;
     }
 
     .task-card-label-input-prefix {
         color: var(--text-accent);
-        font-size: calc(var(--font-ui-medium) * 0.875);
+        font-size: var(--tag-size);
         line-height: 1;
     }
 
     .task-card-label-input {
         display: inline-block;
         padding: var(--tag-padding-y) var(--tag-padding-x);
-        font-size: calc(var(--font-ui-medium) * 0.875);
+        font-size: var(--tag-size);
         color: var(--text-muted);
         line-height: 1;
         box-sizing: border-box;

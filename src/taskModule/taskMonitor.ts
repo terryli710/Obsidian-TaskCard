@@ -41,7 +41,8 @@ export class TaskMonitor {
     }
   }
 
-  async monitorFileToFormatTasks(file: TFile) {
+  // HACK: currently don't have to parse description as it doesn't affect anything
+  async monitorFileToFormatTasks(file: TFile) { 
     const lines = await this.getLinesFromFile(file);
     if (!lines) return;
     const updatedLines = this.formatTaskInLines(lines);
@@ -65,7 +66,7 @@ export class TaskMonitor {
     if (this.plugin.taskValidator.isValidFormattedTaskMarkdown(line)) {
       const task = this.plugin.taskParser.parseFormattedTaskMarkdown(line);
       task.metadata.taskDisplayParams.mode = mode;
-      return this.plugin.taskFormatter.taskToMarkdownOneLine(task);
+      return this.plugin.taskFormatter.taskToMarkdown(task);
     }
     return line;
   }
@@ -108,7 +109,7 @@ export class TaskMonitor {
     }
     if (this.plugin.taskValidator.isValidUnformattedTaskMarkdown(line)) {
       const task = this.plugin.taskParser.parseTaskMarkdown(line, announceError);
-      return this.plugin.taskFormatter.taskToMarkdownOneLine(task);
+      return this.plugin.taskFormatter.taskToMarkdown(task);
     }
     return line;
   }

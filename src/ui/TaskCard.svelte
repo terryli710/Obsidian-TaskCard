@@ -15,12 +15,15 @@
     import MoreVertical from '../components/icons/MoreVertical.svelte';
     import { Menu, Notice } from 'obsidian';
     import { SettingStore } from '../settings';
+    import { DescriptionParser } from '../taskModule/description';
+    import CircularProgressBar from '../components/CircularProgressBar.svelte';
 
     export let taskSyncManager: ObsidianTaskSyncManager;
     export let plugin: TaskCardPlugin;
     export let params: TaskDisplayParams;
 
     let task: ObsidianTask = taskSyncManager.obsidianTask;
+    let descriptionProgress = DescriptionParser.progressOfDescription(taskSyncManager.obsidianTask.description);
 
     const dispatch = createEventDispatcher();
 
@@ -199,6 +202,9 @@
       <div class="task-card-content">{task.content}</div>
     </div>
     <div class="task-card-single-line-right-container">
+      {#if descriptionProgress[1] * descriptionProgress[0] > 0 && !task.completed }
+        <CircularProgressBar value={descriptionProgress[0]} max={descriptionProgress[1]} showDigits={false} />
+      {/if}
       {#if taskSyncManager.obsidianTask.hasDue()}
         <Due taskSyncManager={taskSyncManager} plugin={plugin} params={params} />
       {/if}
@@ -256,10 +262,10 @@
     border-color: var(--color-red);
   }
   .task-card-checkbox.priority-2 {
-    border-color: var(--color-orange);
+    border-color: var(--color-yellow);
   }
   .task-card-checkbox.priority-3 {
-    border-color: var(--color-yellow);
+    border-color: var(--color-cyan);
   }
 
   /* Maintain border color on hover */
@@ -267,30 +273,30 @@
     background-color: rgba(var(--color-red-rgb), 0.1);
   }
   .task-card-checkbox.priority-2:hover {
-    background-color: rgba(var(--color-orange-rgb), 0.1);
+    background-color: rgba(var(--color-yellow-rgb), 0.1);
   }
   .task-card-checkbox.priority-3:hover {
-    background-color: rgba(var(--color-yellow-rgb), 0.1);
+    background-color: rgba(var(--color-cyan-rgb), 0.1);
   }
 
   input[type=checkbox].task-card-checkbox.priority-1:checked {
     background-color: rgba(var(--color-red-rgb), 0.7);
   }
   input[type=checkbox].task-card-checkbox.priority-2:checked {
-    background-color: rgba(var(--color-orange-rgb), 0.7);
+    background-color: rgba(var(--color-yellow-rgb), 0.7);
   }
   input[type=checkbox].task-card-checkbox.priority-3:checked {
-    background-color: rgba(var(--color-yellow-rgb), 0.7);
+    background-color: rgba(var(--color-cyan-rgb), 0.7);
   }
 
   input[type=checkbox].task-card-checkbox.priority-1:checked:hover {
     background-color: rgba(var(--color-red-rgb), 0.9);
   }
   input[type=checkbox].task-card-checkbox.priority-2:checked:hover {
-    background-color: rgba(var(--color-orange-rgb), 0.9);
+    background-color: rgba(var(--color-yellow-rgb), 0.9);
   }
   input[type=checkbox].task-card-checkbox.priority-3:checked:hover {
-    background-color: rgba(var(--color-yellow-rgb), 0.9);
+    background-color: rgba(var(--color-cyan-rgb), 0.9);
   }
 
   .task-card-menu-button {

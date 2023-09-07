@@ -101,7 +101,7 @@ export class PositionedTaskCache {
       };
     }
 
-    parseQueryResult(queryResult: QueryResult): PositionedTaskProperties[] {
+    async parseQueryResult(queryResult: QueryResult): Promise<PositionedTaskProperties[]> {
         const positionedTasks: PositionedTaskProperties[] = [];
         for (const task of queryResult.values) {
             const filePath = task.path;
@@ -111,7 +111,8 @@ export class PositionedTaskCache {
             const docPosition = { filePath: filePath, start: startPosition, end: endPosition }
             // if not valid formatted task, skip
             if (!this.plugin.taskValidator.isValidFormattedTaskMarkdown(originalText)) { continue; }
-            const obsidianTask = this.plugin.taskParser.parseFormattedTaskMarkdown(originalText);
+            const lines = (await this.plugin.fileOperator.getFileLines(filePath)).slice(task.position.start.line);
+            const obsidianTask = this.plugin.taskParser.parseFormattedTaskFromFileLines(lines);
             // if content failed to parse, then this task is meaningless, we will skip it
             if (obsidianTask.content.length === 0) { continue; }
             positionedTasks.push(PositionedObsidianTask.fromObsidianTaskAndDocPosition(obsidianTask, docPosition));

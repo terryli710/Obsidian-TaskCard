@@ -47,18 +47,18 @@ export class TaskValidator {
   }
 
   private getUnformattedMarkdownPattern(): RegExp {
-    const markdownPatternText: string = `^\\s*- \\[[\\s*+-x=]\\] (.*)(${this.startingNotation}[a-zA-Z]+:\\s*.*?${this.endingNotation}\\s*)*(${this.markdownSuffix})?$`;
+    const markdownPatternText: string = `^\\s*- \\[[\\s*+-x=]\\] (.*)(${this.startingNotation}[a-zA-Z]+:\\s*.*?${this.endingNotation}\\s*)*(${this.markdownSuffix})?`;
     return new RegExp(markdownPatternText, 'gm');
   }
 
   private getFormattedMarkdownPattern(): RegExp {
     const markdownSuffix = this.markdownSuffix;
-    return new RegExp(`^\\s*- \\[[^\\]]\\] (.*?)\\s*(<span( class="[^"]+")? style="display:none">\\{.*?\\}<\\/span>)\\s*(${markdownSuffix})?$`);
+    return new RegExp(`^\\s*- \\[[^\\]]\\] (.*?)\\s*(<span( class="[^"]+")? style="display:none">\\{.*?\\}<\\/span>)\\s*(${markdownSuffix})?`);
   }
 
-  private getExtractedFormattedMarkdownPattern(): RegExp {
-    return new RegExp(`^\\s*- \\[[^\\]]\\] (.*?)\\s*\\{.*?\\}<\\/span>\\s*(${this.markdownSuffix})?$`, 'gm');
-  }
+  // private getExtractedFormattedMarkdownPattern(): RegExp {
+  //   return new RegExp(`^\\s*- \\[[^\\]]\\] (.*?)\\s*\\{.*?\\}<\\/span>\\s*(${this.markdownSuffix})?`, 'gm');
+  // }
 
 
   private hasSpanElement(markdown: string): boolean {
@@ -83,16 +83,16 @@ export class TaskValidator {
     return false;
   }
 
-  isValidExtractedFormattedTaskMarkdown(taskMarkdown: string, indicatorTag: string | null  = null): boolean {
-    const match = this.getExtractedFormattedMarkdownPattern().exec(taskMarkdown);
-    if (match && match[1]) {
-      const contentWithoutAttributes = match[1]
-        .replace(this.getAttributePattern(), '')
-        .trim();
-      return this.hasIndicatorTag(contentWithoutAttributes, indicatorTag);
-    }
-    return false;
-  }
+  // isValidExtractedFormattedTaskMarkdown(taskMarkdown: string, indicatorTag: string | null  = null): boolean {
+  //   const match = this.getExtractedFormattedMarkdownPattern().exec(taskMarkdown);
+  //   if (match && match[1]) {
+  //     const contentWithoutAttributes = match[1]
+  //       .replace(this.getAttributePattern(), '')
+  //       .trim();
+  //     return this.hasIndicatorTag(contentWithoutAttributes, indicatorTag);
+  //   }
+  //   return false;
+  // }
 
   selectHiddenSpans(taskEl: HTMLElement): HTMLElement[] | null {
     // Get all span elements

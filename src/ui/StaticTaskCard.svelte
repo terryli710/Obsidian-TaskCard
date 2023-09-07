@@ -12,6 +12,8 @@
   import { logger } from '../utils/log';
   import { marked } from 'marked';
   import TaskCardPlugin from '..';
+  import { DescriptionParser } from '../taskModule/description';
+    import CircularProgressBar from '../components/CircularProgressBar.svelte';
   marked.use({ mangle: false, headerIds: false, langPrefix: '' });
   
 
@@ -24,6 +26,7 @@
   let dueDisplay = '';
   let labelModule = new LabelModule();
   let descriptionMarkdown = marked(task.description);
+  let descriptionProgress = DescriptionParser.progressOfDescription(task.description);
 
   labelModule.setLabels(task.labels);
 
@@ -123,6 +126,9 @@
       >
         <div class="static-task-card-content">{task.content}</div>
         <div class="static-task-card-middle-right">
+          {#if descriptionProgress[1] * descriptionProgress[0] > 0 && !task.completed }
+            <CircularProgressBar value={descriptionProgress[0]} max={descriptionProgress[1]} showDigits={false} />
+          {/if}
           <!-- Due -->
           {#if task.hasDue()}
             <div class="task-card-due mode-single-line}" role="button" tabindex="0">
@@ -197,11 +203,18 @@
       </div>
     </div>
     <!-- Description -->
-    {#if task.hasDescription()}
-      <div class="task-card-description" role="button" tabindex="0">
-        {@html descriptionMarkdown}
-      </div>
-    {/if}
+    <div class="task-card-description-wrapper">
+      {#if descriptionProgress[1] * descriptionProgress[0] > 0 }
+        <div class="task-card-progress-position">
+          <CircularProgressBar value={descriptionProgress[0]} max={descriptionProgress[1]} />
+        </div>
+      {/if}
+      {#if task.hasDescription()}
+        <div class="task-card-description" role="button" tabindex="0">
+          {@html descriptionMarkdown}
+        </div>
+      {/if}
+    </div>
   </div>
 
   <div class="task-card-attribute-bottom-bar">
@@ -241,6 +254,20 @@
 
 
 <style>
+
+  .task-card-progress-position {
+    position: absolute; /* Absolute positioning for the progress bar */
+    top: 3px;
+    right: 3px;
+    /* background: linear-gradient(to right, transparent 0%, var(--background-primary) 30%, var(--background-primary) 100%); */
+    background-color: var(--background-primary);
+    border-radius: var(--radius-s);
+    padding: 2px 5px 2px 5px;
+    display: flex;
+    align-items: center;
+    /* height: 35px; */
+  }
+
   .static-task-card-content {
     padding-left: 0.25em;
     padding-right: 0.25em;
@@ -332,10 +359,10 @@
     border-color: var(--color-red);
   }
   .task-card-checkbox.priority-2 {
-    border-color: var(--color-orange);
+    border-color: var(--color-yellow);
   }
   .task-card-checkbox.priority-3 {
-    border-color: var(--color-yellow);
+    border-color: var(--color-cyan);
   }
 
   /* Maintain border color on hover */
@@ -347,38 +374,46 @@
     background-color: rgba(var(--color-red-rgb), 0.1);
   }
   .task-card-checkbox.priority-2:hover {
-    background-color: rgba(var(--color-orange-rgb), 0.1);
+    background-color: rgba(var(--color-yellow-rgb), 0.1);
   }
   .task-card-checkbox.priority-3:hover {
-    background-color: rgba(var(--color-yellow-rgb), 0.1);
+    background-color: rgba(var(--color-cyan-rgb), 0.1);
   }
 
   input[type=checkbox].task-card-checkbox.priority-1:checked {
     background-color: rgba(var(--color-red-rgb), 0.7);
   }
   input[type=checkbox].task-card-checkbox.priority-2:checked {
-    background-color: rgba(var(--color-orange-rgb), 0.7);
+    background-color: rgba(var(--color-yellow-rgb), 0.7);
   }
   input[type=checkbox].task-card-checkbox.priority-3:checked {
-    background-color: rgba(var(--color-yellow-rgb), 0.7);
+    background-color: rgba(var(--color-cyan-rgb), 0.7);
   }
 
   input[type=checkbox].task-card-checkbox.priority-1:checked:hover {
     background-color: rgba(var(--color-red-rgb), 0.9);
   }
   input[type=checkbox].task-card-checkbox.priority-2:checked:hover {
-    background-color: rgba(var(--color-orange-rgb), 0.9);
-  }
-  input[type=checkbox].task-card-checkbox.priority-3:checked:hover {
     background-color: rgba(var(--color-yellow-rgb), 0.9);
   }
+  input[type=checkbox].task-card-checkbox.priority-3:checked:hover {
+    background-color: rgba(var(--color-cyan-rgb), 0.9);
+  }
+
+
+  .task-card-description-wrapper {
+        position: relative; /* Relative positioning for the wrapper */
+        grid-column: 2;
+        grid-row: 2;
+        width: 100%;
+        height: 100%;
+    }
 
   .task-card-description {
-    grid-column: 2;
-    grid-row: 2;
     font-size: var(--font-smallest);
     line-height: var(--line-height-tight);
     color: var(--text-faint);
+    border-radius: var(--radius-s);
     border-radius: 5px; /* Rounded square */
     margin: 0.1em; /* Padding for the content */
     padding: 0.22em; /* Padding for the content */

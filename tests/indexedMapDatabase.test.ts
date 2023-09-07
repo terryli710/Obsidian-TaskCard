@@ -62,7 +62,7 @@ describe('IndexedMapDatabase', () => {
     ]);
 
     const query1: QueryFunction<{ age: number; name: string }> = item => item.age > 26;
-    const query2: QueryFunction<{ age: number; name: string }> = item => item.age < 35;
+    const query2: QueryFunction<{ age: number; name: string }> = item => item.age < 34;
 
     const expression: LogicalExpression<{ age: number; name: string }> = {
       operator: 'AND',

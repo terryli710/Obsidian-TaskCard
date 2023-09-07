@@ -8,7 +8,6 @@
   import { logger } from "../utils/log";
   import { SettingStore } from "../settings";
   import { tick, afterUpdate } from "svelte";
-    import { prepareSimpleSearch } from "obsidian";
 
   export let taskSyncManager: ObsidianTaskSyncManager;
   export let params: TaskDisplayParams;
@@ -237,5 +236,8 @@
 
   .project-name:hover {
     background-color: var(--tag-background-hover);
+    border: var(--tag-border-width) solid var(--tag-border-color-hover);
+    color: var(--tag-color-hover);
+    text-decoration: var(--tag-decoration-hover);
   }
   </style>
