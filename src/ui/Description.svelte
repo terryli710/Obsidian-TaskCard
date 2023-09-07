@@ -168,8 +168,8 @@
     }
 
     .task-card-description {
-        grid-column: 2;
-        grid-row: 2;
+        /* grid-column: 2;
+        grid-row: 2; */
         font-size: var(--font-smallest);
         line-height: var(--line-height-tight);
         color: var(--text-faint);

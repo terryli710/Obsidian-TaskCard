@@ -359,8 +359,7 @@ export class TaskParser {
    */
   determineDescriptionLineNumber(lines: string[]): number {
     // Regular expression to match a task line
-    const taskRegex = /^\s*\*- \[.\]/;
-
+    const taskRegex = /^\s*- \[.\]/;
     // Check if the first line is a task
     if (!taskRegex.test(lines[0])) {
       return 0;
