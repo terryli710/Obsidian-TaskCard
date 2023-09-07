@@ -88,7 +88,7 @@
 
       // Group 0: Toggle single-line and multi-line mode
       cardMenu.addItem((item) => {
-          item.setTitle('Switch to Single-line');
+          item.setTitle('Switch to Preview Mode');
           item.setIcon('list');
           item.onClick((evt: MouseEvent | KeyboardEvent) => {
             switchMode(evt, 'single-line');
