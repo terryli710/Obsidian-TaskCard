@@ -236,5 +236,8 @@
 
   .project-name:hover {
     background-color: var(--tag-background-hover);
+    border: var(--tag-border-width) solid var(--tag-border-color-hover);
+    color: var(--tag-color-hover);
+    text-decoration: var(--tag-decoration-hover);
   }
   </style>

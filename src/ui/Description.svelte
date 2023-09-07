@@ -148,10 +148,10 @@
     .task-card-progress-position {
         position: absolute; /* Absolute positioning for the progress bar */
         top: 3px;
-        right: 6px;
+        right: 3px;
         /* background: linear-gradient(to right, transparent 0%, var(--background-primary) 30%, var(--background-primary) 100%); */
         background-color: var(--background-primary);
-        border-radius: var(--radius-m);
+        border-radius: var(--radius-s);
         padding: 2px 5px 2px 5px;
         display: flex;
         align-items: center;
@@ -173,7 +173,7 @@
         font-size: var(--font-smallest);
         line-height: var(--line-height-tight);
         color: var(--text-faint);
-        border-radius: 5px; /* Rounded square */
+        border-radius: var(--radius-s);
         cursor: pointer; /* Pointer cursor on hover */
         margin: 0.1em; /* Padding for the content */
         padding: 0.22em; /* Padding for the content */

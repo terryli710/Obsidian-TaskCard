@@ -2,7 +2,7 @@ import { logger } from '../utils/log';
 import { escapeRegExp, extractTags } from '../utils/regexUtils';
 import { kebabToCamel } from '../utils/stringCaseConverter';
 import { toArray, toBoolean } from '../utils/typeConversion';
-import { DueDate, ObsidianTask, Order, Priority, TaskProperties } from './task';
+import { DueDate, ObsidianTask, Order, Priority, TaskProperties, TextPosition } from './task';
 import { Project, ProjectModule } from './project';
 import Sugar from 'sugar';
 import { SettingStore } from '../settings';
@@ -267,7 +267,6 @@ export class TaskParser {
     return task;
   }
 
-
   parseFormattedTaskMarkdown(taskMarkdown: string): ObsidianTask {
     const task: ObsidianTask = new ObsidianTask();
 
@@ -336,60 +335,63 @@ export class TaskParser {
     return task;
   }
 
-//   parseExtractedFormattedTaskMarkdown(taskMarkdown: string): ObsidianTask {
-//     const task = new ObsidianTask();
-  
-//     if (!taskMarkdown) {
-//       logger.warn(`Failed to parse task: ${taskMarkdown}`);
-//       return task;
-//     }
-  
-//     taskMarkdown = taskMarkdown.trim();
-  
-//     // Single regex to capture task part, content, labels, indicator tag, and metadata
-//     const regex = new RegExp(`- \\[(.)\\] (.+)\\s+#${this.indicatorTag}({.+})<\\/span>`);
-//     const match = taskMarkdown.match(regex);
-  
-//     if (!match || !match[1] || !match[2] || !match[3]) {
-//       logger.warn(`Failed to parse task: ${taskMarkdown}, match: ${match}`);
-//       return task;
-//     } 
+  parseFormattedTaskFromFileLines(lines: string[]): ObsidianTask {
+    const descriptionLineNumber = this.determineDescriptionLineNumber(lines);
+    const taskMarkdown = lines.slice(0, descriptionLineNumber + 1).join('\n');
+    return this.parseFormattedTaskMarkdown(taskMarkdown);
+  }
 
-//     const contentWithLabels = match[2].trim();
-  
-//     // Extracting labels from the content line
-//     const [contentLabels, remainingContent] = extractTags(contentWithLabels);
-//     task.content = remainingContent;
-//     task.labels = contentLabels.filter((label) => label !== `#${this.indicatorTag}`);
-//     // Extracting completion status
-//     task.completed = match[1] !== ' ';
+  /**
+   * Determine the number of lines of the description of a task within a document.
+   * 
+   * @param {string[]} lines - An array of strings, each representing a line in the document.
+   * @returns {number} - The number of lines of the description of the task. Returns 0 if the line is not a task or has no description.
+   * 
+   * The function follows this logic:
+   * 1. Check if the first line is a task. A task starts with "<space>*- [<any one char>] ...".
+   * 2. If it's not a task, return 0.
+   * 3. If it is a task, find its indentation level.
+   * 4. Iterate through the following lines to find the description.
+   * 5. A line is considered a description if:
+   *    a. It is not purely space or an empty line.
+   *    b. It is not a task that has the same or less indentation than the original task line.
+   * 6. The function stops iterating when it encounters a line that is not a description and returns the number of lines iterated.
+   */
+  determineDescriptionLineNumber(lines: string[]): number {
+    // Regular expression to match a task line
+    const taskRegex = /^\s*\*- \[.\]/;
 
-//     // Extracting JSON metadata
-//     const metadata = JSON.parse(match[3]);
-//     if (!metadata) {
-//       logger.warn(`Failed to parse metadata: ${match[3]}`);
-//       return task;
-//     }
+    // Check if the first line is a task
+    if (!taskRegex.test(lines[0])) {
+      return 0;
+    }
 
-//     // For string attributes
-//     task.id = metadata.id || '';
-//     task.description = metadata.description || '';
-//     task.sectionID = metadata.sectionID || '';
+    // Determine the indentation level of the task
+    const taskIndentation = lines[0].match(/^\s*/)[0].length;
 
-//     // For attributes that require JSON parsing
-//     task.priority = metadata.priority || 4;
-//     task.order = metadata.order || 0;
-//     task.project = metadata.project || null;
-//     task.due = metadata.due || null;
-//     task.metadata = metadata.metadata || {};
+    let descriptionLineCount = 0;
 
-//     // Optional attributes
-//     task.parent = metadata.parent || null;
-//     task.children = metadata.children || [];
+    // Loop through the lines to find the description
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i];
 
-//     return task;
-// }
-  
+      // Check if the line is not purely space or empty
+      if (line.trim() === '') {
+        break;
+      }
+
+      // Check if the line is another task with the same or less indentation
+      if (taskRegex.test(line) && line.match(/^\s*/)[0].length <= taskIndentation) {
+        break;
+      }
+
+      // If the line passes the above checks, it is a description
+      descriptionLineCount++;
+    }
+    logger.debug(`descriptionLineCount: ${descriptionLineCount} from lines: ${lines}`);
+    return descriptionLineCount;
+  }
+
 
   parseDue(dueString: string): DueDate | null {
     const parsedDateTime = Sugar.Date.create(dueString);

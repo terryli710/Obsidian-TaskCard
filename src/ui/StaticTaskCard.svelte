@@ -12,6 +12,7 @@
   import { logger } from '../utils/log';
   import { marked } from 'marked';
   import TaskCardPlugin from '..';
+  import { DescriptionParser } from '../taskModule/description';
   marked.use({ mangle: false, headerIds: false, langPrefix: '' });
   
 
@@ -24,6 +25,7 @@
   let dueDisplay = '';
   let labelModule = new LabelModule();
   let descriptionMarkdown = marked(task.description);
+  // let descriptionEl = DescriptionParser.extractDescriptionEl(taskSyncManager.taskItemEl);
 
   labelModule.setLabels(task.labels);
 
