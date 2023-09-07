@@ -387,7 +387,6 @@ export class TaskParser {
       // If the line passes the above checks, it is a description
       descriptionLineCount++;
     }
-    logger.debug(`descriptionLineCount: ${descriptionLineCount} from lines: ${lines}`);
     return descriptionLineCount;
   }
 

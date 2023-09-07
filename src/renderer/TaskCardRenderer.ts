@@ -28,6 +28,7 @@
   export class TaskCardRenderManager {
     private plugin: TaskCardPlugin;
     private taskItemFilter: (elems: HTMLElement) => boolean;
+    private processors: TaskItemSvelteAdapter[] = [];
     constructor(plugin: TaskCardPlugin) {
       this.plugin = plugin;
   
@@ -48,6 +49,7 @@
           // register taskStore
           const processor = new TaskItemSvelteAdapter(taskSync, this.plugin);
           processor.onload();
+          this.processors.push(processor);
         }
   
       };
@@ -101,6 +103,8 @@
             markdownTask: null,
             taskItemEl: taskItemEl,
             taskMetadata: {
+              sectionEl: section,
+              ctx: ctx,
               sourcePath: sourcePath,
               mdSectionInfo: mdSectionInfo,
               lineStartInSection: lineStartInSection,
@@ -111,6 +115,16 @@
       );
       return taskSyncs;
     }
+
+    refreshTaskSyncMetadata(): void {
+      logger.debug(`refreshTaskSyncMetadata, updating ${this.processors.length} processors`);
+      for (const processor of this.processors) {
+        processor.taskSyncManager.refreshMetadata();
+      }
+    }
+
+
+
   }
   
   export function getLineNumberOfListItem(
@@ -177,4 +191,5 @@
     }
   
     return { startLine, endLine };
+
   }

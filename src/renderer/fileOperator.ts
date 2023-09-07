@@ -51,7 +51,7 @@ export class FileOperator {
     const fileLines = await this.getFileLines(filePath);
     const newFileLines: string[] = [...fileLines];
     newFileLines.splice(lineStart, lineEnd - lineStart, newContent);
-    // logger.debug(`newContent: ${newContent}, lineStart: ${lineStart}, lineEnd: ${lineEnd}`);
+    logger.debug(`update file: start line content: ${fileLines[lineStart]}, end line content: ${fileLines[lineEnd - 1]}`);
     await this.app.vault.modify(file as TFile, newFileLines.join('\n'));
   }
 

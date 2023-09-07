@@ -67,7 +67,8 @@ export default class TaskCardPlugin extends Plugin {
     this.registerEvent(
       this.app.workspace.on(
         'layout-change', 
-        this.taskMonitor.layoutChangeHandler.bind(this.taskMonitor))
+        this.taskMonitor.layoutChangeHandler.bind(this.taskMonitor)
+        )
     );
 
     // @ts-ignore

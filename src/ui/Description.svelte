@@ -61,7 +61,6 @@
         realLineNumber++;
         });
         el.appendChild(descriptionEl);
-        logger.debug(`descriptionEl: ${descriptionEl.outerHTML}`);
         
     }
 
