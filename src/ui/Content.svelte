@@ -74,11 +74,11 @@
 <style>
 
     .task-card-content.mode-multi-line:hover {
-    background-color: var(--background-modifier-hover); /* Background hover color */
+        background-color: var(--background-primary-alt); /* Background hover color */
     }
 
     .task-card-content.mode-multi-line:active {
-    background-color: var(--background-modifier-active-hover); /* Background active color */
+        background-color: var(--background-modifier-active-hover); /* Background active color */
     }
 
     input.task-card-content.mode-multi-line {

@@ -3,12 +3,12 @@
 }
 
 .obsidian-taskcard {
-  background-color: var(--background-primary) !important;
+  background-color: var(--background-primary);
   color: var(--text-normal);
   font-size: var(--font-text-size);
   font-family: var(--font-text);
   line-height: var(--line-height-normal);
-  border-radius: var(--radius-l);
+  border-radius: var(--radius-m);
   border: var(--border-width) solid var(--background-modifier-border);
   height: var(--input-height);
   margin: 1px 0;
@@ -18,7 +18,6 @@
   white-space: normal;
   outline: none;
   align-items: flex-start;
-  box-shadow: 0px 0px 5px var(--color-base-25);
   text-align: inherit; /* Aligns text as in a regular div */
   width: 100%;
   height: 100%;
@@ -31,7 +30,7 @@
 }
 
 .obsidian-taskcard.mode-single-line:hover {
-  background-color: var(--background-modifier-hover);
+  background-color: var(--background-primary-alt);
 }
 
 .obsidian-taskcard.mode-single-line:active {
@@ -43,6 +42,11 @@
 }
 
 .obsidian-taskcard.mode-multi-line.is-flashing {
+  box-shadow: 0px 0px 10px var(--text-highlight-bg);
+  background-color: var(--background-primary) !important;
+}
+
+.obsidian-taskcard-list-item.is-flashing .obsidian-taskcard.mode-single-line {
   box-shadow: 0px 0px 10px var(--text-highlight-bg);
 }
 
@@ -56,9 +60,6 @@
   background-color: inherit !important;
 }
 
-.obsidian-taskcard-list-item.is-flashing .obsidian-taskcard.mode-single-line {
-  box-shadow: 0px 0px 10px var(--text-highlight-bg);
-}
 
 .task-card-single-line {
   display: flex;
@@ -66,7 +67,9 @@
   align-items: center;
   justify-content: space-between; /* Align the two main containers */
   width: 100%;
+  box-shadow: none;
 }
+
 
 .task-card-single-line-left-container {
   display: flex;
@@ -81,20 +84,12 @@
   align-items: center; /* Vertically center the children */
 }
 
-.task-card-major-block {
-  display: grid;
-  grid-template-columns: auto 1fr; /* Checkbox takes only the space it needs, rest for content and description */
-  grid-template-rows: auto auto; /* Two rows for content and description */
-  width: 100%;
-  align-items: center;
-}
-
 .task-card-checkbox-wrapper {
   grid-column: 1;
   grid-row: 1;
   display: flex;
   align-items: center;
-  margin-right: 4px;
+  /* margin-right: 4px; */
 }
 
 .task-card-content-project-line {
@@ -116,49 +111,6 @@
   font-size: var(--font-text-size);
 }
 
-.task-card-description {
-  grid-column: 2;
-  grid-row: 2;
-  font-size: var(--font-ui-small);
-  color: var(--color-base-50);
-  border-radius: 5px; /* Rounded square */
-  cursor: pointer; /* Pointer cursor on hover */
-  margin: 0.1em; /* Padding for the content */
-  padding: 0.25em; /* Padding for the content */
-}
-
-.task-card-description:hover {
-  background-color: var(
-    --background-modifier-hover
-  ); /* Background hover color */
-}
-
-.task-card-description:active {
-  background-color: var(
-    --background-modifier-active-hover
-  ); /* Background active color */
-}
-
-.task-card-description textarea {
-  width: 100%; /* Full width of the container */
-  height: 100%; /* Full height of the container */
-  border-radius: 5px; /* Rounded square */
-  transition: background-color 0.3s ease; /* Smooth background color transition */
-  padding: 8px; /* Padding for the content */
-}
-
-.task-card-description textarea:hover {
-  background-color: var(
-    --background-modifier-hover
-  ); /* Background hover color */
-}
-
-.task-card-description textarea:active {
-  background-color: var(
-    --background-modifier-active-hover
-  ); /* Background active color */
-}
-
 .task-card-menu-button.mode-multi-line {
   grid-column: 3;
   grid-row: 1;
@@ -174,7 +126,7 @@
 
 .task-card-attribute-bottom-bar-left {
   display: flex; /* Enables Flexbox for the left-aligned elements */
-  align-items: center;
+  align-items: center;  /* Center children vertically */
   overflow: hidden; /* Hide the overflow */
   flex-grow: 1; /* Takes up remaining left space */
 }
@@ -192,79 +144,30 @@
   font-size: var(--font-ui-medium);
 }
 
-.task-card-labels {
-  display: flex;
-  flex-wrap: nowrap; /* Prevents wrapping */
-  overflow: scroll; /* Truncates any labels that don't fit */
-  white-space: nowrap; /* Keeps labels on a single line */
-  align-items: center;
-  gap: 4px;
-  flex-grow: 1; /* Make it take up all available space */
-  font-size: var(--font-ui-medium);
-}
-
-.task-card-labels a {
-  text-decoration: none;
-  flex-shrink: 0;
-}
-
-.task-card-labels button:hover {
-  background-color: var(
-    --background-modifier-hover
-  ); /* Change the background color on hover */
-}
-
-.more-labels-symbol {
-  display: inline-block;
-}
-
-input.task-card-label-input {
-  display: inline-block;
-  padding: 1px 10px;
-  border-radius: 1000px; /* Rounded corners */
-  border: var(--border-width) solid var(--background-modifier-border);
-  width: auto;
-  font-size: var(--font-ui-small);
-  white-space: nowrap;
-}
-
-input.task-card-label-input:focus {
-  outline: none; /* Remove the default outline */
-  box-shadow: none; /* Remove the default box-shadow */
-  border: calc(0.75 * var(--border-width)) solid
-    var(--background-modifier-border); /* Add a custom border */
-}
-
 .task-card-icon {
   align-self: center;
   width: var(--icon-xs);
   height: var(--icon-xs);
 }
 
-.task-card-round-button {
+.task-card-button {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: none;
+  box-shadow: none !important;
   background: none;
   padding: 0;
   cursor: pointer;
   width: calc(var(--icon-xs) + 10px);
   height: calc(var(--icon-xs) + 10px);
-  border-radius: 50%;
   overflow: hidden; /* Hide overflow */
   min-width: calc(var(--icon-xs) + 10px); /* Set minimum width */
   min-height: calc(var(--icon-xs) + 10px); /* Set minimum height */
   flex-shrink: 0; /* Prevent shrinking */
-  background-color: var(--interactive-normal);
 }
 
-.task-card-round-button:hover {
-  background-color: var(--background-modifier-hover);
-}
-
-.task-card-round-button:active {
-  background-color: var(--background-modifier-active-hover);
+.task-card-button:hover {
+  background: var(--background-modifier-hover);
 }
 
 .task-card-menu-button:hover svg {

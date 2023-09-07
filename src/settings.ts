@@ -4,6 +4,7 @@ import type { Writable } from 'svelte/store';
 import TaskCardPlugin from './index';
 import { Project } from './taskModule/project';
 import { logger } from './utils/log';
+import { LabelModule } from './taskModule/labels/index';
 
 export interface TaskCardSettings {
   parsingSettings: {
@@ -11,6 +12,7 @@ export interface TaskCardSettings {
     markdownEndingNotation: string;
     indicatorTag: string;
     markdownSuffix: string;
+    blockLanguage: string
   };
   displaySettings: {
     defaultMode: string;
@@ -26,7 +28,8 @@ export const DefaultSettings: TaskCardSettings = {
     markdownStartingNotation: '%%*',
     markdownEndingNotation: '*%%',
     indicatorTag: 'TaskCard',
-    markdownSuffix: ' .'
+    markdownSuffix: ' .',
+    blockLanguage: 'taskcard'
   },
   displaySettings: {
     defaultMode: 'single-line'
@@ -47,6 +50,7 @@ export class SettingsTab extends PluginSettingTab {
     newProjectName: string;
     newProjectColor: string;
   };
+  private labelModule: LabelModule;
 
   constructor(app: App, plugin: TaskCardPlugin) {
     super(app, plugin);
@@ -56,6 +60,7 @@ export class SettingsTab extends PluginSettingTab {
       newProjectName: '',
       newProjectColor: ''
     };
+    this.labelModule = new LabelModule();
   }
 
   display(): void {
@@ -128,7 +133,7 @@ export class SettingsTab extends PluginSettingTab {
         if (isColorPickerMode) {
           colorPickerButton.setTooltip('Cancel').setIcon('circle-off');
         } else {
-          colorPickerButton.setTooltip('Pick a color').setIcon('palette');
+          colorPickerButton.setTooltip('Pick a color (optional)').setIcon('palette');
         }
       }
     };
@@ -148,6 +153,7 @@ export class SettingsTab extends PluginSettingTab {
 
     if (isColorPickerMode) {
       setting.addColorPicker((colorPicker) => {
+        colorPickerComponent = colorPicker;
         colorPicker.onChange((value) => {
           newProjectColor = value;
           this.settingStatus.newProjectColor = value; // Store the color value if needed
@@ -348,21 +354,51 @@ export class SettingsTab extends PluginSettingTab {
     };
   
     const setting = new Setting(this.containerEl);
-  
+
     setting
       .setName('Indicator Tag')
-      .setDesc('The tag used to identify task cards.')
-      .addText((text) => {
-        textField = text;
-        return text
-          .setPlaceholder('YourTagHere')
-          .setValue(this.plugin.settings.parsingSettings.indicatorTag)
-          .setDisabled(true)
-          .onChange((value: string) => {
-            const indicatorTag = value.replace(/^#/, '');
-            this.plugin.writeSettings((old) => (old.parsingSettings.indicatorTag = indicatorTag));
-          });
+      .then((setting) => {
+        setting.descEl.appendChild(
+          createFragment((frag) => {
+            frag.appendText(
+              'The tag used to identify task cards. ' +
+              'Will take full effect after reloading obsidian. ' +
+              'Toggle on to convert existing tasks\' tags when indicator tag is changed. ' +
+              'Indicator tag must be a valid Obsidian tag, e.g. #TaskCard. Refer to '
+            );
+            frag.createEl(
+              'a',
+              {
+                text: 'Tag format',
+                href: 'https://help.obsidian.md/Editing+and+formatting/Tags#Tag+format'
+              },
+              (a) => {
+                a.setAttr('target', '_blank');
+              }
+            );
+            frag.createEl('br');
+          })
+        );
       });
+  
+    let convertTaskIndicatorTags: boolean = false
+    
+    setting.addToggle((toggle) => {
+      toggle
+        .setTooltip('Convert task indicator tags as well')
+        .setValue(convertTaskIndicatorTags)
+        .onChange((value) => {
+          convertTaskIndicatorTags = value
+        })
+    })
+
+    setting.addText((text) => {
+      textField = text;
+      return text
+        .setPlaceholder('YourTagHere')
+        .setValue(this.plugin.settings.parsingSettings.indicatorTag)
+        .setDisabled(true)
+    })
   
     // Add an Edit/Cancel button
     setting.addButton((button) => {
@@ -376,8 +412,13 @@ export class SettingsTab extends PluginSettingTab {
           } else if (isResetWarning) {
             // Confirm reset
             isResetWarning = false;
+            const oldIndicatorTag = this.plugin.settings.parsingSettings.indicatorTag;
+            const newIndicatorTag = DefaultSettings.parsingSettings.indicatorTag;
+            if (convertTaskIndicatorTags && oldIndicatorTag !== newIndicatorTag) {
+              this.plugin.taskMonitor.monitorVaultToChangeIndicatorTags(
+                this.app.vault, newIndicatorTag, oldIndicatorTag);
+            }
             this.plugin.writeSettings((old) => (old.parsingSettings.indicatorTag = DefaultSettings.parsingSettings.indicatorTag));
-            textField.setValue(DefaultSettings.parsingSettings.indicatorTag);
             this.display();
             logger.info(`Indicator tag reset to default.`);
             new Notice(`[TaskCard] Indicator tag reset to default.`);
@@ -397,7 +438,23 @@ export class SettingsTab extends PluginSettingTab {
           if (isEditMode) {
             // Save changes
             isEditMode = false;
-            this.plugin.writeSettings((old) => (old.parsingSettings.indicatorTag = textField.getValue()));
+            const newIndicatorTag = textField.getValue();
+            const oldIndicatorTag = this.plugin.settings.parsingSettings.indicatorTag;
+            if (!newIndicatorTag) {
+              logger.warn(`Indicator Tag cannot be empty.`);
+              new Notice(`[TaskCard] Indicator Tag cannot be empty.`);
+              return;
+            } 
+            if (!this.labelModule.isValidLabel(newIndicatorTag)) {
+              logger.warn(`Invalid indicator tag: ${newIndicatorTag}`);
+              new Notice(`[TaskCard] Invalid indicator tag: ${newIndicatorTag}.`);
+              return;
+            }
+            if (convertTaskIndicatorTags && newIndicatorTag !== oldIndicatorTag) {
+              this.plugin.taskMonitor.monitorVaultToChangeIndicatorTags(
+                this.app.vault, newIndicatorTag, oldIndicatorTag);
+            }
+            this.plugin.writeSettings((old) => (old.parsingSettings.indicatorTag = newIndicatorTag));
             this.display();
             logger.info(`Indicator tag updated: ${textField.getValue()}`);
             new Notice(`[TaskCard] Indicator tag updated: ${textField.getValue()}.`);

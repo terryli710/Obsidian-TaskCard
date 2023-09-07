@@ -15,12 +15,15 @@
     import MoreVertical from '../components/icons/MoreVertical.svelte';
     import { Menu, Notice } from 'obsidian';
     import { SettingStore } from '../settings';
+    import { DescriptionParser } from '../taskModule/description';
+    import CircularProgressBar from '../components/CircularProgressBar.svelte';
 
     export let taskSyncManager: ObsidianTaskSyncManager;
     export let plugin: TaskCardPlugin;
     export let params: TaskDisplayParams;
 
     let task: ObsidianTask = taskSyncManager.obsidianTask;
+    let descriptionProgress = DescriptionParser.progressOfDescription(taskSyncManager.obsidianTask.description);
 
     const dispatch = createEventDispatcher();
 
@@ -82,84 +85,107 @@
     function showCardMenu(event) {
       event.preventDefault();
       const cardMenu = new Menu();
+
+      // Group 0: Toggle single-line and multi-line mode
+      cardMenu.addItem((item) => {
+          item.setTitle('Switch to Single-line');
+          item.setIcon('list');
+          item.onClick((evt: MouseEvent | KeyboardEvent) => {
+            switchMode(evt, 'single-line');
+          });
+        });
+
+      // Separator
+      cardMenu.addSeparator();
+
+      // Group 1: Task Description and Due Date
       if (!taskSyncManager.obsidianTask.hasDescription()) {
-          cardMenu.addItem((item) => {
-              item.setTitle('Add Description');
-              item.setIcon('plus');
-              item.onClick((evt: MouseEvent | KeyboardEvent) => {
-                  taskSyncManager.taskCardStatus.descriptionStatus = 'editing';
-              })
-          })
+        cardMenu.addItem((item) => {
+          item.setTitle('Add Description');
+          item.setIcon('plus');
+          item.onClick((evt) => {
+            taskSyncManager.taskCardStatus.descriptionStatus = 'editing';
+          });
+        });
       } else {
-          cardMenu.addItem((item) => {
-              item.setTitle('Delete Description');
-              item.setIcon('trash');
-              item.onClick((evt: MouseEvent | KeyboardEvent) => {
-                  taskSyncManager.updateObsidianTaskAttribute('description', '');
-              })
-          })
+        cardMenu.addItem((item) => {
+          item.setTitle('Delete Description');
+          item.setIcon('trash');
+          item.onClick((evt) => {
+            taskSyncManager.updateObsidianTaskAttribute('description', '');
+          });
+        });
       }
 
       if (!taskSyncManager.obsidianTask.hasDue()) {
-          cardMenu.addItem((item) => {
-              item.setTitle('Add Due');
-              item.setIcon('plus');
-              item.onClick((evt: MouseEvent | KeyboardEvent) => {
-                  taskSyncManager.taskCardStatus.dueStatus = 'editing';
-              })
-          })
+        cardMenu.addItem((item) => {
+          item.setTitle('Add Due');
+          item.setIcon('plus');
+          item.onClick((evt) => {
+            taskSyncManager.taskCardStatus.dueStatus = 'editing';
+          });
+        });
       } else {
-          cardMenu.addItem((item) => {
-              item.setTitle('Delete Due');
-              item.setIcon('trash');
-              item.onClick((evt: MouseEvent | KeyboardEvent) => {
-                  taskSyncManager.updateObsidianTaskAttribute('due', null);
-              })
-          })
+        cardMenu.addItem((item) => {
+          item.setTitle('Delete Due');
+          item.setIcon('trash');
+          item.onClick((evt) => {
+            taskSyncManager.updateObsidianTaskAttribute('due', null);
+          });
+        });
       }
 
+      // Separator
+      cardMenu.addSeparator();
+
+      // Group 2: Labels and Projects
       if (taskSyncManager.obsidianTask.hasAnyLabels()) {
-          cardMenu.addItem((item) => {
-              item.setTitle('Remove All Labels');
-              item.setIcon('trash');
-              item.onClick((evt: MouseEvent | KeyboardEvent) => {
-                  taskSyncManager.updateObsidianTaskAttribute('labels', []);
-              })
-          })
+        cardMenu.addItem((item) => {
+          item.setTitle('Remove All Labels');
+          item.setIcon('trash');
+          item.onClick((evt) => {
+            taskSyncManager.updateObsidianTaskAttribute('labels', []);
+          });
+        });
       }
 
       if (taskSyncManager.obsidianTask.hasProject()) {
-          cardMenu.addItem((item) => {
-              item.setTitle('Remove Project');
-              item.setIcon('trash');
-              item.onClick((evt: MouseEvent | KeyboardEvent) => {
-                  taskSyncManager.updateObsidianTaskAttribute('project', null);
-              })
-          })
+        cardMenu.addItem((item) => {
+          item.setTitle('Remove Project');
+          item.setIcon('trash');
+          item.onClick((evt) => {
+            taskSyncManager.updateObsidianTaskAttribute('project', null);
+          });
+        });
       } else {
-          cardMenu.addItem((item) => {
-              item.setTitle('Assign Project');
-              item.setIcon('plus');
-              item.onClick((evt: MouseEvent | KeyboardEvent) => {
-                  taskSyncManager.taskCardStatus.projectStatus = 'selecting';
-                  if (projects.length === 0) {
-                      logger.warn('No projects available');
-                      new Notice(`[TaskCard] No projects available. Add one in Settings Tab.`);
-                  }
-              })
-          })
+        cardMenu.addItem((item) => {
+          item.setTitle('Assign Project');
+          item.setIcon('plus');
+          item.onClick((evt) => {
+            taskSyncManager.taskCardStatus.projectStatus = 'selecting';
+            if (projects.length === 0) {
+              logger.warn('No projects available');
+              new Notice(`[TaskCard] No projects available. Add one in Settings Tab.`);
+            }
+          });
+        });
       }
 
+      // Separator
+      cardMenu.addSeparator();
+
+      // Group 3: Delete Task
       cardMenu.addItem((item) => {
-          item.setTitle('Delete Task');
-          item.setIcon('trash');
-          item.onClick((evt: MouseEvent | KeyboardEvent) => {
-              taskSyncManager.deleteTask();
-          })
-      })
+        item.setTitle('Delete Task');
+        item.setIcon('trash');
+        item.onClick((evt) => {
+          taskSyncManager.deleteTask();
+        });
+      });
 
       cardMenu.showAtPosition({ x: event.clientX, y: event.clientY });
     }
+
 
 </script>
 
@@ -176,6 +202,9 @@
       <div class="task-card-content">{task.content}</div>
     </div>
     <div class="task-card-single-line-right-container">
+      {#if descriptionProgress[1] * descriptionProgress[0] > 0 && !task.completed }
+        <CircularProgressBar value={descriptionProgress[0]} max={descriptionProgress[1]} showDigits={false} />
+      {/if}
       {#if taskSyncManager.obsidianTask.hasDue()}
         <Due taskSyncManager={taskSyncManager} plugin={plugin} params={params} />
       {/if}
@@ -198,7 +227,9 @@
       <Content taskSyncManager={taskSyncManager} />
       <Project taskSyncManager={taskSyncManager} params={params} />
     </div>
-    <Description taskSyncManager={taskSyncManager} />
+    {#if taskSyncManager.obsidianTask.hasDescription() || taskSyncManager.getTaskCardStatus('descriptionStatus') === 'editing'}
+      <Description taskSyncManager={taskSyncManager} />
+    {/if}
     <button class="task-card-menu-button mode-multi-line" on:click={(event) => showCardMenu(event)} tabindex="0">
       <MoreVertical/>
     </button>
@@ -212,7 +243,7 @@
       <Labels taskSyncManager={taskSyncManager} />
     </div>
     <div class="task-card-attribute-bottom-bar-right">
-      <button class="task-card-round-button" on:click={(event) => switchMode(event, 'single-line')}>
+      <button class="task-card-button mode-toggle-button" on:click={(event) => switchMode(event, 'single-line')}>
         <ChevronsDownUp/>
       </button>
     </div>
@@ -223,6 +254,7 @@
 
   .task-card-checkbox {
     border: var(--border-width) solid;
+    border-color: var(--checkbox-border-color);
   }
 
   /* Apply color to checkbox based on priority */
@@ -230,25 +262,41 @@
     border-color: var(--color-red);
   }
   .task-card-checkbox.priority-2 {
-    border-color: var(--color-orange);
+    border-color: var(--color-yellow);
   }
   .task-card-checkbox.priority-3 {
-    border-color: var(--color-yellow);
+    border-color: var(--color-cyan);
   }
 
   /* Maintain border color on hover */
   .task-card-checkbox.priority-1:hover {
-    border-color: var(--color-red);
+    background-color: rgba(var(--color-red-rgb), 0.1);
   }
   .task-card-checkbox.priority-2:hover {
-    border-color: var(--color-orange);
+    background-color: rgba(var(--color-yellow-rgb), 0.1);
   }
   .task-card-checkbox.priority-3:hover {
-    border-color: var(--color-yellow);
+    background-color: rgba(var(--color-cyan-rgb), 0.1);
   }
-  .task-card-checkbox:hover {
-    cursor: pointer;
-    border-width: calc( 2 * var(--border-width));
+
+  input[type=checkbox].task-card-checkbox.priority-1:checked {
+    background-color: rgba(var(--color-red-rgb), 0.7);
+  }
+  input[type=checkbox].task-card-checkbox.priority-2:checked {
+    background-color: rgba(var(--color-yellow-rgb), 0.7);
+  }
+  input[type=checkbox].task-card-checkbox.priority-3:checked {
+    background-color: rgba(var(--color-cyan-rgb), 0.7);
+  }
+
+  input[type=checkbox].task-card-checkbox.priority-1:checked:hover {
+    background-color: rgba(var(--color-red-rgb), 0.9);
+  }
+  input[type=checkbox].task-card-checkbox.priority-2:checked:hover {
+    background-color: rgba(var(--color-yellow-rgb), 0.9);
+  }
+  input[type=checkbox].task-card-checkbox.priority-3:checked:hover {
+    background-color: rgba(var(--color-cyan-rgb), 0.9);
   }
 
   .task-card-menu-button {
@@ -264,6 +312,19 @@
   .task-card-menu-button:hover {
     background: none !important;
     box-shadow: none !important;
+    color: var(--text-accent);
+  }
+
+  button.mode-toggle-button {
+    border-radius: var(--radius-m);
+  }
+
+  .task-card-major-block {
+    display: grid;
+    grid-template-columns: auto 1fr; /* Checkbox takes only the space it needs, rest for content and description */
+    grid-template-rows: auto auto; /* Two rows for content and description */
+    width: 100%;
+    align-items: center;
   }
 
 </style>

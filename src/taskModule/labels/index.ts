@@ -9,7 +9,7 @@ export class LabelModule {
   }
 
   // Check if a label is valid based on Obsidian's rules
-  private isValidLabel(label: string): boolean {
+  public isValidLabel(label: string): boolean {
     // The label should not be empty
     if (!label) return false;
     // The label should contain at least one non-numerical character

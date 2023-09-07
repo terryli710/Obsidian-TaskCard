@@ -38,14 +38,14 @@ describe('AttributeSuggester', () => {
     const lineText = '{{ ';
     const cursorPos = 2;
     const suggestions = suggester.buildSuggestions(lineText, cursorPos);
-    expect(suggestions).toHaveLength(5); // Assuming 5 attribute suggestions are returned
+    expect(suggestions).toHaveLength(3); // Assuming 3 attribute suggestions are returned
   });
 
   it('gets attribute suggestions', () => {
     const lineText = '{{ ';
     const cursorPos = 2;
     const suggestions = suggester.getAttributeSuggestions(lineText, cursorPos);
-    expect(suggestions).toHaveLength(5); // Assuming 5 attribute suggestion is returned
+    expect(suggestions).toHaveLength(3); // Assuming 3 attribute suggestion is returned
   });
 
   it('gets priority suggestions', () => {

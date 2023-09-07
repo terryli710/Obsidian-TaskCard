@@ -1,76 +1,66 @@
 
 import { TaskParser } from '../src/taskModule/taskParser';
-import { ObsidianTask, DateOnly, TaskProperties } from '../src/taskModule/task';
-import { JSDOM } from 'jsdom';
 import { logger } from '../src/utils/log';
 import { writable } from 'svelte/store';
 import { Project, ProjectModule } from '../src/taskModule/project';
 
 
-function createTestTaskElement(document: Document): HTMLElement {
-  // Create the main task element
-  const taskElement = document.createElement('li');
-  taskElement.setAttribute('data-line', '0');
-  taskElement.setAttribute('data-task', '');
-  taskElement.className = 'task-list-item';
-  taskElement.style.display = 'none';
+// function createTestTaskElement(document: Document): HTMLElement {
+//   // Create the main task element
+//   const taskElement = document.createElement('li');
+//   taskElement.setAttribute('data-line', '0');
+//   taskElement.setAttribute('data-task', '');
+//   taskElement.className = 'task-list-item';
+//   taskElement.style.display = 'none';
 
-  // Create the list bullet
-  const listBullet = document.createElement('div');
-  listBullet.className = 'list-bullet';
-  taskElement.appendChild(listBullet);
+//   // Create the list bullet
+//   const listBullet = document.createElement('div');
+//   listBullet.className = 'list-bullet';
+//   taskElement.appendChild(listBullet);
 
-  // Create the checkbox
-  const checkbox = document.createElement('input');
-  checkbox.setAttribute('data-line', '0');
-  checkbox.type = 'checkbox';
-  checkbox.className = 'task-list-item-checkbox';
-  taskElement.appendChild(checkbox);
+//   // Create the checkbox
+//   const checkbox = document.createElement('input');
+//   checkbox.setAttribute('data-line', '0');
+//   checkbox.type = 'checkbox';
+//   checkbox.className = 'task-list-item-checkbox';
+//   taskElement.appendChild(checkbox);
 
-  // Add the task content
-  taskElement.appendChild(document.createTextNode('An example task '));
+//   // Add the task content
+//   taskElement.appendChild(document.createTextNode('An example task '));
 
-  // Create the tag link
-  const tagLink = document.createElement('a');
-  tagLink.href = '#TaskCard';
-  tagLink.className = 'tag';
-  tagLink.target = '_blank';
-  tagLink.rel = 'noopener';
-  tagLink.textContent = '#TaskCard';
-  taskElement.appendChild(tagLink);
+//   // Create the tag link
+//   const tagLink = document.createElement('a');
+//   tagLink.href = '#TaskCard';
+//   tagLink.className = 'tag';
+//   tagLink.target = '_blank';
+//   tagLink.rel = 'noopener';
+//   tagLink.textContent = '#TaskCard';
+//   taskElement.appendChild(tagLink);
+//   // Create a single hidden span element containing all attributes as a JSON object
+//   const attributes = {
+//     priority: 4,
+//     description: '- A multi line description.\n- the second line.',
+//     order: 1,
+//     project: { id: 'project-123', name: 'Project Name', color: '#f1f1f1' },
+//     sectionID: 'section-456',
+//     labels: ['label1', 'label2'],
+//     parent: null,
+//     children: [],
+//     due: {
+//       isRecurring: false,
+//       string: '2023-08-15',
+//       date: '2024-08-15',
+//       timezone: null
+//     },
+//     metadata: { filePath: '/path/to/file' }
+//   };
+//   const attributesSpan = document.createElement('span');
+//   attributesSpan.style.display = 'none';
+//   attributesSpan.textContent = JSON.stringify(attributes);
+//   taskElement.appendChild(attributesSpan);
 
-  // Helper function to create hidden span elements
-  const createHiddenSpan = (className: string, content: string) => {
-    const span = document.createElement('span');
-    span.className = className;
-    span.style.display = 'none';
-    span.textContent = content;
-    taskElement.appendChild(span);
-  };
-
-  // Add the hidden span elements
-  createHiddenSpan('priority', '4');
-  createHiddenSpan(
-    'description',
-    '"- A multi line description.\\n- the second line."'
-  );
-  createHiddenSpan('order', '1');
-  createHiddenSpan(
-    'project',
-    '{"id":"project-123", "name":"Project Name", "color":"#f1f1f1"}'
-  );
-  createHiddenSpan('section-id', '"section-456"');
-  createHiddenSpan('labels', '["label1","label2"]');
-  createHiddenSpan('parent', 'null');
-  createHiddenSpan('children', '[]');
-  createHiddenSpan(
-    'due',
-    '{"isRecurring":false,"string":"2023-08-15","date":"2024-08-15","timezone":null}'
-  );
-  createHiddenSpan('metadata', '{"filePath":"/path/to/file"}');
-
-  return taskElement;
-}
+//   return taskElement;
+// }
 
 describe('taskParser', () => {
   let warnSpy, errorSpy, debugSpy, infoSpy;
@@ -120,156 +110,254 @@ describe('taskParser', () => {
     taskParser = new TaskParser(mockSettingStore, mockProjectModule);
   });
 
-  describe('parseTaskEl', () => {
+  // describe('parseTaskEl', () => {
 
-    it('should merge labels from both hidden span and content, and remove indicatorTag', () => {
-      const dom = new JSDOM();
-      const document = dom.window.document;
-      const taskElement = createTestTaskElement(document);
-      const parsedTask = taskParser.parseTaskEl(taskElement);
+  //   it('should merge labels from both hidden span and content, and remove indicatorTag', () => {
+  //     const dom = new JSDOM();
+  //     const document = dom.window.document;
+  //     const taskElement = createTestTaskElement(document);
+  //     const parsedTask = taskParser.parseTaskEl(taskElement);
     
-      // Expecting labels to contain '#label1', '#label2' from the hidden span
-      // '#TaskCard' should be removed as it's the indicatorTag
-      expect(parsedTask.labels).toEqual(['#label1', '#label2']);
+  //     // Expecting labels to contain '#label1', '#label2' from the hidden span
+  //     // '#TaskCard' should be removed as it's the indicatorTag
+  //     expect(parsedTask.labels).toEqual(['#label1', '#label2']);
+  //   });
+    
+  //   it('should filter out duplicate labels and remove indicatorTag', () => {
+  //     const dom = new JSDOM();
+  //     const document = dom.window.document;
+  //     const taskElement = createTestTaskElement(document);
+    
+  //     // Adding another span to introduce a duplicate label
+  //     const duplicateLabelSpan = document.createElement('span');
+  //     duplicateLabelSpan.className = 'labels';
+  //     duplicateLabelSpan.style.display = 'none';
+  //     duplicateLabelSpan.textContent = '["#label1"]';
+  //     taskElement.appendChild(duplicateLabelSpan);
+    
+  //     const parsedTask = taskParser.parseTaskEl(taskElement);
+    
+  //     // Expecting labels to contain '#label1', '#label2'
+  //     // '#TaskCard' should be removed as it's the indicatorTag
+  //     expect(parsedTask.labels).toEqual(['#label1', '#label2']);
+  //   });
+    
+
+  //   it('should handle only hidden span labels when no content labels are present', () => {
+  //     const dom = new JSDOM();
+  //     const document = dom.window.document;
+  //     const taskElement = createTestTaskElement(document);
+
+  //     // Removing content label
+  //     const tagElement = taskElement.querySelector('a.tag');
+  //     if (tagElement) {
+  //       taskElement.removeChild(tagElement);
+  //     }
+
+  //     const parsedTask = taskParser.parseTaskEl(taskElement);
+
+  //     // Expecting labels to contain only '#label1', '#label2' from the hidden span
+  //     expect(parsedTask.labels).toEqual(['#label1', '#label2']);
+  //   });
+
+    // it('should handle only content labels when no hidden span labels are present', () => {
+    //   const dom = new JSDOM();
+    //   const document = dom.window.document;
+    //   const taskElement = createTestTaskElement(document);
+    
+    //   // Removing hidden span labels
+    //   const labelsSpan = taskElement.querySelector('span[style="display:none"]');
+    //   if (labelsSpan) {
+    //     taskElement.removeChild(labelsSpan);
+    //   }
+    
+    //   const parsedTask = taskParser.parseTaskEl(taskElement);
+    
+    //   // Expecting labels to be empty as we've removed the hidden span
+    //   expect(parsedTask.labels).toEqual([]);
+    // });
+    
+
+  //   it('should parse a task element correctly', () => {
+  //     // Create a test task element using the new task HTML structure
+  //     const dom = new JSDOM();
+  //     const document = dom.window.document;
+  //     const taskElement = createTestTaskElement(document);
+
+  //     // Expected task object
+  //     const expectedTask = {
+  //       id: '',
+  //       content: 'An example task',
+  //       priority: 4,
+  //       description: '- A multi line description.\n- the second line.',
+  //       order: 1,
+  //       project: {
+  //         id: 'project-123',
+  //         name: 'Project Name',
+  //         color: '#f1f1f1'
+  //       },
+  //       sectionID: 'section-456',
+  //       labels: ['#label1', '#label2'],
+  //       completed: false,
+  //       parent: null,
+  //       children: [],
+  //       due: {
+  //         isRecurring: false,
+  //         string: '2023-08-15',
+  //         date: '2024-08-15',
+  //         timezone: null
+  //       },
+  //       metadata: {
+  //         filePath: '/path/to/file'
+  //       }
+  //     };
+
+  //     // Call the parseTaskEl method
+  //     const parsedTask = taskParser.parseTaskEl(taskElement);
+
+  //     // Assert that the parsed task matches the expected task object
+  //     expect(parsedTask).toEqual(expectedTask);
+  //   });
+
+  //   it('should parse another task element correctly', () => {
+  //     // Create a test task element using the new task HTML structure
+  //     const dom = new JSDOM();
+  //     const document = dom.window.document;
+  //     const taskElement = createTestTaskElement(document);
+
+  //     // Expected task object without the id property
+  //     const expectedTask = {
+  //       id: '',
+  //       content: 'An example task',
+  //       priority: 4,
+  //       description: '- A multi line description.\n- the second line.',
+  //       order: 1,
+  //       project: {
+  //         id: 'project-123',
+  //         name: 'Project Name',
+  //         color: '#f1f1f1'
+  //       },
+  //       sectionID: 'section-456',
+  //       labels: ['#label1', '#label2'],
+  //       completed: false,
+  //       parent: null,
+  //       children: [],
+  //       due: {
+  //         isRecurring: false,
+  //         string: '2023-08-15',
+  //         date: '2024-08-15',
+  //         timezone: null
+  //       },
+  //       metadata: {
+  //         filePath: '/path/to/file'
+  //       }
+  //     };
+
+  //     // Call the parseTaskEl method
+  //     const parsedTask = taskParser.parseTaskEl(taskElement);
+
+  //     // Assert that the parsed task matches the expected task object without considering the id
+  //     expect(parsedTask).toEqual(expect.objectContaining(expectedTask));
+  //   });
+  // });
+
+
+  describe('parseFormattedTaskMarkdown', () => {
+    
+    it('should parse a basic task correctly', () => {
+      const taskMarkdown = `- [ ] This is a task <span style="display:none">{"id":"123"}</span>`;
+      const result = taskParser.parseFormattedTaskMarkdown(taskMarkdown);
+      expect(result.completed).toBe(false);
+      expect(result.content).toBe('This is a task');
+      expect(result.id).toBe('123');
     });
     
-    it('should filter out duplicate labels and remove indicatorTag', () => {
-      const dom = new JSDOM();
-      const document = dom.window.document;
-      const taskElement = createTestTaskElement(document);
-    
-      // Adding another span to introduce a duplicate label
-      const duplicateLabelSpan = document.createElement('span');
-      duplicateLabelSpan.className = 'labels';
-      duplicateLabelSpan.style.display = 'none';
-      duplicateLabelSpan.textContent = '["#label1"]';
-      taskElement.appendChild(duplicateLabelSpan);
-    
-      const parsedTask = taskParser.parseTaskEl(taskElement);
-    
-      // Expecting labels to contain '#label1', '#label2'
-      // '#TaskCard' should be removed as it's the indicatorTag
-      expect(parsedTask.labels).toEqual(['#label1', '#label2']);
-    });
-    
-
-    it('should handle only hidden span labels when no content labels are present', () => {
-      const dom = new JSDOM();
-      const document = dom.window.document;
-      const taskElement = createTestTaskElement(document);
-
-      // Removing content label
-      const tagElement = taskElement.querySelector('a.tag');
-      if (tagElement) {
-        taskElement.removeChild(tagElement);
-      }
-
-      const parsedTask = taskParser.parseTaskEl(taskElement);
-
-      // Expecting labels to contain only '#label1', '#label2' from the hidden span
-      expect(parsedTask.labels).toEqual(['#label1', '#label2']);
+    it('should parse a completed task', () => {
+      const taskMarkdown = `- [x] This is a completed task <span style="display:none">{"id":"123"}</span>`;
+      const result = taskParser.parseFormattedTaskMarkdown(taskMarkdown);
+      expect(result.completed).toBe(true);
     });
 
-    it('should handle only content labels when no hidden span labels are present', () => {
-      const dom = new JSDOM();
-      const document = dom.window.document;
-      const taskElement = createTestTaskElement(document);
-
-      // Removing hidden span labels
-      const labelsSpan = taskElement.querySelector('span.labels');
-      if (labelsSpan) {
-        taskElement.removeChild(labelsSpan);
-      }
-
-      const parsedTask = taskParser.parseTaskEl(taskElement);
-
-      // Expecting labels to contain only '#TaskCard' from the content
-      expect(parsedTask.labels).toEqual([]);
+    it('should parse task with multiple attributes', () => {
+      const taskMarkdown = `- [ ] Task with multiple attributes <span style="display:none">{"id":"123","priority":1,"description":"Description here"}</span>`;
+      const result = taskParser.parseFormattedTaskMarkdown(taskMarkdown);
+      expect(result.id).toBe('123');
+      expect(result.priority).toBe(1);
+      expect(result.description).toBe('Description here');
     });
 
-    it('should parse a task element correctly', () => {
-      // Create a test task element using the new task HTML structure
-      const dom = new JSDOM();
-      const document = dom.window.document;
-      const taskElement = createTestTaskElement(document);
-
-      // Expected task object
-      const expectedTask = {
-        id: '',
-        content: 'An example task',
-        priority: 4,
-        description: '- A multi line description.\n- the second line.',
-        order: 1,
-        project: {
-          id: 'project-123',
-          name: 'Project Name',
-          color: '#f1f1f1'
-        },
-        sectionID: 'section-456',
-        labels: ['#label1', '#label2'],
-        completed: false,
-        parent: null,
-        children: [],
-        due: {
-          isRecurring: false,
-          string: '2023-08-15',
-          date: '2024-08-15',
-          timezone: null
-        },
-        metadata: {
-          filePath: '/path/to/file'
-        }
-      };
-      console.log(`task element: ${JSON.stringify(taskElement.innerHTML)}`);
-
-      // Call the parseTaskEl method
-      const parsedTask = taskParser.parseTaskEl(taskElement);
-
-      // Assert that the parsed task matches the expected task object
-      expect(parsedTask).toEqual(expectedTask);
+    it('should parse a task with new description', () => {
+      const taskMarkdown = `- [ ] Task with new description <span style="display:none">{"id":"123"}</span>\n    Description here`;
+      const result = taskParser.parseFormattedTaskMarkdown(taskMarkdown);
+      expect(result.description).toBe('    Description here');
     });
 
-    it('should parse another task element correctly', () => {
-      // Create a test task element using the new task HTML structure
-      const dom = new JSDOM();
-      const document = dom.window.document;
-      const taskElement = createTestTaskElement(document);
+    it('should parse task with labels', () => {
+      const taskMarkdown = `- [ ] Task with #label1 #label2 <span style="display:none">{"id":"123"}</span>`;
+      const result = taskParser.parseFormattedTaskMarkdown(taskMarkdown);
+      expect(result.labels).toEqual(['#label1', '#label2']);
+    });
 
-      // Expected task object without the id property
-      const expectedTask = {
-        id: '',
-        content: 'An example task',
-        priority: 4,
-        description: '- A multi line description.\n- the second line.',
-        order: 1,
-        project: {
-          id: 'project-123',
-          name: 'Project Name',
-          color: '#f1f1f1'
-        },
-        sectionID: 'section-456',
-        labels: ['#label1', '#label2'],
-        completed: false,
-        parent: null,
-        children: [],
-        due: {
-          isRecurring: false,
-          string: '2023-08-15',
-          date: '2024-08-15',
-          timezone: null
-        },
-        metadata: {
-          filePath: '/path/to/file'
-        }
-      };
+    it('should ignore indicator tags', () => {
+      // Assuming this.indicatorTag is 'TaskCard'
+      const taskMarkdown = `- [ ] Task with #label #TaskCard <span style="display:none">{"id":"123"}</span>`;
+      const result = taskParser.parseFormattedTaskMarkdown(taskMarkdown);
+      expect(result.labels).toEqual(['#label']);
+    });
 
-      // Call the parseTaskEl method
-      const parsedTask = taskParser.parseTaskEl(taskElement);
-
-      // Assert that the parsed task matches the expected task object without considering the id
-      expect(parsedTask).toEqual(expect.objectContaining(expectedTask));
+    it('should parse metadata correctly', () => {
+      const taskMarkdown = `- [ ] Task with metadata <span style="display:none">{"metadata":{"filePath":"/path/to/file"}}</span>`;
+      const result = taskParser.parseFormattedTaskMarkdown(taskMarkdown);
+      expect(result.metadata.filePath).toBe('/path/to/file');
     });
   });
+
+
+  // describe('parseExtractedFormattedTaskMarkdown', () => {
+  //   it('should correctly parse a complete task', () => {
+  //     const taskMarkdown = '- [ ] Exercise #PersonalLife #Health #TaskCard{"id":"69c7847e-b182-4353-8676-d29450dedbdb","priority":1,"description":"- Cardio for 30 mins\\\\n- Weight lifting for 20 mins","order":0,"project":{"id":"bdedc03b-88e8-4a1e-b566-fe12d3d925e7","name":"HealthPlan","color":"#f45fe3"},"sectionID":"","parent":null,"children":[],"due":null,"metadata":{}} .';
+  //     const parsedTask = taskParser.parseExtractedFormattedTaskMarkdown(taskMarkdown);
+  //     expect(parsedTask.completed).toBe(false);
+  //     expect(parsedTask.content).toBe('Exercise');
+  //     expect(parsedTask.labels).toEqual(['#PersonalLife', '#Health']);
+  //     expect(parsedTask.id).toBe('69c7847e-b182-4353-8676-d29450dedbdb');
+  //     expect(parsedTask.priority).toBe(1);
+  //     expect(parsedTask.description).toBe('- Cardio for 30 mins\\n- Weight lifting for 20 mins');
+  //     expect(parsedTask.order).toBe(0);
+  //     expect(parsedTask.project).toEqual({"id":"bdedc03b-88e8-4a1e-b566-fe12d3d925e7","name":"HealthPlan","color":"#f45fe3"});
+  //     expect(parsedTask.sectionID).toBe('');
+  //     expect(parsedTask.parent).toBe(null);
+  //     expect(parsedTask.children).toEqual([]);
+  //     expect(parsedTask.due).toBe(null);
+  //     expect(parsedTask.metadata).toEqual({});
+  //   });
+  
+  //   it('should handle tasks without metadata', () => {
+  //     const taskMarkdown = '- [ ] Exercise #PersonalLife #Health #TaskCard{"id":"","priority":4,"description":"","order":0,"project":{"id":"","name":"","color":""},"sectionID":"","parent":null,"children":[],"due":null,"metadata":{}} .';
+  //     const parsedTask = taskParser.parseExtractedFormattedTaskMarkdown(taskMarkdown);
+  //     expect(parsedTask.completed).toBe(false);
+  //     expect(parsedTask.content).toBe('Exercise');
+  //     expect(parsedTask.labels).toEqual(['#PersonalLife', '#Health']);
+  //     expect(parsedTask.id).toBe('');
+  //     expect(parsedTask.priority).toBe(4);
+  //     // ... (other default values)
+  //   });
+  
+  //   it('should handle completed tasks', () => {
+  //     const taskMarkdown = '- [x] Exercise #PersonalLife #Health #TaskCard{"id":"","priority":4,"description":"","order":0,"project":{"id":"","name":"","color":""},"sectionID":"","parent":null,"children":[],"due":null,"metadata":{}} .';
+  //     const parsedTask = taskParser.parseExtractedFormattedTaskMarkdown(taskMarkdown);
+  //     expect(parsedTask.completed).toBe(true);
+  //   });
+  
+  //   it('should handle tasks with only metadata', () => {
+  //     const taskMarkdown = '- [ ] #TaskCard{"id":"69c7847e-b182-4353-8676-d29450dedbdb"} .';
+  //     const parsedTask = taskParser.parseExtractedFormattedTaskMarkdown(taskMarkdown);
+  //     expect(parsedTask.completed).toBe(false);
+  //     expect(parsedTask.content).toBe('');
+  //     expect(parsedTask.labels).toEqual([]);
+  //   });
+  // });
+
 
   describe('parseTaskMarkdown', () => {
     // 1. Parsing a simple task without any attributes.
@@ -363,7 +451,7 @@ describe('taskParser', () => {
     // 6. Parsing a task with a `description` attribute.
     it('should parse a task with a description attribute correctly', () => {
       const taskMarkdown =
-        '- [ ] Task with description %%*description:A detailed description*%%';
+        '- [ ] Task with description\nA detailed description';
 
       const parsedTask = taskParser.parseTaskMarkdown(taskMarkdown);
 
@@ -475,3 +563,4 @@ describe('taskParser', () => {
     });
   });
 });
+

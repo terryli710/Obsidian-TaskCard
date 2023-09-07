@@ -59,6 +59,20 @@
   }
 
   adjustWrapperHeight();
+
+  function isSelectEvent(evt: MouseEvent | KeyboardEvent) {
+    // return if it's mouse single click or keyboard "Enter" key press
+    if (evt instanceof MouseEvent) {
+      return evt.button === 0;
+    }
+    return evt instanceof KeyboardEvent && (evt.key === "Enter" || evt.key === " ");
+  }
+
+  function searchProject(evt: MouseEvent | KeyboardEvent, projectName: string) {
+    if (!isSelectEvent(evt)) { return; }
+    // @ts-ignore
+    const searchResult = taskSyncManager.plugin.app.internalPlugins.getPluginById('global-search').instance.openGlobalSearch(`line:\(\"\\\"name\\\":\\\"${projectName}\\\"\"\)`);
+  }
 </script>
 
 {#if params.mode === "single-line"}
@@ -80,9 +94,9 @@
             role="button"
             >
               <div class="task-card-project">
-                <a href="#{project.name}" class="tag" target="_blank" rel="noopener">
+                <div class="project-name">
                   {project.name}
-                </a>
+                </div>
                 <span class="project-color" style="background-color: {project.color};"></span>
               </div>
             </div>
@@ -112,12 +126,19 @@
     {:else}
       {#if project}
         <div class="task-card-project">
-          <a href="#{project.name}" class="tag" target="_blank" rel="noopener">
+          <div class="project-name"
+            title="search for project: {project.name}"
+            on:click={(evt) => searchProject(evt, project.name)}
+            on:keydown={(evt) => searchProject(evt, project.name)}
+            tabindex="0"
+            role="button"
+          >
             {project.name}
-          </a>
+          </div>
           <span
             class="project-color clickable-icon"
             style="background-color: {project.color};"
+            title="select project"
             on:click={toggleProjectPopup}
             on:keydown={(e) => e.key === 'Enter' && toggleProjectPopup()}
             tabindex="0"
@@ -180,8 +201,8 @@
 
     .divider {
       height: 1px;
-      margin: 2px 0;
-      background-color: var(--background-modifier-border);
+      margin: 3px 0;
+      background-color: transparent;
     }
 
   .project-color {
@@ -199,5 +220,24 @@
     cursor: pointer; /* Change the cursor to a pointer on hover */
     border: var(--border-width) solid var(--background-modifier-border); /* Add a border on hover */
   }
-  
+
+  .project-name {
+    background-color: var(--tag-background);
+    border: var(--tag-border-width) solid var(--tag-border-color);
+    border-radius: var(--tag-radius);
+    color: var(--tag-color);
+    font-size: var(--tag-size);
+    font-weight: var(--tag-weight);
+    text-decoration: var(--tag-decoration);
+    padding: var(--tag-padding-y) var(--tag-padding-x);
+    line-height: 1;
+    cursor: pointer;
+  }
+
+  .project-name:hover {
+    background-color: var(--tag-background-hover);
+    border: var(--tag-border-width) solid var(--tag-border-color-hover);
+    color: var(--tag-color-hover);
+    text-decoration: var(--tag-decoration-hover);
+  }
   </style>

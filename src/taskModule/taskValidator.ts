@@ -8,7 +8,7 @@ export type SpanElements = Record<keyof ObsidianTask, HTMLElement>;
 
 export class TaskValidator {
   private spanElementPattern: RegExp =
-    /<span class="[^"]+" style="display:none;">(.*?)<\/span>/;
+    /<span( class="[^"]+")? style="display:none">(.*?)<\/span>/;
   private markdownTaskPattern: RegExp = /^\s*- \[[^\]]\]\s/;
   private indicatorTag: string;
   private startingNotation: string;
@@ -31,8 +31,10 @@ export class TaskValidator {
     });
   }
 
-  private hasIndicatorTag(contentPart: string): boolean {
-    const indicatorTagPattern = new RegExp(`#${this.indicatorTag}`);
+  private hasIndicatorTag(contentPart: string, indicatorTag: string | null = null): boolean {
+    if (typeof contentPart !== 'string') return false;
+    if (indicatorTag === null) { indicatorTag = this.indicatorTag; }
+    const indicatorTagPattern = new RegExp(`#${indicatorTag}`);
     return indicatorTagPattern.test(contentPart);
   }
 
@@ -45,54 +47,94 @@ export class TaskValidator {
   }
 
   private getUnformattedMarkdownPattern(): RegExp {
-    const markdownPatternText: string = `^\\s*- \\[[\\s*+-x=]\\] (.*)(${this.startingNotation}[a-zA-Z]+:\\s*.*?${this.endingNotation}\\s*)*(${this.markdownSuffix})?$`;
+    const markdownPatternText: string = `^\\s*- \\[[\\s*+-x=]\\] (.*)(${this.startingNotation}[a-zA-Z]+:\\s*.*?${this.endingNotation}\\s*)*(${this.markdownSuffix})?`;
     return new RegExp(markdownPatternText, 'gm');
   }
 
   private getFormattedMarkdownPattern(): RegExp {
     const markdownSuffix = this.markdownSuffix;
-    return new RegExp(`^\\s*- \\[[^\\]]\\] (.*?)\\s*(<span class="[^"]+" style="display:none;">.*?<\\/span>\\s*)+(${markdownSuffix})?$`);
+    return new RegExp(`^\\s*- \\[[^\\]]\\] (.*?)\\s*(<span( class="[^"]+")? style="display:none">\\{.*?\\}<\\/span>)\\s*(${markdownSuffix})?`);
   }
+
+  // private getExtractedFormattedMarkdownPattern(): RegExp {
+  //   return new RegExp(`^\\s*- \\[[^\\]]\\] (.*?)\\s*\\{.*?\\}<\\/span>\\s*(${this.markdownSuffix})?`, 'gm');
+  // }
 
 
   private hasSpanElement(markdown: string): boolean {
     if (typeof markdown !== 'string') return false;
   
     const hasSpan = this.spanElementPattern.test(markdown);
-  
     return hasSpan;
   }
 
-  isValidFormattedTaskMarkdown(taskMarkdown: string): boolean {
-    // at least one span element
-    if (!this.hasSpanElement(taskMarkdown)) return false;
-    const match = this.getFormattedMarkdownPattern().exec(taskMarkdown);
+  isValidFormattedTaskMarkdown(taskMarkdown: string, indicatorTag: string | null  = null): boolean {
+    // Check for a single span element with or without class, containing an object of attributes
+    const singleSpanPattern = /<span(?: class="[^"]+")? style="display:none">\{.*?\}<\/span>/;
+    if (!singleSpanPattern.test(taskMarkdown)) return false;
 
+    const match = this.getFormattedMarkdownPattern().exec(taskMarkdown);
     if (match && match[1]) {
       const contentWithoutAttributes = match[1]
         .replace(this.getAttributePattern(), '')
         .trim();
-      // logger.debug(`isValidFormattedTaskMarkdown: contentWithoutAttributes - ${contentWithoutAttributes}`);
-      return this.hasIndicatorTag(contentWithoutAttributes);
+      return this.hasIndicatorTag(contentWithoutAttributes, indicatorTag);
     }
     return false;
   }
 
-  isValidUnformattedTaskMarkdown(taskMarkdown: string): boolean {
+  // isValidExtractedFormattedTaskMarkdown(taskMarkdown: string, indicatorTag: string | null  = null): boolean {
+  //   const match = this.getExtractedFormattedMarkdownPattern().exec(taskMarkdown);
+  //   if (match && match[1]) {
+  //     const contentWithoutAttributes = match[1]
+  //       .replace(this.getAttributePattern(), '')
+  //       .trim();
+  //     return this.hasIndicatorTag(contentWithoutAttributes, indicatorTag);
+  //   }
+  //   return false;
+  // }
+
+  selectHiddenSpans(taskEl: HTMLElement): HTMLElement[] | null {
+    // Get all span elements
+    const allSpans = taskEl.querySelectorAll('span');
+
+    // Filter those that have 'display:none' in their style attribute
+    const hiddenSpans = Array.from(allSpans).filter(span => {
+      const style = span.getAttribute('style');
+      return style && style.replace(/\s/g, '').includes('display:none');
+    });
+
+    return hiddenSpans;
+  }
+
+  isValidTaskElement(taskElement: HTMLElement): boolean {
+    // Check for a single span element with or without class, containing an object of attributes
+    const hiddenSpans = this.selectHiddenSpans(taskElement);
+    if (hiddenSpans.length === 0) { return false; }
+    const singleSpanElement = hiddenSpans[0];
+    if (!singleSpanElement || !/^\{.*\}$/.test(singleSpanElement.textContent || '')) {
+      return false;
+    }
+
+    // Check for the presence of the indicator tag
+    return this.checkTaskElementIndicatorTag(taskElement);
+  }
+
+  isValidUnformattedTaskMarkdown(taskMarkdown: string, indicatorTag: string | null  = null): boolean {
     const match = this.getUnformattedMarkdownPattern().exec(taskMarkdown);
     if (match && match[1]) {
       if (this.hasSpanElement(taskMarkdown)) { return false; }
       const contentWithoutAttributes = match[1]
         .replace(this.getAttributePattern(), '')
         .trim();
-      return this.hasIndicatorTag(contentWithoutAttributes);
+      return this.hasIndicatorTag(contentWithoutAttributes, indicatorTag);
     }
     return false;
   }
 
-  isMarkdownTaskWithIndicatorTag(taskMarkdown: string): boolean {
+  isMarkdownTaskWithIndicatorTag(taskMarkdown: string, indicatorTag: string | null  = null): boolean {
     return (
-      this.isMarkdownTask(taskMarkdown) && this.hasIndicatorTag(taskMarkdown)
+      this.isMarkdownTask(taskMarkdown) && this.hasIndicatorTag(taskMarkdown, indicatorTag)
     );
   }
 
@@ -147,19 +189,7 @@ export class TaskValidator {
     // If the loop completes without finding the indicator tag, return false
     return false;
   }
-  
 
-  isValidTaskElement(taskElement: HTMLElement): boolean {
-    if (!this.checkTaskElementClass(taskElement)) {
-      return false;
-    }
-
-    const spans: SpanElements = this.getTaskElementSpans(taskElement);
-    return (
-      Object.values(spans).length > 0 &&
-      Object.values(spans).some((span) => span !== null)
-    );
-  }
 
   isCompleteTaskElement(taskElement: HTMLElement): boolean {
     if (!this.checkTaskElementClass(taskElement)) {
