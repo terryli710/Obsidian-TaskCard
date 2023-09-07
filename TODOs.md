@@ -4,10 +4,8 @@
 
 - TODO: Auto added due.
 - TODO: google calendar sync?
-- TODO: subtasks?
-- TODO: todoist sync?
-- TODO: recurring task?
-- TODO: date parsing - date only?
+- TODO: todoist sync? (not right now)
+- TODO: recurring task? (not right now)
 
 # Commands
 - 
@@ -21,8 +19,7 @@
 - formatted attribute saving.
 - No direct edit method.
 - Single line mode background problem - taskcard background compatibility
-- TODO: optimize the appearance.
-- 
+
 
 ## Multi-mode display in preview mode
 
@@ -80,7 +77,6 @@
 - double click and edit description with multi line support.
   - Save and discard edits.
 - TODO: (far stretch) interactive display mode when editing.
-- TODO: sub task in descriptions
 - Sub task interactive.
 
 ### Delete
@@ -168,7 +164,6 @@
 ## HTML pinpointing the MD
 
 - Mostly done.
-- TODO: OPTIMIZE: Description as appending paragraphs
 
 # Task Formats
 
@@ -182,7 +177,7 @@
 ```
 
 ## Formatted Markdown
-
+- TODO: to be updated
 - A json field for arbitrary matadata saving
 
 ```markdown
