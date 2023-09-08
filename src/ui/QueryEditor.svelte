@@ -30,18 +30,18 @@
 
     let filePath = query.filePathQuery;
 
-    let dueDateEnabled = false;
-    let filePathEnabled = false;
+    // let dueDateEnabled = false;
+    // let filePathEnabled = false;
 
     let lowerPaths = paths.map((path) => path.toLowerCase());
 
-    function toggleFilter(filterType) {
-        if (filterType === 'dueDate') {
-            dueDateEnabled = !dueDateEnabled;
-        } else if (filterType === 'filePath') {
-            filePathEnabled = !filePathEnabled;
-        }
-    }
+    // function toggleFilter(filterType) {
+    //     if (filterType === 'dueDate') {
+    //         dueDateEnabled = !dueDateEnabled;
+    //     } else if (filterType === 'filePath') {
+    //         filePathEnabled = !filePathEnabled;
+    //     }
+    // }
 
     // Function to save the query
     function saveQuery() {
@@ -108,7 +108,8 @@
 
         // Validate the parsed time
         if (!time || !isValidDate(time)) {
-            logger.error(`Invalid date string: ${value}`);
+            // logger.error(`Invalid date string: ${value}`);
+            return;
         }
 
         // Assign the parsed time to the appropriate variable

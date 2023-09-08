@@ -11,6 +11,8 @@ export class QueryAndTaskListSvelteAdapter {
     svelteComponent: SvelteComponent
     codeBlockEl: HTMLElement
     codeBlockMetadata: {
+        sectionEl: HTMLElement
+        ctx: MarkdownPostProcessorContext
         sourcePath: string
         lineStart: number
         lineEnd: number
@@ -28,6 +30,8 @@ export class QueryAndTaskListSvelteAdapter {
         this.codeBlockEl = el
         const mdSectionInfo: MarkdownSectionInformation = ctx.getSectionInfo(el);
         this.codeBlockMetadata = {
+        sectionEl: el,
+        ctx: ctx,
         sourcePath: ctx.sourcePath,
         lineStart: mdSectionInfo.lineStart,
         lineEnd: mdSectionInfo.lineEnd
