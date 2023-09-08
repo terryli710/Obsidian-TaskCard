@@ -2,6 +2,7 @@ import TaskCardPlugin from "..";
 import { SettingStore } from "../settings";
 import { Project } from "../taskModule/project";
 import { PositionedObsidianTask } from "../taskModule/task";
+import { logger } from "../utils/log";
 import { MultipleAttributeTaskQuery } from "./cache";
 
 export interface TaskQueryOptions {
@@ -86,6 +87,8 @@ export class QuerySyncManager {
                 this.editMode = JSON.parse(value);
             }
         }
+
+        logger.debug(`query: ${JSON.stringify(query)}`);
     
         return query;
     }

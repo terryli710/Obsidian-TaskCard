@@ -1,7 +1,7 @@
 import { App, Plugin } from 'obsidian';
 import type { PluginManifest, Workspace, WorkspaceLeaf } from 'obsidian';
 import type { TaskCardSettings } from './settings';
-import { SettingStore, SettingsTab } from './settings';
+import { DefaultSettings, SettingStore, SettingsTab } from './settings';
 import { logger } from './utils/log';
 import AttributeSuggest from './autoSuggestions/EditorSuggestions';
 import { Project, ProjectModule } from './taskModule/project';
@@ -42,16 +42,24 @@ export default class TaskCardPlugin extends Plugin {
     this.staticTaskListRenderManager = new StaticTaskListRenderManager(this);
     this.cache = new TaskCardCache(this);
   }
-
+  
   async loadSettings() {
+    // Load saved settings from storage
     const loadedSettings = await this.loadData();
+  
+    // Initialize settings with default values
+    let initialSettings = JSON.parse(JSON.stringify(DefaultSettings));
+  
+    // Update the initial settings with any saved settings
     SettingStore.update((old) => {
       return {
-        ...old,
-        ...(loadedSettings || {})
+        ...initialSettings, // Start with default settings
+        ...old,             // Override with old settings (if any)
+        ...loadedSettings   // Finally, override with loaded settings
       };
     });
   }
+  
 
   async writeSettings(
     changeOpts: (settings: TaskCardSettings) => void
