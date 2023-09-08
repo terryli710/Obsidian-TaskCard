@@ -4,6 +4,7 @@ import QueryEditor from "../ui/QueryEditor.svelte";
 import StaticTaskList from '../ui/StaticTaskList.svelte';
 import { QuerySyncManager } from "../query/querySyncManager"
 import { MarkdownPostProcessorContext, MarkdownSectionInformation } from "obsidian"
+import { logger } from "../utils/log";
 
 
 export class QueryAndTaskListSvelteAdapter {
@@ -45,7 +46,7 @@ export class QueryAndTaskListSvelteAdapter {
     }
 
     async onload() {
-
+        logger.debug(`loading ${this.codeBlockMetadata.sourcePath}`)
         if (this.querySyncManager.editMode) {
             this.svelteComponent = new QueryEditor({
                 target: this.codeBlockEl,

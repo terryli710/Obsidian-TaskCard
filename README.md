@@ -6,7 +6,12 @@
   - [Highlights](#highlights)
   - [Features](#features)
   - [Examples](#examples)
+    - [Quick start](#quick-start)
   - [Usage](#usage)
+    - [Add a task](#add-a-task)
+    - [Add projects](#add-projects)
+    - [Two modes](#two-modes)
+    - [Query](#query)
   - [Installation](#installation)
     - [Obsidian Plugins](#obsidian-plugins)
     - [Manual](#manual)
@@ -20,8 +25,8 @@ Obsidian-TaskCard is an Obsidian plugin designed to revolutionize your task mana
 ## Features
 
 - **Two Display Modes**: Choose between two display modes for your tasks.
-    - **QuickView Mode**: Designed for quick browsing, this mode displays tasks at the same height as a normal markdown task, showing only the most essential information.
-    - **DetailedView Mode**: This mode provides a comprehensive task card that allows you to see and edit all attributes of a task, such as the project, due date, and description.
+    - **Preview Mode**: Designed for quick browsing, this mode displays tasks at the same height as a normal markdown task, showing only the most essential information.
+    - **Detailed Mode**: This mode provides a comprehensive task card that allows you to see and edit all attributes of a task, such as the project, due date, and description.
   
 - **Tags and Projects**: Easily categorize your tasks with tags and associate them with specific projects.
   
@@ -30,17 +35,28 @@ Obsidian-TaskCard is an Obsidian plugin designed to revolutionize your task mana
 
 ## Examples
 
-> TODO: Insert GIF here to demonstrate how to switch between QuickView and DetailedView modes.
+### Quick start
 
-> TODO: Insert GIF here to demonstrate how to add tags and projects to a task.
-
-> TODO: Insert GIF here to demonstrate how to add a description to a task.
+1. Open a file and add several tasks;
+2. 
 
 
 ## Usage
 
-Detailed documentation on how to use Obsidian-TaskCard is coming soon. For now, you can start by installing the plugin and exploring its intuitive interface.
+### Add a task
+- How to use all the attributes?
+- Format of the attributes
 
+### Add projects
+- Adjust color, etc.
+
+### Two modes 
+- How to toggle two modes;
+- How to modify attributes;
+
+### Query
+- How to create a query;
+- 
 
 ## Installation
 
