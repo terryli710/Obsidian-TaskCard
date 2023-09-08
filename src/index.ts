@@ -1,5 +1,5 @@
 import { App, Plugin } from 'obsidian';
-import type { PluginManifest, Workspace, WorkspaceLeaf } from 'obsidian';
+import type { Editor, PluginManifest, Workspace, WorkspaceLeaf } from 'obsidian';
 import type { TaskCardSettings } from './settings';
 import { DefaultSettings, SettingStore, SettingsTab } from './settings';
 import { logger } from './utils/log';
@@ -96,18 +96,29 @@ export default class TaskCardPlugin extends Plugin {
 
   registerCommands() {
     this.addCommand({
-      id: 'task-card-single-line-display-mode',
-      name: 'Task Card: Single Line Display Mode',
+      id: 'task-card-preview-display-mode',
+      name: 'Preview Display Mode',
       callback: () => {
         this.taskMonitor.changeDisplayModeCommandHandler('single-line');
       }
     })
     
     this.addCommand({
-      id: 'task-card-multi-line-display-mode',
-      name: 'Task Card: Multi Line Display Mode',
+      id: 'task-card-detailed-display-mode',
+      name: 'Detailed Display Mode',
       callback: () => {
         this.taskMonitor.changeDisplayModeCommandHandler('multi-line');
+      }
+    })
+
+    this.addCommand({
+      id: 'task-card-add-query',
+      name: 'Add Query',
+      editorCallback: (editor: Editor) => {
+        editor.replaceRange(
+          `\n\`\`\`${this.settings.parsingSettings.blockLanguage}\n\`\`\``,
+          editor.getCursor()
+        )
       }
     })
   }

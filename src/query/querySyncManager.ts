@@ -1,3 +1,4 @@
+import { MarkdownPostProcessorContext } from "obsidian";
 import TaskCardPlugin from "..";
 import { SettingStore } from "../settings";
 import { Project } from "../taskModule/project";
@@ -22,16 +23,23 @@ export class QuerySyncManager {
     editMode: boolean = true;
     options: TaskQueryOptions;
     codeBlockMetadata: {
+        sectionEl: HTMLElement;
+        ctx: MarkdownPostProcessorContext;
         sourcePath: string;
         lineStart: number;
         lineEnd: number;
     }
 
-    constructor(plugin: TaskCardPlugin, blockLanguage: string, source: string, codeBlockMetadata: {
-        sourcePath: string;
-        lineStart: number;
-        lineEnd: number;
-    }) {
+    constructor(plugin: TaskCardPlugin, 
+        blockLanguage: string, 
+        source: string, 
+        codeBlockMetadata: {
+            sectionEl: HTMLElement;
+            ctx: MarkdownPostProcessorContext;
+            sourcePath: string;
+            lineStart: number;
+            lineEnd: number;
+        }) {
         this.plugin = plugin;
         this.blockLanguage = blockLanguage;
         this.source = source;
@@ -87,8 +95,6 @@ export class QuerySyncManager {
                 this.editMode = JSON.parse(value);
             }
         }
-
-        logger.debug(`query: ${JSON.stringify(query)}`);
     
         return query;
     }
@@ -170,12 +176,20 @@ export class QuerySyncManager {
         this.editMode = editMode;
         const filledQuery = this.setDefaultQueryValues(taskQuery);
         const newQuery = this.formatCodeBlock(this.queryFormatter(filledQuery));
+        this.updateCodeBlockMetadata();
         this.plugin.fileOperator.updateFile(
             this.codeBlockMetadata.sourcePath, 
             newQuery, 
             this.codeBlockMetadata.lineStart, 
             this.codeBlockMetadata.lineEnd + 1
         );
+    }
+
+    updateCodeBlockMetadata() {
+        const mdSectionInfo = this.codeBlockMetadata.ctx.getSectionInfo(this.codeBlockMetadata.sectionEl);
+        this.codeBlockMetadata.sourcePath = this.codeBlockMetadata.ctx.sourcePath;
+        this.codeBlockMetadata.lineStart = mdSectionInfo.lineStart;
+        this.codeBlockMetadata.lineEnd = mdSectionInfo.lineEnd;
     }
 
     toEditMode() {
