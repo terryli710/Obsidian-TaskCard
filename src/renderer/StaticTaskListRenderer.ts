@@ -62,7 +62,6 @@ export class StaticTaskListRenderManager {
           SettingStore.subscribe((settings) => {
             blockLanguage = settings.parsingSettings.blockLanguage;  
           })
-          logger.debug(`parsing language: ${blockLanguage}, source: ${source}`);
           const processor = new QueryAndTaskListSvelteAdapter(this.plugin, blockLanguage, source, el, ctx);
           processor.onload();
         };
