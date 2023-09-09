@@ -1,7 +1,7 @@
 import { App, Plugin } from 'obsidian';
-import type { PluginManifest, Workspace, WorkspaceLeaf } from 'obsidian';
+import type { Editor, PluginManifest, Workspace, WorkspaceLeaf } from 'obsidian';
 import type { TaskCardSettings } from './settings';
-import { SettingStore, SettingsTab } from './settings';
+import { DefaultSettings, SettingStore, SettingsTab } from './settings';
 import { logger } from './utils/log';
 import AttributeSuggest from './autoSuggestions/EditorSuggestions';
 import { Project, ProjectModule } from './taskModule/project';
@@ -42,16 +42,24 @@ export default class TaskCardPlugin extends Plugin {
     this.staticTaskListRenderManager = new StaticTaskListRenderManager(this);
     this.cache = new TaskCardCache(this);
   }
-
+  
   async loadSettings() {
+    // Load saved settings from storage
     const loadedSettings = await this.loadData();
+  
+    // Initialize settings with default values
+    let initialSettings = JSON.parse(JSON.stringify(DefaultSettings));
+  
+    // Update the initial settings with any saved settings
     SettingStore.update((old) => {
       return {
-        ...old,
-        ...(loadedSettings || {})
+        ...initialSettings, // Start with default settings
+        ...old,             // Override with old settings (if any)
+        ...loadedSettings   // Finally, override with loaded settings
       };
     });
   }
+  
 
   async writeSettings(
     changeOpts: (settings: TaskCardSettings) => void
@@ -88,18 +96,29 @@ export default class TaskCardPlugin extends Plugin {
 
   registerCommands() {
     this.addCommand({
-      id: 'task-card-single-line-display-mode',
-      name: 'Task Card: Single Line Display Mode',
+      id: 'task-card-preview-display-mode',
+      name: 'Preview Display Mode',
       callback: () => {
         this.taskMonitor.changeDisplayModeCommandHandler('single-line');
       }
     })
     
     this.addCommand({
-      id: 'task-card-multi-line-display-mode',
-      name: 'Task Card: Multi Line Display Mode',
+      id: 'task-card-detailed-display-mode',
+      name: 'Detailed Display Mode',
       callback: () => {
         this.taskMonitor.changeDisplayModeCommandHandler('multi-line');
+      }
+    })
+
+    this.addCommand({
+      id: 'task-card-add-query',
+      name: 'Add Query',
+      editorCallback: (editor: Editor) => {
+        editor.replaceRange(
+          `\n\`\`\`${this.settings.parsingSettings.blockLanguage}\n\`\`\``,
+          editor.getCursor()
+        )
       }
     })
   }
@@ -109,11 +128,15 @@ export default class TaskCardPlugin extends Plugin {
       this.taskCardRenderManager.getPostProcessor()
     );
 
-    //@ts-ignore
-    this.registerEvent(this.app.metadataCache.on("dataview:index-ready", () => {
+  //@ts-ignore
+  this.registerEvent(this.app.metadataCache.on("dataview:index-ready", () => {
+    setTimeout(() => {
+      this.cache.taskCache.initializeAndRefreshAllTasks.bind(this.cache.taskCache)(),
       this.registerMarkdownCodeBlockProcessor('taskcard', 
-        this.staticTaskListRenderManager.getCodeBlockProcessor());
-    }));
+        this.staticTaskListRenderManager.getCodeBlockProcessor()
+      );
+    }, 20); // delay of 200 milliseconds
+  }));
 
   }
 

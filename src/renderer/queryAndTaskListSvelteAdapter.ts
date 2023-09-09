@@ -4,6 +4,7 @@ import QueryEditor from "../ui/QueryEditor.svelte";
 import StaticTaskList from '../ui/StaticTaskList.svelte';
 import { QuerySyncManager } from "../query/querySyncManager"
 import { MarkdownPostProcessorContext, MarkdownSectionInformation } from "obsidian"
+import { logger } from "../utils/log";
 
 
 export class QueryAndTaskListSvelteAdapter {
@@ -11,6 +12,8 @@ export class QueryAndTaskListSvelteAdapter {
     svelteComponent: SvelteComponent
     codeBlockEl: HTMLElement
     codeBlockMetadata: {
+        sectionEl: HTMLElement
+        ctx: MarkdownPostProcessorContext
         sourcePath: string
         lineStart: number
         lineEnd: number
@@ -28,6 +31,8 @@ export class QueryAndTaskListSvelteAdapter {
         this.codeBlockEl = el
         const mdSectionInfo: MarkdownSectionInformation = ctx.getSectionInfo(el);
         this.codeBlockMetadata = {
+        sectionEl: el,
+        ctx: ctx,
         sourcePath: ctx.sourcePath,
         lineStart: mdSectionInfo.lineStart,
         lineEnd: mdSectionInfo.lineEnd
@@ -41,7 +46,7 @@ export class QueryAndTaskListSvelteAdapter {
     }
 
     async onload() {
-
+        logger.debug(`loading ${this.codeBlockMetadata.sourcePath}`)
         if (this.querySyncManager.editMode) {
             this.svelteComponent = new QueryEditor({
                 target: this.codeBlockEl,
