@@ -138,7 +138,6 @@ export default class TaskCardPlugin extends Plugin {
     }, 20); // delay of 200 milliseconds
   }));
 
-
   }
 
   async onload() {

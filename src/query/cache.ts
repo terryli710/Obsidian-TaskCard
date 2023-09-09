@@ -160,6 +160,10 @@ export class PositionedTaskCache {
         return this.database.queryTasksByMultipleAttributes(query);
     }
 
+    getLength() {
+        return this.database.getLength();
+    }
+
 }
 
 
