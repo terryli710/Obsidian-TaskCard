@@ -17,13 +17,13 @@
       - [Create a task](#create-a-task)
       - [Add normal attributes to a task](#add-normal-attributes-to-a-task)
       - [Add special attributes to a task](#add-special-attributes-to-a-task)
-      - [](#)
+    - [Task Modification](#task-modification)
   - [Installation](#installation)
     - [Obsidian Plugins](#obsidian-plugins)
     - [Manual](#manual)
     - [Beta Testing](#beta-testing)
   - [License](#license)
-  - [](#-1)
+  - [](#)
 
 ## Highlights
 
@@ -48,6 +48,8 @@ Obsidian-TaskCard is an Obsidian plugin designed to revolutionize your task mana
 
 ### Usage Preview
 
+
+
 ![quick-start](assets/Quick%20Start.gif)
 
 ### Add a task
@@ -59,16 +61,25 @@ Obsidian-TaskCard is an Obsidian plugin designed to revolutionize your task mana
 ![edit-a-task](assets/Modify%20A%20Task.gif)
 
 ### Query
-- How to create a query;
+
+![query](assets/Add%20A%20Query.gif)
 
 
 ## Usage
 
 ### Task Creation
 
+Attributes | Addition | Example |
+--- | --- | ---
+Content | Task in markdown | `- [ ] some content` |
+Tag | Tag in markdown | `- [ ] some content #tag` |
+Description | Description in markdown (change line + indent) | `- [ ] some content \n    - some description` |
+Due Date | Special attribute: `due` | `%%* due: 2021-01-01 *%%` |
+Project | Special attribute: `project` | `%%* project: project name *%%` |
+
 #### Create a task 
 - Create a task in the normal way by typing `- [ ] some content`;
-- To make it recognizable as a task card, add a tag (indicator tag in the settings, default to "#TaskCard") to the task.
+- To make it recognizable as a task card, add a tag (indicator tag in the settings, default to "`#TaskCard`") to the task.
 
 #### Add normal attributes to a task
 Some attributes are native for a markdown task, we can add them to the task in the same way as normal markdown.
@@ -85,7 +96,17 @@ Some added ingredients for a task card, we can add them in a special way: `%%* k
 - Due Date: Add a due date to the task. e.g. `%%* due: 2021-01-01 *%%`
 - Project: Add a project to the task. e.g. `%%* project: project name *%%`
 
-#### 
+### Task Modification
+- Tasks are shown in two view: preview and detailed views. Most attributes are editable in the detailed view.
+- Add `description`, `due`, and `project`: click the ⋮ button in the bottom right corner.
+- Add `tags`: click the + button.
+- Add `priority`: right click the checkbox.
+- Modify `description`, `due`: click on them.
+- Modify `tags`: right click on the tag and select `edit`.
+- Modify `project`: click on the project color dot.
+- Modify `priority`: right click on the checkbox.
+
+
 
 ## Installation
 
