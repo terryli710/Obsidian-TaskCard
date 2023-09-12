@@ -128,11 +128,15 @@ export default class TaskCardPlugin extends Plugin {
       this.taskCardRenderManager.getPostProcessor()
     );
 
-    //@ts-ignore
-    this.registerEvent(this.app.metadataCache.on("dataview:index-ready", () => {
+  //@ts-ignore
+  this.registerEvent(this.app.metadataCache.on("dataview:index-ready", () => {
+    setTimeout(() => {
+      this.cache.taskCache.initializeAndRefreshAllTasks.bind(this.cache.taskCache)(),
       this.registerMarkdownCodeBlockProcessor('taskcard', 
-        this.staticTaskListRenderManager.getCodeBlockProcessor());
-    }));
+        this.staticTaskListRenderManager.getCodeBlockProcessor()
+      );
+    }, 20); // delay of 200 milliseconds
+  }));
 
   }
 

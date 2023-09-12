@@ -25,6 +25,7 @@
     {/each}
 </ul>
 <div class="button-menu">
+    <span class="list-stats">TaskCard Query: {taskList.length} / {querySyncManager.plugin.cache.taskCache.getLength()} tasks.</span>
     <button class="edit-button" on:click={toEditMode}>Edit</button>
 </div>
 
@@ -36,15 +37,14 @@
     }
 
     .edit-button {
-        width: 80%;
-        font-size: 16px;
+        width: 40%;
         color: var(--text-normal);
         margin: 10px;
     }
 
     .error-page {
         text-align: center;
-        font-size: 18px;
+        font-size: 14px;
         color: var(--text-muted);
         margin: 20px;
     }
@@ -56,5 +56,10 @@
 
     .error-page p {
         margin-bottom: 20px;
+    }
+
+    .list-stats {
+        font-size: var(--font-ui-small);
+        color: var(--text-muted);
     }
 </style>

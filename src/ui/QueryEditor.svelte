@@ -102,7 +102,16 @@
 
         // Determine the value based on queryName
         const value = queryName === 'startDate' ? startDateString : endDateString;
-
+        
+        // if value is empty, set date to null
+        if (value === '') {
+            if (queryName === 'startDate') {
+                startDate = null;
+            } else if (queryName === 'endDate') {
+                endDate = null;
+            }
+        }
+        
         // Parse the date string
         const time = Sugar.Date.create(value);
 
