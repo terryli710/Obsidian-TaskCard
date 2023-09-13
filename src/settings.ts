@@ -308,8 +308,10 @@ export class SettingsTab extends PluginSettingTab {
           if (isEditMode) {
             // Save changes
             isEditMode = false;
-            logger.info(`Project updated: ${project.name}`);
-            new Notice(`[TaskCard] Project updated: ${project.name}.`);
+            // new Notice(`[TaskCard] Project updated: ${project.name}.`);
+            const originalProject: Project = this.plugin.projectModule.getProjectById(project.id);
+            this.announceProjectChange(originalProject, project);
+            this.plugin.projectModule.updateProject(project);
             this.display();
           } else if (isDeleteWarning) {
             // Cancel delete warning
@@ -325,6 +327,17 @@ export class SettingsTab extends PluginSettingTab {
   
     // Initialize the UI
     updateUI();
+  }
+
+  announceProjectChange(originalProject: Project, newProject: Project) {
+    // if name changed, if color changed, if name + color changed
+    if (originalProject.name !== newProject.name && originalProject.color !== newProject.color) {
+      new Notice(`[TaskCard] Project name and color updated: ${newProject.name}.`);
+    } else if (originalProject.name !== newProject.name) {
+      new Notice(`[TaskCard] Project name updated: ${newProject.name}.`);
+    } else if (originalProject.color !== newProject.color) {
+      new Notice(`[TaskCard] Project color updated: ${newProject.color}.`);
+    }
   }
   
   
@@ -483,8 +496,8 @@ export class SettingsTab extends PluginSettingTab {
       .addDropdown((dropdown) => {
         dropdown
           .addOptions({
-            'single-line': 'Single Line',
-            'multi-line': 'Multi Line'
+            'single-line': 'Preview Mode',
+            'multi-line': 'Detailed Mode'
           })
           .setValue(this.plugin.settings.displaySettings.defaultMode)
           .onChange(async (value: string) => {

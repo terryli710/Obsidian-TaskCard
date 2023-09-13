@@ -1,5 +1,5 @@
 import { App, Plugin } from 'obsidian';
-import type { Editor, PluginManifest, Workspace, WorkspaceLeaf } from 'obsidian';
+import type { Editor, EditorPosition, PluginManifest, Workspace, WorkspaceLeaf } from 'obsidian';
 import type { TaskCardSettings } from './settings';
 import { DefaultSettings, SettingStore, SettingsTab } from './settings';
 import { logger } from './utils/log';
@@ -119,6 +119,19 @@ export default class TaskCardPlugin extends Plugin {
           `\n\`\`\`${this.settings.parsingSettings.blockLanguage}\n\`\`\``,
           editor.getCursor()
         )
+      }
+    })
+
+    this.addCommand({
+      id: 'task-card-add-task',
+      name: 'Add Task',
+      editorCallback: (editor: Editor) => {
+        const editorPos: EditorPosition = editor.getCursor();
+        editor.replaceRange(
+          `\n- [ ]  #${this.settings.parsingSettings.indicatorTag}\n`,
+          editorPos
+        )
+        editor.setCursor(editor.getCursor().line + 1, 6)
       }
     })
   }

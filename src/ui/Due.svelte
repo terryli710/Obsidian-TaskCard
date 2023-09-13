@@ -41,7 +41,7 @@
             logger.error(e);
           }
           if (!newDue) { 
-            new Notice(`Invalid due date: ${dueString}`);
+            new Notice(`[TaskCard] Invalid due date: ${dueString}`);
             dueString = due ? due.string : '';
           } else {
             due = newDue;
