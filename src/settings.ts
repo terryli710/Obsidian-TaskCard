@@ -489,7 +489,6 @@ export class SettingsTab extends PluginSettingTab {
     updateUI();
   }
   
-  
 
   cardDisplaySettings() {
     new Setting(this.containerEl)
@@ -511,4 +510,8 @@ export class SettingsTab extends PluginSettingTab {
           });
       });
   }
+
+  
+
+
 }
