@@ -186,6 +186,7 @@ export class TaskDatabase extends IndexedMapDatabase<PositionedTaskProperties> {
           return false;
         },
         task => filePathQuery && filePathQuery !== '' ? task.docPosition.filePath.startsWith(filePathQuery) : true
+
       ]
     };
     const filteredTasks = this.queryByComplexLogic(expression);
