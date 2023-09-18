@@ -18,6 +18,7 @@
       - [Add normal attributes to a task](#add-normal-attributes-to-a-task)
       - [Add special attributes to a task](#add-special-attributes-to-a-task)
     - [Task Modification](#task-modification)
+    - [Create a query](#create-a-query)
   - [Installation](#installation)
     - [Obsidian Plugins](#obsidian-plugins)
     - [Manual](#manual)
@@ -107,6 +108,15 @@ Some added ingredients for a task card, we can add them in a special way: `%%* k
 - Modify `project`: click on the project color dot.
 - Modify `priority`: right click on the checkbox.
 
+### Create a query
+- Create a query by inserting a code block of `taskcard`.
+    ```markdown
+    >>> ```taskcard
+    >>> 
+    >>> ```
+    ```
+    - You don't have to create anything, the plugin will parse it and display the query for you.
+- Use command (⌘ + p) - "Task Card: Add Query". It will automatically add the query code block at your cursor position.
 
 
 ## Installation
