@@ -6,6 +6,7 @@
   import TaskCardPlugin from "..";
   import { tick } from "svelte";
   import { TaskDisplayParams, TaskDisplayMode } from "../renderer/postProcessor";
+    import { Notice } from "obsidian";
 
   export let taskSyncManager: ObsidianTaskSyncManager;
   export let plugin: TaskCardPlugin;
@@ -33,12 +34,18 @@
           event.preventDefault();
           // taskSyncManager.setTaskCardStatus('dueStatus', 'done');
           taskSyncManager.taskCardStatus.dueStatus = 'done';
+          let newDue: DueDate | null;
           try {
-            due = plugin.taskParser.parseDue(dueString);
+            newDue = plugin.taskParser.parseDue(dueString);
           } catch (e) {
             logger.error(e);
           }
-          if (!due) { dueString = ''; }
+          if (!newDue) { 
+            new Notice(`[TaskCard] Invalid due date: ${dueString}`);
+            dueString = due ? due.string : '';
+          } else {
+            due = newDue;
+          }
           taskSyncManager.updateObsidianTaskAttribute('due', due);
           updateDueDisplay();
       } else if (event.key === 'Escape') {

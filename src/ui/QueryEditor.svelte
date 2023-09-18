@@ -30,17 +30,6 @@
 
     let filePath = query.filePathQuery;
 
-    let dueDateEnabled = false;
-    let filePathEnabled = false;
-
-    function toggleFilter(filterType) {
-        if (filterType === 'dueDate') {
-            dueDateEnabled = !dueDateEnabled;
-        } else if (filterType === 'filePath') {
-            filePathEnabled = !filePathEnabled;
-        }
-    }
-
     // Function to save the query
     function saveQuery() {
         saveDate();
@@ -100,13 +89,23 @@
 
         // Determine the value based on queryName
         const value = queryName === 'startDate' ? startDateString : endDateString;
-
+        
+        // if value is empty, set date to null
+        if (value === '') {
+            if (queryName === 'startDate') {
+                startDate = null;
+            } else if (queryName === 'endDate') {
+                endDate = null;
+            }
+        }
+        
         // Parse the date string
         const time = Sugar.Date.create(value);
 
         // Validate the parsed time
         if (!time || !isValidDate(time)) {
-            logger.error(`Invalid date string: ${value}`);
+            // logger.error(`Invalid date string: ${value}`);
+            return;
         }
 
         // Assign the parsed time to the appropriate variable

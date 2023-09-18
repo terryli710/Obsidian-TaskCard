@@ -53,7 +53,6 @@ export class PositionedTaskCache {
         SettingStore.subscribe((settings) => {
           this.indicatorTag = settings.parsingSettings.indicatorTag;
         });
-        this.initializeAndRefreshAllTasks();
     }
 
     async initializeAndRefreshAllTasks() {
@@ -61,9 +60,41 @@ export class PositionedTaskCache {
       this.database.updateDatabase(taskList.map(task => ({ id: task.id, item: task })));
       this.updateStatus(taskList.length, true);
     }
+
+    async getDataviewAPI(totalTime = 1000, interval = 100) {
+      let elapsed = 0;
+    
+      return new Promise(async (resolve, reject) => {
+        const tryFetching = async () => {
+          const dataviewAPI = await getAPI();
+          
+          if (dataviewAPI) {
+            resolve(dataviewAPI);
+            return;
+          }
+    
+          elapsed += interval;
+    
+          if (elapsed >= totalTime) {
+            reject(new Error("Timed out while fetching dataviewAPI"));
+            return;
+          }
+    
+          setTimeout(tryFetching, interval);
+        };
+    
+        tryFetching();
+      });
+    }
+    
     
     private async fetchTasksFromAPI(attribute?: string, value?: any): Promise<PositionedTaskProperties[]> {
-      const dataviewAPI = await getAPI();
+      let dataviewAPI;
+      try {
+        dataviewAPI = await this.getDataviewAPI();
+      } catch (err) {
+        console.error("Error fetching dataview API:", err);
+      }
       let query = `TASK FROM #${this.indicatorTag} WHERE contains(text, "#${this.indicatorTag}")`;
       const queryResult: QueryResult = await dataviewAPI.tryQuery(query);
       return this.parseQueryResult(queryResult);
@@ -76,8 +107,12 @@ export class PositionedTaskCache {
     }
     
     private async fetchTasksFromFileList(fileList?: string[]): Promise<PositionedTaskProperties[]> {
-      const dataviewAPI = await getAPI();
-      
+      let dataviewAPI;
+      try {
+        dataviewAPI = await this.getDataviewAPI();
+      } catch (err) {
+        console.error("Error fetching dataview API:", err);
+      }
       let fromClause = `#${this.indicatorTag}`;
       
       if (fileList && fileList.length > 0) {
@@ -123,6 +158,10 @@ export class PositionedTaskCache {
     async queryTasks(query: MultipleAttributeTaskQuery): Promise<PositionedTaskProperties[]> {
         // Perform the query
         return this.database.queryTasksByMultipleAttributes(query);
+    }
+
+    getLength() {
+        return this.database.getLength();
     }
 
 }

@@ -7,13 +7,21 @@
     import TaskCard from "./TaskCard.svelte";
     import TaskCardPlugin from "..";
     import { ObsidianTaskSyncManager } from "../taskModule/taskSyncManager";
+    import { SettingStore } from "../settings";
 
     export let taskSyncManager: ObsidianTaskSyncManager;
     export let plugin: TaskCardPlugin;
-    // export let defaultParams: TaskDisplayParams;
-    let params: TaskDisplayParams;
 
-    params = { ...taskSyncManager.obsidianTask.metadata.taskDisplayParams };
+    let params: TaskDisplayParams = { ...taskSyncManager.obsidianTask.metadata.taskDisplayParams };
+
+    let defaultMode: TaskDisplayMode = 'single-line';
+    SettingStore.subscribe(settings => {
+        defaultMode = settings.displaySettings.defaultMode as TaskDisplayMode;
+    });
+    
+    if (!('mode' in params)) {
+        params.mode = defaultMode
+    }
 
     // Find the input element with class "task-list-item-checkbox" within taskItemEl
     const inputElement = taskSyncManager.taskItemEl.querySelector('input.task-list-item-checkbox');

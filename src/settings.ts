@@ -511,7 +511,7 @@ export class SettingsTab extends PluginSettingTab {
       });
   }
 
-  
+
 
 
 }
