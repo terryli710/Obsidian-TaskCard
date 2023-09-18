@@ -12,6 +12,8 @@
     - [Manual](#manual)
     - [Beta Testing](#beta-testing)
   - [License](#license)
+  - [Frequently Asked Questions](#frequently-asked-questions)
+    - [1. Why do some user interface elements appear incorrect? What steps can be taken to resolve this?](#1-why-do-some-user-interface-elements-appear-incorrect-what-steps-can-be-taken-to-resolve-this)
 
 ## Highlights
 
@@ -75,3 +77,13 @@ Contributions are welcome! Please read the [contributing guidelines](CONTRIBUTIN
 ## License
 
 This project is licensed under the Apache License - see the [LICENSE.md](LICENSE.md) file for details.
+
+
+## Frequently Asked Questions
+
+### 1. Why do some user interface elements appear incorrect? What steps can be taken to resolve this?
+- **Theme Compatibility**: Our plugin has not been exhaustively tested across all available themes. Therefore, compatibility issues related to the active theme could lead to the user interface not displaying as intended. To address this:
+  - Ensure your theme is up-to-date;
+  - Use the plugin settings to switch to a different theme for troubleshooting purposes.
+
+Should the issue persist, we welcome you to report it by opening an [issue](https://github.com/terryli710/Obsidian-TaskCard/issues) on our GitHub repository.
