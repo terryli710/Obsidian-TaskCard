@@ -11,9 +11,7 @@
 
     export let taskSyncManager: ObsidianTaskSyncManager;
     let description = taskSyncManager.obsidianTask.description;
-    // let descriptionMarkdown = marked(description);
-    // let descriptionMarkdown = DescriptionParser.extractDescriptionEl(taskSyncManager.taskItemEl).outerHTML;
-    let descriptionEl = DescriptionParser.extractDescriptionEl(taskSyncManager.taskItemEl);
+    let descriptionElList = DescriptionParser.extractListEls(taskSyncManager.taskItemEl);
     let inputElement: HTMLTextAreaElement;
     let descriptionProgress = DescriptionParser.progressOfDescription(description)
 
@@ -23,44 +21,47 @@
         let realLineNumber = 1;
 
         // Iterate through each <li> element
-        descriptionEl.querySelectorAll('li').forEach((liElement) => {
-        // Check if the <li> element contains a task
-        if (liElement.classList.contains('task-list-item')) {
-            // Update the "real" data-line attribute
-            liElement.setAttribute('data-real-line', realLineNumber.toString());
+        for (let i = 0; i < descriptionElList.length; i++) {
+            const descriptionEl = descriptionElList[i];
+            descriptionEl.querySelectorAll('li').forEach((liElement) => {
+            // Check if the <li> element contains a task
+            if (liElement.classList.contains('task-list-item')) {
+                // Update the "real" data-line attribute
+                liElement.setAttribute('data-real-line', realLineNumber.toString());
 
-            liElement.style.color = 'var(--text-faint)';
+                liElement.style.color = 'var(--text-faint)';
 
-            // Find the checkbox within this <li> element
-            const checkbox = liElement.querySelector('.task-list-item-checkbox');
+                // Find the checkbox within this <li> element
+                const checkbox = liElement.querySelector('.task-list-item-checkbox');
 
-            // Add a click event listener to the checkbox
-            checkbox.addEventListener('click', function() {
-                const lineNumber = parseInt(liElement.getAttribute('data-real-line'));
-                // Log the "real" data-line when the checkbox is clicked
-                console.log('Real data-line:', lineNumber);
-                // toggle the ith line's task status "- [ ] " or "- [x]"
-                const newDescription = description.split('\n').map((line, index) => {
-                    if (index === lineNumber - 1) {
-                        if (line.includes('- [x]')) {
-                            return line.replace('- [x]', '- [ ]');
-                        } else if (line.includes('- [ ]')) {
-                            return line.replace('- [ ]', '- [x]');
+                // Add a click event listener to the checkbox
+                checkbox.addEventListener('click', function() {
+                    const lineNumber = parseInt(liElement.getAttribute('data-real-line'));
+                    // Log the "real" data-line when the checkbox is clicked
+                    console.log('Real data-line:', lineNumber);
+                    // toggle the ith line's task status "- [ ] " or "- [x]"
+                    const newDescription = description.split('\n').map((line, index) => {
+                        if (index === lineNumber - 1) {
+                            if (line.includes('- [x]')) {
+                                return line.replace('- [x]', '- [ ]');
+                            } else if (line.includes('- [ ]')) {
+                                return line.replace('- [ ]', '- [x]');
+                            }
                         }
-                    }
-                    return line;
-                })
+                        return line;
+                    })
 
-                description = newDescription.join('\n');
+                    description = newDescription.join('\n');
 
-                taskSyncManager.updateObsidianTaskAttribute('description', description);
+                    taskSyncManager.updateObsidianTaskAttribute('description', description);
+                });
+            }
+
+            // Increment the "real" line number counter
+            realLineNumber++;
             });
+            el.appendChild(descriptionEl);
         }
-
-        // Increment the "real" line number counter
-        realLineNumber++;
-        });
-        el.appendChild(descriptionEl);
         
     }
 

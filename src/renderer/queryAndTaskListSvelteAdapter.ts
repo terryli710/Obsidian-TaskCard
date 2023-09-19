@@ -46,7 +46,6 @@ export class QueryAndTaskListSvelteAdapter {
     }
 
     async onload() {
-        logger.debug(`loading ${this.codeBlockMetadata.sourcePath}`)
         if (this.querySyncManager.editMode) {
             this.svelteComponent = new QueryEditor({
                 target: this.codeBlockEl,

@@ -23,28 +23,30 @@ export class DescriptionParser {
     constructor() {
     }
 
-    static extractDescriptionEl(taskElement: HTMLElement): HTMLElement {
-        // Check if taskElement is null or undefined
-        if (!taskElement) { return null; }
-        // Find the ul element within taskElement
-        const ulElement = taskElement.querySelector('ul');
-        // Check if ulElement is null or undefined
-        if (!ulElement) { return null; }
-        return ulElement;
-    }
+    // Extracts list elements (ul and ol) from taskElement
+    static extractListEls(taskElement: HTMLElement): HTMLElement[] {
+      if (!taskElement) { return []; }
 
-    static parseDescriptionFromTaskEl(taskElement: HTMLElement): string {
-        const ulElement = DescriptionParser.extractDescriptionEl(taskElement);
-        if (!ulElement) { return ""; }
+      const listElements: HTMLElement[] = Array.from(taskElement.querySelectorAll('ul, ol'));
+      return listElements;
+  }
 
-        // Convert the ul element to Markdown
-        try {
-          return htmlToMarkdown(ulElement.outerHTML);
-        } catch (error) {
-          throw new Error(`Failed to convert HTML to Markdown: ${error.message}`);
-        }
+  // Parses the description from a given task element
+  static parseDescriptionFromTaskEl(taskElement: HTMLElement): string {
+      const listElements = DescriptionParser.extractListEls(taskElement);
+      if (listElements.length === 0) { return ""; }
+      let descriptionMarkdown = "";
+
+      for (const listEl of listElements) {
+          try {
+              descriptionMarkdown += htmlToMarkdown(listEl.outerHTML) + "\n";
+          } catch (error) {
+              throw new Error(`Failed to convert HTML to Markdown: ${error.message}`);
+          }
       }
-      
+
+      return descriptionMarkdown.trim();
+  }
 
     static progressOfDescription(description: string): [number, number] {
       if (!description || description.trim().length === 0) { return [0, 0]; }

@@ -30,19 +30,6 @@
 
     let filePath = query.filePathQuery;
 
-    // let dueDateEnabled = false;
-    // let filePathEnabled = false;
-
-    let lowerPaths = paths.map((path) => path.toLowerCase());
-
-    // function toggleFilter(filterType) {
-    //     if (filterType === 'dueDate') {
-    //         dueDateEnabled = !dueDateEnabled;
-    //     } else if (filterType === 'filePath') {
-    //         filePathEnabled = !filePathEnabled;
-    //     }
-    // }
-
     // Function to save the query
     function saveQuery() {
         saveDate();
@@ -130,7 +117,7 @@
     }
 
     function handleFilePathInput(event: any) {
-        const matches = filePathSuggest(filePath.toLowerCase(), lowerPaths);
+        const matches = filePathSuggest(filePath, paths);
         if (matches.length > 0) {
             query.filePathQuery = matches[0];
         } else {

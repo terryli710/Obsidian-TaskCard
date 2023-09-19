@@ -65,8 +65,6 @@ export class SettingsTab extends PluginSettingTab {
 
   display(): void {
     this.containerEl.empty();
-    // title
-    this.containerEl.createEl('h2', { text: 'Task Card' });
     // projects
     this.projectSettings();
     // parsing settings
@@ -86,6 +84,9 @@ export class SettingsTab extends PluginSettingTab {
 
     this.containerEl.createEl('h3', { text: 'Project Editing' });
     if (projects.length > 0) {
+      this.containerEl.createEl('div', 
+      { text: 'Changes to the project will be automatically applied to ALL TASKS within this project.', 
+        cls: 'setting-item-description' });
       const firstProject = projects[0];
       const restProjects = projects.slice(1);
       this.projectEditSetting(firstProject);
@@ -139,7 +140,7 @@ export class SettingsTab extends PluginSettingTab {
     };
   
     const setting = new Setting(this.containerEl).setName('Add A Project');
-    setting.setDesc('Project names must be unique. Color picking is optional.');
+    setting.setDesc('Project names must be UNIQUE. Color picking is OPTIONAL.');
   
     setting.addText((text) => {
       text
@@ -308,10 +309,11 @@ export class SettingsTab extends PluginSettingTab {
           if (isEditMode) {
             // Save changes
             isEditMode = false;
-            // new Notice(`[TaskCard] Project updated: ${project.name}.`);
             const originalProject: Project = this.plugin.projectModule.getProjectById(project.id);
             this.announceProjectChange(originalProject, project);
             this.plugin.projectModule.updateProject(project);
+            this.updateProjectsToSettings();
+            this.plugin.taskMonitor.monitorVaultToChangeProjects(this.app.vault, project, originalProject);
             this.display();
           } else if (isDeleteWarning) {
             // Cancel delete warning
@@ -429,7 +431,7 @@ export class SettingsTab extends PluginSettingTab {
             const newIndicatorTag = DefaultSettings.parsingSettings.indicatorTag;
             if (convertTaskIndicatorTags && oldIndicatorTag !== newIndicatorTag) {
               this.plugin.taskMonitor.monitorVaultToChangeIndicatorTags(
-                this.app.vault, newIndicatorTag, oldIndicatorTag);
+                this.app.vault, '#' + newIndicatorTag, '#' + oldIndicatorTag);
             }
             this.plugin.writeSettings((old) => (old.parsingSettings.indicatorTag = DefaultSettings.parsingSettings.indicatorTag));
             this.display();
@@ -487,7 +489,6 @@ export class SettingsTab extends PluginSettingTab {
     updateUI();
   }
   
-  
 
   cardDisplaySettings() {
     new Setting(this.containerEl)
@@ -509,4 +510,8 @@ export class SettingsTab extends PluginSettingTab {
           });
       });
   }
+
+
+
+
 }
