@@ -18,12 +18,14 @@
       - [Add normal attributes to a task](#add-normal-attributes-to-a-task)
       - [Add special attributes to a task](#add-special-attributes-to-a-task)
     - [Task Modification](#task-modification)
+    - [Create a query](#create-a-query)
   - [Installation](#installation)
     - [Obsidian Plugins](#obsidian-plugins)
     - [Manual](#manual)
     - [Beta Testing](#beta-testing)
   - [License](#license)
-  - [](#)
+  - [Frequently Asked Questions](#frequently-asked-questions)
+    - [1. Why do some user interface elements appear incorrect? What steps can be taken to resolve this?](#1-why-do-some-user-interface-elements-appear-incorrect-what-steps-can-be-taken-to-resolve-this)
 
 ## Highlights
 
@@ -106,6 +108,15 @@ Some added ingredients for a task card, we can add them in a special way: `%%* k
 - Modify `project`: click on the project color dot.
 - Modify `priority`: right click on the checkbox.
 
+### Create a query
+- Create a query by inserting a code block of `taskcard`.
+    ```markdown
+    >>> ```taskcard
+    >>> 
+    >>> ```
+    ```
+    - You don't have to create anything, the plugin will parse it and display the query for you.
+- Use command (⌘ + p) - "Task Card: Add Query". It will automatically add the query code block at your cursor position.
 
 
 ## Installation
@@ -143,4 +154,11 @@ Contributions are welcome! Please read the [contributing guidelines](CONTRIBUTIN
 This project is licensed under the Apache License - see the [LICENSE.md](LICENSE.md) file for details.
 
 
-## 
+## Frequently Asked Questions
+
+### 1. Why do some user interface elements appear incorrect? What steps can be taken to resolve this?
+- **Theme Compatibility**: Our plugin has not been exhaustively tested across all available themes. Therefore, compatibility issues related to the active theme could lead to the user interface not displaying as intended. To address this:
+  - Ensure your theme is up-to-date;
+  - Use the plugin settings to switch to a different theme for troubleshooting purposes.
+
+Should the issue persist, we welcome you to report it by opening an [issue](https://github.com/terryli710/Obsidian-TaskCard/issues) on our GitHub repository.

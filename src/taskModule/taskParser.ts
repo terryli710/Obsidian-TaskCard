@@ -70,6 +70,8 @@ export class TaskParser {
         return null;
       }
     }
+
+    logger.debug(`Parsing task element: ${taskEl.outerHTML}`);
   
     const task = new ObsidianTask();
     const attributes = parseAttributes.bind(this)();

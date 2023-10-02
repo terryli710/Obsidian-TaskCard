@@ -129,7 +129,7 @@ export class PositionedTaskCache {
     
     
     private updateStatus(taskCount: number, initialized: boolean = false) {
-      logger.info(`TaskCache: ${initialized ? 'Found' : 'Refreshed'} ${taskCount} tasks`);
+      // logger.info(`TaskCache: ${initialized ? 'Found' : 'Refreshed'} ${taskCount} tasks`);
       this.status = {
         initialized: true,
         refreshTimeStamp: Date.now()
@@ -225,6 +225,7 @@ export class TaskDatabase extends IndexedMapDatabase<PositionedTaskProperties> {
           return false;
         },
         task => filePathQuery && filePathQuery !== '' ? task.docPosition.filePath.startsWith(filePathQuery) : true
+
       ]
     };
     const filteredTasks = this.queryByComplexLogic(expression);

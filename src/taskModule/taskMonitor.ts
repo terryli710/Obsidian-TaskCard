@@ -3,6 +3,7 @@ import TaskCardPlugin from '..';
 import { Notice } from 'obsidian';
 import { logger } from '../utils/log';
 import { TaskDisplayMode } from '../renderer/postProcessor';
+import { Project } from './project';
 
 
 export class TaskMonitor {
@@ -33,11 +34,17 @@ export class TaskMonitor {
   }
 
   // MONITORS
-
   async monitorVaultToChangeIndicatorTags(vault: Vault, newIndicatorTag, oldIndicatorTag) {
     // iterate over all markdown files in the vault
     for (const file of vault.getMarkdownFiles()) {
       this.changeIndicatorTagsForFile(file, newIndicatorTag, oldIndicatorTag);
+    }
+  }
+
+  async monitorVaultToChangeProjects(vault: Vault, newProject: Project, oldProject: Project) {
+    // iterate over all markdown files in the vault
+    for (const file of vault.getMarkdownFiles()) {
+      this.changeProjectForFile(file, newProject, oldProject);
     }
   }
 
@@ -79,8 +86,20 @@ export class TaskMonitor {
     await this.updateFileWithNewLines(file, updatedLines);
   }
 
+  async changeProjectForFile(file: TFile, newProject, oldProject) {
+    // iterate over all lines in the file, find formatted tasks
+    const lines = await this.getLinesFromFile(file);
+    if (!lines) return;
+    const updatedLines: string[] = this.changeProjectForLines(lines, newProject, oldProject);
+    await this.updateFileWithNewLines(file, updatedLines);
+  }
+
   changeIndicatorTagsForLines(lines: string[], newIndicatorTag, oldIndicatorTag): string[] {
     return lines.map((line, index) => this.changeIndicatorTagForLine(line, newIndicatorTag, oldIndicatorTag));
+  }
+
+  changeProjectForLines(lines: string[], newProject, oldProject): string[] {
+    return lines.map((line, index) => this.changeProjectForLine(line, newProject, oldProject));
   }
 
   changeIndicatorTagForLine(line: string, newIndicatorTag, oldIndicatorTag) {
@@ -88,6 +107,17 @@ export class TaskMonitor {
       // formatted task will only have one indicator tag at the correct position
       // so we can safely replace it
       line = line.replace(oldIndicatorTag, newIndicatorTag);
+    }
+    return line;
+  }
+
+  changeProjectForLine(line: string, newProject: Project, oldProject: Project) {
+    if (this.plugin.taskValidator.isValidFormattedTaskMarkdown(line)) {
+      const task = this.plugin.taskParser.parseFormattedTaskMarkdown(line);
+      if (task.project.id !== oldProject.id) return line;
+      task.project = newProject;
+      const updatedLine = this.plugin.taskFormatter.taskToMarkdown(task);
+      return updatedLine;
     }
     return line;
   }
