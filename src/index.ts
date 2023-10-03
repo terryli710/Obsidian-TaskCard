@@ -12,6 +12,7 @@ import { FileOperator } from './renderer/fileOperator';
 import { TaskFormatter } from './taskModule/taskFormatter';
 import { TaskMonitor } from './taskModule/taskMonitor';
 import { TaskCardCache } from './query';
+import { CreateProjectModal } from './modal/createProjectModal';
 
 
 export default class TaskCardPlugin extends Plugin {
@@ -143,7 +144,17 @@ export default class TaskCardPlugin extends Plugin {
         const currentLine = editor.getLine(editorPos.line);
         editor.replaceRange(` #${this.settings.parsingSettings.indicatorTag}`, { line: editorPos.line, ch: currentLine.length });
       }
-    });
+    })
+
+    // a command to pop up a modal to create a new project
+    this.addCommand({
+      id: 'task-card-create-project',
+      name: 'Create a New Project',
+      callback: () => {
+        const projectCreationModel = new CreateProjectModal(this.app, this.projectModule.addProject.bind(this.projectModule));
+        projectCreationModel.open();
+      }
+    })
   }
 
   registerPostProcessors() {
