@@ -124,7 +124,7 @@ export default class TaskCardPlugin extends Plugin {
 
     this.addCommand({
       id: 'task-card-add-task',
-      name: 'Add Task',
+      name: 'Add Task in a New Line',
       editorCallback: (editor: Editor) => {
         const editorPos: EditorPosition = editor.getCursor();
         editor.replaceRange(
@@ -134,6 +134,16 @@ export default class TaskCardPlugin extends Plugin {
         editor.setCursor(editor.getCursor().line + 1, 6)
       }
     })
+
+    this.addCommand({
+      id: 'task-card-append-indicator-tag',
+      name: 'Append Indicator Tag',
+      editorCallback: (editor: Editor) => {
+        const editorPos: EditorPosition = editor.getCursor();
+        const currentLine = editor.getLine(editorPos.line);
+        editor.replaceRange(` #${this.settings.parsingSettings.indicatorTag}`, { line: editorPos.line, ch: currentLine.length });
+      }
+    });
   }
 
   registerPostProcessors() {
