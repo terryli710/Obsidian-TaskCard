@@ -150,7 +150,7 @@
         top: 3px;
         right: 3px;
         /* background: linear-gradient(to right, transparent 0%, var(--background-primary) 30%, var(--background-primary) 100%); */
-        background-color: var(--background-primary);
+        background-color: rgba(0,0,0,0);
         border-radius: var(--radius-s);
         padding: 2px 5px 2px 5px;
         display: flex;
