@@ -71,7 +71,7 @@ export class TaskParser {
       }
     }
 
-    logger.debug(`Parsing task element: ${taskEl.outerHTML}`);
+    // logger.debug(`Parsing task element: ${taskEl.outerHTML}`);
   
     const task = new ObsidianTask();
     const attributes = parseAttributes.bind(this)();
@@ -260,11 +260,11 @@ export class TaskParser {
       }
     }
 
-  if (noticeFunc && errors.length > 0) {
-    for (const error of errors) {
-      noticeFunc(error);
+    if (noticeFunc && errors.length > 0) {
+      for (const error of errors) {
+        noticeFunc(error);
+      }
     }
-  }
 
     return task;
   }

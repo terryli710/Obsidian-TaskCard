@@ -38,7 +38,7 @@ export default class TaskCardPlugin extends Plugin {
     this.taskValidator = new TaskValidator(SettingStore);
     this.taskCardRenderManager = new TaskCardRenderManager(this);
     this.fileOperator = new FileOperator(this, this.app);
-    this.taskMonitor = new TaskMonitor(this, this.app);
+    this.taskMonitor = new TaskMonitor(this, this.app, SettingStore);
     this.staticTaskListRenderManager = new StaticTaskListRenderManager(this);
     this.cache = new TaskCardCache(this);
   }

@@ -6,7 +6,7 @@
   import TaskCardPlugin from "..";
   import { tick } from "svelte";
   import { TaskDisplayParams, TaskDisplayMode } from "../renderer/postProcessor";
-    import { Notice } from "obsidian";
+  import { Notice } from "obsidian";
 
   export let taskSyncManager: ObsidianTaskSyncManager;
   export let plugin: TaskCardPlugin;
