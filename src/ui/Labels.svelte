@@ -117,7 +117,7 @@
     />
   {:else}
     <button class="task-card-button label-plus-button" on:click={enableLabelAddMode}>
-      <Plus/>
+      <Plus ariaLabel="Add Label"/>
     </button>
   {/if}
 </div>

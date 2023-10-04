@@ -154,7 +154,7 @@
           class="task-card-button mode-toggle-button"
           on:click={(event) => switchMode(event, 'multi-line')}
         >
-          <ChevronsUpDown />
+          <ChevronsUpDown ariaLabel="Toggle Task Display Mode" />
         </button>
       </div>
     </div>    
@@ -246,7 +246,7 @@
         class="task-card-button mode-toggle-button"
         on:click={(event) => switchMode(event, 'single-line')}
       >
-        <ChevronsDownUp />
+        <ChevronsDownUp ariaLabel="Toggle Task Display Mode" />
       </button>
     </div>
   </div>

@@ -231,7 +231,7 @@
       <Description taskSyncManager={taskSyncManager} />
     {/if}
     <button class="task-card-menu-button mode-multi-line" on:click={(event) => showCardMenu(event)} tabindex="0">
-      <MoreVertical/>
+      <MoreVertical ariaLabel="Show Menu"/>
     </button>
   </div>
 
@@ -244,7 +244,7 @@
     </div>
     <div class="task-card-attribute-bottom-bar-right">
       <button class="task-card-button mode-toggle-button" on:click={(event) => switchMode(event, 'single-line')}>
-        <ChevronsDownUp/>
+        <ChevronsDownUp ariaLabel="Toggle Task Display Mode"/>
       </button>
     </div>
   </div>
