@@ -430,7 +430,6 @@ export class TaskParser {
 
   parseDuration(durationString: string): Duration | null {
     const durationInMinutes = parse(durationString, 'm');
-    logger.debug(`durationInMinutes: ${durationInMinutes}`);
     // Convert the difference to hours and minutes
     const hours = Math.floor(durationInMinutes / 60);
     const minutes = durationInMinutes % 60;

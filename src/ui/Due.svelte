@@ -136,7 +136,6 @@
     {#if taskSyncManager.getTaskCardStatus('dueStatus') === 'editing'}
       <input
         type="text"
-        on:keydown={toggleEditMode}
         on:input={() => adjustWidthForInput(inputElement)}
         bind:value={dueString}
         bind:this={inputElement}

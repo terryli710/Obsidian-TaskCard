@@ -11,7 +11,7 @@
 
 
   export let taskSyncManager: ObsidianTaskSyncManager;
-  export let plugin: TaskCardPlugin;
+  // export let plugin: TaskCardPlugin;
   export let params: TaskDisplayParams;
   let duration: Duration | null;
   duration = taskSyncManager.obsidianTask.hasDuration() ? taskSyncManager.obsidianTask.duration : null;
@@ -61,7 +61,6 @@
   }
 
   async function toggleDurationEditMode(event: KeyboardEvent | MouseEvent) {
-      logger.debug(`duration status: ${taskSyncManager.taskCardStatus.durationStatus}`);
       if (taskSyncManager.taskCardStatus.durationStatus === 'done') {
           enableDurationEditMode(event);
       } else {
@@ -142,7 +141,6 @@
     {#if taskSyncManager.getTaskCardStatus('durationStatus') === 'editing'}
       <input
         type="text"
-        on:keydown={toggleDurationEditMode}
         bind:value={durationInputString}
         bind:this={durationInputElement}
         class="task-card-duration"
