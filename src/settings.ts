@@ -6,6 +6,11 @@ import { Project } from './taskModule/project';
 import { logger } from './utils/log';
 import { LabelModule } from './taskModule/labels/index';
 
+export let emptyProject: Project = {
+  id: '',
+  name: ''
+}
+
 export interface TaskCardSettings {
   parsingSettings: {
     markdownStartingNotation: string;
@@ -19,6 +24,7 @@ export interface TaskCardSettings {
   };
   userMetadata: {
     projects: any;
+    defaultProject: any;
   };
   syncSettings: any; // Todoist account info + other possible synced platforms
 }
@@ -35,9 +41,10 @@ export const DefaultSettings: TaskCardSettings = {
     defaultMode: 'single-line'
   },
   userMetadata: {
-    projects: {}
+    projects: {},
+    defaultProject: emptyProject,
   },
-  syncSettings: {}
+  syncSettings: {},
 };
 
 export const SettingStore: Writable<TaskCardSettings> =
@@ -99,6 +106,10 @@ export class SettingsTab extends PluginSettingTab {
     } else {
       this.editProjectPlaceHolder();
     }
+
+    this.containerEl.createEl('h3', { text: 'Default Project' });
+    this.defaultProjectSetting(projects);
+
   }
 
   // Update projects from projectModule to settings
@@ -331,6 +342,55 @@ export class SettingsTab extends PluginSettingTab {
     updateUI();
   }
 
+  defaultProjectSetting(projects: Project[]) {
+    // Check if the default project is still in the projects list
+    let defaultProject = this.plugin.settings.userMetadata.defaultProject;
+    if (defaultProject && !projects.find(p => p.id === defaultProject.id)) {
+      defaultProject = emptyProject;
+    }
+
+    let defaultProjectId = defaultProject.id;
+  
+    const setting = new Setting(this.containerEl);
+    setting.setName('Default Project');
+  
+    if (!projects.length) {
+      setting.setDesc('No projects available.');
+      return;
+    }
+  
+    // Create a dropdown with project names as choices
+    setting.addDropdown(dropdown => {
+      const choices = projects.reduce((acc, project) => {
+        acc[project.id] = `${project.name}`; // Displaying name and color
+        return acc;
+      }, {});
+      const projectChoices = projects.reduce((acc, project) => {
+        acc[project.id] = project 
+        acc[''] = undefined;
+        return acc
+      }, {})
+  
+      dropdown.addOption('', 'No default project');
+      dropdown.addOptions(choices);
+  
+      dropdown.setValue(defaultProjectId || '');
+      dropdown.onChange(value => {
+        defaultProjectId = value;
+        if (!value) {
+          this.plugin.settings.userMetadata.defaultProject = emptyProject;
+          new Notice(`[TaskCard] Default project set to no project.`);
+        }
+        defaultProject = projectChoices[value];
+        this.plugin.settings.userMetadata.defaultProject = defaultProject;
+        new Notice(`[TaskCard] Default project changed to: ${defaultProject.name}.`);
+        this.plugin.writeSettings((old) => {
+          old.userMetadata.defaultProject
+        })
+      });
+    });
+  }
+  
   announceProjectChange(originalProject: Project, newProject: Project) {
     // if name changed, if color changed, if name + color changed
     if (originalProject.name !== newProject.name && originalProject.color !== newProject.color) {

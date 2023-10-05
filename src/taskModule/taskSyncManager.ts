@@ -7,6 +7,7 @@ type TaskCardStatus = {
   descriptionStatus: 'editing' | 'done';
   projectStatus: 'selecting' | 'done';
   dueStatus: 'editing' | 'done';
+  durationStatus: 'editing' | 'done';
 };
 
 export interface ObsidianTaskSyncProps {
@@ -44,7 +45,8 @@ export class ObsidianTaskSyncManager implements ObsidianTaskSyncProps {
     this.taskCardStatus = props?.taskCardStatus || {
       descriptionStatus: 'done',
       projectStatus: 'done',
-      dueStatus: 'done'
+      dueStatus: 'done',
+      durationStatus: 'done',
     };
     this.taskItemEl = props?.taskItemEl || null;
     this.taskMetadata = props?.taskMetadata || {
@@ -118,7 +120,8 @@ export class ObsidianTaskSyncManager implements ObsidianTaskSyncProps {
     const allowedStatuses = {
       descriptionStatus: ['editing', 'done'],
       projectStatus: ['selecting', 'done'],
-      dueStatus: ['editing', 'done']
+      dueStatus: ['editing', 'done'],
+      durationStatus: ['editing', 'done']
     };
     return allowedStatuses[key].includes(status);
   }

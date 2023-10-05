@@ -12,6 +12,7 @@ import { FileOperator } from './renderer/fileOperator';
 import { TaskFormatter } from './taskModule/taskFormatter';
 import { TaskMonitor } from './taskModule/taskMonitor';
 import { TaskCardCache } from './query';
+import { CreateProjectModal } from './modal/createProjectModal';
 
 
 export default class TaskCardPlugin extends Plugin {
@@ -38,7 +39,7 @@ export default class TaskCardPlugin extends Plugin {
     this.taskValidator = new TaskValidator(SettingStore);
     this.taskCardRenderManager = new TaskCardRenderManager(this);
     this.fileOperator = new FileOperator(this, this.app);
-    this.taskMonitor = new TaskMonitor(this, this.app);
+    this.taskMonitor = new TaskMonitor(this, this.app, SettingStore);
     this.staticTaskListRenderManager = new StaticTaskListRenderManager(this);
     this.cache = new TaskCardCache(this);
   }
@@ -124,7 +125,7 @@ export default class TaskCardPlugin extends Plugin {
 
     this.addCommand({
       id: 'task-card-add-task',
-      name: 'Add Task',
+      name: 'Add Task in a New Line',
       editorCallback: (editor: Editor) => {
         const editorPos: EditorPosition = editor.getCursor();
         editor.replaceRange(
@@ -132,6 +133,26 @@ export default class TaskCardPlugin extends Plugin {
           editorPos
         )
         editor.setCursor(editor.getCursor().line + 1, 6)
+      }
+    })
+
+    this.addCommand({
+      id: 'task-card-append-indicator-tag',
+      name: 'Append Indicator Tag',
+      editorCallback: (editor: Editor) => {
+        const editorPos: EditorPosition = editor.getCursor();
+        const currentLine = editor.getLine(editorPos.line);
+        editor.replaceRange(` #${this.settings.parsingSettings.indicatorTag}`, { line: editorPos.line, ch: currentLine.length });
+      }
+    })
+
+    // a command to pop up a modal to create a new project
+    this.addCommand({
+      id: 'task-card-create-project',
+      name: 'Create a New Project',
+      callback: () => {
+        const projectCreationModel = new CreateProjectModal(this.app, this.projectModule.addProject.bind(this.projectModule));
+        projectCreationModel.open();
       }
     })
   }

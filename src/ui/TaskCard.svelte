@@ -17,6 +17,7 @@
     import { SettingStore } from '../settings';
     import { DescriptionParser } from '../taskModule/description';
     import CircularProgressBar from '../components/CircularProgressBar.svelte';
+    import Duration from './Duration.svelte';
 
     export let taskSyncManager: ObsidianTaskSyncManager;
     export let plugin: TaskCardPlugin;
@@ -186,6 +187,8 @@
       cardMenu.showAtPosition({ x: event.clientX, y: event.clientY });
     }
 
+    let displayDue: boolean = taskSyncManager.obsidianTask.hasDue() || taskSyncManager.getTaskCardStatus('dueStatus') === 'editing';
+    let displayDuration: boolean = taskSyncManager.obsidianTask.hasDuration() || taskSyncManager.getTaskCardStatus('durationStatus') === 'editing';
 
 </script>
 
@@ -231,20 +234,26 @@
       <Description taskSyncManager={taskSyncManager} />
     {/if}
     <button class="task-card-menu-button mode-multi-line" on:click={(event) => showCardMenu(event)} tabindex="0">
-      <MoreVertical/>
+      <MoreVertical ariaLabel="Show Menu"/>
     </button>
   </div>
 
   <div class="task-card-attribute-bottom-bar">
     <div class="task-card-attribute-bottom-bar-left">
-      {#if taskSyncManager.obsidianTask.hasDue() || taskSyncManager.getTaskCardStatus('dueStatus') === 'editing'}
+      {#if displayDue}
         <Due taskSyncManager={taskSyncManager} plugin={plugin} params={params} />
+      {/if}
+      {#if displayDuration}
+        <Duration taskSyncManager={taskSyncManager} plugin={plugin} params={params} />
+      {/if}
+      {#if displayDue || displayDuration}
+        <div class="task-card-attribute-separator"></div>
       {/if}
       <Labels taskSyncManager={taskSyncManager} />
     </div>
     <div class="task-card-attribute-bottom-bar-right">
       <button class="task-card-button mode-toggle-button" on:click={(event) => switchMode(event, 'single-line')}>
-        <ChevronsDownUp/>
+        <ChevronsDownUp ariaLabel="Toggle Task Display Mode"/>
       </button>
     </div>
   </div>
