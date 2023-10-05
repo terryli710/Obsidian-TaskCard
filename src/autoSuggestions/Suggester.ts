@@ -38,8 +38,9 @@ export class AttributeSuggester {
       // );
 
       this.inputtableAttributes = [
-        'priority',
         'due',
+        'duration',
+        'priority',
         'project',
       ]
     });
@@ -56,6 +57,9 @@ export class AttributeSuggester {
     suggestions = suggestions.concat(
       this.getDueSuggestions(lineText, cursorPos)
     );
+    suggestions = suggestions.concat(
+      this.getDurationSuggestions(lineText, cursorPos)
+    )
     suggestions = suggestions.concat(
       this.getProjectSuggestions(lineText, cursorPos)
     );
@@ -178,6 +182,51 @@ export class AttributeSuggester {
     });
 
     return suggestions;
+  }
+
+  getDurationSuggestions(
+    lineText: string,
+    cursorPos: number
+  ): SuggestInformation[] {
+    let suggestions: SuggestInformation[] = [];
+
+    // Modify regex to capture the due date query
+    const durationRegexText = `${escapeRegExp(this.startingNotation)}\\s?duration:(.*?)${escapeRegExp(this.endingNotation)}`;
+    const durationRegex = new RegExp(durationRegexText, 'g');
+    const durationMatch = matchByPositionAndGroup(lineText, durationRegex, cursorPos, 1);
+    if (!durationMatch) return suggestions; // No match
+
+    // Get the due date query from the captured group
+    const durationQuery = (durationMatch[1] || '').trim();
+
+    const durationStringSelections = [
+      '5 minutes',
+      '10 minutes',
+      '15 minutes',
+      '30 minutes',
+      '1 hour',
+      '2 hours',
+      '3 hours',
+    ];
+
+    // Use the dueQuery to filter the suggestions
+    const filteredDurationStrings = durationStringSelections.filter((durationString) =>
+      durationString.toLowerCase().startsWith(durationQuery.toLowerCase())
+    );
+
+    suggestions = filteredDurationStrings.map((durationString) => {
+      const replaceText = `${this.startingNotation}duration: ${durationString}${this.endingNotation} `;
+      return {
+        displayText: durationString,
+        replaceText: replaceText,
+        replaceFrom: durationMatch.index,
+        replaceTo: durationMatch.index + durationMatch[0].length,
+        cursorPosition: durationMatch.index + replaceText.length
+      };
+    });
+
+    return suggestions;
+
   }
 
   getProjectSuggestions(

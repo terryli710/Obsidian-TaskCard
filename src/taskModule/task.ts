@@ -19,6 +19,11 @@ export type DueDate = {
   timezone?: string | null;
 };
 
+export type Duration = {
+  hours: number;
+  minutes: number;
+}
+
 export type SectionID = string;
 export type Priority = 1 | 2 | 3 | 4;
 export type Order = number;
@@ -38,6 +43,7 @@ export interface TaskProperties {
   children: TaskProperties[] | ObsidianTask[];
 
   due?: DueDate | null;
+  duration?: Duration | null;
   metadata?: {
     taskDisplayParams?: TaskDisplayParams | null;
     [key: string]: any; 
@@ -59,6 +65,7 @@ export class ObsidianTask implements TaskProperties {
   public children: TaskProperties[] | ObsidianTask[];
 
   public due?: DueDate | null;
+  public duration?: Duration | null;
   
   public metadata?: {
     taskDisplayParams?: TaskDisplayParams | null;
@@ -78,6 +85,7 @@ export class ObsidianTask implements TaskProperties {
     this.parent = props?.parent || null;
     this.children = props?.children || [];
     this.due = props?.due || null;
+    this.duration = props?.duration || null;
     this.metadata = props?.metadata || {};
   }
 
@@ -109,6 +117,12 @@ export class ObsidianTask implements TaskProperties {
     if (!this.due) return false;
     // return if the due string is not empty
     return !!this.due.string;
+  }
+
+  hasDuration(): boolean {
+    if (!this.duration) return false;
+    // return if the duration string is not empty = hours and minutes all zero
+    return this.duration.hours > 0 || this.duration.minutes > 0;
   }
 
   setTaskDisplayParams(key: string, value: any): void {
