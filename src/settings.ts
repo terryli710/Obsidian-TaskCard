@@ -28,12 +28,15 @@ export interface TaskCardSettings {
     projects: any;
     defaultProject: any;
   };
-  syncSettings: {GoogleSyncSetting}; // Todoist account info + other possible synced platforms
+  syncSettings: {
+    googleSyncSetting: GoogleSyncSetting
+  }; // Todoist account info + other possible synced platforms
 }
 
 export interface GoogleSyncSetting {
   clientID: string;
   clientSecret: string;
+  isLogin: boolean;
 }
 
 export const DefaultSettings: TaskCardSettings = {
@@ -52,9 +55,10 @@ export const DefaultSettings: TaskCardSettings = {
     defaultProject: emptyProject,
   },
   syncSettings: {
-    GoogleSyncSetting: {
+    googleSyncSetting: {
       clientID: '',
-      clientSecret: ''
+      clientSecret: '',
+      isLogin: false
     }
   },
 };
@@ -94,7 +98,8 @@ export class SettingsTab extends PluginSettingTab {
     this.cardDisplaySettings();
     // sync settings
     // 1. google calendar
-    this.containerEl.createEl('h2', { text: 'Google Calendar Sync Settings' });
+    this.containerEl.createEl('h2', { text: 'Sync Settings' });
+    this.containerEl.createEl('h3', { text: 'Google Calendar Sync Setting' });
     this.googleCalendarSyncSettings();
   }
 
@@ -588,27 +593,64 @@ export class SettingsTab extends PluginSettingTab {
   }
 
   googleCalendarSyncSettings() {
-    
-		new Setting(this.containerEl)
-    .setName("Login with google")
-    .addButton(button => {
-      button
-        .setButtonText("Login")
-        .onClick(() => {
-          if (false) {
-            // setRefreshToken("");
-            // setAccessToken("");
-            // setExpirationTime(0);
-            // this.hide();
-            // this.display();
-          } else {
-            // this.plugin.writeSettings((old) => (old.syncSettings.GoogleSyncSetting.clientID = "1092403450430-ef10a6poh36bmbt5vl9bo2tbuvr4j3he.apps.googleusercontent.com"));
-            // this.plugin.writeSettings((old) => (old.syncSettings.GoogleSyncSetting.clientSecret = "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"));
-            GoogleCalendarLogin();
-          }
+    const googleSettings = this.plugin.settings.syncSettings.googleSyncSetting;
+    let loginButton: ButtonComponent;
+
+    new Setting(this.containerEl)
+    .setName("Login via Google")
+    .addText(text => {
+        text
+        .setPlaceholder('Client ID')
+        .setValue(googleSettings.clientID)
+        .onChange(value => {
+            this.plugin.writeSettings(old => old.syncSettings.googleSyncSetting.clientID = value);
         })
+        .setDisabled(googleSettings.isLogin);
     })
-  }
+    .setDesc(createFragment(frag => {
+      frag.appendText('You need to create a Google Calendar API enabled client to use this feature. Refer to ');
+      frag.createEl(
+          'a',
+          {
+              text: 'the documentation',
+              href: 'docs/google-calendar-sync-setup.md', // TODO: correct this link.
+          }
+      );
+      frag.appendText(' for more details.');
+  }))
+    .addText(text => {
+        text
+        .setPlaceholder('Client Secret')
+        .setValue(googleSettings.clientSecret)
+        .onChange(value => {
+            this.plugin.writeSettings(old => old.syncSettings.googleSyncSetting.clientSecret = value);
+        })
+        .setDisabled(googleSettings.isLogin);
+    })
+    .addButton(button => {
+        const isLoggedIn = googleSettings.isLogin;
+        
+        loginButton = button
+          .setButtonText(isLoggedIn ? "Logout" : "Login")
+          .onClick(async () => {
+              if (isLoggedIn) {
+                  // Handle logout logic here if necessary.
+                  googleSettings.isLogin = false;
+                  this.plugin.writeSettings(old => old.syncSettings.googleSyncSetting.isLogin = false);
+              } else {
+                  const loginSuccess = await GoogleCalendarLogin();
+                  if (loginSuccess) {
+                      googleSettings.isLogin = true;
+                      this.plugin.writeSettings(old => old.syncSettings.googleSyncSetting.isLogin = true);
+                  }
+              }
+              this.display();
+          });
+    });
+    if (googleSettings.isLogin) {
+      loginButton.setWarning();
+    }
+}
 
 
 }
