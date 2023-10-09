@@ -7,6 +7,7 @@ import { logger } from './utils/log';
 import { LabelModule } from './taskModule/labels/index';
 import { GoogleCalendarLogin } from './api/googleCalendarAPI/authentication';
 import { getAccessToken } from './api/googleCalendarAPI/localStorage';
+import { googleCalendarSyncSettings } from './settings/syncSettings/googleCalendarSettings';
 
 export let emptyProject: Project = {
   id: '',
@@ -37,6 +38,9 @@ export interface GoogleSyncSetting {
   clientID: string;
   clientSecret: string;
   isLogin: boolean;
+  doesNeedFilters: boolean;
+  filterTag: string;
+  filterProject: string;
 }
 
 export const DefaultSettings: TaskCardSettings = {
@@ -58,7 +62,10 @@ export const DefaultSettings: TaskCardSettings = {
     googleSyncSetting: {
       clientID: '',
       clientSecret: '',
-      isLogin: false
+      isLogin: false,
+      doesNeedFilters: false,
+      filterTag: '',
+      filterProject: ''
     }
   },
 };
@@ -100,7 +107,12 @@ export class SettingsTab extends PluginSettingTab {
     // 1. google calendar
     this.containerEl.createEl('h2', { text: 'Sync Settings' });
     this.containerEl.createEl('h3', { text: 'Google Calendar Sync Setting' });
-    this.googleCalendarSyncSettings();
+    googleCalendarSyncSettings(this.containerEl, 
+        this.plugin.settings, 
+        this.plugin.writeSettings.bind(this.plugin), 
+        this.display.bind(this),
+        this.plugin.projectModule,
+        );
   }
 
   projectSettings() {
@@ -591,66 +603,6 @@ export class SettingsTab extends PluginSettingTab {
           });
       });
   }
-
-  googleCalendarSyncSettings() {
-    const googleSettings = this.plugin.settings.syncSettings.googleSyncSetting;
-    let loginButton: ButtonComponent;
-
-    new Setting(this.containerEl)
-    .setName("Login via Google")
-    .addText(text => {
-        text
-        .setPlaceholder('Client ID')
-        .setValue(googleSettings.clientID)
-        .onChange(value => {
-            this.plugin.writeSettings(old => old.syncSettings.googleSyncSetting.clientID = value);
-        })
-        .setDisabled(googleSettings.isLogin);
-    })
-    .setDesc(createFragment(frag => {
-      frag.appendText('You need to create a Google Calendar API enabled client to use this feature. Refer to ');
-      frag.createEl(
-          'a',
-          {
-              text: 'the documentation',
-              href: 'docs/google-calendar-sync-setup.md', // TODO: correct this link.
-          }
-      );
-      frag.appendText(' for more details.');
-  }))
-    .addText(text => {
-        text
-        .setPlaceholder('Client Secret')
-        .setValue(googleSettings.clientSecret)
-        .onChange(value => {
-            this.plugin.writeSettings(old => old.syncSettings.googleSyncSetting.clientSecret = value);
-        })
-        .setDisabled(googleSettings.isLogin);
-    })
-    .addButton(button => {
-        const isLoggedIn = googleSettings.isLogin;
-        
-        loginButton = button
-          .setButtonText(isLoggedIn ? "Logout" : "Login")
-          .onClick(async () => {
-              if (isLoggedIn) {
-                  // Handle logout logic here if necessary.
-                  googleSettings.isLogin = false;
-                  this.plugin.writeSettings(old => old.syncSettings.googleSyncSetting.isLogin = false);
-              } else {
-                  const loginSuccess = await GoogleCalendarLogin();
-                  if (loginSuccess) {
-                      googleSettings.isLogin = true;
-                      this.plugin.writeSettings(old => old.syncSettings.googleSyncSetting.isLogin = true);
-                  }
-              }
-              this.display();
-          });
-    });
-    if (googleSettings.isLogin) {
-      loginButton.setWarning();
-    }
-}
 
 
 }
