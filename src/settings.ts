@@ -5,6 +5,8 @@ import TaskCardPlugin from './index';
 import { Project } from './taskModule/project';
 import { logger } from './utils/log';
 import { LabelModule } from './taskModule/labels/index';
+import { GoogleCalendarLogin } from './api/googleCalendarAPI/authentication';
+import { getAccessToken } from './api/googleCalendarAPI/localStorage';
 
 export let emptyProject: Project = {
   id: '',
@@ -26,7 +28,12 @@ export interface TaskCardSettings {
     projects: any;
     defaultProject: any;
   };
-  syncSettings: any; // Todoist account info + other possible synced platforms
+  syncSettings: {GoogleSyncSetting}; // Todoist account info + other possible synced platforms
+}
+
+export interface GoogleSyncSetting {
+  clientID: string;
+  clientSecret: string;
 }
 
 export const DefaultSettings: TaskCardSettings = {
@@ -44,7 +51,12 @@ export const DefaultSettings: TaskCardSettings = {
     projects: {},
     defaultProject: emptyProject,
   },
-  syncSettings: {},
+  syncSettings: {
+    GoogleSyncSetting: {
+      clientID: '',
+      clientSecret: ''
+    }
+  },
 };
 
 export const SettingStore: Writable<TaskCardSettings> =
@@ -75,11 +87,15 @@ export class SettingsTab extends PluginSettingTab {
     // projects
     this.projectSettings();
     // parsing settings
-    this.containerEl.createEl('h3', { text: 'Parsing Settings' });
+    this.containerEl.createEl('h2', { text: 'Parsing Settings' });
     this.cardParsingSettings();
     // display settings
-    this.containerEl.createEl('h3', { text: 'Display Settings' });
+    this.containerEl.createEl('h2', { text: 'Display Settings' });
     this.cardDisplaySettings();
+    // sync settings
+    // 1. google calendar
+    this.containerEl.createEl('h2', { text: 'Google Calendar Sync Settings' });
+    this.googleCalendarSyncSettings();
   }
 
   projectSettings() {
@@ -571,7 +587,28 @@ export class SettingsTab extends PluginSettingTab {
       });
   }
 
-
+  googleCalendarSyncSettings() {
+    
+		new Setting(this.containerEl)
+    .setName("Login with google")
+    .addButton(button => {
+      button
+        .setButtonText("Login")
+        .onClick(() => {
+          if (false) {
+            // setRefreshToken("");
+            // setAccessToken("");
+            // setExpirationTime(0);
+            // this.hide();
+            // this.display();
+          } else {
+            // this.plugin.writeSettings((old) => (old.syncSettings.GoogleSyncSetting.clientID = "1092403450430-ef10a6poh36bmbt5vl9bo2tbuvr4j3he.apps.googleusercontent.com"));
+            // this.plugin.writeSettings((old) => (old.syncSettings.GoogleSyncSetting.clientSecret = "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"));
+            GoogleCalendarLogin();
+          }
+        })
+    })
+  }
 
 
 }

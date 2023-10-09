@@ -27,6 +27,8 @@ export default class TaskCardPlugin extends Plugin {
   public taskMonitor: TaskMonitor;
   public cache: TaskCardCache;
 
+  private static instance: TaskCardPlugin;
+
   constructor(app: App, pluginManifest: PluginManifest) {
     super(app, pluginManifest);
     SettingStore.subscribe((settings) => {
@@ -43,6 +45,10 @@ export default class TaskCardPlugin extends Plugin {
     this.staticTaskListRenderManager = new StaticTaskListRenderManager(this);
     this.cache = new TaskCardCache(this);
   }
+
+  public static getInstance(): TaskCardPlugin {
+		return TaskCardPlugin.instance;
+	}
   
   async loadSettings() {
     // Load saved settings from storage
@@ -184,6 +190,7 @@ export default class TaskCardPlugin extends Plugin {
     this.registerPostProcessors();
     this.registerEvents();
     this.registerCommands();
+    TaskCardPlugin.instance = this;
 
     logger.info('Plugin loaded.');
   }
