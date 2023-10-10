@@ -47,6 +47,7 @@ export default class TaskCardPlugin extends Plugin {
     this.taskMonitor = new TaskMonitor(this, this.app, SettingStore);
     this.staticTaskListRenderManager = new StaticTaskListRenderManager(this);
     this.taskChangeAPI = new TaskChangeAPI();
+    
     function printChangeListener(event: TaskChangeEvent): void {
       if (event.type === TaskChangeType.UPDATE) {
         const updatedProperties = getUpdatedProperties(event.previousState, event.currentState);

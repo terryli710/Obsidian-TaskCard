@@ -5,8 +5,6 @@ import TaskCardPlugin from './index';
 import { Project } from './taskModule/project';
 import { logger } from './utils/log';
 import { LabelModule } from './taskModule/labels/index';
-import { GoogleCalendarLogin } from './api/googleCalendarAPI/authentication';
-import { getAccessToken } from './api/googleCalendarAPI/localStorage';
 import { googleCalendarSyncSettings } from './settings/syncSettings/googleCalendarSettings';
 
 export let emptyProject: Project = {

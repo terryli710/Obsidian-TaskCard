@@ -1,7 +1,7 @@
 
 
 import { PluginSettingTab, ButtonComponent, Setting } from 'obsidian'; // Assuming obsidian types based on the code context.
-import { GoogleCalendarLogin } from '../../api/googleCalendarAPI/authentication';
+import { GoogleCalendarAuthenticator } from '../../api/googleCalendarAPI/authentication';
 import { ProjectModule } from '../../taskModule/project';
 
 
@@ -58,7 +58,7 @@ export function googleCalendarSyncSettings(
                     googleSettings.isLogin = false;
                     writeSettings(old => old.syncSettings.googleSyncSetting.isLogin = false);
                 } else {
-                    const loginSuccess = await GoogleCalendarLogin();
+                    const loginSuccess = await new GoogleCalendarAuthenticator().login();
                     if (loginSuccess) {
                         googleSettings.isLogin = true;
                         writeSettings(old => old.syncSettings.googleSyncSetting.isLogin = true);
