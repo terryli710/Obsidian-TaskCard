@@ -1,7 +1,7 @@
 // Adopted from https://github.com/YukiGasai/obsidian-google-calendar/blob/master/src/googleApi/GoogleAuth.ts
 
 import OAuth2Client from 'google-auth-library';
-import { getRefreshToken, setAccessToken, setExpirationTime, setRefreshToken } from './localStorage';
+import { getAccessToken, getExpirationTime, getRefreshToken, setAccessToken, setExpirationTime, setRefreshToken } from './localStorage';
 import { Notice, requestUrl, Plugin } from 'obsidian';
 import TaskCardPlugin from '../..';
 
@@ -44,6 +44,65 @@ export class GoogleCalendarAuthenticator {
         }
 
         return this.startServerAndHandleResponse(this.syncSettings, authURL);
+    }
+
+    async getGoogleAuthToken(): Promise<string | null> {
+        if (!this.syncSettings.isLogin) {
+            new Notice(`[TaskCard] Not logged in to Google Calendar`);
+            return null;
+        }
+
+        let token = getAccessToken();
+        if (!token || this.needsToRefreshToken()) {
+            // need to refresh token
+            this.refreshAccessToken();
+            token = getAccessToken();
+        }
+        return token;
+    }
+
+
+    async refreshAccessToken(): Promise<string> {
+        const clientID = this.syncSettings.clientID;
+        const clientSecret = this.syncSettings.clientSecret;
+        const refreshToken = getRefreshToken();
+
+        let refreshBody = {
+            grant_type: "refresh_token",
+            client_id: clientID,
+            client_secret: clientSecret,
+            refresh_token: refreshToken,
+        };
+
+        const {json: tokenData} = await requestUrl({
+            method: 'POST',
+            url: `https://oauth2.googleapis.com/token`,
+            headers: {'content-type': 'application/json'},
+            body: JSON.stringify(refreshBody)
+        })
+
+        if (!tokenData) {
+            new Notice("[TaskCard] Error while refreshing authentication");
+            return;
+        }
+        
+        //Save new Access token and Expiration Time
+        setAccessToken(tokenData.access_token);
+        setExpirationTime(+new Date() + tokenData.expires_in * 1000);
+        return tokenData.access_token;
+    }
+
+
+    needsToRefreshToken(): boolean {
+        const timestamp = getExpirationTime()
+        if (!timestamp) {
+            return true;
+        }
+        if (timestamp < +new Date()) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     getAuthUrl(clientID: string, authSession: any): string {
