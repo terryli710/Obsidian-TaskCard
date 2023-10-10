@@ -29,9 +29,12 @@ export interface TaskCardSettings {
     projects: any;
     defaultProject: any;
   };
-  syncSettings: {
-    googleSyncSetting: GoogleSyncSetting
-  }; // Todoist account info + other possible synced platforms
+  syncSettings: SyncSettings;
+}
+
+export interface SyncSettings {
+  googleSyncSetting: GoogleSyncSetting
+  // Todoist account info + other possible synced platforms
 }
 
 export interface GoogleSyncSetting {

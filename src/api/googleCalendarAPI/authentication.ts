@@ -11,6 +11,7 @@ const url = require('url');
 
 import type { IncomingMessage, ServerResponse } from 'http';
 import { logger } from '../../utils/log';
+import { SettingStore, SyncSettings } from '../../settings';
 
 
 const PORT: number = 8888;
@@ -21,8 +22,12 @@ let authSession = {server: null, verifier: null, challenge: null, state:null};
 
 
 export async function GoogleCalendarLogin(): Promise<boolean> {
-    const plugin = TaskCardPlugin.getInstance();
-    const clientID = plugin.settings.syncSettings.googleSyncSetting.clientID;
+    // const plugin = TaskCardPlugin.getInstance();
+    let syncSettings: any = {};
+    SettingStore.subscribe((settings) => {
+        syncSettings = settings.syncSettings.googleSyncSetting;
+    })
+    const clientID = syncSettings.googleSyncSetting.clientID;
 
     if (!authSession.state) {
         authSession.state = generateState();
@@ -37,7 +42,7 @@ export async function GoogleCalendarLogin(): Promise<boolean> {
         window.open(authURL);
     }
 
-    return startServerAndHandleResponse(plugin, authURL);
+    return startServerAndHandleResponse(syncSettings, authURL);
 }
 
 function getAuthUrl(clientID: string, authSession: any): string {
@@ -53,7 +58,7 @@ function getAuthUrl(clientID: string, authSession: any): string {
         + '&scope=email%20profile%20https://www.googleapis.com/auth/calendar';
 }
 
-async function startServerAndHandleResponse(plugin: any, authURL: string): Promise<boolean> {
+async function startServerAndHandleResponse(syncSettings: SyncSettings, authURL: string): Promise<boolean> {
     return new Promise((resolve) => {
         authSession.server = http.createServer(async (req, res) => {
             try {
@@ -67,7 +72,7 @@ async function startServerAndHandleResponse(plugin: any, authURL: string): Promi
                     return resolve(false);
                 }
 
-                const token = await exchangeCodeForToken(plugin, authSession.state, authSession.verifier, code, false);
+                const token = await exchangeCodeForToken(syncSettings, authSession.state, authSession.verifier, code, false);
 
                 if (!token) {
                     return resolve(false);
@@ -77,7 +82,7 @@ async function startServerAndHandleResponse(plugin: any, authURL: string): Promi
                     storeTokensAndExpiration(token);
                     logger.info("Tokens acquired.");
                     res.end("[Obsidian Task Card] Authentication successful! Please return to obsidian.");
-                    plugin.settings.syncSettings.googleSyncSetting.isLogin = true;
+                    syncSettings.googleSyncSetting.isLogin = true;
                 }
 
             } catch (e) {
@@ -122,10 +127,10 @@ function resetAuthSession() {
 }
 
 
-const exchangeCodeForToken = async (plugin: TaskCardPlugin, state: string, verifier:string, code: string, isMobile: boolean): Promise<any> => {
+const exchangeCodeForToken = async (syncSettings: SyncSettings, state: string, verifier:string, code: string, isMobile: boolean): Promise<any> => {
 	
-    const clientID = plugin.settings.syncSettings.googleSyncSetting.clientID;
-    const clientSecret = plugin.settings.syncSettings.googleSyncSetting.clientSecret;
+    const clientID = syncSettings.googleSyncSetting.clientID;
+    const clientSecret = syncSettings.googleSyncSetting.clientSecret;
 
     const url = `https://oauth2.googleapis.com/token`
         + `?grant_type=authorization_code`
