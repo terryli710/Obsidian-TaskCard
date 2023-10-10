@@ -14,6 +14,7 @@ import { TaskMonitor } from './taskModule/taskMonitor';
 import { TaskCardCache } from './query';
 import { CreateProjectModal } from './modal/createProjectModal';
 import { TaskChangeAPI, TaskChangeEvent, TaskChangeType, getUpdatedProperties } from './taskModule/taskAPI';
+import { CodeBlockProcessor } from './renderer/StaticTaskListRenderer';
 
 
 export default class TaskCardPlugin extends Plugin {
@@ -180,14 +181,26 @@ export default class TaskCardPlugin extends Plugin {
     this.registerMarkdownPostProcessor(
       this.taskCardRenderManager.getPostProcessor()
     );
+  
+  let taskCardMarkdownCodeBlockProcessor: CodeBlockProcessor;
+
+  setTimeout(() => {
+    if (!taskCardMarkdownCodeBlockProcessor) {
+      this.registerMarkdownCodeBlockProcessor('taskcard', 
+        taskCardMarkdownCodeBlockProcessor = this.staticTaskListRenderManager.getCodeBlockProcessor()
+      );
+    }
+  }, 3000);
 
   //@ts-ignore
   this.registerEvent(this.app.metadataCache.on("dataview:index-ready", () => {
     setTimeout(() => {
-      this.cache.taskCache.initializeAndRefreshAllTasks.bind(this.cache.taskCache)(),
-      this.registerMarkdownCodeBlockProcessor('taskcard', 
-        this.staticTaskListRenderManager.getCodeBlockProcessor()
-      );
+      this.cache.taskCache.initializeAndRefreshAllTasks.bind(this.cache.taskCache)()
+      if (!taskCardMarkdownCodeBlockProcessor) {
+        this.registerMarkdownCodeBlockProcessor('taskcard', 
+          taskCardMarkdownCodeBlockProcessor = this.staticTaskListRenderManager.getCodeBlockProcessor()
+        );
+      }
     }, 20); // delay of 200 milliseconds
   }));
 
