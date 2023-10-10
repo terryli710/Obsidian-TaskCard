@@ -13,6 +13,7 @@ import { TaskFormatter } from './taskModule/taskFormatter';
 import { TaskMonitor } from './taskModule/taskMonitor';
 import { TaskCardCache } from './query';
 import { CreateProjectModal } from './modal/createProjectModal';
+import { TaskChangeAPI, TaskChangeEvent, TaskChangeType, getUpdatedProperties } from './taskModule/taskAPI';
 
 
 export default class TaskCardPlugin extends Plugin {
@@ -25,6 +26,7 @@ export default class TaskCardPlugin extends Plugin {
   public staticTaskListRenderManager: StaticTaskListRenderManager;
   public fileOperator: FileOperator;
   public taskMonitor: TaskMonitor;
+  public taskChangeAPI: TaskChangeAPI;
   public cache: TaskCardCache;
 
   private static instance: TaskCardPlugin;
@@ -43,6 +45,17 @@ export default class TaskCardPlugin extends Plugin {
     this.fileOperator = new FileOperator(this, this.app);
     this.taskMonitor = new TaskMonitor(this, this.app, SettingStore);
     this.staticTaskListRenderManager = new StaticTaskListRenderManager(this);
+    this.taskChangeAPI = new TaskChangeAPI();
+    function printChangeListener(event: TaskChangeEvent): void {
+      if (event.type === TaskChangeType.UPDATE) {
+        const updatedProperties = getUpdatedProperties(event.previousState, event.currentState);
+        logger.info(`Updated properties: ${JSON.stringify(updatedProperties)}`);
+      } else {
+        logger.info(`Received Task Change Event`, event);
+      }
+    }
+    this.taskChangeAPI.registerListener(printChangeListener);
+  
     this.cache = new TaskCardCache(this);
   }
 

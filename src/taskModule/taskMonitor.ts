@@ -5,6 +5,7 @@ import { logger } from '../utils/log';
 import { TaskDisplayMode } from '../renderer/postProcessor';
 import { Project } from './project';
 import { SettingStore } from '../settings';
+import { TaskChangeEvent, TaskChangeType } from './taskAPI';
 
 
 export class TaskMonitor {
@@ -147,11 +148,19 @@ export class TaskMonitor {
     if (this.plugin.taskValidator.isValidUnformattedTaskMarkdown(line)) {
       const task = this.plugin.taskParser.parseTaskMarkdown(line, announceError);
       // additional logic before adding the task: default project
-      // logger.debug(`default project: ${JSON.stringify(this.defaultProject)}, task.project : ${JSON.stringify(task.project)}`);
       if (!task.project?.id && this.defaultProject?.id) {
         logger.debug('No project found, using default project');
         task.project = this.defaultProject;
       }
+      
+      // API: task added
+      const event: TaskChangeEvent = {
+        taskId: task.id,
+        type: TaskChangeType.ADD,
+        currentState: task,
+        timestamp: new Date(),
+      }
+      this.plugin.taskChangeAPI.recordChange(event);
       return this.plugin.taskFormatter.taskToMarkdown(task);
     }
     return line;

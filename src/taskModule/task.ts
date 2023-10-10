@@ -89,6 +89,25 @@ export class ObsidianTask implements TaskProperties {
     this.metadata = props?.metadata || {};
   }
 
+  getCopy(): ObsidianTask {
+    return new ObsidianTask({
+      id: this.id,
+      content: this.content,
+      priority: this.priority,
+      description: this.description,
+      order: this.order,
+      project: this.project,
+      sectionID: this.sectionID,
+      labels: this.labels,
+      completed: this.completed,
+      parent: this.parent,
+      children: this.children,
+      due: this.due,
+      duration: this.duration,
+      metadata: this.metadata,
+    });
+  }
+
   hasDescription() {
     return this.description.length > 0;
   }
