@@ -20,10 +20,12 @@ export class GoogleCalendarAuthenticator {
 
     private authSession = {server: null, verifier: null, challenge: null, state: null};
     private syncSettings: GoogleSyncSetting;
+    public isLogin: boolean = false;
 
     constructor() {
         SettingStore.subscribe((settings) => {
             this.syncSettings = settings.syncSettings.googleSyncSetting;
+            this.isLogin = settings.syncSettings.googleSyncSetting.isLogin;
         });
     }
 
