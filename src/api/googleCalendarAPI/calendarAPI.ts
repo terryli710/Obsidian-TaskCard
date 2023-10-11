@@ -1,7 +1,5 @@
 
 
-// TODO: syncs automatically
-
 import { Notice } from "obsidian";
 import { logger } from "../../utils/log";
 import { GoogleCalendarAuthenticator } from "./authentication";
@@ -25,16 +23,37 @@ export class GoogleCalendarAPI {
     }
 
     async init() {
-        this.calendars = await this.getCalendars();
+        this.calendars = await this.listCalendars();
     }
 
     async test() {
-        const startOfMonth = moment().startOf("month");
-        const endOfMonth = moment().endOf("month");
-        this.getEventsInCalendar(this.calendars[0], startOfMonth, endOfMonth); 
+        try {
+            const startOfMonth = moment().startOf("month");
+            const endOfMonth = moment().endOf("month");
+
+            // Fetch events from the calendar within the specified date range
+            const events: GoogleEvent[] = await this.getEventsInCalendar(this.calendars[0], startOfMonth, endOfMonth);
+
+            console.log('Events in Calendar:', events);
+
+            // Check if there are any events, if so, use the first event's ID to test the getEvent method
+            if (events.length > 0) {
+                const firstEventId = events[0].id; // Extracting ID of the first event
+                const calendarId = this.calendars[0].id; 
+
+                // Fetch the specific event by id from the calendar
+                const event = await this.getEvent(firstEventId, calendarId);
+
+                console.log('Single Event:', event);
+            } else {
+                console.log('No events found in the specified date range.');
+            }
+        } catch (error) {
+            console.error('An error occurred:', error);
+        }
     }
 
-    async getCalendars(): Promise<GoogleCalendar[]> {
+    async listCalendars(): Promise<GoogleCalendar[]> {
         if (!this.authenticator.isLogin) {
             new Notice(`[TaskCard] Not logged in to Google Calendar`);
             return [];
@@ -79,7 +98,7 @@ export class GoogleCalendarAPI {
         const startString = startDateMoment.toISOString();
         const endString = endDateMoment.toISOString();
 
-        // Prepare for the request
+        // 2. Prepare for the request
         let totalEventList: GoogleEvent[] = [];
         let nextPageToken: string | undefined;
 
@@ -87,7 +106,7 @@ export class GoogleCalendarAPI {
             let url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendar.id)}/events?`;
             url += `maxResults=${resultSize}`;
             url += `&singleEvents=true`;
-            url += `&orderBy=startTime`; // Adjusted to the correct case as per Google Calendar API
+            url += `&orderBy=startTime`;
             url += `&timeMin=${startString}`;
             url += `&timeMax=${endString}`;
 
@@ -96,7 +115,7 @@ export class GoogleCalendarAPI {
             }
 
             // Make the API request
-            const tmpRequestResult: GoogleEventList = await callRequest(url, "GET", null); // Ensure callRequest is accessible here
+            const tmpRequestResult: GoogleEventList = await callRequest(url, "GET", null);
 
             // Filter events and assign the calendar as the parent to each event
             const newList = tmpRequestResult.items.filter((event) => {
@@ -108,14 +127,55 @@ export class GoogleCalendarAPI {
 
             // Prepare for the next iteration if necessary
             nextPageToken = tmpRequestResult.nextPageToken;
-        } while (nextPageToken && totalEventList.length < resultSize); // Adjusted condition for readability and correctness
+        } while (nextPageToken && totalEventList.length < resultSize); 
 
         return totalEventList;
     }
 
-    createEventInCalendar() {
+    
+    /**
+     * Method to get information of a single event by id
+     * @param eventId The id of the event
+     * @param calendarId The id of the calendar the event is in (optional)
+     * @returns The found Event
+     */
+    
+    async getEvent(eventId: string, calendarId?: string): Promise<GoogleEvent> {
+        // Check if the settings are complete and the user is logged in
+        if (!this.authenticator.isLogin) {
+            new Notice(`[TaskCard] Not logged in to Google Calendar`);
+            return null;
+        }
+        
+        const calendars = await this.listCalendars();
+        if (calendarId) {
+            // Encode the calendarId before using it in the URL
+            const encodedCalendarId = encodeURIComponent(calendarId);
+            const foundEvent = await callRequest(`https://www.googleapis.com/calendar/v3/calendars/${encodedCalendarId}/events/${eventId}`, "GET", null);
+            foundEvent.parent = calendars.find(calendar => calendar.id === calendarId);
+            return foundEvent;
+        }
 
+        // If calendar ID is not provided, attempt to find the event in all available calendars
+        for (const calendar of calendars) {
+            try {
+                // Encode the calendar.id before using it in the URL
+                const encodedCalendarId = encodeURIComponent(calendar.id);
+                const foundEvent = await callRequest(`https://www.googleapis.com/calendar/v3/calendars/${encodedCalendarId}/events/${eventId}`, "GET", null);
+                if (foundEvent && foundEvent.id === eventId) {
+                    foundEvent.parent = calendar;
+                    return foundEvent;
+                }
+            } catch (err) {
+                // If the event is not found in the current calendar, continue to the next one
+                // Optionally, you might want to handle or log the error depending on your requirements
+            }
+        }
+
+        // If the event was not found in any of the calendars, throw an error or handle it as per your requirement
+        throw new Error('Event not found in any of the calendars');
     }
+
 
 
 
