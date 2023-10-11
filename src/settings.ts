@@ -35,10 +35,13 @@ export interface SyncSettings {
   // Todoist account info + other possible synced platforms
 }
 
-export interface GoogleSyncSetting {
+export interface SyncSetting {
+  isLogin: boolean;
+}
+
+export interface GoogleSyncSetting extends SyncSetting {
   clientID: string;
   clientSecret: string;
-  isLogin: boolean;
   doesNeedFilters: boolean;
   filterTag: string;
   filterProject: string;

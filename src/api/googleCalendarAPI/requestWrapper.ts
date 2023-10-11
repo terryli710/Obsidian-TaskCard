@@ -3,6 +3,7 @@
 import { GoogleApiError } from './googleAPIError';
 import { requestUrl } from "obsidian";
 import { GoogleCalendarAuthenticator } from './authentication';
+import { logger } from '../../utils/log';
 
 export const callRequest = async (url: string, method: string, body: any, noAuth = false): Promise<any> => {
 
@@ -22,6 +23,7 @@ export const callRequest = async (url: string, method: string, body: any, noAuth
     //Normal request
     let response;
     try { 
+        logger.debug(`request url: ${url}, method: ${method}, body: ${body}, headers: ${JSON.stringify(requestHeaders)}`);
         response = await requestUrl({
             method: method,
             url: url,

@@ -15,6 +15,7 @@ import { TaskCardCache } from './query';
 import { CreateProjectModal } from './modal/createProjectModal';
 import { TaskChangeAPI, TaskChangeEvent, TaskChangeType, getUpdatedProperties } from './taskModule/taskAPI';
 import { CodeBlockProcessor } from './renderer/StaticTaskListRenderer';
+import { ExternalAPIManager } from './api/externalAPIManager';
 
 
 export default class TaskCardPlugin extends Plugin {
@@ -29,6 +30,7 @@ export default class TaskCardPlugin extends Plugin {
   public taskMonitor: TaskMonitor;
   public taskChangeAPI: TaskChangeAPI;
   public cache: TaskCardCache;
+  public externalAPIManager: ExternalAPIManager;
 
   private static instance: TaskCardPlugin;
 
@@ -47,6 +49,7 @@ export default class TaskCardPlugin extends Plugin {
     this.taskMonitor = new TaskMonitor(this, this.app, SettingStore);
     this.staticTaskListRenderManager = new StaticTaskListRenderManager(this);
     this.taskChangeAPI = new TaskChangeAPI();
+    this.externalAPIManager = new ExternalAPIManager(SettingStore);
     
     function printChangeListener(event: TaskChangeEvent): void {
       if (event.type === TaskChangeType.UPDATE) {
@@ -212,6 +215,7 @@ export default class TaskCardPlugin extends Plugin {
     this.projectModule.updateProjects(
       this.settings.userMetadata.projects as Project[]
     );
+    this.externalAPIManager.initAPIs();
     this.addSettingTab(new SettingsTab(this.app, this));
     this.registerEditorSuggest(new AttributeSuggest(this.app));
     this.registerPostProcessors();
