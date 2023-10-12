@@ -6,7 +6,14 @@ import { TaskDisplayMode } from '../renderer/postProcessor';
 import { Project } from './project';
 import { SettingStore } from '../settings';
 import { TaskChangeEvent, TaskChangeType } from './taskAPI';
+import { ObsidianTask } from './task';
 
+
+interface TaskDetail {
+  taskMarkdown: string;
+  startLine: number;
+  endLine: number;
+}
 
 export class TaskMonitor {
   plugin: TaskCardPlugin;
@@ -59,8 +66,20 @@ export class TaskMonitor {
   // HACK: currently don't have to parse description as it doesn't affect anything
   async monitorFileToFormatTasks(file: TFile) { 
     const lines = await this.getLinesFromFile(file);
+    let updatedLines = lines;
     if (!lines) return;
-    const updatedLines = this.formatTaskInLines(lines);
+    const taskDetails = this.detectTasksFromLines(lines);
+    if (taskDetails.length === 0) return;
+    for (const taskDetail of taskDetails) {
+      // format task lines
+      let newLines = this.formatTaskWithLines(taskDetail.taskMarkdown.split('\n'));
+      // insert task lines to lines of the file
+      updatedLines = updatedLines.slice(0, taskDetail.startLine).concat(newLines, updatedLines.slice(taskDetail.endLine));
+      // notify API about creation of tasks
+      let task = this.parseTaskWithLines(taskDetail.taskMarkdown.split('\n'));
+      this.plugin.externalAPIManager.createTask(task);
+
+    }
     await this.updateFileWithNewLines(file, updatedLines);
   }
 
@@ -71,7 +90,108 @@ export class TaskMonitor {
     await this.updateFileWithNewLines(file, updatedLines);
   }
 
+
   // HELPERS
+
+  parseTaskWithLines(lines: string[]): ObsidianTask {
+
+    function announceError(errorMsg: string): void {
+      // Show a notice popup
+      new Notice(errorMsg);
+      // Log the error
+      logger.error(errorMsg);
+    }
+
+    const taskMarkdown = lines.join('\n');
+    if (this.plugin.taskValidator.isValidUnformattedTaskMarkdown(lines[0])) {
+      const task = this.plugin.taskParser.parseTaskMarkdown(taskMarkdown, announceError);
+      // additional logic before adding the task: default project
+      if (!task.project?.id && this.defaultProject?.id) {
+        logger.debug('No project found, using default project');
+        task.project = this.defaultProject;
+      }
+      return task;
+    } else {
+      return null;
+    }
+
+  }
+
+  formatTaskWithLines(lines: string[]): string[] {
+    const task = this.parseTaskWithLines(lines);
+    if (!task) return [''];
+    return this.plugin.taskFormatter.taskToMarkdown(task).split('\n');
+  }
+
+  detectTasksFromLines(lines: string[]): TaskDetail[] {
+    const taskDetails: TaskDetail[] = [];
+    let lineIndex = 0;
+
+    for (const line of lines) {
+      if (this.plugin.taskValidator.isValidFormattedTaskMarkdown(line)) {
+        // Count how many lines are in the description
+        const followingLines = lines.slice(lineIndex + 1);
+        const descriptionLineCount = this.countDescriptionLines(line, followingLines);
+
+        // Create a string that includes the task and its descriptions
+        const taskWithDescription = lines.slice(lineIndex, lineIndex + 1 + descriptionLineCount).join('\n');
+
+        // Create an object with the task, start line, and end line, then add it to the array
+        taskDetails.push({
+          taskMarkdown: taskWithDescription,
+          startLine: lineIndex + 1, // +1 because line numbers usually start from 1, not 0
+          endLine: lineIndex + 1 + descriptionLineCount, // same here
+        });
+
+        // Skip the description lines in the next iterations
+        lineIndex += descriptionLineCount;
+      }
+      lineIndex++;
+    }
+
+    return taskDetails;
+  }
+
+  countDescriptionLines(taskLine: string, followingLines: string[]): number {
+    // Function to count the leading spaces of a line
+    function countLeadingSpaces(line) {
+      return line.match(/^(\s*)/)[0].length;
+    }
+  
+    // Function to check if a line starts with specific characters
+    function startsWithSymbols(line) {
+      return /^\s*([-] \[[ xX]\]|[-] |[1-9]+\. )/.test(line);
+    }
+  
+    // Function to check if a line is not empty or all spaces
+    function isNotEmpty(line) {
+      return line.trim().length > 0;
+    }
+  
+    const taskIndentation = countLeadingSpaces(taskLine);
+  
+    let descriptionLineCount = 0;
+  
+    for (const line of followingLines) {
+      // Check if the line is indented more than the task
+      const hasMoreIndentation = countLeadingSpaces(line) > taskIndentation;
+  
+      // Check if the line starts with the specified symbols and is not empty
+      const isValidStart = startsWithSymbols(line) && isNotEmpty(line);
+  
+      if (hasMoreIndentation && isValidStart) {
+        // This line is part of the description
+        descriptionLineCount++;
+      } else {
+        // We've reached the end of the description
+        break;
+      }
+    }
+  
+    return descriptionLineCount;
+  }
+
+
 
   changeTaskDisplayModesInLines(lines: string[], mode: TaskDisplayMode): string[] {
     return lines.map((line, index) => this.changeTaskDisplayModeInLine(line, mode));
@@ -134,37 +254,38 @@ export class TaskMonitor {
     return await this.plugin.fileOperator.getFileLines(file.path);
   }
 
-  formatTaskInLines(lines: string[]): string[] {
-    return lines.map((line, index) => this.formatTaskInLine(line, index));
-  }
+  // formatTaskInLines(lines: string[]): string[] {
+  //   return lines.map((line, index) => this.formatTaskInLine(line, index));
+  // }
 
-  formatTaskInLine(line: string, index: number): string {
-    function announceError(errorMsg: string): void {
-      // Show a notice popup
-      new Notice(errorMsg);
-      // Log the error
-      logger.error(errorMsg);
-    }
-    if (this.plugin.taskValidator.isValidUnformattedTaskMarkdown(line)) {
-      const task = this.plugin.taskParser.parseTaskMarkdown(line, announceError);
-      // additional logic before adding the task: default project
-      if (!task.project?.id && this.defaultProject?.id) {
-        logger.debug('No project found, using default project');
-        task.project = this.defaultProject;
-      }
+  // formatTaskInLine(line: string, index: number): string {
+  //   function announceError(errorMsg: string): void {
+  //     // Show a notice popup
+  //     new Notice(errorMsg);
+  //     // Log the error
+  //     logger.error(errorMsg);
+  //   }
+
+  //   if (this.plugin.taskValidator.isValidUnformattedTaskMarkdown(line)) {
+  //     const task = this.plugin.taskParser.parseTaskMarkdown(line, announceError);
+  //     // additional logic before adding the task: default project
+  //     if (!task.project?.id && this.defaultProject?.id) {
+  //       logger.debug('No project found, using default project');
+  //       task.project = this.defaultProject;
+  //     }
       
-      // API: task added
-      const event: TaskChangeEvent = {
-        taskId: task.id,
-        type: TaskChangeType.ADD,
-        currentState: task,
-        timestamp: new Date(),
-      }
-      this.plugin.taskChangeAPI.recordChange(event);
-      return this.plugin.taskFormatter.taskToMarkdown(task);
-    }
-    return line;
-  }
+  //     // API: task added
+  //     const event: TaskChangeEvent = {
+  //       taskId: task.id,
+  //       type: TaskChangeType.ADD,
+  //       currentState: task,
+  //       timestamp: new Date(),
+  //     }
+  //     this.plugin.taskChangeAPI.recordChange(event);
+  //     return this.plugin.taskFormatter.taskToMarkdown(task);
+  //   }
+  //   return line;
+  // }
 
   async updateFileWithNewLines(file: TFile, updatedLines: string[]) {
     await this.plugin.fileOperator.updateFile(

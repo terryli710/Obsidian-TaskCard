@@ -141,7 +141,7 @@ export class TaskParser {
     task.completed = checkbox?.checked || false;
   
     return task;
-  }  
+  }
 
   parseTaskMarkdown(taskMarkdown: string, noticeFunc: (msg: string) => void = null): ObsidianTask {
     const task: ObsidianTask = new ObsidianTask();

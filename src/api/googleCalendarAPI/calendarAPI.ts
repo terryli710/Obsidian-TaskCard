@@ -8,10 +8,10 @@ import { GoogleCalendar, GoogleCalendarList, GoogleEvent, GoogleEventList } from
 import moment from "moment";
 import { SettingStore } from "../../settings";
 import { GoogleApiError } from "./googleAPIError";
+import { TaskChangeEvent } from "../../taskModule/taskAPI";
 
 
 export class GoogleCalendarAPI { 
-    // TODO: to create new class instance somewhere in the plugin
 
     public authenticator: GoogleCalendarAuthenticator;
     public calendars: GoogleCalendar[];
@@ -20,9 +20,9 @@ export class GoogleCalendarAPI {
     constructor() {
         this.authenticator = new GoogleCalendarAuthenticator();
         this.init();
-        setTimeout(() => {
-            this.test();
-        }, 2000);
+        // setTimeout(() => {
+        //     this.test();
+        // }, 2000);
     }
 
     async init() {
@@ -116,6 +116,11 @@ export class GoogleCalendarAPI {
         } catch (error) {
             console.error('An error occurred:', error);
         }
+    }
+
+    handleLocalTaskChanges(event: TaskChangeEvent) {
+        console.log(`Received Task Change Event`, event);
+        // TODO logic
     }
 
     async listCalendars(): Promise<GoogleCalendar[]> {
