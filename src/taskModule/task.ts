@@ -19,6 +19,57 @@ export type DueDate = {
   timezone?: string | null;
 };
 
+
+// Function to convert DueDate to dateTime string
+export function convertToDateTime(dueDate: DueDate): string | null {
+  if (dueDate.date) {
+    let dateTime = dueDate.date;
+
+    if (dueDate.time) {
+      dateTime += `T${dueDate.time}`;
+    } else {
+      dateTime += 'T00:00'; // Default to midnight if no time is provided
+    }
+
+    if (dueDate.timezone) {
+      // If a timezone is provided, we assume it's something like '-07:00' or '+05:30'
+      dateTime += dueDate.timezone;
+    } else {
+      // If no timezone is provided, you might want to default to 'Z' (Zulu time/UTC)
+      // or you could default to the local timezone offset. This example uses 'Z'.
+      dateTime += 'Z';
+    }
+
+    return dateTime;
+  }
+
+  // If no valid date is available, return null or handle this case as per your application's needs
+  return null;
+}
+
+// Function to calculate start and end dateTimes
+export function calculateStartEndDateTime(dueDate: DueDate, duration: Duration): { start: string, end: string } | null {
+  if (!dueDate.date) {
+    return null; // or throw an error, depending on your error handling strategy
+  }
+
+  // Convert dueDate to a Date object
+  const startDate = new Date(`${dueDate.date}T${dueDate.time || '00:00'}${dueDate.timezone || 'Z'}`);
+
+  // Clone the startDate object to keep the original startDate unchanged
+  const endDate = new Date(startDate);
+
+  // Add the duration to the endDate
+  endDate.setHours(endDate.getHours() + duration.hours);
+  endDate.setMinutes(endDate.getMinutes() + duration.minutes);
+
+  // Convert dates to ISO strings
+  const startDateTime = startDate.toISOString();
+  const endDateTime = endDate.toISOString();
+
+  return { start: startDateTime, end: endDateTime };
+}
+
 export type Duration = {
   hours: number;
   minutes: number;

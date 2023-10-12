@@ -8,7 +8,9 @@ import { GoogleCalendar, GoogleCalendarList, GoogleEvent, GoogleEventList } from
 import moment from "moment";
 import { SettingStore } from "../../settings";
 import { GoogleApiError } from "./googleAPIError";
-import { TaskChangeEvent } from "../../taskModule/taskAPI";
+import { TaskChangeEvent, TaskChangeType } from "../../taskModule/taskAPI";
+import { LocalStorageDB } from "./localStorage";
+import { ObsidianTask, calculateStartEndDateTime } from "../../taskModule/task";
 
 
 export class GoogleCalendarAPI { 
@@ -16,6 +18,7 @@ export class GoogleCalendarAPI {
     public authenticator: GoogleCalendarAuthenticator;
     public calendars: GoogleCalendar[];
     public defaultCalendar: GoogleCalendar;
+    private taskMappingDB: LocalStorageDB;
 
     constructor() {
         this.authenticator = new GoogleCalendarAuthenticator();
@@ -23,6 +26,7 @@ export class GoogleCalendarAPI {
         // setTimeout(() => {
         //     this.test();
         // }, 2000);
+        this.taskMappingDB = new LocalStorageDB();
     }
 
     async init() {
@@ -118,9 +122,64 @@ export class GoogleCalendarAPI {
         }
     }
 
-    handleLocalTaskChanges(event: TaskChangeEvent) {
+    addTaskInDB(event: GoogleEvent, task: ObsidianTask) {
+        this.taskMappingDB.setData(event.id, task.id)
+        this.taskMappingDB.setData(task.id, event.id)
+    }
+
+    deleteTaskInDB(task: ObsidianTask, event?: GoogleEvent) {
+        let eventId;
+        if (!event) {
+            eventId = this.taskMappingDB.getData(task.id);
+        } else {
+            eventId = this.taskMappingDB.getData(event.id);
+        }
+        this.taskMappingDB.deleteData(task.id);
+        this.taskMappingDB.deleteData(eventId);
+    }
+
+    async handleLocalTaskChanges(event: TaskChangeEvent) {
         console.log(`Received Task Change Event`, event);
-        // TODO logic
+        // create
+        if (event.type === TaskChangeType.ADD) {
+            const googleEvent = this.convertTaskToGoogleEvent(event.currentState);
+            const createdEvent = await this.createEvent(googleEvent);
+            this.addTaskInDB(createdEvent, event.currentState);
+        } else if (event.type === TaskChangeType.UPDATE) {
+            // update
+            let googleEvent = this.convertTaskToGoogleEvent(event.currentState);
+            googleEvent = this.assignEventId(googleEvent, event.currentState.id);
+            const updatedEvent = await this.updateEvent(googleEvent);
+            // this.addTaskInDB(updatedEvent, event.currentState);
+        } else if (event.type === TaskChangeType.REMOVE) {
+            const googleEvent = this.convertTaskToGoogleEvent(event.previousState);
+            await this.deleteEvent(googleEvent);
+            this.deleteTaskInDB(event.previousState);
+        }
+    }
+
+    assignEventId(event: GoogleEvent, taskId: string) {
+        // look up the task in the DB
+        const eventId = this.taskMappingDB.getData(taskId);
+        if (eventId) {
+            event.id = eventId;
+        }
+        return event;
+    }
+
+    convertTaskToGoogleEvent(task: Partial<ObsidianTask>): GoogleEvent {
+        const {start, end} = calculateStartEndDateTime(task.due, task.duration);
+        const event: GoogleEvent = {
+            summary: task.content,
+            description: task.description,
+            start: {
+                dateTime: start,
+            },
+            end: {
+                dateTime: end,
+            }
+        }
+        return event
     }
 
     async listCalendars(): Promise<GoogleCalendar[]> {
@@ -271,6 +330,7 @@ export class GoogleCalendarAPI {
                 'POST', processedEvent);
             
             logger.info(`Google Event ${event.summary} created.`);
+
             return createdEvent;
         } catch (error) {
             if (error instanceof GoogleApiError) {

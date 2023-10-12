@@ -11,8 +11,8 @@ export enum TaskChangeType {
 export interface TaskChangeEvent {
     taskId: string;
     type: TaskChangeType;
-    previousState?: Partial<ObsidianTask>;
-    currentState?: Partial<ObsidianTask>;
+    previousState?: ObsidianTask;
+    currentState?: ObsidianTask;
     timestamp: Date;
 }
 
