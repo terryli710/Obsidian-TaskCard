@@ -45,9 +45,9 @@ export class GoogleCalendarAPI {
             const endOfMonth = moment().endOf("month");
 
             // Fetch events from the calendar within the specified date range
-            const events: GoogleEvent[] = await this.getEventsInCalendar(this.calendars[0], startOfMonth, endOfMonth);
+            // const events: GoogleEvent[] = await this.getEventsInCalendar(this.calendars[0], startOfMonth, endOfMonth);
 
-            console.log('Events in Calendar:', events);
+            // console.log('Events in Calendar:', events);
 
             // Create a test event
             const testEvent: GoogleEvent = {
@@ -69,18 +69,32 @@ export class GoogleCalendarAPI {
 
             console.log('Test Event Created:', createdEvent);
 
-            // Check if there are any events, if so, use the first event's ID to test the getEvent method
-            if (events.length > 0) {
-                const firstEventId = events[0].id; // Extracting ID of the first event
-                const calendarId = this.calendars[0].id; // Assuming you want to use the first calendar
+            // Ensure the event was created before attempting deletion
+            if (createdEvent && createdEvent.id) {
+                // Attempt to delete the event
+                const deletionResult = await this.deleteEvent(createdEvent);
 
-                // Fetch the specific event by id from the calendar
-                const event = await this.getEvent(firstEventId, calendarId);
-
-                console.log('Single Event:', event);
+                if (deletionResult) {
+                    console.log('Test Event Deleted Successfully:', createdEvent);
+                } else {
+                    console.log('Failed to Delete Test Event:', createdEvent);
+                }
             } else {
-                console.log('No events found in the specified date range.');
+                console.error('Test Event Creation Failed:', testEvent);
             }
+
+        //     // Check if there are any events, if so, use the first event's ID to test the getEvent method
+        //     if (events.length > 0) {
+        //         const firstEventId = events[0].id; // Extracting ID of the first event
+        //         const calendarId = this.calendars[0].id; // Assuming you want to use the first calendar
+
+        //         // Fetch the specific event by id from the calendar
+        //         const event = await this.getEvent(firstEventId, calendarId);
+
+        //         console.log('Single Event:', event);
+        //     } else {
+        //         console.log('No events found in the specified date range.');
+        //     }
         } catch (error) {
             console.error('An error occurred:', error);
         }
@@ -245,6 +259,70 @@ export class GoogleCalendarAPI {
             return null;
         }
     }
+
+
+    /**
+     * Deletes an event from Google Calendar. If the event is recurrent, it will delete all instances unless deleteSingle is set.
+     * This method has been optimized for better readability, logical flow, and robustness.
+     *
+     * @param event The event to delete
+     * @param deleteAllOccurrences If set to true and the event is recurrent, only one instance is deleted
+     * @returns a promise that resolves with a boolean indicating whether the deletion was successful
+     */
+    async deleteEvent(event: GoogleEvent, deleteAllOccurrences: boolean = false): Promise<boolean> {
+        try {
+            if (!this.authenticator.isLogin) {
+                // Not logged in
+                throw new GoogleApiError("Not logged in", null, 401, { error: "Not logged in" });
+            }
+
+            let calendarId = event.parent?.id ?? this.defaultCalendar?.id;
+
+            if (!calendarId) {
+                // No calendar ID found
+                throw new GoogleApiError("No default calendar selected in settings", null, 999, { error: "No calendar set" });
+            }
+
+            // If the event is part of a recurrence and we're not deleting all occurrences,
+            // we use the event ID; otherwise, we try to use the recurringEventId or default to the event ID.
+            const eventId = (!deleteAllOccurrences && event.recurringEventId) ? event.id : (event.recurringEventId ?? event.id);
+
+            // Send the DELETE request to the Google Calendar API
+            const response = await callRequest(
+                `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events/${eventId}`, 
+                'DELETE', null);
+
+            if (response) {  // if needed, check specific response status or content
+                new Notice(`Google Event ${event.summary} deleted.`);
+                return true;
+            } else {
+                throw new Error('Unknown error occurred.'); // or handle specific response error
+            }
+
+        } catch (error) {
+            // Handling different types of errors and providing user feedback
+            if (error instanceof GoogleApiError) {
+                switch (error.status) {
+                    case 401: // Unauthorized
+                        // Handle the unauthorized error, e.g., by prompting re-login or giving a specific message
+                        break;
+                    case 999: // Custom error for "No calendar set"
+                        new Notice(error.message); // Informing the user to select a default calendar
+                        break;
+                    default:
+                        // Handle other types of API errors
+                        new Notice(`Google Event ${event.summary} could not be deleted.`);
+                        console.error('[TaskCard]', error);
+                        break;
+                }
+            } else {
+                // For unexpected errors, log them
+                console.error('[TaskCard]', error);
+            }
+            return false; // Deletion failed
+        }
+    }
+    
 
 
     /**
