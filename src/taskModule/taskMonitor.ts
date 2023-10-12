@@ -71,14 +71,18 @@ export class TaskMonitor {
     const taskDetails = this.detectTasksFromLines(lines);
     if (taskDetails.length === 0) return;
     for (const taskDetail of taskDetails) {
+      logger.debug(`taskDetail: ${JSON.stringify(taskDetail)}`);
       // format task lines
       let newLines = this.formatTaskWithLines(taskDetail.taskMarkdown.split('\n'));
+      
       // insert task lines to lines of the file
       updatedLines = updatedLines.slice(0, taskDetail.startLine).concat(newLines, updatedLines.slice(taskDetail.endLine));
+      logger.debug(`replacing from ${taskDetail.startLine}: ${lines[taskDetail.startLine]} to ${taskDetail.endLine}: ${lines[taskDetail.endLine]}`);
       // notify API about creation of tasks
       let task = this.parseTaskWithLines(taskDetail.taskMarkdown.split('\n'));
+      logger.debug(`taskMonitor: creating task: ${JSON.stringify(task)}`);
       this.plugin.externalAPIManager.createTask(task);
-
+      // TODO: timezone is not correct;
     }
     await this.updateFileWithNewLines(file, updatedLines);
   }
@@ -128,7 +132,7 @@ export class TaskMonitor {
     let lineIndex = 0;
 
     for (const line of lines) {
-      if (this.plugin.taskValidator.isValidFormattedTaskMarkdown(line)) {
+      if (this.plugin.taskValidator.isValidUnformattedTaskMarkdown(line)) {
         // Count how many lines are in the description
         const followingLines = lines.slice(lineIndex + 1);
         const descriptionLineCount = this.countDescriptionLines(line, followingLines);
@@ -139,8 +143,8 @@ export class TaskMonitor {
         // Create an object with the task, start line, and end line, then add it to the array
         taskDetails.push({
           taskMarkdown: taskWithDescription,
-          startLine: lineIndex + 1, // +1 because line numbers usually start from 1, not 0
-          endLine: lineIndex + 1 + descriptionLineCount, // same here
+          startLine: lineIndex,
+          endLine: lineIndex + 1 + descriptionLineCount,
         });
 
         // Skip the description lines in the next iterations
@@ -253,39 +257,6 @@ export class TaskMonitor {
   async getLinesFromFile(file: TFile): Promise<string[] | null> {
     return await this.plugin.fileOperator.getFileLines(file.path);
   }
-
-  // formatTaskInLines(lines: string[]): string[] {
-  //   return lines.map((line, index) => this.formatTaskInLine(line, index));
-  // }
-
-  // formatTaskInLine(line: string, index: number): string {
-  //   function announceError(errorMsg: string): void {
-  //     // Show a notice popup
-  //     new Notice(errorMsg);
-  //     // Log the error
-  //     logger.error(errorMsg);
-  //   }
-
-  //   if (this.plugin.taskValidator.isValidUnformattedTaskMarkdown(line)) {
-  //     const task = this.plugin.taskParser.parseTaskMarkdown(line, announceError);
-  //     // additional logic before adding the task: default project
-  //     if (!task.project?.id && this.defaultProject?.id) {
-  //       logger.debug('No project found, using default project');
-  //       task.project = this.defaultProject;
-  //     }
-      
-  //     // API: task added
-  //     const event: TaskChangeEvent = {
-  //       taskId: task.id,
-  //       type: TaskChangeType.ADD,
-  //       currentState: task,
-  //       timestamp: new Date(),
-  //     }
-  //     this.plugin.taskChangeAPI.recordChange(event);
-  //     return this.plugin.taskFormatter.taskToMarkdown(task);
-  //   }
-  //   return line;
-  // }
 
   async updateFileWithNewLines(file: TFile, updatedLines: string[]) {
     await this.plugin.fileOperator.updateFile(

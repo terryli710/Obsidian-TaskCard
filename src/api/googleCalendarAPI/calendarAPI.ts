@@ -4,13 +4,13 @@ import { Notice } from "obsidian";
 import { logger } from "../../utils/log";
 import { GoogleCalendarAuthenticator } from "./authentication";
 import { callRequest } from "./requestWrapper";
-import { GoogleCalendar, GoogleCalendarList, GoogleEvent, GoogleEventList } from "./types";
+import { GoogleCalendar, GoogleCalendarList, GoogleEvent, GoogleEventList, GoogleEventTimePoint } from "./types";
 import moment from "moment";
 import { SettingStore } from "../../settings";
 import { GoogleApiError } from "./googleAPIError";
 import { TaskChangeEvent, TaskChangeType } from "../../taskModule/taskAPI";
 import { LocalStorageDB } from "./localStorage";
-import { ObsidianTask, calculateStartEndDateTime } from "../../taskModule/task";
+import { ObsidianTask } from "../../taskModule/task";
 
 
 export class GoogleCalendarAPI { 
@@ -26,7 +26,7 @@ export class GoogleCalendarAPI {
         // setTimeout(() => {
         //     this.test();
         // }, 2000);
-        this.taskMappingDB = new LocalStorageDB();
+        this.taskMappingDB = new LocalStorageDB("taskMapping");
     }
 
     async init() {
@@ -125,6 +125,8 @@ export class GoogleCalendarAPI {
     addTaskInDB(event: GoogleEvent, task: ObsidianTask) {
         this.taskMappingDB.setData(event.id, task.id)
         this.taskMappingDB.setData(task.id, event.id)
+        logger.debug(`Added task ${task.id} to DB`);
+        logger.debug(`DB: ${JSON.stringify(this.taskMappingDB.getAllData())}`);
     }
 
     deleteTaskInDB(task: ObsidianTask, event?: GoogleEvent) {
@@ -152,7 +154,8 @@ export class GoogleCalendarAPI {
             const updatedEvent = await this.updateEvent(googleEvent);
             // this.addTaskInDB(updatedEvent, event.currentState);
         } else if (event.type === TaskChangeType.REMOVE) {
-            const googleEvent = this.convertTaskToGoogleEvent(event.previousState);
+            let googleEvent = this.convertTaskToGoogleEvent(event.previousState);
+            googleEvent = this.assignEventId(googleEvent, event.previousState.id);
             await this.deleteEvent(googleEvent);
             this.deleteTaskInDB(event.previousState);
         }
@@ -168,18 +171,41 @@ export class GoogleCalendarAPI {
     }
 
     convertTaskToGoogleEvent(task: Partial<ObsidianTask>): GoogleEvent {
-        const {start, end} = calculateStartEndDateTime(task.due, task.duration);
+        const {start, end} = this.constructStartAndEnd(task);
         const event: GoogleEvent = {
             summary: task.content,
             description: task.description,
-            start: {
-                dateTime: start,
-            },
-            end: {
-                dateTime: end,
-            }
+            start: start,
+            end: end,
         }
         return event
+    }
+
+    constructStartAndEnd(task: Partial<ObsidianTask>): {start: GoogleEventTimePoint, end: GoogleEventTimePoint}  {
+        const due = task.due;
+        const duration = task.duration;
+
+        // Assuming the 'date' field in 'DueDate' is a string in "YYYY-MM-DD" format.
+        const startDate = this.dateToGoogleDate(due.date);
+        const startTime = due.time ? this.dateTimeToGoogleDateTime(`${due.date}T${due.time}`) : null;
+        
+        const start: GoogleEventTimePoint = {
+            date: startDate,
+            dateTime: startTime,
+            timeZone: task.due.timezone || null, // Set to null if timezone is not provided
+        };
+
+        // Calculate the end time based on the duration
+        const taskDuration = moment.duration({ hours: duration.hours, minutes: duration.minutes });
+        const endMoment = moment(startTime || startDate).add(taskDuration); // If time is not available, it assumes the start of the day
+
+        const end: GoogleEventTimePoint = {
+            date: endMoment.format("YYYY-MM-DD"),
+            dateTime: endMoment.format(),
+            timeZone: task.due.timezone || null, // Set to null if timezone is not provided
+        };
+
+        return { start, end };
     }
 
     async listCalendars(): Promise<GoogleCalendar[]> {
@@ -320,8 +346,9 @@ export class GoogleCalendarAPI {
         }
 
         // Preprocess the event
+        logger.debug(`event: ${JSON.stringify(event)}`);
         const processedEvent = this.preprocessEvent(event, targetCalendar);
-
+        logger.debug(`processedEvent: ${JSON.stringify(processedEvent)}`);
 
         try {
             // Assuming callRequest is accessible here, either as a global function or a method on this class.
@@ -543,14 +570,14 @@ export class GoogleCalendarAPI {
         // Deep copy event to avoid mutating the original object
         const processedEvent = JSON.parse(JSON.stringify(event));
 
-        // Convert dates to Google's format
-        if (processedEvent.start.date) {
-            processedEvent.start.date = this.dateToGoogleDate(processedEvent.start.date); 
-            processedEvent.end.date = this.dateToGoogleDate(processedEvent.end.date);
-        } else if (processedEvent.start.dateTime) {
-            processedEvent.start.dateTime = this.dateTimeToGoogleDateTime(processedEvent.start.dateTime); 
-            processedEvent.end.dateTime = this.dateTimeToGoogleDateTime(processedEvent.end.dateTime);
-        }
+        // // Convert dates to Google's format
+        // if (processedEvent.start.date) {
+        //     processedEvent.start.date = this.dateToGoogleDate(processedEvent.start.date); 
+        //     processedEvent.end.date = this.dateToGoogleDate(processedEvent.end.date);
+        // } else if (processedEvent.start.dateTime) {
+        //     processedEvent.start.dateTime = this.dateTimeToGoogleDateTime(processedEvent.start.dateTime); 
+        //     processedEvent.end.dateTime = this.dateTimeToGoogleDateTime(processedEvent.end.dateTime);
+        // }
 
         // Ensure the event's time zone matches the calendar's time zone
         if (calendar.timeZone) {
@@ -561,8 +588,6 @@ export class GoogleCalendarAPI {
                 processedEvent.end.timeZone = calendar.timeZone;
             }
         }
-
-        // Perform any other necessary preprocessing here...
 
         return processedEvent;
     }

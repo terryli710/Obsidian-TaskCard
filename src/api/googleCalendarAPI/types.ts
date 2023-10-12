@@ -212,3 +212,10 @@ export interface GoogleEventList {
 	nextSyncToken: string;
 	items: GoogleEvent[];
 }
+
+
+export interface GoogleEventTimePoint {
+	date?: string;
+	dateTime?: string;
+	timeZone?: string;
+}
