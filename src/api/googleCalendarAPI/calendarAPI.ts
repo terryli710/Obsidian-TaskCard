@@ -1,4 +1,4 @@
-
+// Adopted from https://github.com/YukiGasai/obsidian-google-calendar/tree/master/src/googleApi
 
 import { Notice } from "obsidian";
 import { logger } from "../../utils/log";
@@ -45,7 +45,7 @@ export class GoogleCalendarAPI {
             const endOfMonth = moment().endOf("month");
 
             // Fetch events from the calendar within the specified date range
-            // const events: GoogleEvent[] = await this.getEventsInCalendar(this.calendars[0], startOfMonth, endOfMonth);
+            // const events: GoogleEvent[] = await this.listEventsInCalendar(this.calendars[0], startOfMonth, endOfMonth);
 
             // console.log('Events in Calendar:', events);
 
@@ -69,19 +69,37 @@ export class GoogleCalendarAPI {
 
             console.log('Test Event Created:', createdEvent);
 
-            // Ensure the event was created before attempting deletion
+            // Ensure the event was created before attempting update or deletion
             if (createdEvent && createdEvent.id) {
-                // Attempt to delete the event
-                const deletionResult = await this.deleteEvent(createdEvent);
+                // Prepare an update for the test event
+                const updatedEventInfo = {
+                    ...createdEvent, // This keeps existing event properties
+                    summary: 'Updated Test Event',
+                    description: 'This is an updated description for the test event.',
+                    // Add other event properties to update as needed
+                };
 
-                if (deletionResult) {
-                    console.log('Test Event Deleted Successfully:', createdEvent);
+                // Attempt to update the event
+                const updatedEvent = await this.updateEvent(updatedEventInfo);
+
+                if (updatedEvent) {
+                    console.log('Test Event Updated Successfully:', updatedEvent);
                 } else {
-                    console.log('Failed to Delete Test Event:', createdEvent);
+                    console.log('Failed to Update Test Event:', createdEvent);
                 }
+
+                // // Attempt to delete the event
+                // const deletionResult = await this.deleteEvent(updatedEvent || createdEvent); // Try to delete the updated event, if available
+
+                // if (deletionResult) {
+                //     console.log('Test Event Deleted Successfully:', updatedEvent || createdEvent);
+                // } else {
+                //     console.log('Failed to Delete Test Event:', updatedEvent || createdEvent);
+                // }
             } else {
                 console.error('Test Event Creation Failed:', testEvent);
             }
+
 
         //     // Check if there are any events, if so, use the first event's ID to test the getEvent method
         //     if (events.length > 0) {
@@ -115,7 +133,7 @@ export class GoogleCalendarAPI {
         return calendarList.items;
     }
 
-    async getEventsInCalendar(
+    async listEventsInCalendar(
             calendar: GoogleCalendar, 
             startDate: moment.Moment | null = null,
             endDate: moment.Moment | null = null,
@@ -272,8 +290,8 @@ export class GoogleCalendarAPI {
     async deleteEvent(event: GoogleEvent, deleteAllOccurrences: boolean = false): Promise<boolean> {
         try {
             if (!this.authenticator.isLogin) {
-                // Not logged in
-                throw new GoogleApiError("Not logged in", null, 401, { error: "Not logged in" });
+                new Notice(`[TaskCard] Not logged in to Google Calendar`);
+                return null;
             }
 
             let calendarId = event.parent?.id ?? this.defaultCalendar?.id;
@@ -293,7 +311,7 @@ export class GoogleCalendarAPI {
                 'DELETE', null);
 
             if (response) {  // if needed, check specific response status or content
-                new Notice(`Google Event ${event.summary} deleted.`);
+                new Notice(`[TaskCard] Google Event ${event.summary} deleted.`);
                 return true;
             } else {
                 throw new Error('Unknown error occurred.'); // or handle specific response error
@@ -321,6 +339,131 @@ export class GoogleCalendarAPI {
             }
             return false; // Deletion failed
         }
+    }
+
+
+    /**
+     * Updates an event in the user's Google Calendar.
+     * If the event is recurrent, it will update all instances unless `updateSingle` is set to true.
+     * In case of errors, a more robust approach is to delete and re-create the event.
+     * 
+     * @param {GoogleEvent} event - The event to update, along with the new data.
+     * @param {boolean} updateAllOccurrences - If true and the event is recurrent, all instances are updated.
+     * @returns {Promise<GoogleEvent|null>} - The updated event, or null if the update failed.
+     */
+    async updateEvent(event, updateAllOccurrences = false) {
+        try {
+            if (!this.authenticator.isLogin) {
+                new Notice(`[TaskCard] Not logged in to Google Calendar`);
+                return null;
+            }
+
+            // If updating a recurring event, retrieve the master event first
+            if (updateAllOccurrences && event.recurringEventId) {
+                const recurringEvent = await this.getEvent(event.recurringEventId, event.parent.id);
+                event = this.prepareRecurringEventUpdate(event, recurringEvent);
+            }
+
+            const calendarId = this.determineCalendarId(event);
+            if (!calendarId) {
+                throw new GoogleApiError("No default calendar selected in settings", null, 999, {error: "No calendar set"});
+            }
+
+            const requestUrl = `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events/${event.id}`;
+            const updatedEvent = await callRequest(requestUrl, "PUT", event);
+
+            updatedEvent.parent = this.getCalendarParent(calendarId);
+
+            new Notice(`[TaskCard] Google Event ${event.summary} updated.`);
+            return updatedEvent;
+        } catch (error) {
+            return this.handleUpdateEventError(error, event);
+        }
+    }
+
+
+    /**
+     * Prepares a recurring event for an update operation.
+     *
+     * @param {GoogleEvent} event - The single instance of the recurring event with updates.
+     * @param {GoogleEvent} recurringEvent - The master recurring event.
+     * @returns {GoogleEvent} - The prepared event object ready for the update operation.
+     */
+    prepareRecurringEventUpdate(event, recurringEvent) {
+        // Merge the event updates into the recurring event
+        const updatedRecurringEvent = {
+            ...recurringEvent,
+            ...event,
+            start: this.formatEventDate(event.start, recurringEvent.start),
+            end: this.formatEventDate(event.end, recurringEvent.end),
+            recurrence: recurringEvent.recurrence,
+            id: recurringEvent.id
+        };
+
+        delete updatedRecurringEvent.recurringEventId;
+        delete updatedRecurringEvent.originalStartTime;
+
+        return updatedRecurringEvent;
+    }
+
+    /**
+     * Formats the event date for consistency.
+     *
+     * @param {Object} eventDate - The event date object from the single event instance.
+     * @param {Object} recurringEventDate - The event date object from the master recurring event.
+     * @returns {Object} - The formatted event date object.
+     */
+    formatEventDate(eventDate, recurringEventDate) {
+        const formattedDate = eventDate.dateTime
+            ? { dateTime: window.moment(eventDate.dateTime).date(window.moment(recurringEventDate.dateTime).date()).format() }
+            : { date: window.moment(recurringEventDate.date).format("YYYY-MM-DD") };
+
+        return formattedDate;
+    }
+
+    /**
+     * Determines the calendar ID for the event.
+     *
+     * @param {GoogleEvent} event - The event object.
+     * @returns {string} - The calendar ID.
+     */
+    determineCalendarId(event) {
+        return event?.parent?.id || this.defaultCalendar.id || "";
+    }
+
+    /**
+     * Retrieves the parent calendar based on the calendar ID.
+     *
+     * @param {string} calendarId - The calendar ID.
+     * @returns {Object} - The parent calendar object.
+     */
+    async getCalendarParent(calendarId) {
+        const calendars = this.calendars;
+        return calendars.find(calendar => calendar.id === calendarId);
+    }
+
+    /**
+     * Handles errors that occur during the event update process.
+     *
+     * @param {Error} error - The error object.
+     * @param {GoogleEvent} event - The event that was being updated.
+     * @returns {null} - Indicates that the update process failed.
+     */
+    handleUpdateEventError(error, event) {
+        switch (error.status) {
+            case 401: // Handle specific error status as needed
+                // ... 
+                break;
+            case 999:
+                new Notice(`[TaskCard] ${error.message}`);
+                break;
+            default:
+                // this.createNotice(`Google Event ${event.summary} could not be updated.`);
+                new Notice(`Google Event ${event.summary} could not be updated.`);
+                console.error('[GoogleCalendar]', error);
+                break;
+        }
+        return null;
     }
     
 
