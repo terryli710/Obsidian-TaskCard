@@ -45,6 +45,7 @@ export interface GoogleSyncSetting extends SyncSetting {
   doesNeedFilters: boolean;
   filterTag: string;
   filterProject: string;
+  defaultCalendarId: string;
 }
 
 export const DefaultSettings: TaskCardSettings = {
@@ -69,7 +70,8 @@ export const DefaultSettings: TaskCardSettings = {
       isLogin: false,
       doesNeedFilters: false,
       filterTag: '',
-      filterProject: ''
+      filterProject: '',
+      defaultCalendarId: ''
     }
   },
 };

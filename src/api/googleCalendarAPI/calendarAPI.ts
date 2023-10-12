@@ -6,13 +6,16 @@ import { GoogleCalendarAuthenticator } from "./authentication";
 import { callRequest } from "./requestWrapper";
 import { GoogleCalendar, GoogleCalendarList, GoogleEvent, GoogleEventList } from "./types";
 import moment from "moment";
+import { SettingStore } from "../../settings";
+import { GoogleApiError } from "./googleAPIError";
 
 
 export class GoogleCalendarAPI { 
     // TODO: to create new class instance somewhere in the plugin
 
-    authenticator: GoogleCalendarAuthenticator;
+    public authenticator: GoogleCalendarAuthenticator;
     public calendars: GoogleCalendar[];
+    public defaultCalendar: GoogleCalendar;
 
     constructor() {
         this.authenticator = new GoogleCalendarAuthenticator();
@@ -24,6 +27,16 @@ export class GoogleCalendarAPI {
 
     async init() {
         this.calendars = await this.listCalendars();
+        SettingStore.subscribe((settings) => {
+            const defaultCalendarId = settings.syncSettings.googleSyncSetting.defaultCalendarId;
+            if (defaultCalendarId) {
+                this.defaultCalendar = this.calendars.find(calendar => calendar.id === defaultCalendarId);
+            }
+        });
+
+        // DEBUG
+        this.defaultCalendar = this.calendars[1];
+        logger.debug(`defaultCalendar: ${JSON.stringify(this.defaultCalendar)}`);
     }
 
     async test() {
@@ -36,10 +49,30 @@ export class GoogleCalendarAPI {
 
             console.log('Events in Calendar:', events);
 
+            // Create a test event
+            const testEvent: GoogleEvent = {
+                summary: 'Test Event',
+                description: 'This is a test event.',
+                start: {
+                    dateTime: moment().add(1, 'days').format(), // starts tomorrow
+                    timeZone: 'America/Los_Angeles',
+                },
+                end: {
+                    dateTime: moment().add(2, 'days').format(), // ends the day after tomorrow
+                    timeZone: 'America/Los_Angeles',
+                },
+                // Add other event properties as needed
+            };
+
+            // Add the test event to the calendar
+            const createdEvent = await this.createEvent(testEvent);
+
+            console.log('Test Event Created:', createdEvent);
+
             // Check if there are any events, if so, use the first event's ID to test the getEvent method
             if (events.length > 0) {
                 const firstEventId = events[0].id; // Extracting ID of the first event
-                const calendarId = this.calendars[0].id; 
+                const calendarId = this.calendars[0].id; // Assuming you want to use the first calendar
 
                 // Fetch the specific event by id from the calendar
                 const event = await this.getEvent(firstEventId, calendarId);
@@ -174,6 +207,86 @@ export class GoogleCalendarAPI {
 
         // If the event was not found in any of the calendars, throw an error or handle it as per your requirement
         throw new Error('Event not found in any of the calendars');
+    }
+
+
+    async createEvent(event: Partial<GoogleEvent>, calendar?: GoogleCalendar): Promise<GoogleEvent | null> {
+        if (!this.authenticator.isLogin) {
+            new Notice(`[TaskCard] Not logged in to Google Calendar`);
+            return null;
+        }
+
+        // Find the target calendar
+        let targetCalendar: GoogleCalendar = event.parent || calendar || this.defaultCalendar;
+        if (!targetCalendar) {
+            new Notice(`[TaskCard] Could not create Google Event because no calendar was specified.`);
+            return null;
+        }
+
+        // Preprocess the event
+        const processedEvent = this.preprocessEvent(event, targetCalendar);
+
+
+        try {
+            // Assuming callRequest is accessible here, either as a global function or a method on this class.
+            const createdEvent = await callRequest(
+                `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(targetCalendar.id)}/events?conferenceDataVersion=1`, 
+                'POST', processedEvent);
+            
+            logger.info(`Google Event ${event.summary} created.`);
+            return createdEvent;
+        } catch (error) {
+            if (error instanceof GoogleApiError) {
+                new Notice(`[TaskCard] ${error.message}`);
+            } else {
+                new Notice(`[TaskCard] Google event ${event.summary} could not be created.`);
+                console.error('[GoogleCalendar]', error);
+            }
+            return null;
+        }
+    }
+
+
+    /**
+     * Preprocesses the event, ensuring dates are in the correct format and time zones match the calendar's time zone.
+     * @param event The event to preprocess.
+     * @param calendar The calendar where the event will be added; used to set the event's time zone.
+     * @returns The preprocessed event, ready to be sent to the Google Calendar API.
+     */
+    private preprocessEvent(event: Partial<GoogleEvent>, calendar: GoogleCalendar): Partial<GoogleEvent> {
+        // Deep copy event to avoid mutating the original object
+        const processedEvent = JSON.parse(JSON.stringify(event));
+
+        // Convert dates to Google's format
+        if (processedEvent.start.date) {
+            processedEvent.start.date = this.dateToGoogleDate(processedEvent.start.date); 
+            processedEvent.end.date = this.dateToGoogleDate(processedEvent.end.date);
+        } else if (processedEvent.start.dateTime) {
+            processedEvent.start.dateTime = this.dateTimeToGoogleDateTime(processedEvent.start.dateTime); 
+            processedEvent.end.dateTime = this.dateTimeToGoogleDateTime(processedEvent.end.dateTime);
+        }
+
+        // Ensure the event's time zone matches the calendar's time zone
+        if (calendar.timeZone) {
+            if (!processedEvent.start.timeZone) {
+                processedEvent.start.timeZone = calendar.timeZone;
+            }
+            if (!processedEvent.end.timeZone) {
+                processedEvent.end.timeZone = calendar.timeZone;
+            }
+        }
+
+        // Perform any other necessary preprocessing here...
+
+        return processedEvent;
+    }
+
+    private dateToGoogleDate(date: string): string {
+        return moment(date).format("YYYY-MM-DD");
+    }
+
+    private dateTimeToGoogleDateTime(date: string): string {
+        return moment(date).format();
     }
 
 
