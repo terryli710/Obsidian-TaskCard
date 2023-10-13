@@ -7,6 +7,12 @@ import { logger } from "../utils/log";
 import { GoogleCalendarAPI } from "./googleCalendarAPI/calendarAPI";
 
 
+export interface SyncMappings {
+    googleSyncSetting: {
+        id: string;
+    }
+}
+
 export class ExternalAPIManager {
     private settings: TaskCardSettings;
     public googleCalendarAPI: GoogleCalendarAPI = undefined;
@@ -23,7 +29,7 @@ export class ExternalAPIManager {
         }
     }
 
-    createTask(task: ObsidianTask) {
+    async createTask(task: ObsidianTask): Promise<SyncMappings> {
         // build task change event
         const event: TaskChangeEvent = {
             taskId: task.id,
@@ -31,7 +37,9 @@ export class ExternalAPIManager {
             currentState: task,
             timestamp: new Date(),
         }
-        this.notifyChange(event);
+        const syncMappings = await this.notifyTaskCreations(event);
+        logger.debug(`syncMappings: ${JSON.stringify(syncMappings)}`);
+        return syncMappings;
     }
 
     updateTask(task: ObsidianTask, origTask?: ObsidianTask) {
@@ -43,7 +51,7 @@ export class ExternalAPIManager {
             previousState: origTask,
             timestamp: new Date(),
         }
-        this.notifyChange(event);
+        this.notifyTaskUpdates(event);
     }
 
     deleteTask(task: ObsidianTask) {
@@ -54,11 +62,23 @@ export class ExternalAPIManager {
             previousState: task,
             timestamp: new Date(),
         }
-        this.notifyChange(event);
+        this.notifyTaskDeletions(event);
     }
 
-    notifyChange(event: TaskChangeEvent) {
-        this.googleCalendarAPI.handleLocalTaskChanges(event);
+    async notifyTaskCreations(event: TaskChangeEvent): Promise<SyncMappings> {
+        if (event.type !== TaskChangeType.ADD) return;
+        const id = await this.googleCalendarAPI.handleLocalTaskCreation(event);
+        return { googleSyncSetting: { id: id } };
+    }
+
+    notifyTaskUpdates(event: TaskChangeEvent) {
+        if (event.type !== TaskChangeType.UPDATE) return;
+        this.googleCalendarAPI.handleLocalTaskUpdate(event);
+    }
+
+    notifyTaskDeletions(event: TaskChangeEvent) {
+        if (event.type !== TaskChangeType.REMOVE) return;
+        this.googleCalendarAPI.handleLocalTaskDeletion(event);
     }
 
 

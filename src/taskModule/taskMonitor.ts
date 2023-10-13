@@ -71,18 +71,18 @@ export class TaskMonitor {
     const taskDetails = this.detectTasksFromLines(lines);
     if (taskDetails.length === 0) return;
     for (const taskDetail of taskDetails) {
-      logger.debug(`taskDetail: ${JSON.stringify(taskDetail)}`);
+
+      // notify API about creation of tasks
+      let task = this.parseTaskWithLines(taskDetail.taskMarkdown.split('\n'));
+      const syncMetadata = await this.plugin.externalAPIManager.createTask(task);
+      task.metadata.syncMappings = syncMetadata;
+      logger.debug(`task.metadata: ${JSON.stringify(task.metadata)}`);
       // format task lines
-      let newLines = this.formatTaskWithLines(taskDetail.taskMarkdown.split('\n'));
+      let newLines = this.plugin.taskFormatter.taskToMarkdown(task).split('\n');
+      // let newLines = this.formatTaskWithLines(taskDetail.taskMarkdown.split('\n'));
       
       // insert task lines to lines of the file
       updatedLines = updatedLines.slice(0, taskDetail.startLine).concat(newLines, updatedLines.slice(taskDetail.endLine));
-      logger.debug(`replacing from ${taskDetail.startLine}: ${lines[taskDetail.startLine]} to ${taskDetail.endLine}: ${lines[taskDetail.endLine]}`);
-      // notify API about creation of tasks
-      let task = this.parseTaskWithLines(taskDetail.taskMarkdown.split('\n'));
-      logger.debug(`taskMonitor: creating task: ${JSON.stringify(task)}`);
-      this.plugin.externalAPIManager.createTask(task);
-      // TODO: timezone is not correct;
     }
     await this.updateFileWithNewLines(file, updatedLines);
   }

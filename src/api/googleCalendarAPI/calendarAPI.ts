@@ -18,7 +18,7 @@ export class GoogleCalendarAPI {
     public authenticator: GoogleCalendarAuthenticator;
     public calendars: GoogleCalendar[];
     public defaultCalendar: GoogleCalendar;
-    private taskMappingDB: LocalStorageDB;
+    // private taskMappingDB: LocalStorageDB;
 
     constructor() {
         this.authenticator = new GoogleCalendarAuthenticator();
@@ -26,7 +26,7 @@ export class GoogleCalendarAPI {
         // setTimeout(() => {
         //     this.test();
         // }, 2000);
-        this.taskMappingDB = new LocalStorageDB("taskMapping");
+        // this.taskMappingDB = new LocalStorageDB("taskMapping");
     }
 
     async init() {
@@ -92,87 +92,39 @@ export class GoogleCalendarAPI {
                     console.log('Failed to Update Test Event:', createdEvent);
                 }
 
-                // // Attempt to delete the event
-                // const deletionResult = await this.deleteEvent(updatedEvent || createdEvent); // Try to delete the updated event, if available
-
-                // if (deletionResult) {
-                //     console.log('Test Event Deleted Successfully:', updatedEvent || createdEvent);
-                // } else {
-                //     console.log('Failed to Delete Test Event:', updatedEvent || createdEvent);
-                // }
             } else {
                 console.error('Test Event Creation Failed:', testEvent);
             }
-
-
-        //     // Check if there are any events, if so, use the first event's ID to test the getEvent method
-        //     if (events.length > 0) {
-        //         const firstEventId = events[0].id; // Extracting ID of the first event
-        //         const calendarId = this.calendars[0].id; // Assuming you want to use the first calendar
-
-        //         // Fetch the specific event by id from the calendar
-        //         const event = await this.getEvent(firstEventId, calendarId);
-
-        //         console.log('Single Event:', event);
-        //     } else {
-        //         console.log('No events found in the specified date range.');
-        //     }
         } catch (error) {
             console.error('An error occurred:', error);
         }
     }
 
-    addTaskInDB(event: GoogleEvent, task: ObsidianTask) {
-        this.taskMappingDB.setData(event.id, task.id)
-        this.taskMappingDB.setData(task.id, event.id)
-        logger.debug(`Added task ${task.id} to DB`);
-        logger.debug(`DB: ${JSON.stringify(this.taskMappingDB.getAllData())}`);
+    async handleLocalTaskCreation(event: TaskChangeEvent): Promise<string> {
+        if (event.type !== TaskChangeType.ADD) return '';
+        const googleEvent = this.convertTaskToGoogleEvent(event.currentState);
+        const createdEvent = await this.createEvent(googleEvent);
+        return createdEvent.id;
     }
 
-    deleteTaskInDB(task: ObsidianTask, event?: GoogleEvent) {
-        let eventId;
-        if (!event) {
-            eventId = this.taskMappingDB.getData(task.id);
-        } else {
-            eventId = this.taskMappingDB.getData(event.id);
-        }
-        this.taskMappingDB.deleteData(task.id);
-        this.taskMappingDB.deleteData(eventId);
+    async handleLocalTaskUpdate(event: TaskChangeEvent): Promise<string> {
+        if (event.type !== TaskChangeType.UPDATE) return;
+        const googleEvent = this.convertTaskToGoogleEvent(event.currentState);
+        const updatedEvent = await this.updateEvent(googleEvent);
+        return updatedEvent.id;
     }
 
-    async handleLocalTaskChanges(event: TaskChangeEvent) {
-        console.log(`Received Task Change Event`, event);
-        // create
-        if (event.type === TaskChangeType.ADD) {
-            const googleEvent = this.convertTaskToGoogleEvent(event.currentState);
-            const createdEvent = await this.createEvent(googleEvent);
-            this.addTaskInDB(createdEvent, event.currentState);
-        } else if (event.type === TaskChangeType.UPDATE) {
-            // update
-            let googleEvent = this.convertTaskToGoogleEvent(event.currentState);
-            googleEvent = this.assignEventId(googleEvent, event.currentState.id);
-            const updatedEvent = await this.updateEvent(googleEvent);
-            // this.addTaskInDB(updatedEvent, event.currentState);
-        } else if (event.type === TaskChangeType.REMOVE) {
-            let googleEvent = this.convertTaskToGoogleEvent(event.previousState);
-            googleEvent = this.assignEventId(googleEvent, event.previousState.id);
-            await this.deleteEvent(googleEvent);
-            this.deleteTaskInDB(event.previousState);
-        }
-    }
-
-    assignEventId(event: GoogleEvent, taskId: string) {
-        // look up the task in the DB
-        const eventId = this.taskMappingDB.getData(taskId);
-        if (eventId) {
-            event.id = eventId;
-        }
-        return event;
+    async handleLocalTaskDeletion(event: TaskChangeEvent): Promise<void> {
+        if (event.type !== TaskChangeType.REMOVE) return;
+        const googleEvent = this.convertTaskToGoogleEvent(event.previousState);
+        await this.deleteEvent(googleEvent);
     }
 
     convertTaskToGoogleEvent(task: Partial<ObsidianTask>): GoogleEvent {
         const {start, end} = this.constructStartAndEnd(task);
+        const storedId = task.metadata?.syncMappings?.googleSyncSetting?.id;
         const event: GoogleEvent = {
+            ...(storedId && { id: storedId }),
             summary: task.content,
             description: task.description,
             start: start,
@@ -181,28 +133,39 @@ export class GoogleCalendarAPI {
         return event
     }
 
-    constructStartAndEnd(task: Partial<ObsidianTask>): {start: GoogleEventTimePoint, end: GoogleEventTimePoint}  {
-        const due = task.due;
-        const duration = task.duration;
+    constructStartAndEnd(task: Partial<ObsidianTask>): {start: GoogleEventTimePoint, end: GoogleEventTimePoint} {
+        if (!task.due) {
+            throw new Error("Task must have a due date.");
+        }
 
-        // Assuming the 'date' field in 'DueDate' is a string in "YYYY-MM-DD" format.
-        const startDate = this.dateToGoogleDate(due.date);
-        const startTime = due.time ? this.dateTimeToGoogleDateTime(`${due.date}T${due.time}`) : null;
-        
+        const due = task.due;
+        const duration = task.duration || { hours: 0, minutes: 0 }; // Default duration if not provided
+
+        // Format start date and time
+        let startDateTime: string | null = null;
+        if (due.time) {
+            // Combine date and time if time is provided
+            startDateTime = this.dateTimeToGoogleDateTime(`${due.date}T${due.time}`);
+        }
+
         const start: GoogleEventTimePoint = {
-            date: startDate,
-            dateTime: startTime,
-            timeZone: task.due.timezone || null, // Set to null if timezone is not provided
+            ...(startDateTime ? { dateTime: startDateTime } : { date: this.dateToGoogleDate(due.date) }),
+            timeZone: due.timezone || this.defaultCalendar.timeZone || null,
         };
 
         // Calculate the end time based on the duration
         const taskDuration = moment.duration({ hours: duration.hours, minutes: duration.minutes });
-        const endMoment = moment(startTime || startDate).add(taskDuration); // If time is not available, it assumes the start of the day
+        const endMoment = moment(startDateTime || due.date).add(taskDuration); // If time is not available, it assumes the start of the day
+
+        // Check if duration is longer than one day
+        const isMultiDay = taskDuration.asDays() >= 1;
+
+        // Determine end date format based on whether time is specified and if duration is less than one day
+        const endDateFormat = (due.time && !isMultiDay) ? "YYYY-MM-DDTHH:mm:ss" : "YYYY-MM-DD";
 
         const end: GoogleEventTimePoint = {
-            date: endMoment.format("YYYY-MM-DD"),
-            dateTime: endMoment.format(),
-            timeZone: task.due.timezone || null, // Set to null if timezone is not provided
+            ...(startDateTime ? { dateTime: endMoment.format(endDateFormat) } : { date: endMoment.format("YYYY-MM-DD") }),
+            timeZone: due.timezone || this.defaultCalendar.timeZone || null,
         };
 
         return { start, end };
@@ -570,15 +533,6 @@ export class GoogleCalendarAPI {
         // Deep copy event to avoid mutating the original object
         const processedEvent = JSON.parse(JSON.stringify(event));
 
-        // // Convert dates to Google's format
-        // if (processedEvent.start.date) {
-        //     processedEvent.start.date = this.dateToGoogleDate(processedEvent.start.date); 
-        //     processedEvent.end.date = this.dateToGoogleDate(processedEvent.end.date);
-        // } else if (processedEvent.start.dateTime) {
-        //     processedEvent.start.dateTime = this.dateTimeToGoogleDateTime(processedEvent.start.dateTime); 
-        //     processedEvent.end.dateTime = this.dateTimeToGoogleDateTime(processedEvent.end.dateTime);
-        // }
-
         // Ensure the event's time zone matches the calendar's time zone
         if (calendar.timeZone) {
             if (!processedEvent.start.timeZone) {
@@ -599,10 +553,6 @@ export class GoogleCalendarAPI {
     private dateTimeToGoogleDateTime(date: string): string {
         return moment(date).format();
     }
-
-
-
-
 
 }
 
