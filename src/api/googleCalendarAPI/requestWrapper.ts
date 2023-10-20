@@ -19,7 +19,7 @@ export const callRequest = async (url: string, method: string, body: any, noAuth
     // Send request
     let response;
     try {
-        logger.debug(`Sending request - url: ${url}, method: ${method}, body: ${JSON.stringify(body)}, headers: ${JSON.stringify(requestHeaders)}`);
+        logger.info(`Sending request - url: ${url}, method: ${method}, body: ${JSON.stringify(body)}, headers: ${JSON.stringify(requestHeaders)}`);
         response = await requestUrl({
             method,
             url,
@@ -28,7 +28,7 @@ export const callRequest = async (url: string, method: string, body: any, noAuth
             throw: false,
         });
     } catch (error) {
-        logger.error(`Request failed - ${error}`);
+        logger.info(`Request failed - ${error}`);
         throwGoogleApiError("Request failed", method, url, body, response?.status ?? 500, { error: error.message });
     }
 
@@ -54,22 +54,22 @@ export const callRequest = async (url: string, method: string, body: any, noAuth
 
 
 async function processResponse(response: any) {
-    logger.debug(`Received response - status: ${response.status}`);
-    logger.debug(`Type of response: ${typeof response}, response properties: ${Object.keys(response)}`);
+    // logger.debug(`Received response - status: ${response.status}`);
+    // logger.debug(`Type of response: ${typeof response}, response properties: ${Object.keys(response)}`);
 
     let jsonData;
 
     // If response.json is an object, it's likely the response body already parsed.
     // So, we directly assign it to jsonData.
     if (response.json && typeof response.json === 'object') {
-        logger.debug(`response.json is an object, assigning as jsonData...`);
+        // logger.debug(`response.json is an object, assigning as jsonData...`);
         jsonData = response.json;
     }
 
     // If jsonData wasn't set above, and if response.json is a function, 
     // we try to parse the response's body as JSON.
     if (!jsonData && response.json && typeof response.json === 'function') {
-        logger.debug(`response.json is a function, trying to parse...`);
+        // logger.debug(`response.json is a function, trying to parse...`);
         try {
             jsonData = await response.json();
         } catch (error) {
@@ -86,7 +86,7 @@ async function processResponse(response: any) {
         // Handle or throw error as per your error handling logic.
     } else {
         // Log the final jsonData after attempted parsing or direct assignment
-        logger.debug(`jsonData after processing: ${JSON.stringify(jsonData)}`);
+        // logger.debug(`jsonData after processing: ${JSON.stringify(jsonData)}`);
     }
 
     return jsonData; // This will return undefined in case of an error, consider throwing an error if that's not desired.

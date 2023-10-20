@@ -38,7 +38,7 @@ export class ExternalAPIManager {
             timestamp: new Date(),
         }
         const syncMappings = await this.notifyTaskCreations(event);
-        logger.debug(`syncMappings: ${JSON.stringify(syncMappings)}`);
+        // logger.debug(`syncMappings: ${JSON.stringify(syncMappings)}`);
         return syncMappings;
     }
 
@@ -73,12 +73,17 @@ export class ExternalAPIManager {
 
     notifyTaskUpdates(event: TaskChangeEvent) {
         if (event.type !== TaskChangeType.UPDATE) return;
-        this.googleCalendarAPI.handleLocalTaskUpdate(event);
+        if (event.currentState.metadata.syncMappings.googleSyncSetting.id) {
+            this.googleCalendarAPI.handleLocalTaskUpdate(event);
+        }
     }
 
     notifyTaskDeletions(event: TaskChangeEvent) {
         if (event.type !== TaskChangeType.REMOVE) return;
-        this.googleCalendarAPI.handleLocalTaskDeletion(event);
+        if (event.previousState.metadata.syncMappings.googleSyncSetting.id) {
+            logger.debug(`deleting task with id: ${event.previousState.metadata.syncMappings.googleSyncSetting.id}`);
+            this.googleCalendarAPI.handleLocalTaskDeletion(event);
+        }
     }
 
 

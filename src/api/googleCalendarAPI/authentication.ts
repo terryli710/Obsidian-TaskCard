@@ -211,7 +211,6 @@ export class GoogleCalendarAuthenticator {
             + `&state=${state}`
             + `&redirect_uri=${GoogleCalendarAuthenticator.REDIRECT_URI}`;
 
-        logger.debug(`url: ${url}`);
         const response = await fetch(url, {
             method: 'POST',
             headers: {'content-type': 'application/x-www-form-urlencoded'},

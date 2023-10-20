@@ -75,7 +75,7 @@ export class TaskMonitor {
       let task = this.parseTaskWithLines(taskDetail.taskMarkdown.split('\n'));
       const syncMetadata = await this.plugin.externalAPIManager.createTask(task);
       task.metadata.syncMappings = syncMetadata;
-      logger.debug(`task.metadata: ${JSON.stringify(task.metadata)}`);
+      // logger.debug(`task.metadata: ${JSON.stringify(task.metadata)}`);
       // format task lines
       let newLines = this.plugin.taskFormatter.taskToMarkdown(task).split('\n');
       
@@ -109,7 +109,7 @@ export class TaskMonitor {
       const task = this.plugin.taskParser.parseTaskMarkdown(taskMarkdown, announceError);
       // additional logic before adding the task: default project
       if (!task.project?.id && this.defaultProject?.id) {
-        logger.debug('No project found, using default project');
+        // logger.debug('No project found, using default project');
         task.project = this.defaultProject;
       }
       return task;

@@ -102,14 +102,15 @@ export class ObsidianTaskSyncManager implements ObsidianTaskSyncProps {
     logger.info(`successfully set ${key} to ${value}`);
     this.updateTaskToFile();
     
-    const event: TaskChangeEvent = {
-      taskId: origTask.id,
-      type: TaskChangeType.UPDATE,
-      previousState: origTask,
-      currentState: newTask,
-      timestamp: new Date(),
-    }
-    this.plugin.taskChangeAPI.recordChange(event);
+    // const event: TaskChangeEvent = {
+    //   taskId: origTask.id,
+    //   type: TaskChangeType.UPDATE,
+    //   previousState: origTask,
+    //   currentState: newTask,
+    //   timestamp: new Date(),
+    // }
+    // this.plugin.taskChangeAPI.recordChange(event);
+    this.plugin.externalAPIManager.updateTask(newTask, origTask);
   }
 
   updateObsidianTaskDisplayParams(key: string, value: any): void {
@@ -159,12 +160,14 @@ export class ObsidianTaskSyncManager implements ObsidianTaskSyncProps {
     );
 
     // notify API
-    const event: TaskChangeEvent = {
-      taskId: this.obsidianTask.id,
-      type: TaskChangeType.REMOVE,
-      previousState: this.obsidianTask,
-      timestamp: new Date(),
-    }
-    this.plugin.taskChangeAPI.recordChange(event);
+    // const event: TaskChangeEvent = {
+    //   taskId: this.obsidianTask.id,
+    //   type: TaskChangeType.REMOVE,
+    //   previousState: this.obsidianTask,
+    //   timestamp: new Date(),
+    // }
+    // this.plugin.taskChangeAPI.recordChange(event);
+    logger.debug(`notifying external API manager to delete task ${this.obsidianTask.id}`);
+    this.plugin.externalAPIManager.deleteTask(this.obsidianTask);
   }
 }

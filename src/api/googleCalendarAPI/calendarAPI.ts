@@ -42,7 +42,7 @@ export class GoogleCalendarAPI {
 
         // DEBUG
         this.defaultCalendar = this.calendars[1];
-        logger.debug(`defaultCalendar: ${JSON.stringify(this.defaultCalendar)}`);
+        // logger.debug(`defaultCalendar: ${JSON.stringify(this.defaultCalendar)}`);
     }
 
     async test() {
@@ -104,13 +104,14 @@ export class GoogleCalendarAPI {
 
     async handleLocalTaskCreation(event: TaskChangeEvent): Promise<string> {
         if (event.type !== TaskChangeType.ADD) return '';
+        if (this.filterCreationEvent(event) === false) return '';
         const googleEvent = this.convertTaskToGoogleEvent(event.currentState);
         const createdEvent = await this.createEvent(googleEvent);
         return createdEvent.id;
-        // TODO: filter events
     }
 
     filterCreationEvent(event: TaskChangeEvent): boolean {
+        // logger.debug(`filtering: event type = ${event.type}, filter project = ${this.googleSyncSetting.filterProject}, filter tag = ${this.googleSyncSetting.filterTag}`);
         if (event.type !== TaskChangeType.ADD) return false;
         // logic to filter creation events: some events should not be created by google calendar
         // 1. intrinsic filter: task without due date won't be created
@@ -128,6 +129,7 @@ export class GoogleCalendarAPI {
     async handleLocalTaskUpdate(event: TaskChangeEvent): Promise<string> {
         if (event.type !== TaskChangeType.UPDATE) return;
         const googleEvent = this.convertTaskToGoogleEvent(event.currentState);
+        // logger.debug(`updating with googleEvent: ${JSON.stringify(googleEvent)}`);
         const updatedEvent = await this.updateEvent(googleEvent);
         return updatedEvent.id;
     }
@@ -327,9 +329,9 @@ export class GoogleCalendarAPI {
         }
 
         // Preprocess the event
-        logger.debug(`event: ${JSON.stringify(event)}`);
+        // logger.debug(`event: ${JSON.stringify(event)}`);
         const processedEvent = this.preprocessEvent(event, targetCalendar);
-        logger.debug(`processedEvent: ${JSON.stringify(processedEvent)}`);
+        // logger.debug(`processedEvent: ${JSON.stringify(processedEvent)}`);
 
         try {
             // Assuming callRequest is accessible here, either as a global function or a method on this class.
