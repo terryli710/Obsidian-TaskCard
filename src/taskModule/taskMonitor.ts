@@ -5,7 +5,6 @@ import { logger } from '../utils/log';
 import { TaskDisplayMode } from '../renderer/postProcessor';
 import { Project } from './project';
 import { SettingStore } from '../settings';
-import { TaskChangeEvent, TaskChangeType } from './taskAPI';
 import { ObsidianTask } from './task';
 
 
@@ -79,7 +78,6 @@ export class TaskMonitor {
       logger.debug(`task.metadata: ${JSON.stringify(task.metadata)}`);
       // format task lines
       let newLines = this.plugin.taskFormatter.taskToMarkdown(task).split('\n');
-      // let newLines = this.formatTaskWithLines(taskDetail.taskMarkdown.split('\n'));
       
       // insert task lines to lines of the file
       updatedLines = updatedLines.slice(0, taskDetail.startLine).concat(newLines, updatedLines.slice(taskDetail.endLine));
@@ -194,7 +192,6 @@ export class TaskMonitor {
   
     return descriptionLineCount;
   }
-
 
 
   changeTaskDisplayModesInLines(lines: string[], mode: TaskDisplayMode): string[] {

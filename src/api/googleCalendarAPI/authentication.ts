@@ -1,9 +1,10 @@
 // Adopted from https://github.com/YukiGasai/obsidian-google-calendar/blob/master/src/googleApi/GoogleAuth.ts
 
+
+// TODO: implement retrying, reauthenticate and fallback mechanism
 import OAuth2Client from 'google-auth-library';
 import { getAccessToken, getExpirationTime, getRefreshToken, setAccessToken, setExpirationTime, setRefreshToken } from './localStorage';
 import { Notice, requestUrl, Plugin } from 'obsidian';
-import TaskCardPlugin from '../..';
 
 const {google} = require('googleapis');
 const http = require('http');

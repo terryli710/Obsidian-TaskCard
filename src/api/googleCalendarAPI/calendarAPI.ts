@@ -6,7 +6,7 @@ import { GoogleCalendarAuthenticator } from "./authentication";
 import { callRequest } from "./requestWrapper";
 import { GoogleCalendar, GoogleCalendarList, GoogleEvent, GoogleEventList, GoogleEventTimePoint } from "./types";
 import moment from "moment";
-import { SettingStore } from "../../settings";
+import { GoogleSyncSetting, SettingStore } from "../../settings";
 import { GoogleApiError } from "./googleAPIError";
 import { TaskChangeEvent, TaskChangeType } from "../../taskModule/taskAPI";
 import { LocalStorageDB } from "./localStorage";
@@ -18,6 +18,7 @@ export class GoogleCalendarAPI {
     public authenticator: GoogleCalendarAuthenticator;
     public calendars: GoogleCalendar[];
     public defaultCalendar: GoogleCalendar;
+    googleSyncSetting: GoogleSyncSetting;
     // private taskMappingDB: LocalStorageDB;
 
     constructor() {
@@ -36,6 +37,7 @@ export class GoogleCalendarAPI {
             if (defaultCalendarId) {
                 this.defaultCalendar = this.calendars.find(calendar => calendar.id === defaultCalendarId);
             }
+            this.googleSyncSetting = settings.syncSettings.googleSyncSetting;
         });
 
         // DEBUG
@@ -105,6 +107,22 @@ export class GoogleCalendarAPI {
         const googleEvent = this.convertTaskToGoogleEvent(event.currentState);
         const createdEvent = await this.createEvent(googleEvent);
         return createdEvent.id;
+        // TODO: filter events
+    }
+
+    filterCreationEvent(event: TaskChangeEvent): boolean {
+        if (event.type !== TaskChangeType.ADD) return false;
+        // logic to filter creation events: some events should not be created by google calendar
+        // 1. intrinsic filter: task without due date won't be created
+        if (!event.currentState.due.date) return false;
+        // 2. setting based filter: if there's filter project or tag, check if the task is in the project or tag
+        if (this.googleSyncSetting.filterProject) {
+            if (this.googleSyncSetting.filterProject !== event.currentState.project.id) return false;
+        }
+        if (this.googleSyncSetting.filterTag) {
+            if (!event.currentState.labels.includes(this.googleSyncSetting.filterTag)) return false;
+        }
+        return true;
     }
 
     async handleLocalTaskUpdate(event: TaskChangeEvent): Promise<string> {
@@ -521,7 +539,6 @@ export class GoogleCalendarAPI {
         return null;
     }
     
-
 
     /**
      * Preprocesses the event, ensuring dates are in the correct format and time zones match the calendar's time zone.
