@@ -3,7 +3,6 @@
 import { SettingStore, TaskCardSettings } from "../settings";
 import { ObsidianTask } from "../taskModule/task";
 import { TaskChangeEvent, TaskChangeType } from "../taskModule/taskAPI";
-import { logger } from "../utils/log";
 import { GoogleCalendarAPI } from "./googleCalendarAPI/calendarAPI";
 
 
@@ -51,7 +50,8 @@ export class ExternalAPIManager {
             previousState: origTask,
             timestamp: new Date(),
         }
-        this.notifyTaskUpdates(event);
+        const syncMappings = this.notifyTaskUpdates(event);
+        return syncMappings;
     }
 
     deleteTask(task: ObsidianTask) {
@@ -68,22 +68,20 @@ export class ExternalAPIManager {
     async notifyTaskCreations(event: TaskChangeEvent): Promise<SyncMappings> {
         if (event.type !== TaskChangeType.ADD) return;
         const id = await this.googleCalendarAPI.handleLocalTaskCreation(event);
-        return { googleSyncSetting: { id: id } };
+        const oldSyncMappings = event.currentState.metadata.syncMappings || {};
+        return { ...oldSyncMappings, googleSyncSetting: { id: id } };
     }
 
-    notifyTaskUpdates(event: TaskChangeEvent) {
+    async notifyTaskUpdates(event: TaskChangeEvent): Promise<SyncMappings> {
         if (event.type !== TaskChangeType.UPDATE) return;
-        if (event.currentState.metadata.syncMappings.googleSyncSetting.id) {
-            this.googleCalendarAPI.handleLocalTaskUpdate(event);
-        }
+        const id = await this.googleCalendarAPI.handleLocalTaskUpdate(event);
+        const oldSyncMappings = event.currentState.metadata.syncMappings || {};
+        return { ...oldSyncMappings, googleSyncSetting: { id: id } };
     }
 
     notifyTaskDeletions(event: TaskChangeEvent) {
         if (event.type !== TaskChangeType.REMOVE) return;
-        if (event.previousState.metadata.syncMappings.googleSyncSetting.id) {
-            logger.debug(`deleting task with id: ${event.previousState.metadata.syncMappings.googleSyncSetting.id}`);
-            this.googleCalendarAPI.handleLocalTaskDeletion(event);
-        }
+        this.googleCalendarAPI.handleLocalTaskDeletion(event);
     }
 
 

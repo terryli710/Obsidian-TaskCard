@@ -4,12 +4,11 @@ import { Notice } from "obsidian";
 import { logger } from "../../utils/log";
 import { GoogleCalendarAuthenticator } from "./authentication";
 import { callRequest } from "./requestWrapper";
-import { GoogleCalendar, GoogleCalendarList, GoogleEvent, GoogleEventList, GoogleEventTimePoint } from "./types";
+import { GoogleCalendar, GoogleEvent, GoogleEventList, GoogleEventTimePoint } from "./types";
 import moment from "moment";
 import { GoogleSyncSetting, SettingStore } from "../../settings";
 import { GoogleApiError } from "./googleAPIError";
 import { TaskChangeEvent, TaskChangeType } from "../../taskModule/taskAPI";
-import { LocalStorageDB } from "./localStorage";
 import { ObsidianTask } from "../../taskModule/task";
 
 
@@ -105,14 +104,13 @@ export class GoogleCalendarAPI {
     async handleLocalTaskCreation(event: TaskChangeEvent): Promise<string> {
         if (event.type !== TaskChangeType.ADD) return '';
         if (this.filterCreationEvent(event) === false) return '';
+
         const googleEvent = this.convertTaskToGoogleEvent(event.currentState);
         const createdEvent = await this.createEvent(googleEvent);
         return createdEvent.id;
     }
 
     filterCreationEvent(event: TaskChangeEvent): boolean {
-        // logger.debug(`filtering: event type = ${event.type}, filter project = ${this.googleSyncSetting.filterProject}, filter tag = ${this.googleSyncSetting.filterTag}`);
-        if (event.type !== TaskChangeType.ADD) return false;
         // logic to filter creation events: some events should not be created by google calendar
         // 1. intrinsic filter: task without due date won't be created
         if (!event.currentState.due.date) return false;
@@ -127,15 +125,39 @@ export class GoogleCalendarAPI {
     }
 
     async handleLocalTaskUpdate(event: TaskChangeEvent): Promise<string> {
-        if (event.type !== TaskChangeType.UPDATE) return;
+        // local task updates can match to task update, create, or delete
+        if (event.type !== TaskChangeType.UPDATE) return '';
+        logger.debug(`handling local task update: ${JSON.stringify(event)}`);
+        logger.debug(`has google sync id: ${event.currentState.metadata.syncMappings.googleSyncSetting.id}`);
+        logger.debug(`filtered: ${this.filterCreationEvent(event)}`);
         const googleEvent = this.convertTaskToGoogleEvent(event.currentState);
-        // logger.debug(`updating with googleEvent: ${JSON.stringify(googleEvent)}`);
-        const updatedEvent = await this.updateEvent(googleEvent);
-        return updatedEvent.id;
+        
+        // possible task creation events: 1. no google sync id 2. filter passed
+        if (!event.currentState.metadata.syncMappings.googleSyncSetting.id) {
+            if (this.filterCreationEvent(event) === false) return '';
+            logger.debug(`try to create event`)
+            const createdEvent = await this.createEvent(googleEvent);
+            return createdEvent.id;
+        }
+        // possible task deletion events: 1. has google sync id; 2. filter failed
+        if (event.previousState.metadata.syncMappings.googleSyncSetting.id && !this.filterCreationEvent(event)) {
+            logger.debug(`try to delete event`)
+            const deletedEvent = await this.deleteEvent(googleEvent);
+            return '';
+        }
+        // possible task update events: 1. has google sync id; 2. filter passed
+        if (event.previousState.metadata.syncMappings.googleSyncSetting.id && this.filterCreationEvent(event)) {
+            logger.debug(`try to update event`)
+            const updatedEvent = await this.updateEvent(googleEvent);
+            return updatedEvent.id;
+        }
+        return '';
     }
 
     async handleLocalTaskDeletion(event: TaskChangeEvent): Promise<void> {
         if (event.type !== TaskChangeType.REMOVE) return;
+        if (!event.previousState.metadata.syncMappings.googleSyncSetting.id) return;
+
         const googleEvent = this.convertTaskToGoogleEvent(event.previousState);
         await this.deleteEvent(googleEvent);
     }
@@ -339,7 +361,7 @@ export class GoogleCalendarAPI {
                 `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(targetCalendar.id)}/events?conferenceDataVersion=1`, 
                 'POST', processedEvent);
             
-            logger.info(`Google Event ${event.summary} created.`);
+            logger.info(`Google Event \"${event.summary}\" created (ID: ${createdEvent.id}).`);
 
             return createdEvent;
         } catch (error) {
