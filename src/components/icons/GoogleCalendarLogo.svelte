@@ -1,11 +1,30 @@
 
+<script lang="ts">
+    export let width: string = "24";
+    export let height: string = "24";
+    export let role: string = 'img';
+    export let ariaLabel: string = 'icon';
+    export let lineBased: boolean = false;
+</script>
 
-<script>
-    import LucideIcon from './LucideIcon.svelte';
-    export let width = "24";
-    export let height = "24";
-    export let ariaLabel = "google-calendar";
-    const svgPath = `
+<svg 
+    xmlns="http://www.w3.org/2000/svg" 
+    version="1.1" 
+    id="logo_x5F_calendar_x5F_192px_x5F_clr" 
+    x="0px" y="0px" viewBox="0 0 696.53 678.67" 
+    xml:space="preserve"
+    {width}
+    {height}
+    {role}
+    aria-label={ariaLabel}
+    class={$$props.class}
+    class:line-based={lineBased}
+    on:click
+    on:keydown
+    on:keyup
+    on:focus
+>
+<defs id="defs207" />
     <g id="g202">
         <g id="g193">
             <g id="g12">
@@ -184,6 +203,16 @@
         </radialGradient>
         <path fill="url(#SVGID_32_)" fill-opacity="0.05" d="M696.53,160.738c0-23.307-14.913-43.087-35.719-50.454V53.579   C660.811,23.977,636.834,0,607.231,0H89.299C59.696,0,35.719,23.977,35.719,53.579l0.134,56.615   C15.002,117.517,0,137.341,0,160.738c0,2.5,0.179,4.956,0.491,7.322l35.228,224.854l0,0L17.994,621.385   c-0.089,1.25-0.134,2.456-0.134,3.706c0,29.603,23.977,53.579,53.579,53.579h553.652c29.603,0,53.579-23.977,53.579-53.579   c0-1.25-0.045-2.456-0.134-3.706l-17.726-228.471l35.228-224.854C696.352,165.694,696.53,163.238,696.53,160.738z" id="path200" />
     </g>
-    `;
-</script>
-<LucideIcon width={width} height={height} svgPath={svgPath} ariaLabel={ariaLabel} class="task-card-icon" />
+</svg>
+
+
+
+
+<style>
+    /* Default, pattern-based style */
+
+    /* Line-based style when the `line-based` class is applied */
+    svg.line-based path {
+        fill: #a5a5a5;  /* Color of the line */
+    }
+</style>
