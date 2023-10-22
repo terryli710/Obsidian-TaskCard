@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { Platform, Workspace } from 'obsidian';
+  import { Platform, Workspace } from 'obsidian';
   import ChevronsDownUp from '../components/icons/ChevronsDownUp.svelte';
   import ChevronsUpDown from '../components/icons/ChevronsUpDown.svelte';
   import {
