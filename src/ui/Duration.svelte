@@ -134,6 +134,7 @@
     on:keydown={toggleDurationEditMode}
     role="button"
     tabindex="0"
+    aria-label="Duration"
   >
     <div class="task-card-duration-left-part">
       <span class="task-card-duration-prefix"><History width={"14"} height={"14"} ariaLabel="duration"/></span>

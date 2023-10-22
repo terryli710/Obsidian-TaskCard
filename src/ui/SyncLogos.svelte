@@ -46,9 +46,12 @@
 <style>
     .logo-wrapper {
         display: flex;
-        /* width: 14px;
-        height: 14px; */
+        width: 18px;
+        height: 18px;
         align-items: center;
-        padding: 0 4px;
+        margin: 0 2px;
+        padding: 2px;
+        border: calc(var(--border-width) / 2) solid var(--text-accent);
+        border-radius: var(--radius-s);
     }
 </style>

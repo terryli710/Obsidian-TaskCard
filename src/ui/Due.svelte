@@ -127,6 +127,7 @@
   <div class="task-card-due-container {params.mode === 'single-line' ? 'mode-single-line' : 'mode-multi-line'}"
     on:click={toggleEditMode}
     on:keydown={toggleEditMode}
+    aria-label="Due"
     role="button"
     tabindex="0"
   >
