@@ -5,7 +5,7 @@ import TaskCardPlugin from './index';
 import { Project } from './taskModule/project';
 import { logger } from './utils/log';
 import { LabelModule } from './taskModule/labels/index';
-import { googleCalendarSyncSettings } from './settings/syncSettings/googleCalendarSettings';
+import { GoogleSyncSetting, googleCalendarSyncSettings } from './settings/syncSettings/googleCalendarSettings';
 
 // TODO: the google filter tag cannot be the same as indicator tag.
 
@@ -39,15 +39,6 @@ export interface SyncSettings {
 
 export interface SyncSetting {
   isLogin: boolean;
-}
-
-export interface GoogleSyncSetting extends SyncSetting {
-  clientID: string;
-  clientSecret: string;
-  doesNeedFilters: boolean;
-  filterTag: string;
-  filterProject: string;
-  defaultCalendarId: string;
 }
 
 export const DefaultSettings: TaskCardSettings = {
@@ -115,11 +106,13 @@ export class SettingsTab extends PluginSettingTab {
     // 1. google calendar
     this.containerEl.createEl('h2', { text: 'Sync Settings' });
     this.containerEl.createEl('h3', { text: 'Google Calendar Sync Setting' });
-    googleCalendarSyncSettings(this.containerEl, 
+    googleCalendarSyncSettings(
+        this.containerEl, 
         this.plugin.settings, 
         this.plugin.writeSettings.bind(this.plugin), 
         this.display.bind(this),
         this.plugin.projectModule,
+        this.plugin.externalAPIManager.googleCalendarAPI
         );
   }
 
@@ -614,3 +607,5 @@ export class SettingsTab extends PluginSettingTab {
 
 
 }
+export { GoogleSyncSetting };
+

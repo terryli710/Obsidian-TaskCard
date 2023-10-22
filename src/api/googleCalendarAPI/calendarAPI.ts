@@ -6,10 +6,11 @@ import { GoogleCalendarAuthenticator } from "./authentication";
 import { callRequest } from "./requestWrapper";
 import { GoogleCalendar, GoogleEvent, GoogleEventList, GoogleEventTimePoint } from "./types";
 import moment from "moment";
-import { GoogleSyncSetting, SettingStore } from "../../settings";
+import { SettingStore } from "../../settings";
 import { GoogleApiError } from "./googleAPIError";
 import { TaskChangeEvent, TaskChangeType } from "../../taskModule/taskAPI";
 import { ObsidianTask } from "../../taskModule/task";
+import { GoogleSyncSetting } from "../../settings/syncSettings/googleCalendarSettings";
 
 
 export class GoogleCalendarAPI { 
@@ -17,11 +18,14 @@ export class GoogleCalendarAPI {
     public authenticator: GoogleCalendarAuthenticator;
     public calendars: GoogleCalendar[];
     public defaultCalendar: GoogleCalendar;
+    private lastUpdateCalenderTime: moment.Moment = null;
+    updateThreshold: number;
     googleSyncSetting: GoogleSyncSetting;
     // private taskMappingDB: LocalStorageDB;
 
-    constructor() {
+    constructor(updateThreshold: number = 1000 * 60 * 5) {
         this.authenticator = new GoogleCalendarAuthenticator();
+        this.updateThreshold = updateThreshold;
         this.init();
         // setTimeout(() => {
         //     this.test();
@@ -30,7 +34,11 @@ export class GoogleCalendarAPI {
     }
 
     async init() {
-        this.calendars = await this.listCalendars();
+        try {
+            this.calendars = await this.listCalendars();
+        } catch (e) {
+            logger.error(`Failed to list calendars: ${e}`);
+        }
         SettingStore.subscribe((settings) => {
             const defaultCalendarId = settings.syncSettings.googleSyncSetting.defaultCalendarId;
             if (defaultCalendarId) {
@@ -44,62 +52,62 @@ export class GoogleCalendarAPI {
         // logger.debug(`defaultCalendar: ${JSON.stringify(this.defaultCalendar)}`);
     }
 
-    async test() {
-        try {
-            const startOfMonth = moment().startOf("month");
-            const endOfMonth = moment().endOf("month");
+    // async test() {
+    //     try {
+    //         const startOfMonth = moment().startOf("month");
+    //         const endOfMonth = moment().endOf("month");
 
-            // Fetch events from the calendar within the specified date range
-            // const events: GoogleEvent[] = await this.listEventsInCalendar(this.calendars[0], startOfMonth, endOfMonth);
+    //         // Fetch events from the calendar within the specified date range
+    //         // const events: GoogleEvent[] = await this.listEventsInCalendar(this.calendars[0], startOfMonth, endOfMonth);
 
-            // console.log('Events in Calendar:', events);
+    //         // console.log('Events in Calendar:', events);
 
-            // Create a test event
-            const testEvent: GoogleEvent = {
-                summary: 'Test Event',
-                description: 'This is a test event.',
-                start: {
-                    dateTime: moment().add(1, 'days').format(), // starts tomorrow
-                    timeZone: 'America/Los_Angeles',
-                },
-                end: {
-                    dateTime: moment().add(2, 'days').format(), // ends the day after tomorrow
-                    timeZone: 'America/Los_Angeles',
-                },
-                // Add other event properties as needed
-            };
+    //         // Create a test event
+    //         const testEvent: GoogleEvent = {
+    //             summary: 'Test Event',
+    //             description: 'This is a test event.',
+    //             start: {
+    //                 dateTime: moment().add(1, 'days').format(), // starts tomorrow
+    //                 timeZone: 'America/Los_Angeles',
+    //             },
+    //             end: {
+    //                 dateTime: moment().add(2, 'days').format(), // ends the day after tomorrow
+    //                 timeZone: 'America/Los_Angeles',
+    //             },
+    //             // Add other event properties as needed
+    //         };
 
-            // Add the test event to the calendar
-            const createdEvent = await this.createEvent(testEvent);
+    //         // Add the test event to the calendar
+    //         const createdEvent = await this.createEvent(testEvent);
 
-            console.log('Test Event Created:', createdEvent);
+    //         console.log('Test Event Created:', createdEvent);
 
-            // Ensure the event was created before attempting update or deletion
-            if (createdEvent && createdEvent.id) {
-                // Prepare an update for the test event
-                const updatedEventInfo = {
-                    ...createdEvent, // This keeps existing event properties
-                    summary: 'Updated Test Event',
-                    description: 'This is an updated description for the test event.',
-                    // Add other event properties to update as needed
-                };
+    //         // Ensure the event was created before attempting update or deletion
+    //         if (createdEvent && createdEvent.id) {
+    //             // Prepare an update for the test event
+    //             const updatedEventInfo = {
+    //                 ...createdEvent, // This keeps existing event properties
+    //                 summary: 'Updated Test Event',
+    //                 description: 'This is an updated description for the test event.',
+    //                 // Add other event properties to update as needed
+    //             };
 
-                // Attempt to update the event
-                const updatedEvent = await this.updateEvent(updatedEventInfo);
+    //             // Attempt to update the event
+    //             const updatedEvent = await this.updateEvent(updatedEventInfo);
 
-                if (updatedEvent) {
-                    console.log('Test Event Updated Successfully:', updatedEvent);
-                } else {
-                    console.log('Failed to Update Test Event:', createdEvent);
-                }
+    //             if (updatedEvent) {
+    //                 console.log('Test Event Updated Successfully:', updatedEvent);
+    //             } else {
+    //                 console.log('Failed to Update Test Event:', createdEvent);
+    //             }
 
-            } else {
-                console.error('Test Event Creation Failed:', testEvent);
-            }
-        } catch (error) {
-            console.error('An error occurred:', error);
-        }
-    }
+    //         } else {
+    //             console.error('Test Event Creation Failed:', testEvent);
+    //         }
+    //     } catch (error) {
+    //         console.error('An error occurred:', error);
+    //     }
+    // }
 
     async handleLocalTaskCreation(event: TaskChangeEvent): Promise<string> {
         if (event.type !== TaskChangeType.ADD) return '';
@@ -213,19 +221,45 @@ export class GoogleCalendarAPI {
         return { start, end };
     }
 
+
+    public async getCalendars(): Promise<GoogleCalendar[]> {
+
+        // If 'this.calendars' is not initialized or the last update is old, refresh 'this.calendars'.
+        if (!this.calendars || 
+            !this.lastUpdateCalenderTime || 
+            moment().diff(this.lastUpdateCalenderTime) > this.updateThreshold) {
+            await this.refreshCalendars();
+        }
+
+        return this.calendars!;
+    }
+
     async listCalendars(): Promise<GoogleCalendar[]> {
         if (!this.authenticator.isLogin) {
-            new Notice(`[TaskCard] Not logged in to Google Calendar`);
+            console.warn(`[TaskCard] Not logged in to Google Calendar`);
             return [];
         }
 
-        const calendarList = await callRequest(
-            `https://www.googleapis.com/calendar/v3/users/me/calendarList`, 
-            "GET", null)
+        try {
+            const calendarList = await callRequest(
+                `https://www.googleapis.com/calendar/v3/users/me/calendarList`, 
+                "GET", null);
+            
+            return calendarList.items;
+        } catch (error) {
+            console.error('Error listing calendars:', error);
+            throw error; // Rethrowing error since it should be handled in the calling context.
+        }
+    }
 
-        // logger.debug(`calendarList: ${JSON.stringify(calendarList.items)}`);
-
-        return calendarList.items;
+    private async refreshCalendars(): Promise<void> {
+        try {
+            this.calendars = await this.listCalendars();
+            this.lastUpdateCalenderTime = moment();
+        } catch (error) {
+            console.error('Failed to refresh calendars', error); // Handle errors appropriately for your context.
+            // Potentially throw the error so it can be handled upstream or set 'this.calendars' to an empty array or null, based on how you want your application to behave on failure.
+        }
     }
 
     async listEventsInCalendar(

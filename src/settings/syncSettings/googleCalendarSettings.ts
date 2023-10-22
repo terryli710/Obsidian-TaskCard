@@ -3,19 +3,30 @@
 import { PluginSettingTab, ButtonComponent, Setting } from 'obsidian'; // Assuming obsidian types based on the code context.
 import { GoogleCalendarAuthenticator } from '../../api/googleCalendarAPI/authentication';
 import { ProjectModule } from '../../taskModule/project';
+import { GoogleCalendarAPI } from '../../api/googleCalendarAPI/calendarAPI';
+import { SyncSetting } from '../../settings';
 
+export interface GoogleSyncSetting extends SyncSetting {
+    clientID: string;
+    clientSecret: string;
+    doesNeedFilters: boolean;
+    filterTag: string;
+    filterProject: string;
+    defaultCalendarId: string;
+}
 
-export function googleCalendarSyncSettings(
+export async function googleCalendarSyncSettings(
     containerEl: HTMLElement,
     pluginSettings: any, // Adjust with the specific type.
     writeSettings: Function,
     display: Function,
     projectModule: ProjectModule,
-): void {
-    const googleSettings = pluginSettings.syncSettings.googleSyncSetting;
+    googleCalendarAPI: GoogleCalendarAPI,
+): Promise<void> {
+    const googleSettings: GoogleSyncSetting = pluginSettings.syncSettings.googleSyncSetting;
     let loginButton: ButtonComponent;
 
-    // Google login settings
+    // 1. Google login settings
     new Setting(containerEl)
     .setName("Login via Google")
     .addText(text => {
@@ -73,7 +84,25 @@ export function googleCalendarSyncSettings(
 
     let doesNeedFilters: boolean = pluginSettings.syncSettings.googleSyncSetting.doesNeedFilters;
 
-    // Task sync filter settings
+    // 2. Google default calendar selection
+    const calendars = googleCalendarAPI.getCalendars();
+    const calendarOptions: Record<string, string> = {};
+    (await calendars).forEach((calendar) => {
+        calendarOptions[calendar.id] = calendar.summary;
+    });
+
+    new Setting(containerEl)
+        .setName("Default Calendar")
+        .addDropdown(dropdown => {
+            dropdown
+                .addOptions(calendarOptions)
+                .setValue(googleSettings.defaultCalendarId)
+                .onChange(value => {
+                    writeSettings(old => old.syncSettings.googleSyncSetting.defaultCalendarId = value);
+                })
+        })
+
+    // 3. Task sync filter settings
     new Setting(containerEl)
     .setName("Task Sync Filter")
     .then((setting) => {
