@@ -1,6 +1,7 @@
 
 <script lang="ts">
     import { ObsidianTaskSyncManager } from "../taskModule/taskSyncManager";
+    import MonoColorSVG from "../components/icons/MonoColorSVG.svelte";
     import GoogleCalendarLogo from "../components/icons/GoogleCalendarLogo.svelte";
     import { logger } from "../utils/log";
 
@@ -28,19 +29,17 @@
         }
     }
 
-    logger.debug(`taskSyncManager.obsidianTask.metadata.syncMappings`, taskSyncManager.obsidianTask.metadata.syncMappings);
-
-    logger.debug('logoList', logoList);
-
-    logger.debug(`logolist.includes('google') ${logoList.includes('google')}`);
-
-
 </script>
 
 
 {#if logoList.includes('google')}
     <div class="logo-wrapper">
         <GoogleCalendarLogo width="14px" height="14px" ariaLabel="Google Calendar Synced" />
+        <!-- <MonoColorSVG 
+            SomeSvelteComponent={GoogleCalendarLogo} 
+            componentProps={{ width: "14px", height: "14px", ariaLabel: "Google Calendar Synced" }} 
+            color="#800080" 
+        /> -->
     </div>
 {/if}
 
