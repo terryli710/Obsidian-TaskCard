@@ -215,14 +215,13 @@ export class GoogleCalendarAuthenticator {
             method: 'POST',
             headers: {'content-type': 'application/x-www-form-urlencoded'},
         });
-        // TODO: handle error code in response. (e.g. response.status = 401)
+
         if (!response.ok) {
             new Notice(`Log in failed. ${response.status}: ${await response.text()}`);
             return;
         }
 
         const jsonResponse = await response.json();
-        // console.log(jsonResponse);
         return jsonResponse;
     }
 

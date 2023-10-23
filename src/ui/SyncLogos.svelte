@@ -5,7 +5,8 @@
     import GoogleCalendarLogo from "../components/icons/GoogleCalendarLogo.svelte";
     import { logger } from "../utils/log";
 
-    export let taskSyncManager: ObsidianTaskSyncManager;
+    export let taskSyncManager: ObsidianTaskSyncManager = undefined;
+    export let providedMetadata = undefined;
 
     const MetadataLogoMapping = {
         googleSyncSetting: 'google',
@@ -13,14 +14,16 @@
 
     let logoList = [];
 
+    let metadata = taskSyncManager ? taskSyncManager.obsidianTask.metadata : providedMetadata;
+    if (!metadata) metadata = {};
     // Check if taskSyncManager and its nested properties are not undefined
-    if (taskSyncManager.obsidianTask.metadata.syncMappings) {
+    if (metadata.syncMappings) {
         // Loop over the keys in MetadataLogoMapping
         for (const key in MetadataLogoMapping) {
-            // Check if the key from MetadataLogoMapping exists in taskSyncManager.obsidianTask.metadata.syncMappings
-            if (key in taskSyncManager.obsidianTask.metadata.syncMappings) {
+            // Check if the key from MetadataLogoMapping exists in metadata.syncMappings
+            if (key in metadata.syncMappings) {
                 // Check if the value for this key in metadata is not empty or "{}"
-                const metadataValue = taskSyncManager.obsidianTask.metadata.syncMappings[key];
+                const metadataValue = metadata.syncMappings[key];
                 if (metadataValue && metadataValue !== "{}") {
                     // Add the corresponding value from MetadataLogoMapping to logoList
                     logoList.push(MetadataLogoMapping[key]);

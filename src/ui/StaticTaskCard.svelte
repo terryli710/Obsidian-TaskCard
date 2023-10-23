@@ -1,21 +1,25 @@
 <script lang="ts">
-  import { Platform, Workspace } from 'obsidian';
-  import ChevronsDownUp from '../components/icons/ChevronsDownUp.svelte';
-  import ChevronsUpDown from '../components/icons/ChevronsUpDown.svelte';
-  import {
-    TaskDisplayMode,
-    TaskDisplayParams
-  } from '../renderer/postProcessor';
-  import { LabelModule } from '../taskModule/labels';
-  import { DocPosition, ObsidianTask, PositionedObsidianTask } from '../taskModule/task';
-  import { displayDate, displayTime } from '../utils/dateTimeFormatter';
-  import { logger } from '../utils/log';
-  import { marked } from 'marked';
-  import TaskCardPlugin from '..';
-  import { DescriptionParser } from '../taskModule/description';
+    import { Platform, Workspace } from 'obsidian';
+    import ChevronsDownUp from '../components/icons/ChevronsDownUp.svelte';
+    import ChevronsUpDown from '../components/icons/ChevronsUpDown.svelte';
+    import {
+      TaskDisplayMode,
+      TaskDisplayParams
+    } from '../renderer/postProcessor';
+    import { LabelModule } from '../taskModule/labels';
+    import { DocPosition, ObsidianTask, PositionedObsidianTask } from '../taskModule/task';
+    import { displayDate, displayTime } from '../utils/dateTimeFormatter';
+    import { logger } from '../utils/log';
+    import { marked } from 'marked';
+    import TaskCardPlugin from '..';
+    import { DescriptionParser } from '../taskModule/description';
     import CircularProgressBar from '../components/CircularProgressBar.svelte';
+    import SyncLogos from './SyncLogos.svelte';
   marked.use({ mangle: false, headerIds: false, langPrefix: '' });
-  
+
+  // TODO: solve all the TODOs
+  // TODO: wrap up and push new versions
+  // TODO: new command to make all selected lines to be tasks
 
   export let taskItem: PositionedObsidianTask;
   export let plugin: TaskCardPlugin;
@@ -126,6 +130,7 @@
       >
         <div class="static-task-card-content">{task.content}</div>
         <div class="static-task-card-middle-right">
+          <SyncLogos providedMetadata={task.metadata} />
           {#if descriptionProgress[1] * descriptionProgress[0] > 0 && !task.completed }
             <CircularProgressBar value={descriptionProgress[0]} max={descriptionProgress[1]} showDigits={false} />
           {/if}
@@ -182,6 +187,7 @@
       <div class="task-card-content mode-multi-line" role="button" tabindex="0">
         {task.content}
       </div>
+      <SyncLogos providedMetadata={task.metadata} />
       <!-- Project -->
       <div class="project-wrapper">
         {#if task.hasProject()}
