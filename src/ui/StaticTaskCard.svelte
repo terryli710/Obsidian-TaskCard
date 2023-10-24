@@ -1,25 +1,22 @@
 <script lang="ts">
-    import { Platform, Workspace } from 'obsidian';
-    import ChevronsDownUp from '../components/icons/ChevronsDownUp.svelte';
-    import ChevronsUpDown from '../components/icons/ChevronsUpDown.svelte';
-    import {
-      TaskDisplayMode,
-      TaskDisplayParams
-    } from '../renderer/postProcessor';
-    import { LabelModule } from '../taskModule/labels';
-    import { DocPosition, ObsidianTask, PositionedObsidianTask } from '../taskModule/task';
-    import { displayDate, displayTime } from '../utils/dateTimeFormatter';
-    import { logger } from '../utils/log';
-    import { marked } from 'marked';
-    import TaskCardPlugin from '..';
-    import { DescriptionParser } from '../taskModule/description';
-    import CircularProgressBar from '../components/CircularProgressBar.svelte';
-    import SyncLogos from './SyncLogos.svelte';
+  import { Platform, Workspace } from 'obsidian';
+  import ChevronsDownUp from '../components/icons/ChevronsDownUp.svelte';
+  import ChevronsUpDown from '../components/icons/ChevronsUpDown.svelte';
+  import {
+    TaskDisplayMode,
+    TaskDisplayParams
+  } from '../renderer/postProcessor';
+  import { LabelModule } from '../taskModule/labels';
+  import { DocPosition, ObsidianTask, PositionedObsidianTask } from '../taskModule/task';
+  import { displayDate, displayTime } from '../utils/dateTimeFormatter';
+  import { logger } from '../utils/log';
+  import { marked } from 'marked';
+  import TaskCardPlugin from '..';
+  import { DescriptionParser } from '../taskModule/description';
+  import CircularProgressBar from '../components/CircularProgressBar.svelte';
+  import SyncLogos from './SyncLogos.svelte';
   marked.use({ mangle: false, headerIds: false, langPrefix: '' });
 
-  // TODO: solve all the TODOs
-  // TODO: wrap up and push new versions
-  // TODO: new command to make all selected lines to be tasks
 
   export let taskItem: PositionedObsidianTask;
   export let plugin: TaskCardPlugin;
@@ -233,7 +230,7 @@
           </div>
         </div>
         {#if taskDisplayParams.mode === 'multi-line'}
-          <div class="task-card-attribute-separator"> | </div>
+          <div class="task-card-attribute-separator"></div>
         {/if}
       {/if}
       <!-- Labels -->

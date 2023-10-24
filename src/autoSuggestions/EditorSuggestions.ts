@@ -44,7 +44,6 @@ export default class AttributeSuggest extends EditorSuggest<SuggestInformation> 
     editor: Editor,
     file: TFile
   ): EditorSuggestTriggerInfo {
-    // TODO: return null if the plugin is not loaded
     const line = editor.getLine(cursor.line);
     if (!this.taskValidator.isMarkdownTaskWithIndicatorTag(line)) {
       return null;

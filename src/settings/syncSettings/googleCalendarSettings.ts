@@ -44,7 +44,7 @@ export async function googleCalendarSyncSettings(
             'a',
             {
                 text: 'the documentation',
-                href: 'docs/google-calendar-sync-setup.md', // TODO: correct this link.
+                href: 'https://github.com/terryli710/Obsidian-TaskCard/blob/feature/google-calendar-api/docs/google-calendar-sync-setup.md', // TODO: correct this link.
             }
         );
         frag.appendText(' for more details.');
