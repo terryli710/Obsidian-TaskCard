@@ -179,6 +179,39 @@ export default class TaskCardPlugin extends Plugin {
         projectCreationModel.open();
       }
     })
+
+    // a command to append indicator tag to each of the selected line, if they are tasks (and not subtasks)
+    this.addCommand({
+      id: 'task-card-add-indicator-tag',
+      name: 'Add Indicator Tags to Selected Tasks',
+      editorCallback: (editor: Editor) => {
+        const selectionLines = editor.getSelection().split('\n');
+        let isTask: boolean = false;
+        let indentation: number = 0;
+        let prevIsTask: boolean = false;
+        let prevIndentation: number = 0;
+        let newLines: string[] = [];
+        for (let i = 0; i < selectionLines.length; i++) {
+          const line = selectionLines[i];
+          isTask = line.trim().startsWith('- [ ]');
+          indentation = line.length - line.trimStart().length;
+          const isSubTask = prevIsTask && prevIndentation < indentation;
+          if (isTask && !isSubTask) {
+            // Append the indicator tag to the task and continue the loop instead of breaking it
+            newLines.push(line + ` #${this.settings.parsingSettings.indicatorTag}`);
+          } else {
+            // If it's not a task, or it's a subtask, just add the original line
+            newLines.push(line);
+          }
+          // Save the current task status and indentation for the next iteration
+          prevIsTask = isTask;
+          prevIndentation = indentation;
+        }
+        // After exiting the loop, we need to join the new lines and replace the editor's selection with the new string
+        const newSelection = newLines.join('\n');
+        editor.replaceSelection(newSelection);
+      },
+    });
   }
 
   registerPostProcessors() {
