@@ -28,6 +28,7 @@
   export class TaskCardRenderManager {
     private plugin: TaskCardPlugin;
     private taskItemFilter: (elems: HTMLElement) => boolean;
+
     constructor(plugin: TaskCardPlugin) {
       this.plugin = plugin;
   

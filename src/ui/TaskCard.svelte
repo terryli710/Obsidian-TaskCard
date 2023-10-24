@@ -18,6 +18,7 @@
     import { DescriptionParser } from '../taskModule/description';
     import CircularProgressBar from '../components/CircularProgressBar.svelte';
     import Duration from './Duration.svelte';
+    import SyncLogos from './SyncLogos.svelte';
 
     export let taskSyncManager: ObsidianTaskSyncManager;
     export let plugin: TaskCardPlugin;
@@ -225,6 +226,7 @@
       <div class="task-card-content">{task.content}</div>
     </div>
     <div class="task-card-single-line-right-container">
+      <SyncLogos taskSyncManager={taskSyncManager} />
       {#if descriptionProgress[1] * descriptionProgress[0] > 0 && !task.completed }
         <CircularProgressBar value={descriptionProgress[0]} max={descriptionProgress[1]} showDigits={false} />
       {/if}
@@ -248,6 +250,7 @@
     </div>
     <div class="task-card-content-project-line">
       <Content taskSyncManager={taskSyncManager} />
+      <SyncLogos taskSyncManager={taskSyncManager} />
       <Project taskSyncManager={taskSyncManager} params={params} />
     </div>
     {#if taskSyncManager.obsidianTask.hasDescription() || taskSyncManager.getTaskCardStatus('descriptionStatus') === 'editing'}

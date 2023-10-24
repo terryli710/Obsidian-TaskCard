@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { Platform, Workspace } from 'obsidian';
+  import { Platform, Workspace } from 'obsidian';
   import ChevronsDownUp from '../components/icons/ChevronsDownUp.svelte';
   import ChevronsUpDown from '../components/icons/ChevronsUpDown.svelte';
   import {
@@ -13,9 +13,10 @@
   import { marked } from 'marked';
   import TaskCardPlugin from '..';
   import { DescriptionParser } from '../taskModule/description';
-    import CircularProgressBar from '../components/CircularProgressBar.svelte';
+  import CircularProgressBar from '../components/CircularProgressBar.svelte';
+  import SyncLogos from './SyncLogos.svelte';
   marked.use({ mangle: false, headerIds: false, langPrefix: '' });
-  
+
 
   export let taskItem: PositionedObsidianTask;
   export let plugin: TaskCardPlugin;
@@ -126,6 +127,7 @@
       >
         <div class="static-task-card-content">{task.content}</div>
         <div class="static-task-card-middle-right">
+          <SyncLogos providedMetadata={task.metadata} />
           {#if descriptionProgress[1] * descriptionProgress[0] > 0 && !task.completed }
             <CircularProgressBar value={descriptionProgress[0]} max={descriptionProgress[1]} showDigits={false} />
           {/if}
@@ -182,6 +184,7 @@
       <div class="task-card-content mode-multi-line" role="button" tabindex="0">
         {task.content}
       </div>
+      <SyncLogos providedMetadata={task.metadata} />
       <!-- Project -->
       <div class="project-wrapper">
         {#if task.hasProject()}
@@ -227,7 +230,7 @@
           </div>
         </div>
         {#if taskDisplayParams.mode === 'multi-line'}
-          <div class="task-card-attribute-separator"> | </div>
+          <div class="task-card-attribute-separator"></div>
         {/if}
       {/if}
       <!-- Labels -->

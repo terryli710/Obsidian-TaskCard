@@ -136,6 +136,7 @@
             on:click={enableEditMode}
             on:keydown={enableEditMode}
             use:appendDescription
+            aria-label="Description"
         >
             <!-- {@html descriptionMarkdown} -->
         </div>

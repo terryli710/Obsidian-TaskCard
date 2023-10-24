@@ -78,7 +78,11 @@
 {#if params.mode === "single-line"}
   <div class="task-card-project">
     {#if project}
-      <span class="project-color" style="background-color: {project.color};"></span>
+      <span 
+      class="project-color" 
+      style="background-color: {project.color};"
+      aria-label="Change Project"
+      ></span>
     {/if}
   </div>
 {:else}
@@ -132,6 +136,7 @@
             on:keydown={(evt) => searchProject(evt, project.name)}
             tabindex="0"
             role="button"
+            aria-label="Project - {project.name}"
           >
             {project.name}
           </div>

@@ -5,6 +5,9 @@ import TaskCardPlugin from './index';
 import { Project } from './taskModule/project';
 import { logger } from './utils/log';
 import { LabelModule } from './taskModule/labels/index';
+import { GoogleSyncSetting, googleCalendarSyncSettings } from './settings/syncSettings/googleCalendarSettings';
+
+// TODO: the google filter tag cannot be the same as indicator tag.
 
 export let emptyProject: Project = {
   id: '',
@@ -26,7 +29,16 @@ export interface TaskCardSettings {
     projects: any;
     defaultProject: any;
   };
-  syncSettings: any; // Todoist account info + other possible synced platforms
+  syncSettings: SyncSettings;
+}
+
+export interface SyncSettings {
+  googleSyncSetting: GoogleSyncSetting
+  // Todoist account info + other possible synced platforms
+}
+
+export interface SyncSetting {
+  isLogin: boolean;
 }
 
 export const DefaultSettings: TaskCardSettings = {
@@ -44,7 +56,17 @@ export const DefaultSettings: TaskCardSettings = {
     projects: {},
     defaultProject: emptyProject,
   },
-  syncSettings: {},
+  syncSettings: {
+    googleSyncSetting: {
+      clientID: '',
+      clientSecret: '',
+      isLogin: false,
+      doesNeedFilters: false,
+      filterTag: '',
+      filterProject: '',
+      defaultCalendarId: ''
+    }
+  },
 };
 
 export const SettingStore: Writable<TaskCardSettings> =
@@ -75,11 +97,23 @@ export class SettingsTab extends PluginSettingTab {
     // projects
     this.projectSettings();
     // parsing settings
-    this.containerEl.createEl('h3', { text: 'Parsing Settings' });
+    this.containerEl.createEl('h2', { text: 'Parsing Settings' });
     this.cardParsingSettings();
     // display settings
-    this.containerEl.createEl('h3', { text: 'Display Settings' });
+    this.containerEl.createEl('h2', { text: 'Display Settings' });
     this.cardDisplaySettings();
+    // sync settings
+    // 1. google calendar
+    this.containerEl.createEl('h2', { text: 'Sync Settings' });
+    this.containerEl.createEl('h3', { text: 'Google Calendar Sync Setting' });
+    googleCalendarSyncSettings(
+        this.containerEl, 
+        this.plugin.settings, 
+        this.plugin.writeSettings.bind(this.plugin), 
+        this.display.bind(this),
+        this.plugin.projectModule,
+        this.plugin.externalAPIManager.googleCalendarAPI
+        );
   }
 
   projectSettings() {
@@ -572,6 +606,6 @@ export class SettingsTab extends PluginSettingTab {
   }
 
 
-
-
 }
+export { GoogleSyncSetting };
+

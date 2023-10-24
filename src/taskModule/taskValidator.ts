@@ -60,7 +60,6 @@ export class TaskValidator {
   //   return new RegExp(`^\\s*- \\[[^\\]]\\] (.*?)\\s*\\{.*?\\}<\\/span>\\s*(${this.markdownSuffix})?`, 'gm');
   // }
 
-
   private hasSpanElement(markdown: string): boolean {
     if (typeof markdown !== 'string') return false;
   
