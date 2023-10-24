@@ -56,8 +56,8 @@
 - Select **OAuth Client ID**;
 - **Application type** = `Web Application`;
 - **Name** = `Obsidian Task Card`;
-- **Authorized JavaScript origins** = `https://http://127.0.0.1:8888`;
-- **Authorized redirect URIs** = `https://http://127.0.0.1:8888/callback`;
+- **Authorized JavaScript origins** = `http://127.0.0.1:8888`;
+- **Authorized redirect URIs** = `http://127.0.0.1:8888/callback`;
 - Click on **CREATE**;
 
 ## Copy and Paste Your Client ID and Secret

@@ -85,6 +85,7 @@ export async function googleCalendarSyncSettings(
     let doesNeedFilters: boolean = pluginSettings.syncSettings.googleSyncSetting.doesNeedFilters;
 
     // 2. Google default calendar selection
+    if (!googleCalendarAPI) return;
     const calendars = googleCalendarAPI.getCalendars();
     const calendarOptions: Record<string, string> = {};
     (await calendars).forEach((calendar) => {
