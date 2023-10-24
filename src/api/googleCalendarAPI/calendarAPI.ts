@@ -128,7 +128,8 @@ export class GoogleCalendarAPI {
 
     constructStartAndEnd(task: Partial<ObsidianTask>): {start: GoogleEventTimePoint, end: GoogleEventTimePoint} {
         if (!task.due) {
-            throw new Error("Task must have a due date.");
+            logger.error(`Task has no due date: ${JSON.stringify(task)}`);
+            return {start: {}, end: {}}
         }
 
         const due = task.due;

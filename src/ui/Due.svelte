@@ -12,6 +12,8 @@
   export let taskSyncManager: ObsidianTaskSyncManager;
   export let plugin: TaskCardPlugin;
   export let params: TaskDisplayParams;
+  export let displayDue: boolean;
+
   let due: DueDate | null;
   let dueString: string;
   let duration: Duration | null;
@@ -22,9 +24,6 @@
   duration = taskSyncManager.obsidianTask.hasDuration() ? taskSyncManager.obsidianTask.duration : null;
 
   updateDueDisplay();
-
-  // TODO: bug: when there's no due, added an wrong due string;
-  // TODO: delete due string would result in due error and using original string;
 
 
   async function toggleEditMode(event: KeyboardEvent | MouseEvent) {
@@ -53,32 +52,37 @@
   }
 
   function finishDueEditing(event: KeyboardEvent | MouseEvent) {
-      if (event instanceof MouseEvent) {
+    if (event instanceof MouseEvent) {
         return;
-      }
-      if (event.key === 'Enter') {
-          // event.preventDefault();
-          // taskSyncManager.setTaskCardStatus('dueStatus', 'done');
-          taskSyncManager.taskCardStatus.dueStatus = 'done';
-          let newDue: DueDate | null;
-          try {
-            newDue = plugin.taskParser.parseDue(dueString);
-          } catch (e) {
+    }
+
+    if (event.key === 'Enter' || event.key === 'Escape') {
+        taskSyncManager.taskCardStatus.dueStatus = 'done';
+        if (event.key === 'Escape') {
+            updateDueDisplay();
+            return;
+        }
+    }
+
+    if (dueString.trim() === '') {
+        due = null;
+    } else {
+        try {
+            let newDue = plugin.taskParser.parseDue(dueString);
+            if (newDue) {
+                due = newDue;
+            } else {
+                new Notice(`[TaskCard] Invalid due date: ${dueString}`);
+                dueString = due ? due.string : '';
+            }
+        } catch (e) {
             logger.error(e);
-          }
-          if (!newDue) { 
-            new Notice(`[TaskCard] Invalid due date: ${dueString}`);
             dueString = due ? due.string : '';
-          } else {
-            due = newDue;
-          }
-          taskSyncManager.updateObsidianTaskAttribute('due', due);
-          updateDueDisplay();
-      } else if (event.key === 'Escape') {
-          event.preventDefault();
-          // taskSyncManager.setTaskCardStatus('dueStatus', 'done');
-          taskSyncManager.taskCardStatus.dueStatus = 'done';
-      }
+        }
+    }
+
+    taskSyncManager.updateObsidianTaskAttribute('due', due);
+    updateDueDisplay();
   }
 
   function updateDueDisplay(): string {
@@ -120,9 +124,7 @@
     node.style.width = Math.min(Math.max(newWidth, minWidth), maxWidth) + 'px';
   }
 
-  // let isEditingDue = taskSyncManager.taskCardStatus.dueStatus === 'editing';
-  let displayDue = taskSyncManager.obsidianTask.hasDue() || taskSyncManager.taskCardStatus.dueStatus === 'editing';
-  // let displayDuration = taskSyncManager.obsidianTask.hasDuration() || taskSyncManager.getTaskCardStatus('durationStatus') === 'editing';
+  $: displayDue = taskSyncManager.obsidianTask.hasDue() || taskSyncManager.taskCardStatus.dueStatus === 'editing';
 
 </script>
 

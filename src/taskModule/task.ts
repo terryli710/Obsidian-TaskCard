@@ -136,7 +136,7 @@ export class ObsidianTask implements TaskProperties {
   hasDue(): boolean {
     if (!this.due) return false;
     // return if the due string is not empty
-    return !!this.due.string;
+    return !!this.due.string.trim();
   }
 
   hasDuration(): boolean {

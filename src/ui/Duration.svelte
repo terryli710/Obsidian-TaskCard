@@ -9,14 +9,12 @@
   import { Notice } from "obsidian";
   import History from "../components/icons/History.svelte";
 
-
   export let taskSyncManager: ObsidianTaskSyncManager;
-  // export let plugin: TaskCardPlugin;
   export let params: TaskDisplayParams;
+  export let displayDuration: boolean;
   let duration: Duration | null;
   duration = taskSyncManager.obsidianTask.hasDuration() ? taskSyncManager.obsidianTask.duration : null;
 
-  // TODO: bug: when there's no duration, added zero duration or wrong duration string;
 
   function customDurationHumanizer(duration: Duration) {
     if (duration.hours === 0) {
@@ -68,30 +66,61 @@
           }
       }
       taskSyncManager.taskCardStatus.durationStatus = 'editing';
-      durationInputString = duration ? `${pad(duration.hours, 2)}:${pad(duration.minutes, 2)}` : '00:00';
+      durationInputString = duration ? `${pad(duration.hours, 2)}:${pad(duration.minutes, 2)}` : '01:00';
       origDurationInputString = durationInputString;
       await tick();
       focusAndSelect(durationInputElement);
   }
 
   function finishDurationEditing(event: KeyboardEvent | MouseEvent) {
-      if (event instanceof MouseEvent) {
-          return;
-      }
+    if (event instanceof MouseEvent) {
+        return;
+    }
 
-      if (event.key === 'Enter' && durationInputString !== origDurationInputString) {
-          const [hours, minutes] = durationInputString.split(":").map(Number);
-          duration = { hours, minutes };
-          taskSyncManager.updateObsidianTaskAttribute('duration', duration);
-          origDurationInputString = durationInputString;
-      }
+    // Handle the Escape key, as the logic is simpler
+    if (event.key === 'Escape') {
+        event.preventDefault();
+        taskSyncManager.taskCardStatus.durationStatus = 'done';
+        return;
+    }
 
-      if (event.key === 'Escape' || event.key === 'Enter') {
-          event.preventDefault();
-          taskSyncManager.taskCardStatus.durationStatus = 'done';
-      }
+    // Main logic for the Enter key
+    if (event.key === 'Enter') {
+        logger.debug(`duration finished: ${durationInputString}`);
+        
+        // Early exit for empty string or 00:00 duration
+        if (durationInputString.trim() === '' || isValidZeroDuration(durationInputString)) {
+            duration = null;
+        } else {
+            const parsedDuration = parseDurationInput(durationInputString);
+            if (parsedDuration) {
+                duration = parsedDuration;
+            } else {
+                new Notice(`[TaskCard] Invalid duration format: ${durationInputString}`);
+            }
+        }
 
-  }
+        taskSyncManager.updateObsidianTaskAttribute('duration', duration);
+        origDurationInputString = durationInputString;
+        
+        updateDurationDisplay();
+        event.preventDefault();
+        taskSyncManager.taskCardStatus.durationStatus = 'done';
+    }
+}
+
+function isValidZeroDuration(input: string): boolean {
+    const [hours, minutes] = input.split(":").map(Number);
+    return hours === 0 && minutes === 0;
+}
+
+function parseDurationInput(input: string): { hours: number, minutes: number } | null {
+    const [hours, minutes] = input.split(":").map(Number);
+    if (!isNaN(hours) && !isNaN(minutes)) {
+        return { hours, minutes };
+    }
+    return null;
+}
 
 
   // Action function to focus and select the input content
@@ -103,7 +132,7 @@
   }
 
   let displayDue: boolean = taskSyncManager.obsidianTask.hasDue() || taskSyncManager.getTaskCardStatus('dueStatus') === 'editing';
-  let displayDuration: boolean = taskSyncManager.obsidianTask.hasDuration() || taskSyncManager.getTaskCardStatus('durationStatus') === 'editing';
+  $: displayDuration = taskSyncManager.obsidianTask.hasDuration() || taskSyncManager.getTaskCardStatus('durationStatus') === 'editing';
 
 
   </script>
@@ -129,7 +158,7 @@
         bind:value={durationInputString}
         bind:this={durationInputElement}
         class="task-card-duration"
-        placeholder="00:00"
+        placeholder="hh:mm"
       />
     {:else}
       <div class="task-card-duration">

@@ -230,9 +230,7 @@
       {#if descriptionProgress[1] * descriptionProgress[0] > 0 && !task.completed }
         <CircularProgressBar value={descriptionProgress[0]} max={descriptionProgress[1]} showDigits={false} />
       {/if}
-      {#if taskSyncManager.obsidianTask.hasDue()}
-        <Due taskSyncManager={taskSyncManager} plugin={plugin} params={params} />
-      {/if}
+      <Due taskSyncManager={taskSyncManager} plugin={plugin} params={params} displayDue={displayDue} />
       <Project taskSyncManager={taskSyncManager} params={params} />
     </div>
   </div>
@@ -263,12 +261,8 @@
 
   <div class="task-card-attribute-bottom-bar">
     <div class="task-card-attribute-bottom-bar-left">
-      {#if displayDue}
-        <Due taskSyncManager={taskSyncManager} plugin={plugin} params={params} />
-      {/if}
-      {#if displayDuration}
-        <Duration taskSyncManager={taskSyncManager} params={params} />
-      {/if}
+      <Due taskSyncManager={taskSyncManager} plugin={plugin} params={params} displayDue={displayDue} />
+      <Duration taskSyncManager={taskSyncManager} params={params} displayDuration={displayDuration} />
       {#if displayDue || displayDuration}
         <div class="task-card-attribute-separator"></div>
       {/if}
