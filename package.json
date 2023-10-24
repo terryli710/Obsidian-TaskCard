@@ -48,10 +48,13 @@
     "ts-jest": "^29.1.1"
   },
   "dependencies": {
+    "humanize-duration": "^3.30.0",
+    "humanized-duration": "^0.0.1",
     "lucide-svelte": "^0.268.0",
     "marked": "^6.0.0",
     "obsidian": "latest",
     "obsidian-dataview": "^0.5.56",
+    "parse-duration": "^1.1.0",
     "runtypes": "^6.7.0",
     "sugar": "^2.0.6",
     "svelte": "^4.1.1",

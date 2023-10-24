@@ -17,6 +17,7 @@
     import { SettingStore } from '../settings';
     import { DescriptionParser } from '../taskModule/description';
     import CircularProgressBar from '../components/CircularProgressBar.svelte';
+    import Duration from './Duration.svelte';
 
     export let taskSyncManager: ObsidianTaskSyncManager;
     export let plugin: TaskCardPlugin;
@@ -98,7 +99,7 @@
       // Separator
       cardMenu.addSeparator();
 
-      // Group 1: Task Description and Due Date
+      // Group 1: Task Description and Due Date and Duration
       if (!taskSyncManager.obsidianTask.hasDescription()) {
         cardMenu.addItem((item) => {
           item.setTitle('Add Description');
@@ -123,6 +124,7 @@
           item.setIcon('plus');
           item.onClick((evt) => {
             taskSyncManager.taskCardStatus.dueStatus = 'editing';
+            displayDue = taskSyncManager.obsidianTask.hasDue() || taskSyncManager.getTaskCardStatus('dueStatus') === 'editing';
           });
         });
       } else {
@@ -131,6 +133,25 @@
           item.setIcon('trash');
           item.onClick((evt) => {
             taskSyncManager.updateObsidianTaskAttribute('due', null);
+          });
+        });
+      }
+
+      if (!taskSyncManager.obsidianTask.hasDuration()) {
+        cardMenu.addItem((item) => {
+          item.setTitle('Add Duration');
+          item.setIcon('plus');
+          item.onClick((evt) => {
+            taskSyncManager.taskCardStatus.durationStatus = 'editing';
+            displayDuration = taskSyncManager.obsidianTask.hasDue() || taskSyncManager.getTaskCardStatus('dueStatus') === 'editing';
+          });
+        });
+      } else {
+        cardMenu.addItem((item) => {
+          item.setTitle('Delete Duration');
+          item.setIcon('trash');
+          item.onClick((evt) => {
+            taskSyncManager.updateObsidianTaskAttribute('duration', null);
           });
         });
       }
@@ -186,6 +207,8 @@
       cardMenu.showAtPosition({ x: event.clientX, y: event.clientY });
     }
 
+    let displayDue: boolean = taskSyncManager.obsidianTask.hasDue() || taskSyncManager.getTaskCardStatus('dueStatus') === 'editing';
+    let displayDuration: boolean = taskSyncManager.obsidianTask.hasDuration() || taskSyncManager.getTaskCardStatus('durationStatus') === 'editing';
 
 </script>
 
@@ -237,8 +260,14 @@
 
   <div class="task-card-attribute-bottom-bar">
     <div class="task-card-attribute-bottom-bar-left">
-      {#if taskSyncManager.obsidianTask.hasDue() || taskSyncManager.getTaskCardStatus('dueStatus') === 'editing'}
+      {#if displayDue}
         <Due taskSyncManager={taskSyncManager} plugin={plugin} params={params} />
+      {/if}
+      {#if displayDuration}
+        <Duration taskSyncManager={taskSyncManager} params={params} />
+      {/if}
+      {#if displayDue || displayDuration}
+        <div class="task-card-attribute-separator"></div>
       {/if}
       <Labels taskSyncManager={taskSyncManager} />
     </div>

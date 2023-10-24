@@ -152,6 +152,7 @@ button.label-plus-button {
   color: var(--tag-color);
   background-color: var(--tag-background);
   border-radius: 50%;
+  padding-top: 3px;
 }
 
 button.label-plus-button:hover {

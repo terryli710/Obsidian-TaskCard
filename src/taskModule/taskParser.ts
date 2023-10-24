@@ -2,11 +2,12 @@ import { logger } from '../utils/log';
 import { escapeRegExp, extractTags } from '../utils/regexUtils';
 import { kebabToCamel } from '../utils/stringCaseConverter';
 import { toArray, toBoolean } from '../utils/typeConversion';
-import { DueDate, ObsidianTask, Order, Priority, TaskProperties, TextPosition } from './task';
+import { DueDate, Duration, ObsidianTask, Order, Priority, TaskProperties, TextPosition } from './task';
 import { Project, ProjectModule } from './project';
 import Sugar from 'sugar';
 import { SettingStore } from '../settings';
 import { DescriptionParser } from './description';
+import parse from 'parse-duration';
 
 
 export class TaskParser {
@@ -87,6 +88,7 @@ export class TaskParser {
     task.parent = attributes.parent || null;
     task.children = attributes.children || [];
     task.due = attributes.due || null;
+    task.duration = attributes.duration || null;
     task.metadata = attributes.metadata || {};
   
     // Get labels from content
@@ -241,6 +243,9 @@ export class TaskParser {
         case 'due':
           task.due = tryParseAttribute('due', this.parseDue.bind(this), attributeValue, 'other');
           break;
+        case 'duration':
+          task.duration = tryParseAttribute('duration', this.parseDuration.bind(this), attributeValue, 'other');
+          break;
         case 'project':
           task.project = tryParseAttribute('project', this.parseProject.bind(this), attributeValue, 'string');
           break;
@@ -328,6 +333,7 @@ export class TaskParser {
     task.order = parseJSONAttribute(metadata['order'], 'order', 0);
     task.project = parseJSONAttribute(metadata['project'], 'project', null);
     task.due = parseJSONAttribute(metadata['due'], 'due', null); 
+    task.duration = parseJSONAttribute(metadata['duration'], 'duration', null);
     task.metadata = parseJSONAttribute(metadata['metadata'], 'metadata', {}); 
 
     // Optional attributes
@@ -421,6 +427,19 @@ export class TaskParser {
       } as DueDate;
     }
   }
+
+  parseDuration(durationString: string): Duration | null {
+    const durationInMinutes = parse(durationString, 'm');
+    // Convert the difference to hours and minutes
+    const hours = Math.floor(durationInMinutes / 60);
+    const minutes = durationInMinutes % 60;
+
+    return {
+      hours: hours,
+      minutes: minutes
+    } as Duration;
+  }
+  
 
   parseProject(projectString: string): Project | null {
     const project = this.projectModule.getProjectByName(projectString);
