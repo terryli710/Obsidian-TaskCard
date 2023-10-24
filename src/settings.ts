@@ -7,7 +7,6 @@ import { logger } from './utils/log';
 import { LabelModule } from './taskModule/labels/index';
 import { GoogleSyncSetting, googleCalendarSyncSettings } from './settings/syncSettings/googleCalendarSettings';
 
-// TODO: the google filter tag cannot be the same as indicator tag.
 
 export let emptyProject: Project = {
   id: '',

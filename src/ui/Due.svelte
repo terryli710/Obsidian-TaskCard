@@ -23,6 +23,9 @@
 
   updateDueDisplay();
 
+  // TODO: bug: when there's no due, added an wrong due string;
+  // TODO: delete due string would result in due error and using original string;
+
 
   async function toggleEditMode(event: KeyboardEvent | MouseEvent) {
       if (taskSyncManager.taskCardStatus.dueStatus === 'done') {

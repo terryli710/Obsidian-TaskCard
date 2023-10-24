@@ -14,10 +14,6 @@ import type { IncomingMessage, ServerResponse } from 'http';
 import { logger } from '../../utils/log';
 import { GoogleSyncSetting, SettingStore, SyncSettings } from '../../settings';
 
-// TODO: bug: port 8888 is already in use.
-// TODO: try to get the token or refresh the token to make sure it's connected?
-// TODO: pop up the settings after login. fetch the calendars after login.
-
 export class GoogleCalendarAuthenticator {
     private static PORT: number = 8888;
     private static REDIRECT_URI = `http://127.0.0.1:${GoogleCalendarAuthenticator.PORT}/callback`;
@@ -123,18 +119,29 @@ export class GoogleCalendarAuthenticator {
             + '&code_challenge_method=S256'
             + '&scope=email%20profile%20https://www.googleapis.com/auth/calendar';
     }
-
     async startServerAndHandleResponse(syncSettings: GoogleSyncSetting, authURL: string): Promise<boolean> {
+        let isResolved = false;  // Flag to ensure the promise only resolves once.
+    
         return new Promise((resolve) => {
             this.authSession.server = http.createServer(async (req, res) => {
                 try {
+                    if (isResolved) {  // Reject any subsequent requests after the first one.
+                        res.writeHead(403);  // Forbidden
+                        res.end("Multiple authentication attempts detected. Please try again.");
+                        return;
+                    }
+    
                     if (!this.isValidCallback(req)) {
+                        res.writeHead(400);  // Bad Request
+                        res.end("Invalid callback.");
                         return resolve(false);
                     }
     
                     const { code, received_state } = this.extractParamsFromRequest(req);
     
                     if (received_state !== this.authSession.state) {
+                        res.writeHead(400);  // Bad Request
+                        res.end("State mismatch.");
                         return resolve(false);
                     }
     
@@ -142,9 +149,12 @@ export class GoogleCalendarAuthenticator {
                         syncSettings,
                         this.authSession.state, 
                         this.authSession.verifier, 
-                        code, false);
+                        code, false
+                    );
     
                     if (!token) {
+                        res.writeHead(400);  // Bad Request
+                        res.end("Failed to obtain token.");
                         return resolve(false);
                     }
     
@@ -157,16 +167,32 @@ export class GoogleCalendarAuthenticator {
     
                 } catch (e) {
                     logger.error(`Error: ${e}, Authentication failed`);
+                    res.writeHead(500);  // Internal Server Error
+                    res.end("Authentication failed due to an internal error.");
                     return resolve(false);
                 } finally {
                     this.closeServer();
                     this.resetAuthSession();
-                    resolve(true);
+                    if (!isResolved) {  // Make sure the promise resolves only once.
+                        isResolved = true;
+                        resolve(true);
+                    }
                 }
     
-            }).listen(GoogleCalendarAuthenticator.PORT, () => window.open(authURL));
+            }).listen(GoogleCalendarAuthenticator.PORT, () => {
+                window.open(authURL)
+                setTimeout(() => {
+                    if (!isResolved) {
+                        isResolved = true;
+                        this.closeServer();
+                        this.resetAuthSession();
+                        resolve(false);  // Timeout scenario: auto-resolve after a certain timeframe.
+                    }
+                }, 300000);  // 5 minutes timeout??
+            });
         });
     }
+    
 
 
     isValidCallback(req: IncomingMessage): boolean {

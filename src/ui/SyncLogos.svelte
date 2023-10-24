@@ -24,7 +24,7 @@
             if (key in metadata.syncMappings) {
                 // Check if the value for this key in metadata is not empty or "{}"
                 const metadataValue = metadata.syncMappings[key];
-                if (metadataValue && metadataValue !== "{}") {
+                if (metadataValue && metadataValue.id && metadataValue.id !== "") {
                     // Add the corresponding value from MetadataLogoMapping to logoList
                     logoList.push(MetadataLogoMapping[key]);
                 }

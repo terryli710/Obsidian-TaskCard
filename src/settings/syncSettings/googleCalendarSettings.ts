@@ -1,10 +1,11 @@
 
 
-import { PluginSettingTab, ButtonComponent, Setting } from 'obsidian'; // Assuming obsidian types based on the code context.
+import { PluginSettingTab, ButtonComponent, Setting, Notice } from 'obsidian'; // Assuming obsidian types based on the code context.
 import { GoogleCalendarAuthenticator } from '../../api/googleCalendarAPI/authentication';
 import { ProjectModule } from '../../taskModule/project';
 import { GoogleCalendarAPI } from '../../api/googleCalendarAPI/calendarAPI';
-import { SyncSetting } from '../../settings';
+import { SettingStore, SyncSetting } from '../../settings';
+import { logger } from '../../utils/log';
 
 export interface GoogleSyncSetting extends SyncSetting {
     clientID: string;
@@ -84,15 +85,18 @@ export async function googleCalendarSyncSettings(
 
     let doesNeedFilters: boolean = pluginSettings.syncSettings.googleSyncSetting.doesNeedFilters;
 
-    // 2. Google default calendar selection
-    if (!googleCalendarAPI) return;
-    const calendars = googleCalendarAPI.getCalendars();
-    const calendarOptions: Record<string, string> = {};
-    (await calendars).forEach((calendar) => {
-        calendarOptions[calendar.id] = calendar.summary;
-    });
+    // Settings after login
+    // logger.debug(`googleSetting.isLogin: ${googleSettings.isLogin}, googleCalendarAPI is not defined: ${!googleCalendarAPI}`);
+    if (googleSettings.isLogin && googleCalendarAPI) {
+        logger.info(`[TaskCard] loading settings after login`);
+        // 2. Google default calendar selection
+        const calendars = googleCalendarAPI.getCalendars();
+        const calendarOptions: Record<string, string> = {};
+        (await calendars).forEach((calendar) => {
+            calendarOptions[calendar.id] = calendar.summary;
+        });
 
-    new Setting(containerEl)
+        new Setting(containerEl)
         .setName("Default Calendar")
         .addDropdown(dropdown => {
             dropdown
@@ -103,67 +107,76 @@ export async function googleCalendarSyncSettings(
                 })
         })
 
-    // 3. Task sync filter settings
-    new Setting(containerEl)
-    .setName("Task Sync Filter")
-    .then((setting) => {
-        setting.descEl.appendChild(
-            createFragment((frag) => {
-                frag.appendText(
-                    "Turn on this setting if you want only a subset of tasks to be synced with Google Calendar. "
-                );
-                frag.createEl('br');
-                frag.appendText("- Adding a tag/project filter means that ONLY tasks with that tag/project will be synced. ");
-                frag.createEl('br');
-                frag.appendText("- Adding BOTH filters means that tasks with both the tag and the project will be synced.");
-            })
-        );
-    })
-    .addToggle(toggle => {
-        toggle
-        .setValue(doesNeedFilters)
-        .onChange(value => {
-            doesNeedFilters = value;
-            writeSettings(old => old.syncSettings.googleSyncSetting.doesNeedFilters = value);
-            display();
-        })
-    })
-
-    // if filter is turned on
-    let filterTag: string = pluginSettings.syncSettings.googleSyncSetting.filterTag;
-    let filterProject: string = pluginSettings.syncSettings.googleSyncSetting.filterProject;
-    if (doesNeedFilters) {
-
-        // Task filter settings
+        // 3. Task sync filter settings
         new Setting(containerEl)
-        .setName("Tag Filter")
-        .addText(text => {
-            text
-            .setPlaceholder('Tag to filter, e.g. #calendar')
-            .setValue(filterTag)
+        .setName("Task Sync Filter")
+        .then((setting) => {
+            setting.descEl.appendChild(
+                createFragment((frag) => {
+                    frag.appendText(
+                        "Turn on this setting if you want only a subset of tasks to be synced with Google Calendar. "
+                    );
+                    frag.createEl('br');
+                    frag.appendText("- Adding a tag/project filter means that ONLY tasks with that tag/project will be synced. ");
+                    frag.createEl('br');
+                    frag.appendText("- Adding BOTH filters means that tasks with both the tag and the project will be synced.");
+                })
+            );
+        })
+        .addToggle(toggle => {
+            toggle
+            .setValue(doesNeedFilters)
             .onChange(value => {
-                filterTag = value;
-                writeSettings(old => old.syncSettings.googleSyncSetting.filterTag = value);
+                doesNeedFilters = value;
+                writeSettings(old => old.syncSettings.googleSyncSetting.doesNeedFilters = value);
+                display();
             })
         })
 
-        // Project filter settings
-        new Setting(containerEl)
-        .setName("Project Filter")
-        .addDropdown(dropdown => {
-            const projects = projectModule.getProjectsData();
-            dropdown
-            .addOption('', 'No filter')
-            .addOptions(projects.reduce((acc, project) => {
-                acc[project.id] = project.name;
-                return acc;
-            }, {}))
-            .setValue(filterProject)
-            .onChange(value => {
-                filterProject = value;
-                writeSettings(old => old.syncSettings.googleSyncSetting.filterProject = value);
-            })
-        })
+        // if filter is turned on
+        let filterTag: string = pluginSettings.syncSettings.googleSyncSetting.filterTag;
+        let filterProject: string = pluginSettings.syncSettings.googleSyncSetting.filterProject;
+        let indicatorTag: string;
+        SettingStore.subscribe((settings) => {
+            indicatorTag = settings.syncSettings.googleSyncSetting.filterTag;
+        });
+        if (doesNeedFilters) {
 
+            // Task filter settings
+            new Setting(containerEl)
+            .setName("Tag Filter")
+            .addText(text => {
+                text
+                .setPlaceholder('Tag to filter, e.g. #calendar')
+                .setValue(filterTag)
+                .onChange(value => {
+                    if (value === indicatorTag) {
+                        new Notice("Tag filter and indicator tag filter cannot be the same.");
+                        logger.error("Tag filter and indicator tag filter cannot be the same.");
+                        return;
+                    }
+                    filterTag = value;
+                    writeSettings(old => old.syncSettings.googleSyncSetting.filterTag = value);
+                })
+            })
+
+            // Project filter settings
+            new Setting(containerEl)
+            .setName("Project Filter")
+            .addDropdown(dropdown => {
+                const projects = projectModule.getProjectsData();
+                dropdown
+                .addOption('', 'No filter')
+                .addOptions(projects.reduce((acc, project) => {
+                    acc[project.id] = project.name;
+                    return acc;
+                }, {}))
+                .setValue(filterProject)
+                .onChange(value => {
+                    filterProject = value;
+                    writeSettings(old => old.syncSettings.googleSyncSetting.filterProject = value);
+                })
+            })
+        }
     }
 }

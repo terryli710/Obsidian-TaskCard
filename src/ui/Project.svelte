@@ -12,6 +12,8 @@
   export let taskSyncManager: ObsidianTaskSyncManager;
   export let params: TaskDisplayParams;
 
+  // TODO: if there's too many project, the popup or dropdown should show which?
+
   let project: Project | null = taskSyncManager.obsidianTask.hasProject() ? taskSyncManager.obsidianTask.project : null;
   let availableProjects: Project[] = [];
   SettingStore.subscribe((settings) => {

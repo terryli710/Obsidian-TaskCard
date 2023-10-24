@@ -5,7 +5,8 @@ import { requestUrl } from "obsidian";
 import { GoogleCalendarAuthenticator } from './authentication';
 import { logger } from '../../utils/log';
 
-export const callRequest = async (url: string, method: string, body: any, noAuth = false): Promise<any> => {
+export const callRequest = async (url: string, method: string, body: any, noAuth = false, retryCount = 0): Promise<any> => {
+    const MAX_RETRIES = 3; // HARDCODED VALUE
     const requestHeaders: Record<string, string> = { 'Content-Type': 'application/json' };
     
     if (!noAuth) {
@@ -32,6 +33,13 @@ export const callRequest = async (url: string, method: string, body: any, noAuth
         throwGoogleApiError("Request failed", method, url, body, response?.status ?? 500, { error: error.message });
     }
 
+    // If the response indicates unauthorized and retry count is less than the max, refresh token and retry
+    if (response.status === 401 && retryCount < MAX_RETRIES) {
+        logger.info("Unauthorized response. Attempting to refresh token and retry.");
+        await new GoogleCalendarAuthenticator().refreshAccessToken();  // Assuming you have this method.
+        return callRequest(url, method, body, noAuth, retryCount + 1);
+    }
+
     if (response.status >= 300) {
         let responseBody;
         try {
@@ -51,7 +59,6 @@ export const callRequest = async (url: string, method: string, body: any, noAuth
 
     return responseJson;
 };
-
 
 async function processResponse(response: any) {
     // logger.debug(`Received response - status: ${response.status}`);

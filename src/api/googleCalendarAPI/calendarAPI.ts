@@ -64,13 +64,13 @@ export class GoogleCalendarAPI {
     filterCreationEvent(event: TaskChangeEvent): boolean {
         // logic to filter creation events: some events should not be created by google calendar
         // 1. intrinsic filter: task without due date won't be created
-        if (!event.currentState.due.date) return false;
+        if (!event.currentState.due?.date) return false; // Optional chaining is used here
         // 2. setting based filter: if there's filter project or tag, check if the task is in the project or tag
         if (this.googleSyncSetting.filterProject) {
-            if (this.googleSyncSetting.filterProject !== event.currentState.project.id) return false;
+            if (this.googleSyncSetting.filterProject !== event.currentState.project?.id) return false;
         }
         if (this.googleSyncSetting.filterTag) {
-            if (!event.currentState.labels.includes(this.googleSyncSetting.filterTag)) return false;
+            if (!event.currentState.labels?.includes(this.googleSyncSetting.filterTag)) return false;
         }
         return true;
     }
