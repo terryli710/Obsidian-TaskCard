@@ -16,6 +16,7 @@ import { CreateProjectModal } from './modal/createProjectModal';
 import { TaskChangeAPI, TaskChangeEvent, TaskChangeType, getUpdatedProperties } from './taskModule/taskAPI';
 import { CodeBlockProcessor } from './renderer/StaticTaskListRenderer';
 import { ExternalAPIManager } from './api/externalAPIManager';
+import _ from 'lodash';
 
 
 export default class TaskCardPlugin extends Plugin {
@@ -75,14 +76,11 @@ export default class TaskCardPlugin extends Plugin {
     // Initialize settings with default values
     let initialSettings = JSON.parse(JSON.stringify(DefaultSettings));
   
-    // Update the initial settings with any saved settings
-    SettingStore.update((old) => {
-      return {
-        ...initialSettings, // Start with default settings
-        ...old,             // Override with old settings (if any)
-        ...loadedSettings   // Finally, override with loaded settings
-      };
-    });
+    // Deep merge the objects
+    const mergedSettings = _.merge({}, initialSettings, loadedSettings);
+  
+    // Update the settings in your store
+    SettingStore.update(() => mergedSettings);
   }
   
 
