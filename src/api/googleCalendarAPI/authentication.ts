@@ -14,6 +14,9 @@ import type { IncomingMessage, ServerResponse } from 'http';
 import { logger } from '../../utils/log';
 import { GoogleSyncSetting, SettingStore, SyncSettings } from '../../settings';
 
+// TODO: bug: port 8888 is already in use.
+// TODO: try to get the token or refresh the token to make sure it's connected?
+// TODO: pop up the settings after login. fetch the calendars after login.
 
 export class GoogleCalendarAuthenticator {
     private static PORT: number = 8888;

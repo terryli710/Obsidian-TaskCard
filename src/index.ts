@@ -191,7 +191,7 @@ export default class TaskCardPlugin extends Plugin {
         let newLines: string[] = [];
         for (let i = 0; i < selectionLines.length; i++) {
           const line = selectionLines[i];
-          isTask = line.trim().startsWith('- [ ]');
+          isTask = /^\-\s*\[[ \-\+\*]\]/.test(line.trim());
           indentation = line.length - line.trimStart().length;
           const isSubTask = prevIsTask && prevIndentation < indentation;
           if (isTask && !isSubTask) {

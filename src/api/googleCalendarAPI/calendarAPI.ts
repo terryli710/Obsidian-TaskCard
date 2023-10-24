@@ -52,63 +52,6 @@ export class GoogleCalendarAPI {
         // logger.debug(`defaultCalendar: ${JSON.stringify(this.defaultCalendar)}`);
     }
 
-    // async test() {
-    //     try {
-    //         const startOfMonth = moment().startOf("month");
-    //         const endOfMonth = moment().endOf("month");
-
-    //         // Fetch events from the calendar within the specified date range
-    //         // const events: GoogleEvent[] = await this.listEventsInCalendar(this.calendars[0], startOfMonth, endOfMonth);
-
-    //         // console.log('Events in Calendar:', events);
-
-    //         // Create a test event
-    //         const testEvent: GoogleEvent = {
-    //             summary: 'Test Event',
-    //             description: 'This is a test event.',
-    //             start: {
-    //                 dateTime: moment().add(1, 'days').format(), // starts tomorrow
-    //                 timeZone: 'America/Los_Angeles',
-    //             },
-    //             end: {
-    //                 dateTime: moment().add(2, 'days').format(), // ends the day after tomorrow
-    //                 timeZone: 'America/Los_Angeles',
-    //             },
-    //             // Add other event properties as needed
-    //         };
-
-    //         // Add the test event to the calendar
-    //         const createdEvent = await this.createEvent(testEvent);
-
-    //         console.log('Test Event Created:', createdEvent);
-
-    //         // Ensure the event was created before attempting update or deletion
-    //         if (createdEvent && createdEvent.id) {
-    //             // Prepare an update for the test event
-    //             const updatedEventInfo = {
-    //                 ...createdEvent, // This keeps existing event properties
-    //                 summary: 'Updated Test Event',
-    //                 description: 'This is an updated description for the test event.',
-    //                 // Add other event properties to update as needed
-    //             };
-
-    //             // Attempt to update the event
-    //             const updatedEvent = await this.updateEvent(updatedEventInfo);
-
-    //             if (updatedEvent) {
-    //                 console.log('Test Event Updated Successfully:', updatedEvent);
-    //             } else {
-    //                 console.log('Failed to Update Test Event:', createdEvent);
-    //             }
-
-    //         } else {
-    //             console.error('Test Event Creation Failed:', testEvent);
-    //         }
-    //     } catch (error) {
-    //         console.error('An error occurred:', error);
-    //     }
-    // }
-
     async handleLocalTaskCreation(event: TaskChangeEvent): Promise<string> {
         if (event.type !== TaskChangeType.ADD) return '';
         if (this.filterCreationEvent(event) === false) return '';

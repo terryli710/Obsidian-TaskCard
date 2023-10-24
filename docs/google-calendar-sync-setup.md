@@ -61,3 +61,9 @@
 - Click on **CREATE**;
 
 ## Copy and Paste Your Client ID and Secret
+
+- Go to settings of the plugin and copy-paste the **Client ID** and **Client Secret**.
+- Click on **Login**, this will take you to the login page of the plugin.
+- Select the correct google account and login.
+- "Google hasn’t verified this app": Click on **Continue** because you created the application.
+- You should see login successful message.
