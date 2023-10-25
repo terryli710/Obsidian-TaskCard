@@ -32,21 +32,21 @@ export class DescriptionParser {
   }
 
   // Parses the description from a given task element
-  static parseDescriptionFromTaskEl(taskElement: HTMLElement): string {
-      const listElements = DescriptionParser.extractListEls(taskElement);
-      if (listElements.length === 0) { return ""; }
-      let descriptionMarkdown = "";
+    static parseDescriptionFromTaskEl(taskElement: HTMLElement): string {
+        const listElements = DescriptionParser.extractListEls(taskElement);
+        if (listElements.length === 0) { return ""; }
+        let descriptionMarkdown = "";
 
-      for (const listEl of listElements) {
-          try {
-              descriptionMarkdown += htmlToMarkdown(listEl.outerHTML) + "\n";
-          } catch (error) {
-              throw new Error(`Failed to convert HTML to Markdown: ${error.message}`);
-          }
-      }
+        for (const listEl of listElements) {
+            try {
+                descriptionMarkdown += htmlToMarkdown(listEl.outerHTML) + "\n";
+            } catch (error) {
+                throw new Error(`Failed to convert HTML to Markdown: ${error.message}`);
+            }
+        }
 
-      return descriptionMarkdown.trim();
-  }
+        return descriptionMarkdown.trim();
+    }
 
     static progressOfDescription(description: string): [number, number] {
       if (!description || description.trim().length === 0) { return [0, 0]; }
