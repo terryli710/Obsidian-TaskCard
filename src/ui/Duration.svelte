@@ -16,23 +16,7 @@
   let duration: Duration | null;
   duration = taskSyncManager.obsidianTask.hasDuration() ? taskSyncManager.obsidianTask.duration : null;
 
-  // Initialize the humanizer
-  // const humanizeDuration = require("humanize-duration");
-  // const shortEnglishHumanizer = humanizeDuration.humanizer({
-  //   language: "shortEn",
-  //   languages: {
-  //     shortEn: {
-  //       y: () => "y",
-  //       mo: () => "mo",
-  //       w: () => "w",
-  //       d: () => "d",
-  //       h: () => "h",
-  //       m: () => "m",
-  //       s: () => "s",
-  //       ms: () => "ms",
-  //     },
-  //   },
-  // });
+  // TODO: bug: when there's no duration, added zero duration or wrong duration string;
 
   function customDurationHumanizer(duration: Duration) {
     if (duration.hours === 0) {
@@ -134,6 +118,7 @@
     on:keydown={toggleDurationEditMode}
     role="button"
     tabindex="0"
+    aria-label="Duration"
   >
     <div class="task-card-duration-left-part">
       <span class="task-card-duration-prefix"><History width={"14"} height={"14"} ariaLabel="duration"/></span>

@@ -12,6 +12,8 @@
   export let taskSyncManager: ObsidianTaskSyncManager;
   export let params: TaskDisplayParams;
 
+  // TODO: if there's too many project, the popup or dropdown should show which?
+
   let project: Project | null = taskSyncManager.obsidianTask.hasProject() ? taskSyncManager.obsidianTask.project : null;
   let availableProjects: Project[] = [];
   SettingStore.subscribe((settings) => {
@@ -78,7 +80,11 @@
 {#if params.mode === "single-line"}
   <div class="task-card-project">
     {#if project}
-      <span class="project-color" style="background-color: {project.color};"></span>
+      <span 
+      class="project-color" 
+      style="background-color: {project.color};"
+      aria-label="Change Project"
+      ></span>
     {/if}
   </div>
 {:else}
@@ -132,6 +138,7 @@
             on:keydown={(evt) => searchProject(evt, project.name)}
             tabindex="0"
             role="button"
+            aria-label="Project - {project.name}"
           >
             {project.name}
           </div>

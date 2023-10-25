@@ -53,6 +53,10 @@ export class PositionedTaskCache {
         SettingStore.subscribe((settings) => {
           this.indicatorTag = settings.parsingSettings.indicatorTag;
         });
+        this.status = {
+          initialized: false,
+          refreshTimeStamp: 0
+        }
     }
 
     async initializeAndRefreshAllTasks() {
@@ -93,7 +97,8 @@ export class PositionedTaskCache {
       try {
         dataviewAPI = await this.getDataviewAPI();
       } catch (err) {
-        console.error("Error fetching dataview API:", err);
+        logger.error("Error fetching dataview API:", err);
+        return [];
       }
       let query = `TASK FROM #${this.indicatorTag} WHERE contains(text, "#${this.indicatorTag}")`;
       const queryResult: QueryResult = await dataviewAPI.tryQuery(query);
@@ -112,6 +117,7 @@ export class PositionedTaskCache {
         dataviewAPI = await this.getDataviewAPI();
       } catch (err) {
         console.error("Error fetching dataview API:", err);
+        return [];
       }
       let fromClause = `#${this.indicatorTag}`;
       

@@ -3,8 +3,7 @@ import { String } from 'runtypes';
 import { v4 as uuidv4 } from 'uuid';
 import { Project } from './project';
 import { TaskDisplayParams } from '../renderer/postProcessor';
-import { logger } from '../utils/log';
-import { isToday } from '../utils/dateTimeFormatter';
+import { SyncMappings } from '../api/externalAPIManager';
 
 export const DateOnly = String.withConstraint((s) =>
   /^\d{4}-\d{2}-\d{2}$/.test(s)
@@ -46,6 +45,7 @@ export interface TaskProperties {
   duration?: Duration | null;
   metadata?: {
     taskDisplayParams?: TaskDisplayParams | null;
+    syncMappings?: SyncMappings;
     [key: string]: any; 
   };
 }
@@ -69,6 +69,7 @@ export class ObsidianTask implements TaskProperties {
   
   public metadata?: {
     taskDisplayParams?: TaskDisplayParams | null;
+    syncMappings?: SyncMappings | null;
     [key: string]: any; 
   };
   
@@ -87,6 +88,25 @@ export class ObsidianTask implements TaskProperties {
     this.due = props?.due || null;
     this.duration = props?.duration || null;
     this.metadata = props?.metadata || {};
+  }
+
+  getCopy(): ObsidianTask {
+    return new ObsidianTask({
+      id: this.id,
+      content: this.content,
+      priority: this.priority,
+      description: this.description,
+      order: this.order,
+      project: this.project,
+      sectionID: this.sectionID,
+      labels: this.labels,
+      completed: this.completed,
+      parent: this.parent,
+      children: this.children,
+      due: this.due,
+      duration: this.duration,
+      metadata: this.metadata,
+    });
   }
 
   hasDescription() {

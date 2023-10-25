@@ -66,7 +66,9 @@
         role="button" 
         tabindex="0" 
         on:click={enableEditMode} 
-        on:keydown={enableEditMode}>
+        on:keydown={enableEditMode}
+        aria-label="Content"
+        >
         {content}
     </div>
 {/if}

@@ -12,7 +12,7 @@ export interface MarkdownTaskMetadata {
     docPosition: DocPosition;
   }
 
-interface CodeBlockProcessor {
+export interface CodeBlockProcessor {
     (source: string, el: HTMLElement, ctx: MarkdownPostProcessorContext): void | Promise<any>;
   }
 

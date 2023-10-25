@@ -13,6 +13,10 @@ import { TaskFormatter } from './taskModule/taskFormatter';
 import { TaskMonitor } from './taskModule/taskMonitor';
 import { TaskCardCache } from './query';
 import { CreateProjectModal } from './modal/createProjectModal';
+import { TaskChangeAPI, TaskChangeEvent, TaskChangeType, getUpdatedProperties } from './taskModule/taskAPI';
+import { CodeBlockProcessor } from './renderer/StaticTaskListRenderer';
+import { ExternalAPIManager } from './api/externalAPIManager';
+import _ from 'lodash';
 
 
 export default class TaskCardPlugin extends Plugin {
@@ -25,7 +29,11 @@ export default class TaskCardPlugin extends Plugin {
   public staticTaskListRenderManager: StaticTaskListRenderManager;
   public fileOperator: FileOperator;
   public taskMonitor: TaskMonitor;
+  public taskChangeAPI: TaskChangeAPI;
   public cache: TaskCardCache;
+  public externalAPIManager: ExternalAPIManager;
+
+  private static instance: TaskCardPlugin;
 
   constructor(app: App, pluginManifest: PluginManifest) {
     super(app, pluginManifest);
@@ -41,8 +49,25 @@ export default class TaskCardPlugin extends Plugin {
     this.fileOperator = new FileOperator(this, this.app);
     this.taskMonitor = new TaskMonitor(this, this.app, SettingStore);
     this.staticTaskListRenderManager = new StaticTaskListRenderManager(this);
+    this.taskChangeAPI = new TaskChangeAPI();
+    this.externalAPIManager = new ExternalAPIManager(SettingStore);
+    
+    function printChangeListener(event: TaskChangeEvent): void {
+      if (event.type === TaskChangeType.UPDATE) {
+        const updatedProperties = getUpdatedProperties(event.previousState, event.currentState);
+        logger.info(`Updated properties: ${JSON.stringify(updatedProperties)}`);
+      } else {
+        logger.info(`Received Task Change Event`, event);
+      }
+    }
+    this.taskChangeAPI.registerListener(printChangeListener);
+  
     this.cache = new TaskCardCache(this);
   }
+
+  public static getInstance(): TaskCardPlugin {
+		return TaskCardPlugin.instance;
+	}
   
   async loadSettings() {
     // Load saved settings from storage
@@ -51,14 +76,11 @@ export default class TaskCardPlugin extends Plugin {
     // Initialize settings with default values
     let initialSettings = JSON.parse(JSON.stringify(DefaultSettings));
   
-    // Update the initial settings with any saved settings
-    SettingStore.update((old) => {
-      return {
-        ...initialSettings, // Start with default settings
-        ...old,             // Override with old settings (if any)
-        ...loadedSettings   // Finally, override with loaded settings
-      };
-    });
+    // Deep merge the objects
+    const mergedSettings = _.merge({}, initialSettings, loadedSettings);
+  
+    // Update the settings in your store
+    SettingStore.update(() => mergedSettings);
   }
   
 
@@ -155,20 +177,65 @@ export default class TaskCardPlugin extends Plugin {
         projectCreationModel.open();
       }
     })
+
+    // a command to append indicator tag to each of the selected line, if they are tasks (and not subtasks)
+    this.addCommand({
+      id: 'task-card-add-indicator-tag',
+      name: 'Add Indicator Tags to Selected Tasks',
+      editorCallback: (editor: Editor) => {
+        const selectionLines = editor.getSelection().split('\n');
+        let isTask: boolean = false;
+        let indentation: number = 0;
+        let prevIsTask: boolean = false;
+        let prevIndentation: number = 0;
+        let newLines: string[] = [];
+        for (let i = 0; i < selectionLines.length; i++) {
+          const line = selectionLines[i];
+          isTask = /^\-\s*\[[ \-\+\*]\]/.test(line.trim());
+          indentation = line.length - line.trimStart().length;
+          const isSubTask = prevIsTask && prevIndentation < indentation;
+          if (isTask && !isSubTask) {
+            // Append the indicator tag to the task and continue the loop instead of breaking it
+            newLines.push(line + ` #${this.settings.parsingSettings.indicatorTag}`);
+          } else {
+            // If it's not a task, or it's a subtask, just add the original line
+            newLines.push(line);
+          }
+          // Save the current task status and indentation for the next iteration
+          prevIsTask = isTask;
+          prevIndentation = indentation;
+        }
+        // After exiting the loop, we need to join the new lines and replace the editor's selection with the new string
+        const newSelection = newLines.join('\n');
+        editor.replaceSelection(newSelection);
+      },
+    });
   }
 
   registerPostProcessors() {
     this.registerMarkdownPostProcessor(
       this.taskCardRenderManager.getPostProcessor()
     );
+  
+  let taskCardMarkdownCodeBlockProcessor: CodeBlockProcessor;
+
+  setTimeout(() => {
+    if (!taskCardMarkdownCodeBlockProcessor) {
+      this.registerMarkdownCodeBlockProcessor('taskcard', 
+        taskCardMarkdownCodeBlockProcessor = this.staticTaskListRenderManager.getCodeBlockProcessor()
+      );
+    }
+  }, 3000);
 
   //@ts-ignore
   this.registerEvent(this.app.metadataCache.on("dataview:index-ready", () => {
     setTimeout(() => {
-      this.cache.taskCache.initializeAndRefreshAllTasks.bind(this.cache.taskCache)(),
-      this.registerMarkdownCodeBlockProcessor('taskcard', 
-        this.staticTaskListRenderManager.getCodeBlockProcessor()
-      );
+      this.cache.taskCache.initializeAndRefreshAllTasks.bind(this.cache.taskCache)()
+      if (!taskCardMarkdownCodeBlockProcessor) {
+        this.registerMarkdownCodeBlockProcessor('taskcard', 
+          taskCardMarkdownCodeBlockProcessor = this.staticTaskListRenderManager.getCodeBlockProcessor()
+        );
+      }
     }, 20); // delay of 200 milliseconds
   }));
 
@@ -179,11 +246,13 @@ export default class TaskCardPlugin extends Plugin {
     this.projectModule.updateProjects(
       this.settings.userMetadata.projects as Project[]
     );
+    this.externalAPIManager.initAPIs();
     this.addSettingTab(new SettingsTab(this.app, this));
     this.registerEditorSuggest(new AttributeSuggest(this.app));
     this.registerPostProcessors();
     this.registerEvents();
     this.registerCommands();
+    TaskCardPlugin.instance = this;
 
     logger.info('Plugin loaded.');
   }

@@ -3,6 +3,7 @@ import { ObsidianTask } from './task';
 import TaskCardPlugin from '..';
 import { logger } from '../utils/log';
 
+
 type TaskCardStatus = {
   descriptionStatus: 'editing' | 'done';
   projectStatus: 'selecting' | 'done';
@@ -93,9 +94,13 @@ export class ObsidianTaskSyncManager implements ObsidianTaskSyncProps {
     );
   }
 
-  updateObsidianTaskAttribute(key: string, value: any): void {
+  async updateObsidianTaskAttribute(key: string, value: any): Promise<void> {
+    const origTask = this.obsidianTask.getCopy();
     this.obsidianTask[key] = value;
+    const newTask = this.obsidianTask.getCopy();
     logger.info(`successfully set ${key} to ${value}`);
+    const syncMetadata = await this.plugin.externalAPIManager.updateTask(newTask, origTask);
+    this.obsidianTask.metadata.syncMappings = syncMetadata;
     this.updateTaskToFile();
   }
 
@@ -144,5 +149,7 @@ export class ObsidianTaskSyncManager implements ObsidianTaskSyncProps {
       docLineStart,
       docLineEnd
     );
+
+    this.plugin.externalAPIManager.deleteTask(this.obsidianTask);
   }
 }
