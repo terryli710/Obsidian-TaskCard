@@ -62,27 +62,27 @@
             updateDueDisplay();
             return;
         }
-    }
 
-    if (dueString.trim() === '') {
-        due = null;
-    } else {
-        try {
-            let newDue = plugin.taskParser.parseDue(dueString);
-            if (newDue) {
-                due = newDue;
-            } else {
-                new Notice(`[TaskCard] Invalid due date: ${dueString}`);
+        if (dueString.trim() === '') {
+            due = null;
+        } else {
+            try {
+                let newDue = plugin.taskParser.parseDue(dueString);
+                if (newDue) {
+                    due = newDue;
+                } else {
+                    new Notice(`[TaskCard] Invalid due date: ${dueString}`);
+                    dueString = due ? due.string : '';
+                }
+            } catch (e) {
+                logger.error(e);
                 dueString = due ? due.string : '';
             }
-        } catch (e) {
-            logger.error(e);
-            dueString = due ? due.string : '';
         }
-    }
 
-    taskSyncManager.updateObsidianTaskAttribute('due', due);
-    updateDueDisplay();
+        taskSyncManager.updateObsidianTaskAttribute('due', due);
+        updateDueDisplay();
+    }
   }
 
   function updateDueDisplay(): string {
