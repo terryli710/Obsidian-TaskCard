@@ -4,7 +4,7 @@ import { PluginSettingTab, ButtonComponent, Setting, Notice } from 'obsidian'; /
 import { GoogleCalendarAuthenticator } from '../../api/googleCalendarAPI/authentication';
 import { ProjectModule } from '../../taskModule/project';
 import { GoogleCalendarAPI } from '../../api/googleCalendarAPI/calendarAPI';
-import { SettingStore, SyncSetting } from '../../settings';
+import { SettingStore, SyncSetting, TaskCardSettings } from '../../settings';
 import { logger } from '../../utils/log';
 
 export interface GoogleSyncSetting extends SyncSetting {
@@ -18,7 +18,7 @@ export interface GoogleSyncSetting extends SyncSetting {
 
 export async function googleCalendarSyncSettings(
     containerEl: HTMLElement,
-    pluginSettings: any, // Adjust with the specific type.
+    pluginSettings: TaskCardSettings,
     writeSettings: Function,
     display: Function,
     projectModule: ProjectModule,

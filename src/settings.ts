@@ -6,6 +6,7 @@ import { Project } from './taskModule/project';
 import { logger } from './utils/log';
 import { LabelModule } from './taskModule/labels/index';
 import { GoogleSyncSetting, googleCalendarSyncSettings } from './settings/syncSettings/googleCalendarSettings';
+import { cardDisplaySettings } from './settings/displaySettings';
 
 
 export let emptyProject: Project = {
@@ -102,7 +103,12 @@ export class SettingsTab extends PluginSettingTab {
     this.cardParsingSettings();
     // display settings
     this.containerEl.createEl('h2', { text: 'Display Settings' });
-    this.cardDisplaySettings();
+    cardDisplaySettings(
+        this.containerEl,
+        this.plugin.settings,
+        this.plugin.writeSettings.bind(this.plugin),
+        this.display.bind(this),
+    );
     // sync settings
     // 1. google calendar
     this.containerEl.createEl('h2', { text: 'Sync Settings' });
@@ -585,26 +591,26 @@ export class SettingsTab extends PluginSettingTab {
   }
   
 
-  cardDisplaySettings() {
-    new Setting(this.containerEl)
-      .setName('Default Display Mode')
-      .setDesc('The default display mode when creating a new task card.')
-      .addDropdown((dropdown) => {
-        dropdown
-          .addOptions({
-            'single-line': 'Preview Mode',
-            'multi-line': 'Detailed Mode'
-          })
-          .setValue(this.plugin.settings.displaySettings.defaultMode)
-          .onChange(async (value: string) => {
-            await this.plugin.writeSettings(
-              (old) => (old.displaySettings.defaultMode = value)
-            );
-            logger.info(`Default display mode updated: ${value}`);
-            new Notice(`[TaskCard] Default display mode updated: ${value}.`);
-          });
-      });
-  }
+  // cardDisplaySettings() {
+  //   new Setting(this.containerEl)
+  //     .setName('Default Display Mode')
+  //     .setDesc('The default display mode when creating a new task card.')
+  //     .addDropdown((dropdown) => {
+  //       dropdown
+  //         .addOptions({
+  //           'single-line': 'Preview Mode',
+  //           'multi-line': 'Detailed Mode'
+  //         })
+  //         .setValue(this.plugin.settings.displaySettings.defaultMode)
+  //         .onChange(async (value: string) => {
+  //           await this.plugin.writeSettings(
+  //             (old) => (old.displaySettings.defaultMode = value)
+  //           );
+  //           logger.info(`Default display mode updated: ${value}`);
+  //           new Notice(`[TaskCard] Default display mode updated: ${value}.`);
+  //         });
+  //     });
+  // }
 
 
 }
