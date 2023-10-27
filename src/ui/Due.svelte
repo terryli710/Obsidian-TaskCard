@@ -8,6 +8,7 @@
   import { TaskDisplayParams, TaskDisplayMode } from "../renderer/postProcessor";
   import { Notice } from "obsidian";
   import CalendarClock from "../components/icons/CalendarClock.svelte";
+    import moment from "moment";
 
   export let taskSyncManager: ObsidianTaskSyncManager;
   export let plugin: TaskCardPlugin;
@@ -24,7 +25,6 @@
   duration = taskSyncManager.obsidianTask.hasDuration() ? taskSyncManager.obsidianTask.duration : null;
 
   updateDueDisplay();
-
 
   async function toggleEditMode(event: KeyboardEvent | MouseEvent) {
       if (taskSyncManager.taskCardStatus.dueStatus === 'done') {
@@ -124,12 +124,52 @@
     node.style.width = Math.min(Math.max(newWidth, minWidth), maxWidth) + 'px';
   }
 
+
+  function convertDueToMoment(dueDate: DueDate): moment.Moment | null {
+    if (!dueDate.date) {
+      return null;  // Ensure the date is present.
+    }
+
+    let datetimeStr = dueDate.date;
+    if (dueDate.time) {
+      datetimeStr += ' ' + dueDate.time;
+    }
+
+    return moment(datetimeStr);
+  }
+
   $: displayDue = taskSyncManager.obsidianTask.hasDue() || taskSyncManager.taskCardStatus.dueStatus === 'editing';
+  
+  
+  // upcoming and ongoing
+  function isUpcoming(due: DueDate, currTime: moment.Moment, minuteGap: number = 15): boolean {
+    if (!due || !due.date || !due.time) { return false; }
+    // convert due to moment
+    const dueMoment = convertDueToMoment(due);
+    // calculate the time gap
+    const timeGap = moment.duration(dueMoment.diff(currTime)).asMinutes();
+    // check if the time gap is within the specified range
+    return timeGap > 0 && timeGap < minuteGap;
+  }
+
+  function isOngoing(due: DueDate, duration: Duration = undefined, currTime: moment.Moment): boolean {
+    if (!due || !due.date || !due.time || !duration) { return false; }
+    // convert due to moment
+    const dueMoment = convertDueToMoment(due);
+    // convert duration to moment
+    const endMoment = currTime.clone().add(duration.hours, 'hours').add(duration.minutes, 'minutes');
+    // calculate if the time gap is within the specified range
+    return currTime.isBetween(dueMoment, endMoment);
+  }
+
+  const now = moment();
+  const upcoming = isUpcoming(due, now);
+  const ongoing = isOngoing(due, duration, now);
 
 </script>
 
 {#if displayDue}
-  <div class="task-card-due-container {params.mode === 'single-line' ? 'mode-single-line' : 'mode-multi-line'}"
+  <div class="task-card-due-container {params.mode === 'single-line' ? 'mode-single-line' : 'mode-multi-line'} {upcoming ? 'upcoming' : ongoing ? 'ongoing' : ''}"
     on:click={toggleEditMode}
     on:keydown={toggleEditMode}
     aria-label="Due"
@@ -137,7 +177,9 @@
     tabindex="0"
   >
     <div class="task-card-due-left-part">
-      <span class="task-card-due-prefix"><CalendarClock width={"14"} height={"14"} ariaLabel="due"/></span>
+      <span class="task-card-due-prefix {upcoming ? 'upcoming' : ongoing ? 'ongoing' : ''}">
+        <CalendarClock width={"14"} height={"14"} ariaLabel="due"/>
+      </span>
     </div>
     {#if taskSyncManager.getTaskCardStatus('dueStatus') === 'editing'}
       <input
@@ -148,7 +190,7 @@
         class="task-card-due"
       />
     {:else}
-      <div class="task-card-due">
+      <div class="task-card-due {upcoming ? 'upcoming' : ongoing ? 'ongoing' : ''}">
         <div class="due-display">
           {dueDisplay}
         </div>
@@ -180,6 +222,14 @@
     padding-top: 1.5px;
   }
 
+  .task-card-due-prefix.ongoing {
+    color: var(--text-on-accent);
+  }
+
+  .task-card-due-prefix.ongoing:hover {
+    color: var(--text-on-accent-hover);
+  }
+
   .task-card-due-container {
     align-items: center;
     display: flex;
@@ -187,6 +237,10 @@
     overflow: hidden;
     font-size: var(--tag-size);
     border: var(--border-width) solid var(--text-accent);
+  }
+
+  .task-card-due-container.ongoing {
+    background-color: var(--interactive-accent);
   }
 
   .task-card-due-container.mode-multi-line {
@@ -213,11 +267,25 @@
     line-height: 1;
   }
 
+  .task-card-due.upcoming {
+    font-style: italic;
+    text-decoration: underline;
+  }
+
+  .task-card-due.ongoing {
+    color: var(--text-on-accent);
+  }
+
   /* This selector ensures that the cursor only changes to a hand pointer when the div is not empty */
   .task-card-due-container.mode-multi-line:not(:empty):hover {
     background-color: var(--background-modifier-hover);
     color: var(--text-accent-hover);
     cursor: pointer;
+  }
+
+  .task-card-due-container.mode-multi-line.ongoing:not(:empty):hover {
+    background-color: var(--interactive-accent-hover);
+    color: var(--text-accent-hover);
   }
 
   input.task-card-due {
@@ -229,7 +297,7 @@
     padding-right: var(--tag-padding-x);
     width: auto;
     height: auto;
-    color: var(--text-accent);
+    /* color: var(--text-accent); */
     white-space: nowrap;
     line-height: 1;
     font-family: var(--font-text);

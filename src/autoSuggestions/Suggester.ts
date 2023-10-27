@@ -12,8 +12,9 @@ export class AttributeSuggester {
   private projects: Project[];
   private nonInputtableAttributes: string[];
   private inputtableAttributes: string[];
+  private maxNumberOfSuggestions: number;
 
-  constructor(settingsStore: typeof SettingStore) {
+  constructor(settingsStore: typeof SettingStore, maxNumberOfSuggestions=10) {
     // Subscribe to the settings store
     settingsStore.subscribe((settings) => {
       this.startingNotation = settings.parsingSettings.markdownStartingNotation;
@@ -31,19 +32,16 @@ export class AttributeSuggester {
         'description',
         'metadata'
       ];
-  
-      // // Filter out the non-inputtable attributes
-      // this.inputtableAttributes = Object.keys(new ObsidianTask()).filter(
-      //   (attr) => !this.nonInputtableAttributes.includes(attr)
-      // );
-
-      this.inputtableAttributes = [
-        'due',
-        'duration',
-        'priority',
-        'project',
-      ]
     });
+
+    this.inputtableAttributes = [
+      'due',
+      'duration',
+      'priority',
+      'project',
+    ]
+
+    this.maxNumberOfSuggestions = maxNumberOfSuggestions;
   }
 
   buildSuggestions(lineText: string, cursorPos: number): SuggestInformation[] {
@@ -63,7 +61,7 @@ export class AttributeSuggester {
     suggestions = suggestions.concat(
       this.getProjectSuggestions(lineText, cursorPos)
     );
-    return suggestions;
+    return suggestions.slice(0, this.maxNumberOfSuggestions);
   }
 
   getAttributeSuggestions(
@@ -138,19 +136,19 @@ export class AttributeSuggester {
     return suggestions;
   }
 
+
   getDueSuggestions(lineText: string, cursorPos: number): SuggestInformation[] {
     let suggestions: SuggestInformation[] = [];
-
-    // Modify regex to capture the due date query
+  
     const dueRegexText = `${escapeRegExp(this.startingNotation)}\\s?due:(.*?)${escapeRegExp(this.endingNotation)}`;
     const dueRegex = new RegExp(dueRegexText, 'g');
     const dueMatch = matchByPositionAndGroup(lineText, dueRegex, cursorPos, 1);
-    if (!dueMatch) return suggestions; // No match
-
-    // Get the due date query from the captured group
+    if (!dueMatch) return suggestions; 
+  
     const dueQuery = (dueMatch[1] || '').trim();
-
-    const dueStringSelections = [
+    const dueQueryLower = dueQuery.toLowerCase();
+  
+    const level1Suggestions = [
       'today',
       'tomorrow',
       'Sunday',
@@ -163,21 +161,64 @@ export class AttributeSuggester {
       'next week',
       'next month',
       'next year'
-    ];
+    ]
+    const level2Suggestions = [
+      'at 9',
+      'at 10',
+      'at 11',
+      'at 12',
+      'at 1',
+      'at 2',
+      'at 3',
+      'at 4',
+      'at 5',
+      'at 6',
+      'at 7',
+      'at 8'
+    ]
 
-    // Use the dueQuery to filter the suggestions
-    const filteredDueStrings = dueStringSelections.filter((dueString) =>
-      dueString.toLowerCase().startsWith(dueQuery.toLowerCase())
-    );
+    const level3Suggestions = [
+      'am',
+      'pm',
+      ':15',
+      ':30',
+      ':45',
+    ]
 
-    suggestions = filteredDueStrings.map((dueString) => {
-      const replaceText = `${this.startingNotation}due: ${dueString}${this.endingNotation} `;
+    const level4Suggestions = [
+      'am',
+      'pm',
+    ]
+
+    const suggestionLevels = [level1Suggestions, level2Suggestions, level3Suggestions, level4Suggestions];
+    const levelInfo = determineLevel(dueQueryLower, suggestionLevels);
+    const filteredSuggestions = levelInfo.filteredSuggestions;
+
+    suggestions = filteredSuggestions.map((filteredSuggestion) => {
+        // Construct the replaceText with the dueQuery, the current suggestion, and a space if not the last level
+      const isLastLevel = suggestionLevels[suggestionLevels.length-1].contains(filteredSuggestion.trim());
+      if (!filteredSuggestion.startsWith(":")) {
+        filteredSuggestion = ` ${filteredSuggestion}`;
+      }
+      if (!isLastLevel) {
+        filteredSuggestion = `${filteredSuggestion} `;
+      }
+      const replaceText = `${this.startingNotation}due: ${dueQuery.trim()}${filteredSuggestion}${this.endingNotation}`;
+
+      // Set the cursor position to be right after the current suggestion
+      let cursorPosition: number;
+      if (isLastLevel) {
+        cursorPosition = dueMatch.index + `${this.startingNotation}due: ${dueQuery.trim()}${filteredSuggestion}${this.endingNotation}`.length;
+      } else {
+        cursorPosition = dueMatch.index + `${this.startingNotation}due: ${dueQuery.trim()}${filteredSuggestion}`.length;
+      }
+
       return {
-        displayText: dueString,
+        displayText: filteredSuggestion,
         replaceText: replaceText,
         replaceFrom: dueMatch.index,
         replaceTo: dueMatch.index + dueMatch[0].length,
-        cursorPosition: dueMatch.index + replaceText.length
+        cursorPosition: cursorPosition
       };
     });
 
@@ -346,4 +387,34 @@ export function adjustEndPosition(
     }
   }
   return 0;
+}
+
+
+interface LevelInfo {
+  level: number;
+  remainingQuery: string;
+  filteredSuggestions: string[];
+}
+
+function determineLevel(dueQuery: string, suggestionLevels: string[][]): LevelInfo {
+  let currentQuery = dueQuery.trim();
+  let currentLevel = 0;
+  let filteredSuggestions: string[] = [];
+
+  for (const suggestions of suggestionLevels) {
+      const matchingSuggestion = suggestions.find(suggestion => currentQuery.startsWith(suggestion));
+      if (matchingSuggestion) {
+          currentLevel++;
+          currentQuery = currentQuery.slice(matchingSuggestion.length).trim();
+      } else {
+          filteredSuggestions = suggestions.filter(suggestion => suggestion.startsWith(currentQuery));
+          break;
+      }
+  }
+
+  return {
+      level: currentLevel,
+      remainingQuery: currentQuery,
+      filteredSuggestions: filteredSuggestions,
+  };
 }
