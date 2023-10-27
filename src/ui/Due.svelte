@@ -152,24 +152,51 @@
     return timeGap > 0 && timeGap < minuteGap;
   }
 
-  function isOngoing(due: DueDate, duration: Duration = undefined, currTime: moment.Moment): boolean {
-    if (!due || !due.date || !due.time || !duration) { return false; }
-    // convert due to moment
-    const dueMoment = convertDueToMoment(due);
-    // convert duration to moment
-    const endMoment = currTime.clone().add(duration.hours, 'hours').add(duration.minutes, 'minutes');
-    // calculate if the time gap is within the specified range
-    return currTime.isBetween(dueMoment, endMoment);
+  enum TaskDueStatus {
+    Upcoming = "upcoming",
+    Ongoing = "ongoing",
+    PassDue = "passDue",
+    Passed= "passed"
   }
 
-  const now = moment();
-  const upcoming = isUpcoming(due, now);
-  const ongoing = isOngoing(due, duration, now);
+  function getTaskDueStatus(task: ObsidianTask, minuteGap: number = 15): TaskDueStatus | null {
+    const due = task.due;
+    let duration = task.duration;
+    const currTime = moment();
+    const finished = task.completed;
+    if (!due) { return null; }
+    const dueMoment = convertDueToMoment(due);
+    const timeGap = moment.duration(dueMoment.diff(currTime)).asMinutes();
+    // upcoming
+    if (timeGap > 0 && timeGap < minuteGap) {
+      return TaskDueStatus.Upcoming;
+    }
+    if (!duration) { duration = { hours: 0, minutes: 0 }; }
+    if (!duration.hours) { duration.hours = 0; }
+    if (!duration.minutes) { duration.minutes = 0; }
+    
+    // ongoing
+    const endMoment = dueMoment.clone().add(duration.hours, 'hours').add(duration.minutes, 'minutes');
+    if (currTime.isBetween(dueMoment, endMoment)) {
+      return TaskDueStatus.Ongoing;
+    }
+    // pass due
+    if (currTime.isAfter(endMoment) && !finished) {
+      return TaskDueStatus.PassDue;
+    }
+    // passed
+    if (currTime.isAfter(endMoment) && finished) {
+      return TaskDueStatus.Passed;
+    }
+    return null;
+  }
+
+  const taskDueStatus = getTaskDueStatus(taskSyncManager.obsidianTask, 15);
 
 </script>
 
 {#if displayDue}
-  <div class="task-card-due-container {params.mode === 'single-line' ? 'mode-single-line' : 'mode-multi-line'} {upcoming ? 'upcoming' : ongoing ? 'ongoing' : ''}"
+  <div class="task-card-due-container {params.mode === 'single-line' ? 'mode-single-line' : 'mode-multi-line'} {taskDueStatus ? taskDueStatus : ''}"
     on:click={toggleEditMode}
     on:keydown={toggleEditMode}
     aria-label="Due"
@@ -177,7 +204,7 @@
     tabindex="0"
   >
     <div class="task-card-due-left-part">
-      <span class="task-card-due-prefix {upcoming ? 'upcoming' : ongoing ? 'ongoing' : ''}">
+      <span class="task-card-due-prefix {taskDueStatus ? taskDueStatus : ''}">
         <CalendarClock width={"14"} height={"14"} ariaLabel="due"/>
       </span>
     </div>
@@ -190,7 +217,7 @@
         class="task-card-due"
       />
     {:else}
-      <div class="task-card-due {upcoming ? 'upcoming' : ongoing ? 'ongoing' : ''}">
+      <div class="task-card-due {taskDueStatus ? taskDueStatus : ''}">
         <div class="due-display">
           {dueDisplay}
         </div>
@@ -226,6 +253,14 @@
     color: var(--text-on-accent);
   }
 
+  .task-card-due-prefix.passDue {
+    color: var(--text-warning);
+  }
+
+  .task-card-due-prefix.passed {
+    color: var(--text-faint);
+  }
+
   .task-card-due-prefix.ongoing:hover {
     color: var(--text-on-accent-hover);
   }
@@ -241,6 +276,10 @@
 
   .task-card-due-container.ongoing {
     background-color: var(--interactive-accent);
+  }
+
+  .task-card-due-container.ongoing:hover {
+    background-color: var(--interactive-accent-hover);
   }
 
   .task-card-due-container.mode-multi-line {
@@ -270,6 +309,14 @@
   .task-card-due.upcoming {
     font-style: italic;
     text-decoration: underline;
+  }
+
+  .task-card-due.passDue {
+    color: var(--text-warning);
+  }
+
+  .task-card-due.passed {
+    color: var(--text-faint);
   }
 
   .task-card-due.ongoing {

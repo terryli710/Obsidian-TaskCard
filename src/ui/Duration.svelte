@@ -18,9 +18,9 @@
 
   function customDurationHumanizer(duration: Duration) {
     if (duration.hours === 0) {
-      return `${duration.minutes}mins`;
+      return `${duration.minutes}min${duration.minutes === 1 ? '' : 's'}`;
     } else if (duration.minutes === 0) {
-      return `${duration.hours}hrs`;
+      return `${duration.hours}hr${duration.hours === 1 ? '' : 's'}`;
     } else {
       return `${duration.hours}h ${duration.minutes}m`;
     }
