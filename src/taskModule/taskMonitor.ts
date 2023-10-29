@@ -70,7 +70,7 @@ export class TaskMonitor {
     const taskDetails = this.detectTasksFromLines(lines);
     if (taskDetails.length === 0) return;
     for (const taskDetail of taskDetails) {
-      logger.debug(`taskDetail: ${JSON.stringify(taskDetail)}`);
+      // logger.debug(`taskDetail: ${JSON.stringify(taskDetail)}`);
       // notify API about creation of tasks
       let task = this.parseTaskWithLines(taskDetail.taskMarkdown.split('\n'));
       const syncMetadata = await this.plugin.externalAPIManager.createTask(task);

@@ -66,10 +66,10 @@ export class GoogleCalendarAPI {
         // 1. intrinsic filter: task without due date won't be created
         if (!event.currentState.due?.date) return false; // Optional chaining is used here
         // 2. setting based filter: if there's filter project or tag, check if the task is in the project or tag
-        if (this.googleSyncSetting.filterProject) {
+        if (this.googleSyncSetting.doesNeedFilters && this.googleSyncSetting.filterProject) {
             if (this.googleSyncSetting.filterProject !== event.currentState.project?.id) return false;
         }
-        if (this.googleSyncSetting.filterTag) {
+        if (this.googleSyncSetting.doesNeedFilters && this.googleSyncSetting.filterTag) {
             if (!event.currentState.labels?.includes(this.googleSyncSetting.filterTag)) return false;
         }
         return true;
@@ -79,28 +79,28 @@ export class GoogleCalendarAPI {
         // local task updates can match to task update, create, or delete
         if (event.type !== TaskChangeType.UPDATE) return '';
         logger.debug(`handling local task update: ${JSON.stringify(event)}`);
-        logger.debug(`has google sync id: ${event.currentState.metadata.syncMappings.googleSyncSetting.id}`);
+        logger.debug(`has google sync id: ${event.currentState.metadata.syncMappings.googleSyncSetting?.id}`);
         logger.debug(`filtered: ${this.filterCreationEvent(event)}`);
         const googleEvent = this.convertTaskToGoogleEvent(event.currentState);
         
         // possible task creation events: 1. no google sync id 2. filter passed
-        if (!event.currentState.metadata.syncMappings.googleSyncSetting.id) {
+        if (!event.currentState.metadata.syncMappings.googleSyncSetting?.id) {
             if (this.filterCreationEvent(event) === false) return '';
             logger.debug(`try to create event`)
             const createdEvent = await this.createEvent(googleEvent);
-            return createdEvent.id;
+            return createdEvent?.id || '';
         }
         // possible task deletion events: 1. has google sync id; 2. filter failed
-        if (event.previousState.metadata.syncMappings.googleSyncSetting.id && !this.filterCreationEvent(event)) {
+        if (event.previousState.metadata.syncMappings.googleSyncSetting?.id && !this.filterCreationEvent(event)) {
             logger.debug(`try to delete event`)
             const deletedEvent = await this.deleteEvent(googleEvent);
             return '';
         }
         // possible task update events: 1. has google sync id; 2. filter passed
-        if (event.previousState.metadata.syncMappings.googleSyncSetting.id && this.filterCreationEvent(event)) {
+        if (event.previousState.metadata.syncMappings.googleSyncSetting?.id && this.filterCreationEvent(event)) {
             logger.debug(`try to update event`)
             const updatedEvent = await this.updateEvent(googleEvent);
-            return updatedEvent.id;
+            return updatedEvent?.id || '';
         }
         return '';
     }
@@ -329,9 +329,9 @@ export class GoogleCalendarAPI {
         }
 
         // Preprocess the event
-        // logger.debug(`event: ${JSON.stringify(event)}`);
+        logger.debug(`event: ${JSON.stringify(event)}`);
         const processedEvent = this.preprocessEvent(event, targetCalendar);
-        // logger.debug(`processedEvent: ${JSON.stringify(processedEvent)}`);
+        logger.debug(`processedEvent: ${JSON.stringify(processedEvent)}`);
 
         try {
             // Assuming callRequest is accessible here, either as a global function or a method on this class.

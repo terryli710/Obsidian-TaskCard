@@ -86,7 +86,7 @@
 
     // Main logic for the Enter key
     if (event.key === 'Enter') {
-        logger.debug(`duration finished: ${durationInputString}`);
+        // logger.debug(`duration finished: ${durationInputString}`);
         
         // Early exit for empty string or 00:00 duration
         if (durationInputString.trim() === '' || isValidZeroDuration(durationInputString)) {

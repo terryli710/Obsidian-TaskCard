@@ -72,7 +72,7 @@ export class TaskParser {
       }
     }
 
-    logger.debug(`Parsing task element: ${taskEl.outerHTML}`);
+    // logger.debug(`Parsing task element: ${taskEl.outerHTML}`);
   
     const task = new ObsidianTask();
     const attributes = parseAttributes.bind(this)();
@@ -227,7 +227,7 @@ export class TaskParser {
       while (allLinesStartWithSpace(descLines)) {
         descLines = removeLeadingSpace(descLines);
       }
-      logger.debug(`Multi-line task: ${descLines.join('\n')}`);
+      // logger.debug(`Multi-line task: ${descLines.join('\n')}`);
       task.description = descLines.join('\n');
       taskMarkdown = lines[0]; // The first line
     }

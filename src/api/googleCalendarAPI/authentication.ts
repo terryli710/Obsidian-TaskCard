@@ -41,8 +41,9 @@ export class GoogleCalendarAuthenticator {
         const authURL = this.getAuthUrl(clientID, this.authSession);
 
         // Ensure no server is running before starting a new one
-        if (!this.authSession.server) {
-            window.open(authURL);
+        if (this.authSession.server) {
+            // Close the existing server
+            this.authSession.server.close();
         }
 
         return this.startServerAndHandleResponse(this.syncSettings, authURL);
@@ -119,6 +120,7 @@ export class GoogleCalendarAuthenticator {
             + '&code_challenge_method=S256'
             + '&scope=email%20profile%20https://www.googleapis.com/auth/calendar';
     }
+
     async startServerAndHandleResponse(syncSettings: GoogleSyncSetting, authURL: string): Promise<boolean> {
         let isResolved = false;  // Flag to ensure the promise only resolves once.
     
@@ -180,7 +182,7 @@ export class GoogleCalendarAuthenticator {
                 }
     
             }).listen(GoogleCalendarAuthenticator.PORT, () => {
-                window.open(authURL)
+                window.open(authURL);
                 setTimeout(() => {
                     if (!isResolved) {
                         isResolved = true;
@@ -216,6 +218,9 @@ export class GoogleCalendarAuthenticator {
     }
 
     closeServer() {
+        if (!this.authSession.server) {
+            return;
+        }
         this.authSession.server.close(() => {
             logger.info("Server closed.")
         });
