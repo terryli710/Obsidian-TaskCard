@@ -15,19 +15,19 @@
   export let params: TaskDisplayParams;
   export let displayDue: boolean;
 
-  let due: DueDate | null;
-  let dueString: string;
+  let schedule: DueDate | null;
+  let scheduleString: string;
   let duration: Duration | null;
-  let dueDisplay = "";
+  let scheduleDisplay = "";
   let inputElement: HTMLInputElement;
-  due = taskSyncManager.obsidianTask.hasDue() ? taskSyncManager.obsidianTask.due : null;
-  dueString = due ? due.string : '';
+  schedule = taskSyncManager.obsidianTask.hasDue() ? taskSyncManager.obsidianTask.schedule : null;
+  scheduleString = schedule ? schedule.string : '';
   duration = taskSyncManager.obsidianTask.hasDuration() ? taskSyncManager.obsidianTask.duration : null;
 
   updateDueDisplay();
 
   async function toggleEditMode(event: KeyboardEvent | MouseEvent) {
-      if (taskSyncManager.taskCardStatus.dueStatus === 'done') {
+      if (taskSyncManager.taskCardStatus.scheduleStatus === 'done') {
         enableDueEditMode(event);
       } else {
         finishDueEditing(event);
@@ -43,9 +43,9 @@
         event.preventDefault();
       }
     }
-      // taskSyncManager.setTaskCardStatus('dueStatus', 'editing');
-      taskSyncManager.taskCardStatus.dueStatus = 'editing';
-      dueString = due ? due.string : '';
+      // taskSyncManager.setTaskCardStatus('scheduleStatus', 'editing');
+      taskSyncManager.taskCardStatus.scheduleStatus = 'editing';
+      scheduleString = schedule ? schedule.string : '';
       await tick();
       focusAndSelect(inputElement);
       adjustWidthForInput(inputElement);
@@ -57,43 +57,43 @@
     }
 
     if (event.key === 'Enter' || event.key === 'Escape') {
-        taskSyncManager.taskCardStatus.dueStatus = 'done';
+        taskSyncManager.taskCardStatus.scheduleStatus = 'done';
         if (event.key === 'Escape') {
             updateDueDisplay();
             return;
         }
 
-        if (dueString.trim() === '') {
-            due = null;
+        if (scheduleString.trim() === '') {
+            schedule = null;
         } else {
             try {
-                let newDue = plugin.taskParser.parseDue(dueString);
+                let newDue = plugin.taskParser.parseDue(scheduleString);
                 if (newDue) {
-                    due = newDue;
+                    schedule = newDue;
                 } else {
-                    new Notice(`[TaskCard] Invalid due date: ${dueString}`);
-                    dueString = due ? due.string : '';
+                    new Notice(`[TaskCard] Invalid schedule date: ${scheduleString}`);
+                    scheduleString = schedule ? schedule.string : '';
                 }
             } catch (e) {
                 logger.error(e);
-                dueString = due ? due.string : '';
+                scheduleString = schedule ? schedule.string : '';
             }
         }
 
-        taskSyncManager.updateObsidianTaskAttribute('due', due);
+        taskSyncManager.updateObsidianTaskAttribute('schedule', schedule);
         updateDueDisplay();
     }
   }
 
   function updateDueDisplay(): string {
-      if (!due) {
-          dueDisplay = '';
-          return dueDisplay;
+      if (!schedule) {
+          scheduleDisplay = '';
+          return scheduleDisplay;
       }
-      let datePart = displayDate(due.date);
-      let timePart = displayTime(due.time);
-      dueDisplay = timePart ? `${datePart}, ${timePart}` : datePart;
-      return dueDisplay;
+      let datePart = displayDate(schedule.date);
+      let timePart = displayTime(schedule.time);
+      scheduleDisplay = timePart ? `${datePart}, ${timePart}` : datePart;
+      return scheduleDisplay;
   }
 
   // Action function to focus and select the input content
@@ -125,29 +125,29 @@
   }
 
 
-  function convertDueToMoment(dueDate: DueDate): moment.Moment | null {
-    if (!dueDate.date) {
+  function convertDueToMoment(scheduleDate: DueDate): moment.Moment | null {
+    if (!scheduleDate.date) {
       return null;  // Ensure the date is present.
     }
 
-    let datetimeStr = dueDate.date;
-    if (dueDate.time) {
-      datetimeStr += ' ' + dueDate.time;
+    let datetimeStr = scheduleDate.date;
+    if (scheduleDate.time) {
+      datetimeStr += ' ' + scheduleDate.time;
     }
 
     return moment(datetimeStr);
   }
 
-  $: displayDue = taskSyncManager.obsidianTask.hasDue() || taskSyncManager.taskCardStatus.dueStatus === 'editing';
+  $: displayDue = taskSyncManager.obsidianTask.hasDue() || taskSyncManager.taskCardStatus.scheduleStatus === 'editing';
   
   
   // upcoming and ongoing
-  function isUpcoming(due: DueDate, currTime: moment.Moment, minuteGap: number = 15): boolean {
-    if (!due || !due.date || !due.time) { return false; }
-    // convert due to moment
-    const dueMoment = convertDueToMoment(due);
+  function isUpcoming(schedule: DueDate, currTime: moment.Moment, minuteGap: number = 15): boolean {
+    if (!schedule || !schedule.date || !schedule.time) { return false; }
+    // convert schedule to moment
+    const scheduleMoment = convertDueToMoment(schedule);
     // calculate the time gap
-    const timeGap = moment.duration(dueMoment.diff(currTime)).asMinutes();
+    const timeGap = moment.duration(scheduleMoment.diff(currTime)).asMinutes();
     // check if the time gap is within the specified range
     return timeGap > 0 && timeGap < minuteGap;
   }
@@ -160,13 +160,13 @@
   }
 
   function getTaskDueStatus(task: ObsidianTask, minuteGap: number = 15): TaskDueStatus | null {
-    const due = task.due;
+    const schedule = task.schedule;
     let duration = task.duration;
     const currTime = moment();
     const finished = task.completed;
-    if (!due) { return null; }
-    const dueMoment = convertDueToMoment(due);
-    const timeGap = moment.duration(dueMoment.diff(currTime)).asMinutes();
+    if (!schedule) { return null; }
+    const scheduleMoment = convertDueToMoment(schedule);
+    const timeGap = moment.duration(scheduleMoment.diff(currTime)).asMinutes();
     // upcoming
     if (timeGap > 0 && timeGap < minuteGap) {
       return TaskDueStatus.Upcoming;
@@ -176,11 +176,11 @@
     if (!duration.minutes) { duration.minutes = 0; }
     
     // ongoing
-    const endMoment = dueMoment.clone().add(duration.hours, 'hours').add(duration.minutes, 'minutes');
-    if (currTime.isBetween(dueMoment, endMoment)) {
+    const endMoment = scheduleMoment.clone().add(duration.hours, 'hours').add(duration.minutes, 'minutes');
+    if (currTime.isBetween(scheduleMoment, endMoment)) {
       return TaskDueStatus.Ongoing;
     }
-    // pass due
+    // pass schedule
     if (currTime.isAfter(endMoment) && !finished) {
       return TaskDueStatus.PassDue;
     }
@@ -196,30 +196,30 @@
 </script>
 
 {#if displayDue}
-  <div class="task-card-due-container {params.mode === 'single-line' ? 'mode-single-line' : 'mode-multi-line'} {taskDueStatus ? taskDueStatus : ''}"
+  <div class="task-card-schedule-container {params.mode === 'single-line' ? 'mode-single-line' : 'mode-multi-line'} {taskDueStatus ? taskDueStatus : ''}"
     on:click={toggleEditMode}
     on:keydown={toggleEditMode}
-    aria-label="Due"
+    aria-label="Schedule"
     role="button"
     tabindex="0"
   >
-    <div class="task-card-due-left-part">
-      <span class="task-card-due-prefix {taskDueStatus ? taskDueStatus : ''}">
-        <CalendarClock width={"14"} height={"14"} ariaLabel="due"/>
+    <div class="task-card-schedule-left-part">
+      <span class="task-card-schedule-prefix {taskDueStatus ? taskDueStatus : ''}">
+        <CalendarClock width={"14"} height={"14"} ariaLabel="schedule"/>
       </span>
     </div>
-    {#if taskSyncManager.getTaskCardStatus('dueStatus') === 'editing'}
+    {#if taskSyncManager.getTaskCardStatus('scheduleStatus') === 'editing'}
       <input
         type="text"
         on:input={() => adjustWidthForInput(inputElement)}
-        bind:value={dueString}
+        bind:value={scheduleString}
         bind:this={inputElement}
-        class="task-card-due"
+        class="task-card-schedule"
       />
     {:else}
-      <div class="task-card-due {taskDueStatus ? taskDueStatus : ''}">
-        <div class="due-display">
-          {dueDisplay}
+      <div class="task-card-schedule {taskDueStatus ? taskDueStatus : ''}">
+        <div class="schedule-display">
+          {scheduleDisplay}
         </div>
       </div>
     {/if}
@@ -229,7 +229,7 @@
 <style>
 
 
-  .task-card-due-left-part {
+  .task-card-schedule-left-part {
       /* background-color: var(--background-secondary); */
       border-top-left-radius: 2em;
       border-bottom-left-radius: 2em;
@@ -240,7 +240,7 @@
       padding: 0 5px;
   }
 
-  .task-card-due-prefix {
+  .task-card-schedule-prefix {
     color: var(--text-accent);
     font-size: var(--tag-size);
     line-height: 1;
@@ -249,23 +249,23 @@
     padding-top: 1.5px;
   }
 
-  .task-card-due-prefix.ongoing {
+  .task-card-schedule-prefix.ongoing {
     color: var(--text-on-accent);
   }
 
-  .task-card-due-prefix.passDue {
+  .task-card-schedule-prefix.passDue {
     color: var(--text-warning);
   }
 
-  .task-card-due-prefix.passed {
+  .task-card-schedule-prefix.passed {
     color: var(--text-faint);
   }
 
-  .task-card-due-prefix.ongoing:hover {
+  .task-card-schedule-prefix.ongoing:hover {
     color: var(--text-on-accent-hover);
   }
 
-  .task-card-due-container {
+  .task-card-schedule-container {
     align-items: center;
     display: flex;
     border-radius: 2em;
@@ -274,19 +274,19 @@
     border: var(--border-width) solid var(--text-accent);
   }
 
-  .task-card-due-container.ongoing {
+  .task-card-schedule-container.ongoing {
     background-color: var(--interactive-accent);
   }
 
-  .task-card-due-container.ongoing:hover {
+  .task-card-schedule-container.ongoing:hover {
     background-color: var(--interactive-accent-hover);
   }
 
-  .task-card-due-container.mode-multi-line {
+  .task-card-schedule-container.mode-multi-line {
     margin-top: 2px;
   }
 
-  .due-display {
+  .schedule-display {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -295,7 +295,7 @@
     padding-top: 1.5px;
   }
   
-  .task-card-due {
+  .task-card-schedule {
     display: inline;
     padding: var(--tag-padding-y) 0px;
     padding-right: var(--tag-padding-x);
@@ -306,36 +306,36 @@
     line-height: 1;
   }
 
-  .task-card-due.upcoming {
+  .task-card-schedule.upcoming {
     font-style: italic;
     text-decoration: underline;
   }
 
-  .task-card-due.passDue {
+  .task-card-schedule.passDue {
     color: var(--text-warning);
   }
 
-  .task-card-due.passed {
+  .task-card-schedule.passed {
     color: var(--text-faint);
   }
 
-  .task-card-due.ongoing {
+  .task-card-schedule.ongoing {
     color: var(--text-on-accent);
   }
 
   /* This selector ensures that the cursor only changes to a hand pointer when the div is not empty */
-  .task-card-due-container.mode-multi-line:not(:empty):hover {
+  .task-card-schedule-container.mode-multi-line:not(:empty):hover {
     background-color: var(--background-modifier-hover);
     color: var(--text-accent-hover);
     cursor: pointer;
   }
 
-  .task-card-due-container.mode-multi-line.ongoing:not(:empty):hover {
+  .task-card-schedule-container.mode-multi-line.ongoing:not(:empty):hover {
     background-color: var(--interactive-accent-hover);
     color: var(--text-accent-hover);
   }
 
-  input.task-card-due {
+  input.task-card-schedule {
     box-sizing: border-box;
     border: none;
     display: inline;
@@ -351,7 +351,7 @@
   }
 
   /* Customize the focus styles */
-  input.task-card-due:focus {
+  input.task-card-schedule:focus {
     outline: none; /* Remove the default outline */
     box-shadow: none; /* Remove the default box-shadow */
   }

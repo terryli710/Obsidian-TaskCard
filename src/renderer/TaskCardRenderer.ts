@@ -97,7 +97,7 @@
             taskCardStatus: {
               descriptionStatus: 'done',
               projectStatus: 'done',
-              dueStatus: 'done',
+              scheduleStatus: 'done',
               durationStatus: 'done'
             },
             markdownTask: null,

@@ -41,7 +41,7 @@ export interface TaskProperties {
   parent?: TaskProperties | ObsidianTask | null;
   children: TaskProperties[] | ObsidianTask[];
 
-  due?: DueDate | null;
+  schedule?: DueDate | null;
   duration?: Duration | null;
   metadata?: {
     taskDisplayParams?: TaskDisplayParams | null;
@@ -64,7 +64,7 @@ export class ObsidianTask implements TaskProperties {
   public parent?: TaskProperties | ObsidianTask | null;
   public children: TaskProperties[] | ObsidianTask[];
 
-  public due?: DueDate | null;
+  public schedule?: DueDate | null;
   public duration?: Duration | null;
   
   public metadata?: {
@@ -85,7 +85,7 @@ export class ObsidianTask implements TaskProperties {
     this.completed = props?.completed || false;
     this.parent = props?.parent || null;
     this.children = props?.children || [];
-    this.due = props?.due || null;
+    this.schedule = props?.schedule || null;
     this.duration = props?.duration || null;
     this.metadata = props?.metadata || {};
   }
@@ -103,7 +103,7 @@ export class ObsidianTask implements TaskProperties {
       completed: this.completed,
       parent: this.parent,
       children: this.children,
-      due: this.due,
+      schedule: this.schedule,
       duration: this.duration,
       metadata: this.metadata,
     });
@@ -134,9 +134,9 @@ export class ObsidianTask implements TaskProperties {
   }
 
   hasDue(): boolean {
-    if (!this.due) return false;
-    // return if the due string is not empty
-    return !!this.due.string.trim();
+    if (!this.schedule) return false;
+    // return if the schedule string is not empty
+    return !!this.schedule.string.trim();
   }
 
   hasDuration(): boolean {

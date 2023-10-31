@@ -56,7 +56,7 @@ export class QuerySyncManager {
             projectQuery: [],
             labelQuery: [],
             completedQuery: [],
-            dueDateTimeQuery: ['', ''],
+            scheduleDateTimeQuery: ['', ''],
             filePathQuery: '',
         };
         // this.initOptions();
@@ -69,7 +69,7 @@ export class QuerySyncManager {
             projectQuery: [],
             labelQuery: [],
             completedQuery: [],
-            dueDateTimeQuery: ['', ''],
+            scheduleDateTimeQuery: ['', ''],
             filePathQuery: '',
         };
     
@@ -87,8 +87,8 @@ export class QuerySyncManager {
                 query.labelQuery = JSON.parse(value);
             } else if (key === 'completed') {
                 query.completedQuery = JSON.parse(value);
-            } else if (key === 'due') {
-                query.dueDateTimeQuery = JSON.parse(value);
+            } else if (key === 'schedule') {
+                query.scheduleDateTimeQuery = JSON.parse(value);
             } else if (key === 'file') {
                 query.filePathQuery = value.replace(/['"]+/g, '');
             } else if (key === 'editMode') {
@@ -153,8 +153,8 @@ export class QuerySyncManager {
             source += `completed: ${JSON.stringify(query.completedQuery)}\n`;
         }
         
-        if (query.dueDateTimeQuery !== undefined && query.dueDateTimeQuery !== null) {
-            source += `due: ${JSON.stringify(query.dueDateTimeQuery)}\n`;
+        if (query.scheduleDateTimeQuery !== undefined && query.scheduleDateTimeQuery !== null) {
+            source += `schedule: ${JSON.stringify(query.scheduleDateTimeQuery)}\n`;
         }
         
         if (query.filePathQuery !== undefined && query.filePathQuery !== null) {

@@ -24,7 +24,7 @@
   let taskDisplayParams: TaskDisplayParams = { mode: 'single-line' };
   let task = taskItem;
   let docPosition = taskItem.docPosition;
-  let dueDisplay = '';
+  let scheduleDisplay = '';
   let labelModule = new LabelModule();
   let descriptionMarkdown = marked(task.description);
   let descriptionProgress = DescriptionParser.progressOfDescription(task.description);
@@ -58,14 +58,14 @@
 }
 
   function updateDueDisplay(): string {
-    if (!task.due) {
-      dueDisplay = '';
-      return dueDisplay;
+    if (!task.schedule) {
+      scheduleDisplay = '';
+      return scheduleDisplay;
     }
-    let datePart = displayDate(task.due.date);
-    let timePart = displayTime(task.due.time);
-    dueDisplay = timePart ? `${datePart}, ${timePart}` : datePart;
-    return dueDisplay;
+    let datePart = displayDate(task.schedule.date);
+    let timePart = displayTime(task.schedule.time);
+    scheduleDisplay = timePart ? `${datePart}, ${timePart}` : datePart;
+    return scheduleDisplay;
   }
 
   updateDueDisplay();
@@ -131,11 +131,11 @@
           {#if descriptionProgress[1] * descriptionProgress[0] > 0 && !task.completed }
             <CircularProgressBar value={descriptionProgress[0]} max={descriptionProgress[1]} showDigits={false} />
           {/if}
-          <!-- Due -->
+          <!-- Schedule -->
           {#if task.hasDue()}
-            <div class="task-card-due mode-single-line}" role="button" tabindex="0">
-              <div class="due-display">
-                {dueDisplay}
+            <div class="task-card-schedule mode-single-line}" role="button" tabindex="0">
+              <div class="schedule-display">
+                {scheduleDisplay}
               </div>
             </div>
           {/if}
@@ -222,11 +222,11 @@
 
   <div class="task-card-attribute-bottom-bar">
     <div class="task-card-attribute-bottom-bar-left">
-      <!-- Due -->
+      <!-- Schedule -->
       {#if task.hasDue()}
-        <div class="task-card-due mode-multi-line}" role="button" tabindex="0">
-          <div class="due-display">
-            {dueDisplay}
+        <div class="task-card-schedule mode-multi-line}" role="button" tabindex="0">
+          <div class="schedule-display">
+            {scheduleDisplay}
           </div>
         </div>
         {#if taskDisplayParams.mode === 'multi-line'}
@@ -335,7 +335,7 @@
     border: var(--border-width) solid var(--background-primary);
   }
 
-  .task-card-due {
+  .task-card-schedule {
     display: inline;
     padding: var(--tag-padding-y) var(--tag-padding-x);
     border: var(--border-width) solid var(--background-modifier-border);

@@ -131,7 +131,7 @@ function parseDurationInput(input: string): { hours: number, minutes: number } |
     node.select();
   }
 
-  let displayDue: boolean = taskSyncManager.obsidianTask.hasDue() || taskSyncManager.getTaskCardStatus('dueStatus') === 'editing';
+  let displayDue: boolean = taskSyncManager.obsidianTask.hasDue() || taskSyncManager.getTaskCardStatus('scheduleStatus') === 'editing';
   $: displayDuration = taskSyncManager.obsidianTask.hasDuration() || taskSyncManager.getTaskCardStatus('durationStatus') === 'editing';
 
 
@@ -140,7 +140,7 @@ function parseDurationInput(input: string): { hours: number, minutes: number } |
 <!-- Duration Display Section -->
 {#if displayDuration}
   {#if displayDue}
-    <span class="due-duration-padding"></span>
+    <span class="schedule-duration-padding"></span>
   {/if}
   <div class="task-card-duration-container {params.mode === 'single-line' ? 'mode-single-line' : 'mode-multi-line'}"
     on:click={toggleDurationEditMode}
@@ -205,7 +205,7 @@ function parseDurationInput(input: string): { hours: number, minutes: number } |
     margin-top: 2px;
   }
   
-  .due-duration-padding {
+  .schedule-duration-padding {
     padding: 2px;
   }
 

@@ -46,7 +46,7 @@ import { Project, ProjectModule } from '../src/taskModule/project';
 //     labels: ['label1', 'label2'],
 //     parent: null,
 //     children: [],
-//     due: {
+//     schedule: {
 //       isRecurring: false,
 //       string: '2023-08-15',
 //       date: '2024-08-15',
@@ -201,7 +201,7 @@ describe('taskParser', () => {
   //       completed: false,
   //       parent: null,
   //       children: [],
-  //       due: {
+  //       schedule: {
   //         isRecurring: false,
   //         string: '2023-08-15',
   //         date: '2024-08-15',
@@ -242,7 +242,7 @@ describe('taskParser', () => {
   //       completed: false,
   //       parent: null,
   //       children: [],
-  //       due: {
+  //       schedule: {
   //         isRecurring: false,
   //         string: '2023-08-15',
   //         date: '2024-08-15',
@@ -315,7 +315,7 @@ describe('taskParser', () => {
 
   // describe('parseExtractedFormattedTaskMarkdown', () => {
   //   it('should correctly parse a complete task', () => {
-  //     const taskMarkdown = '- [ ] Exercise #PersonalLife #Health #TaskCard{"id":"69c7847e-b182-4353-8676-d29450dedbdb","priority":1,"description":"- Cardio for 30 mins\\\\n- Weight lifting for 20 mins","order":0,"project":{"id":"bdedc03b-88e8-4a1e-b566-fe12d3d925e7","name":"HealthPlan","color":"#f45fe3"},"sectionID":"","parent":null,"children":[],"due":null,"metadata":{}} .';
+  //     const taskMarkdown = '- [ ] Exercise #PersonalLife #Health #TaskCard{"id":"69c7847e-b182-4353-8676-d29450dedbdb","priority":1,"description":"- Cardio for 30 mins\\\\n- Weight lifting for 20 mins","order":0,"project":{"id":"bdedc03b-88e8-4a1e-b566-fe12d3d925e7","name":"HealthPlan","color":"#f45fe3"},"sectionID":"","parent":null,"children":[],"schedule":null,"metadata":{}} .';
   //     const parsedTask = taskParser.parseExtractedFormattedTaskMarkdown(taskMarkdown);
   //     expect(parsedTask.completed).toBe(false);
   //     expect(parsedTask.content).toBe('Exercise');
@@ -328,12 +328,12 @@ describe('taskParser', () => {
   //     expect(parsedTask.sectionID).toBe('');
   //     expect(parsedTask.parent).toBe(null);
   //     expect(parsedTask.children).toEqual([]);
-  //     expect(parsedTask.due).toBe(null);
+  //     expect(parsedTask.schedule).toBe(null);
   //     expect(parsedTask.metadata).toEqual({});
   //   });
   
   //   it('should handle tasks without metadata', () => {
-  //     const taskMarkdown = '- [ ] Exercise #PersonalLife #Health #TaskCard{"id":"","priority":4,"description":"","order":0,"project":{"id":"","name":"","color":""},"sectionID":"","parent":null,"children":[],"due":null,"metadata":{}} .';
+  //     const taskMarkdown = '- [ ] Exercise #PersonalLife #Health #TaskCard{"id":"","priority":4,"description":"","order":0,"project":{"id":"","name":"","color":""},"sectionID":"","parent":null,"children":[],"schedule":null,"metadata":{}} .';
   //     const parsedTask = taskParser.parseExtractedFormattedTaskMarkdown(taskMarkdown);
   //     expect(parsedTask.completed).toBe(false);
   //     expect(parsedTask.content).toBe('Exercise');
@@ -344,7 +344,7 @@ describe('taskParser', () => {
   //   });
   
   //   it('should handle completed tasks', () => {
-  //     const taskMarkdown = '- [x] Exercise #PersonalLife #Health #TaskCard{"id":"","priority":4,"description":"","order":0,"project":{"id":"","name":"","color":""},"sectionID":"","parent":null,"children":[],"due":null,"metadata":{}} .';
+  //     const taskMarkdown = '- [x] Exercise #PersonalLife #Health #TaskCard{"id":"","priority":4,"description":"","order":0,"project":{"id":"","name":"","color":""},"sectionID":"","parent":null,"children":[],"schedule":null,"metadata":{}} .';
   //     const parsedTask = taskParser.parseExtractedFormattedTaskMarkdown(taskMarkdown);
   //     expect(parsedTask.completed).toBe(true);
   //   });
@@ -404,16 +404,16 @@ describe('taskParser', () => {
       expect(parsedTask).toMatchObject(expectedTask);
     });
 
-    // 3. Parsing a task with a `due` attribute.
-    it('should parse a task with a due attribute correctly', () => {
-      const taskMarkdown = '- [ ] Task with due date %%*due:2023-08-05*%%';
+    // 3. Parsing a task with a `schedule` attribute.
+    it('should parse a task with a schedule attribute correctly', () => {
+      const taskMarkdown = '- [ ] Task with schedule date %%*schedule:2023-08-05*%%';
 
       const parsedTask = taskParser.parseTaskMarkdown(taskMarkdown);
 
       const expectedTask = {
-        content: 'Task with due date',
+        content: 'Task with schedule date',
         completed: false,
-        due: {
+        schedule: {
           isRecurring: false,
           date: '2023-08-05',
           string: '2023-08-05'
@@ -545,14 +545,14 @@ describe('taskParser', () => {
     // 11. Parsing a task with multiple attributes.
     it('should parse a task with multiple attributes correctly', () => {
       const taskMarkdown =
-        '- [ ] Multi-attribute task %%*priority:2*%% %%*due:2023-09-01*%%';
+        '- [ ] Multi-attribute task %%*priority:2*%% %%*schedule:2023-09-01*%%';
 
       const parsedTask = taskParser.parseTaskMarkdown(taskMarkdown);
 
       const expectedTask = {
         content: 'Multi-attribute task',
         priority: 2,
-        due: {
+        schedule: {
           isRecurring: false,
           date: '2023-09-01',
           string: '2023-09-01'

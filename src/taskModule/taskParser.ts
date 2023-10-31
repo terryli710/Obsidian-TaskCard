@@ -87,7 +87,7 @@ export class TaskParser {
     task.labels = attributes.labels || [];
     task.parent = attributes.parent || null;
     task.children = attributes.children || [];
-    task.due = attributes.due || null;
+    task.schedule = attributes.schedule || null;
     task.duration = attributes.duration || null;
     task.metadata = attributes.metadata || {};
   
@@ -281,8 +281,8 @@ export class TaskParser {
       }
 
       switch (attributeName) {
-        case 'due':
-          task.due = tryParseAttribute('due', this.parseDue.bind(this), attributeValue, 'other');
+        case 'schedule':
+          task.schedule = tryParseAttribute('schedule', this.parseDue.bind(this), attributeValue, 'other');
           break;
         case 'duration':
           task.duration = tryParseAttribute('duration', this.parseDuration.bind(this), attributeValue, 'other');
@@ -373,7 +373,7 @@ export class TaskParser {
     task.priority = parseJSONAttribute(metadata['priority'], 'priority', '4' as unknown as Priority);
     task.order = parseJSONAttribute(metadata['order'], 'order', 0);
     task.project = parseJSONAttribute(metadata['project'], 'project', null);
-    task.due = parseJSONAttribute(metadata['due'], 'due', null); 
+    task.schedule = parseJSONAttribute(metadata['schedule'], 'schedule', null); 
     task.duration = parseJSONAttribute(metadata['duration'], 'duration', null);
     task.metadata = parseJSONAttribute(metadata['metadata'], 'metadata', {}); 
 
@@ -440,8 +440,8 @@ export class TaskParser {
   }
 
 
-  parseDue(dueString: string): DueDate | null {
-    const parsedDateTime = Sugar.Date.create(dueString);
+  parseDue(scheduleString: string): DueDate | null {
+    const parsedDateTime = Sugar.Date.create(scheduleString);
 
     // Check if the parsedDateTime is a valid date
     if (!parsedDateTime || !Sugar.Date.isValid(parsedDateTime)) {
@@ -457,14 +457,14 @@ export class TaskParser {
       return {
         isRecurring: false,
         date: parsedDate,
-        string: dueString
+        string: scheduleString
       } as DueDate;
     } else {
       return {
         isRecurring: false,
         date: parsedDate,
         time: parsedTime,
-        string: dueString
+        string: scheduleString
       } as DueDate;
     }
   }

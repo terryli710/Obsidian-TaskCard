@@ -84,7 +84,7 @@ describe('TaskValidator', () => {
   //     labels: includeAllAttributes || Math.random() > 0.5 ? ['label1', 'label2'] : null,
   //     parent: null,
   //     children: [],
-  //     due: includeAllAttributes || Math.random() > 0.5 ? {
+  //     schedule: includeAllAttributes || Math.random() > 0.5 ? {
   //       isRecurring: false,
   //       string: '2023-08-15',
   //       date: '2024-08-15',
@@ -176,7 +176,7 @@ describe('TaskValidator', () => {
             %%*description:"- A multi line description.\n- the second line."*%% 
             %%*order:1*%% %%*project:{"id":"project-123", "name":"Project Name"}*%% 
             %%*section-id:"section-456"*%% %%*parent:null*%% %%*children:[]*%% 
-            %%*due:"Aug 15, 2024"*%% 
+            %%*schedule:"Aug 15, 2024"*%% 
             %%*metadata:{"filePath":"/path/to/file"}*%%`;
       const onelineUnformattedTask = unformattedTask.replace(/\n/g, '');
 

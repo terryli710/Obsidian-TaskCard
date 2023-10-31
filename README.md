@@ -33,13 +33,13 @@ Obsidian-TaskCard is an Obsidian plugin designed to revolutionize your task mana
 
 ## Features
 
-- **Intuitive and easy-to-use**: the plugin doesn't deviate you from <u>*normal markdown task workflow*</u>. You can create, modify, delete your tasks very similarly when you are using pure markdown in Obsidian. Just by adding a tag (indicator tag in the settings) you can turn your tasks into a task card, which supports two display modes and that allows you to see and edit all attributes of a task, such as the project, due date, and description.
+- **Intuitive and easy-to-use**: the plugin doesn't deviate you from <u>*normal markdown task workflow*</u>. You can create, modify, delete your tasks very similarly when you are using pure markdown in Obsidian. Just by adding a tag (indicator tag in the settings) you can turn your tasks into a task card, which supports two display modes and that allows you to see and edit all attributes of a task, such as the project, schedule date, and description.
 
 - **Two Display Modes**: Choose between two display modes for your tasks.
     - **Preview Mode**: Designed for quick browsing, this mode displays tasks at the same height as a normal markdown task, showing only the most essential information.
-    - **Detailed Mode**: This mode provides a comprehensive task card that allows you to see and edit all attributes of a task, such as the project, due date, and description.
+    - **Detailed Mode**: This mode provides a comprehensive task card that allows you to see and edit all attributes of a task, such as the project, schedule date, and description.
 
-- **Due Date**: Add a due date to your tasks to indicate when the task is due.
+- **Schedule Date**: Add a schedule date to your tasks to indicate when the task is schedule.
 
 - **Tags and Projects**: Easily categorize your tasks with tags and associate them with specific projects.
   
@@ -76,7 +76,7 @@ Attributes | Addition | Example |
 Content | Task in markdown | `- [ ] some content` |
 Tag | Tag in markdown | `- [ ] some content #tag` |
 Description | Description in markdown (change line + indent) | `- [ ] some content \n    - some description` |
-Due Date | Special attribute: `due` | `%%* due: 2021-01-01 *%%` |
+Schedule Date | Special attribute: `schedule` | `%%* schedule: 2021-01-01 *%%` |
 Project | Special attribute: `project` | `%%* project: project name *%%` |
 
 #### Create a task 
@@ -95,15 +95,15 @@ Some attributes are native for a markdown task, we can add them to the task in t
 
 #### Add special attributes to a task
 Some added ingredients for a task card, we can add them in a special way: `%%* key: value *%%`. this is will show nicely in the editing mode of obsidian, while invisible in the preview mode.
-- Due Date: Add a due date to the task. e.g. `%%* due: 2021-01-01 *%%`
+- Schedule Date: Add a schedule date to the task. e.g. `%%* schedule: 2021-01-01 *%%`
 - Project: Add a project to the task. e.g. `%%* project: project name *%%`
 
 ### Task Modification
 - Tasks are shown in two view: preview and detailed views. Most attributes are editable in the detailed view.
-- Add `description`, `due`, and `project`: click the ⋮ button in the bottom right corner.
+- Add `description`, `schedule`, and `project`: click the ⋮ button in the bottom right corner.
 - Add `tags`: click the + button.
 - Add `priority`: right click the checkbox.
-- Modify `description`, `due`: click on them.
+- Modify `description`, `schedule`: click on them.
 - Modify `tags`: right click on the tag and select `edit`.
 - Modify `project`: click on the project color dot.
 - Modify `priority`: right click on the checkbox.

@@ -14,7 +14,7 @@ export interface MultipleAttributeTaskQuery {
     projectQuery?: string[];
     labelQuery?: string[];
     completedQuery?: boolean[];
-    dueDateTimeQuery?: [string, string];
+    scheduleDateTimeQuery?: [string, string];
     filePathQuery?: string;
 }
 
@@ -29,7 +29,7 @@ export interface TaskRow {
     labels: string;
     completed: boolean;
     parentID: string;
-    due: string;
+    schedule: string;
     metadata: string;
     filePath: string;
     startLine: number;
@@ -181,9 +181,9 @@ export class TaskDatabase extends IndexedMapDatabase<PositionedTaskProperties> {
     this.createIndex('project', item => item.project.name);
     this.createIndex('labels', item => item.labels.join(','));
     this.createIndex('completed', item => item.completed);
-    this.createIndex('due.date', item => item.due ? item.due.date : null);
-    this.createIndex('due.time', item => item.due ? item.due.time : null);
-    this.createIndex('due.string', item => item.due ? item.due.string : null);
+    this.createIndex('schedule.date', item => item.schedule ? item.schedule.date : null);
+    this.createIndex('schedule.time', item => item.schedule ? item.schedule.time : null);
+    this.createIndex('schedule.string', item => item.schedule ? item.schedule.string : null);
     this.createIndex('filePath', item => item.docPosition.filePath);
   }
 
@@ -192,7 +192,7 @@ export class TaskDatabase extends IndexedMapDatabase<PositionedTaskProperties> {
       projectQuery = [],
       labelQuery = [],
       completedQuery = [],
-      dueDateTimeQuery = ['', ''],
+      scheduleDateTimeQuery = ['', ''],
       filePathQuery = '',
   }: MultipleAttributeTaskQuery): PositionedTaskProperties[] {
     const expression = {
@@ -204,30 +204,30 @@ export class TaskDatabase extends IndexedMapDatabase<PositionedTaskProperties> {
         task => completedQuery && completedQuery.length > 0 ? completedQuery.includes(task.completed) : true,
         task => {
           // Case 3: If both start and end are empty strings, return true for all tasks
-          if (!dueDateTimeQuery || (dueDateTimeQuery.length === 2 && dueDateTimeQuery[0] === '' && dueDateTimeQuery[1] === '')) {
+          if (!scheduleDateTimeQuery || (scheduleDateTimeQuery.length === 2 && scheduleDateTimeQuery[0] === '' && scheduleDateTimeQuery[1] === '')) {
             return true;
           }
-          const [start, end] = dueDateTimeQuery;
+          const [start, end] = scheduleDateTimeQuery;
         
-          // If the task has a due date
-          if (task.due) {
-            const taskDateTime = Sugar.Date.create(task.due.string);
+          // If the task has a schedule date
+          if (task.schedule) {
+            const taskDateTime = Sugar.Date.create(task.schedule.string);
         
-            // Case 1: If no start date is provided, filter tasks due before the end date
+            // Case 1: If no start date is provided, filter tasks schedule before the end date
             if (start === '') {
               return Sugar.Date.isBefore(taskDateTime, end) || Sugar.Date.is(taskDateTime, end);
             }
         
-            // Case 2: If no end date is provided, filter tasks due after the start date
+            // Case 2: If no end date is provided, filter tasks schedule after the start date
             if (end === '') {
               return Sugar.Date.isAfter(taskDateTime, start) || Sugar.Date.is(taskDateTime, start);
             }
         
-            // Default case: Filter tasks that are due between the start and end dates (inclusive)
+            // Default case: Filter tasks that are schedule between the start and end dates (inclusive)
             return Sugar.Date.isBetween(taskDateTime, start, end) || Sugar.Date.is(taskDateTime, start) || Sugar.Date.is(taskDateTime, end);
           }
         
-          // If the task has no due date, it doesn't meet any of the filtering conditions
+          // If the task has no schedule date, it doesn't meet any of the filtering conditions
           return false;
         },
         task => filePathQuery && filePathQuery !== '' ? task.docPosition.filePath.startsWith(filePathQuery) : true

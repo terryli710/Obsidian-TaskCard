@@ -16,14 +16,14 @@
         projectQuery: [],
         labelQuery: [],
         completedQuery: [],
-        dueDateTimeQuery: ['', ''],
+        scheduleDateTimeQuery: ['', ''],
         filePathQuery: '',
     };
     export let querySyncManager: QuerySyncManager;
     export let paths: string[] = [];
 
-    let startDate = query.dueDateTimeQuery[0] ? new Date(query.dueDateTimeQuery[0]) : null;
-    let endDate = query.dueDateTimeQuery[1] ? new Date(query.dueDateTimeQuery[1]) : null;
+    let startDate = query.scheduleDateTimeQuery[0] ? new Date(query.scheduleDateTimeQuery[0]) : null;
+    let endDate = query.scheduleDateTimeQuery[1] ? new Date(query.scheduleDateTimeQuery[1]) : null;
 
     let startDateString = startDate? startDate.toLocaleString() : '';
     let endDateString = endDate? endDate.toLocaleString() : '';
@@ -51,7 +51,7 @@
             projectQuery: [],
             labelQuery: [],
             completedQuery: [],
-            dueDateTimeQuery: ['', ''],
+            scheduleDateTimeQuery: ['', ''],
             filePathQuery: '',
         };
         querySyncManager.updateTaskQueryToFile(query);
@@ -73,8 +73,8 @@
     }
 
     function saveDate() {
-        query.dueDateTimeQuery[0] = isValidDate(startDate) ? startDate.toLocaleString() : '';
-        query.dueDateTimeQuery[1] = isValidDate(endDate) ? endDate.toLocaleString() : '';
+        query.scheduleDateTimeQuery[0] = isValidDate(startDate) ? startDate.toLocaleString() : '';
+        query.scheduleDateTimeQuery[1] = isValidDate(endDate) ? endDate.toLocaleString() : '';
     }
 
     function isValidDate(date: Date) {
@@ -179,12 +179,12 @@
         on:selected={(evt) => handleSelection(evt, 'label')} 
     />
 
-    <!-- Due DateTime -->
+    <!-- Schedule DateTime -->
     <li class="query-section">
         <div class="header">
             <div class="inline-title-wrapper">
-                <div class="inline-title">Due Date</div>
-                <div class="inline-description">To filter by due date</div>
+                <div class="inline-title">Schedule Date</div>
+                <div class="inline-description">To filter by schedule date</div>
             </div>
             <div class="input-wrapper">
                 <div class="date-input-component">
