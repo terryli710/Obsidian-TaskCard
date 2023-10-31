@@ -19,6 +19,7 @@
     import CircularProgressBar from '../components/CircularProgressBar.svelte';
     import Duration from './Duration.svelte';
     import SyncLogos from './SyncLogos.svelte';
+    import Due from './Due.svelte';
 
     export let taskSyncManager: ObsidianTaskSyncManager;
     export let plugin: TaskCardPlugin;
@@ -261,6 +262,7 @@
 
   <div class="task-card-attribute-bottom-bar">
     <div class="task-card-attribute-bottom-bar-left">
+      <Due taskSyncManager={taskSyncManager} plugin={plugin} params={params} displayDue={displayDuration} />
       <Schedule taskSyncManager={taskSyncManager} plugin={plugin} params={params} displaySchedule={displaySchedule} />
       <Duration taskSyncManager={taskSyncManager} params={params} displayDuration={displayDuration} />
       {#if displaySchedule || displayDuration}

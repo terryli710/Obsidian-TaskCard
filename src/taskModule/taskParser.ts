@@ -88,6 +88,7 @@ export class TaskParser {
     task.parent = attributes.parent || null;
     task.children = attributes.children || [];
     task.schedule = attributes.schedule || null;
+    task.due = attributes.due || null;
     task.duration = attributes.duration || null;
     task.metadata = attributes.metadata || {};
   
@@ -284,6 +285,9 @@ export class TaskParser {
         case 'schedule':
           task.schedule = tryParseAttribute('schedule', this.parseSchedule.bind(this), attributeValue, 'other');
           break;
+        case 'due':
+          task.due = tryParseAttribute('due', this.parseSchedule.bind(this), attributeValue, 'other');
+          break;
         case 'duration':
           task.duration = tryParseAttribute('duration', this.parseDuration.bind(this), attributeValue, 'other');
           break;
@@ -374,6 +378,7 @@ export class TaskParser {
     task.order = parseJSONAttribute(metadata['order'], 'order', 0);
     task.project = parseJSONAttribute(metadata['project'], 'project', null);
     task.schedule = parseJSONAttribute(metadata['schedule'], 'schedule', null); 
+    task.due = parseJSONAttribute(metadata['due'], 'due', null);
     task.duration = parseJSONAttribute(metadata['duration'], 'duration', null);
     task.metadata = parseJSONAttribute(metadata['metadata'], 'metadata', {}); 
 
