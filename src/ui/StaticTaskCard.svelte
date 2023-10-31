@@ -57,7 +57,7 @@
   );
 }
 
-  function updateDueDisplay(): string {
+  function updateScheduleDisplay(): string {
     if (!task.schedule) {
       scheduleDisplay = '';
       return scheduleDisplay;
@@ -68,7 +68,7 @@
     return scheduleDisplay;
   }
 
-  updateDueDisplay();
+  updateScheduleDisplay();
 
   function switchMode(
     event: MouseEvent | KeyboardEvent | CustomEvent,
@@ -132,7 +132,7 @@
             <CircularProgressBar value={descriptionProgress[0]} max={descriptionProgress[1]} showDigits={false} />
           {/if}
           <!-- Schedule -->
-          {#if task.hasDue()}
+          {#if task.hasSchedule()}
             <div class="task-card-schedule mode-single-line}" role="button" tabindex="0">
               <div class="schedule-display">
                 {scheduleDisplay}
@@ -223,7 +223,7 @@
   <div class="task-card-attribute-bottom-bar">
     <div class="task-card-attribute-bottom-bar-left">
       <!-- Schedule -->
-      {#if task.hasDue()}
+      {#if task.hasSchedule()}
         <div class="task-card-schedule mode-multi-line}" role="button" tabindex="0">
           <div class="schedule-display">
             {scheduleDisplay}

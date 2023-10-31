@@ -58,7 +58,7 @@ describe('AttributeSuggester', () => {
   it('gets schedule suggestions', () => {
     const lineText = '{{ schedule: t }}';
     const cursorPos = 9;
-    const suggestions = suggester.getDueSuggestions(lineText, cursorPos);
+    const suggestions = suggester.getScheduleSuggestions(lineText, cursorPos);
     expect(suggestions).toHaveLength(4); // Assuming 4 schedule suggestions are returned
   });
 
@@ -72,7 +72,7 @@ describe('AttributeSuggester', () => {
   it('wont get priority suggestions if cursor is not at the correct position', () => {
     const lineText = '{{ schedule: ';
     const cursorPos = 6;
-    const suggestions = suggester.getDueSuggestions(lineText, cursorPos);
+    const suggestions = suggester.getScheduleSuggestions(lineText, cursorPos);
     expect(suggestions).toHaveLength(0);
   });
 

@@ -2,7 +2,7 @@ import { logger } from '../utils/log';
 import { escapeRegExp, extractTags } from '../utils/regexUtils';
 import { kebabToCamel } from '../utils/stringCaseConverter';
 import { toArray, toBoolean } from '../utils/typeConversion';
-import { DueDate, Duration, ObsidianTask, Order, Priority, TaskProperties, TextPosition } from './task';
+import { ScheduleDate, Duration, ObsidianTask, Order, Priority, TaskProperties, TextPosition } from './task';
 import { Project, ProjectModule } from './project';
 import Sugar from 'sugar';
 import { SettingStore } from '../settings';
@@ -282,7 +282,7 @@ export class TaskParser {
 
       switch (attributeName) {
         case 'schedule':
-          task.schedule = tryParseAttribute('schedule', this.parseDue.bind(this), attributeValue, 'other');
+          task.schedule = tryParseAttribute('schedule', this.parseSchedule.bind(this), attributeValue, 'other');
           break;
         case 'duration':
           task.duration = tryParseAttribute('duration', this.parseDuration.bind(this), attributeValue, 'other');
@@ -440,7 +440,7 @@ export class TaskParser {
   }
 
 
-  parseDue(scheduleString: string): DueDate | null {
+  parseSchedule(scheduleString: string): ScheduleDate | null {
     const parsedDateTime = Sugar.Date.create(scheduleString);
 
     // Check if the parsedDateTime is a valid date
@@ -458,14 +458,14 @@ export class TaskParser {
         isRecurring: false,
         date: parsedDate,
         string: scheduleString
-      } as DueDate;
+      } as ScheduleDate;
     } else {
       return {
         isRecurring: false,
         date: parsedDate,
         time: parsedTime,
         string: scheduleString
-      } as DueDate;
+      } as ScheduleDate;
     }
   }
 

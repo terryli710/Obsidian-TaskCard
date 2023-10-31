@@ -1,4 +1,4 @@
-import { PositionedTaskProperties, DocPosition, Priority, DueDate, ObsidianTask, TextPosition, PositionedObsidianTask } from '../taskModule/task';
+import { PositionedTaskProperties, DocPosition, Priority, ScheduleDate, ObsidianTask, TextPosition, PositionedObsidianTask } from '../taskModule/task';
 import TaskCardPlugin from '..';
 import { getAPI } from 'obsidian-dataview';
 import { QueryResult } from 'obsidian-dataview/lib/api/plugin-api';

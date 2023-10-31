@@ -1,7 +1,7 @@
 <script lang="ts">
   import { logger } from "../utils/log";
   import { displayDate, displayTime } from "../utils/dateTimeFormatter"
-  import { DueDate, Duration, ObsidianTask } from "../taskModule/task";
+  import { ScheduleDate, Duration, ObsidianTask } from "../taskModule/task";
   import { ObsidianTaskSyncManager } from "../taskModule/taskSyncManager";
   import TaskCardPlugin from "..";
   import { tick } from "svelte";
@@ -131,7 +131,7 @@ function parseDurationInput(input: string): { hours: number, minutes: number } |
     node.select();
   }
 
-  let displayDue: boolean = taskSyncManager.obsidianTask.hasDue() || taskSyncManager.getTaskCardStatus('scheduleStatus') === 'editing';
+  let displaySchedule: boolean = taskSyncManager.obsidianTask.hasSchedule() || taskSyncManager.getTaskCardStatus('scheduleStatus') === 'editing';
   $: displayDuration = taskSyncManager.obsidianTask.hasDuration() || taskSyncManager.getTaskCardStatus('durationStatus') === 'editing';
 
 
@@ -139,7 +139,7 @@ function parseDurationInput(input: string): { hours: number, minutes: number } |
 
 <!-- Duration Display Section -->
 {#if displayDuration}
-  {#if displayDue}
+  {#if displaySchedule}
     <span class="schedule-duration-padding"></span>
   {/if}
   <div class="task-card-duration-container {params.mode === 'single-line' ? 'mode-single-line' : 'mode-multi-line'}"

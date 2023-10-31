@@ -1,7 +1,7 @@
 <script lang="ts">
   import { logger } from "../utils/log";
   import { displayDate, displayTime } from "../utils/dateTimeFormatter"
-  import { DueDate, Duration, ObsidianTask } from "../taskModule/task";
+  import { ScheduleDate, Duration, ObsidianTask } from "../taskModule/task";
   import { ObsidianTaskSyncManager } from "../taskModule/taskSyncManager";
   import TaskCardPlugin from "..";
   import { tick } from "svelte";
@@ -13,28 +13,28 @@
   export let taskSyncManager: ObsidianTaskSyncManager;
   export let plugin: TaskCardPlugin;
   export let params: TaskDisplayParams;
-  export let displayDue: boolean;
+  export let displaySchedule: boolean;
 
-  let schedule: DueDate | null;
+  let schedule: ScheduleDate | null;
   let scheduleString: string;
   let duration: Duration | null;
   let scheduleDisplay = "";
   let inputElement: HTMLInputElement;
-  schedule = taskSyncManager.obsidianTask.hasDue() ? taskSyncManager.obsidianTask.schedule : null;
+  schedule = taskSyncManager.obsidianTask.hasSchedule() ? taskSyncManager.obsidianTask.schedule : null;
   scheduleString = schedule ? schedule.string : '';
   duration = taskSyncManager.obsidianTask.hasDuration() ? taskSyncManager.obsidianTask.duration : null;
 
-  updateDueDisplay();
+  updateScheduleDisplay();
 
   async function toggleEditMode(event: KeyboardEvent | MouseEvent) {
       if (taskSyncManager.taskCardStatus.scheduleStatus === 'done') {
-        enableDueEditMode(event);
+        enableScheduleEditMode(event);
       } else {
-        finishDueEditing(event);
+        finishScheduleEditing(event);
       }
   }
 
-  async function enableDueEditMode(event: KeyboardEvent | MouseEvent) {
+  async function enableScheduleEditMode(event: KeyboardEvent | MouseEvent) {
     if (event instanceof KeyboardEvent) {
       if (event.key != 'Enter') {
         return;
@@ -51,7 +51,7 @@
       adjustWidthForInput(inputElement);
   }
 
-  function finishDueEditing(event: KeyboardEvent | MouseEvent) {
+  function finishScheduleEditing(event: KeyboardEvent | MouseEvent) {
     if (event instanceof MouseEvent) {
         return;
     }
@@ -59,7 +59,7 @@
     if (event.key === 'Enter' || event.key === 'Escape') {
         taskSyncManager.taskCardStatus.scheduleStatus = 'done';
         if (event.key === 'Escape') {
-            updateDueDisplay();
+            updateScheduleDisplay();
             return;
         }
 
@@ -67,9 +67,9 @@
             schedule = null;
         } else {
             try {
-                let newDue = plugin.taskParser.parseDue(scheduleString);
-                if (newDue) {
-                    schedule = newDue;
+                let newSchedule = plugin.taskParser.parseSchedule(scheduleString);
+                if (newSchedule) {
+                    schedule = newSchedule;
                 } else {
                     new Notice(`[TaskCard] Invalid schedule date: ${scheduleString}`);
                     scheduleString = schedule ? schedule.string : '';
@@ -81,11 +81,11 @@
         }
 
         taskSyncManager.updateObsidianTaskAttribute('schedule', schedule);
-        updateDueDisplay();
+        updateScheduleDisplay();
     }
   }
 
-  function updateDueDisplay(): string {
+  function updateScheduleDisplay(): string {
       if (!schedule) {
           scheduleDisplay = '';
           return scheduleDisplay;
@@ -125,7 +125,7 @@
   }
 
 
-  function convertDueToMoment(scheduleDate: DueDate): moment.Moment | null {
+  function convertScheduleToMoment(scheduleDate: ScheduleDate): moment.Moment | null {
     if (!scheduleDate.date) {
       return null;  // Ensure the date is present.
     }
@@ -138,38 +138,38 @@
     return moment(datetimeStr);
   }
 
-  $: displayDue = taskSyncManager.obsidianTask.hasDue() || taskSyncManager.taskCardStatus.scheduleStatus === 'editing';
+  $: displaySchedule = taskSyncManager.obsidianTask.hasSchedule() || taskSyncManager.taskCardStatus.scheduleStatus === 'editing';
   
   
   // upcoming and ongoing
-  function isUpcoming(schedule: DueDate, currTime: moment.Moment, minuteGap: number = 15): boolean {
+  function isUpcoming(schedule: ScheduleDate, currTime: moment.Moment, minuteGap: number = 15): boolean {
     if (!schedule || !schedule.date || !schedule.time) { return false; }
     // convert schedule to moment
-    const scheduleMoment = convertDueToMoment(schedule);
+    const scheduleMoment = convertScheduleToMoment(schedule);
     // calculate the time gap
     const timeGap = moment.duration(scheduleMoment.diff(currTime)).asMinutes();
     // check if the time gap is within the specified range
     return timeGap > 0 && timeGap < minuteGap;
   }
 
-  enum TaskDueStatus {
+  enum TaskScheduleStatus {
     Upcoming = "upcoming",
     Ongoing = "ongoing",
-    PassDue = "passDue",
+    PassSchedule = "passSchedule",
     Passed= "passed"
   }
 
-  function getTaskDueStatus(task: ObsidianTask, minuteGap: number = 15): TaskDueStatus | null {
+  function getTaskScheduleStatus(task: ObsidianTask, minuteGap: number = 15): TaskScheduleStatus | null {
     const schedule = task.schedule;
     let duration = task.duration;
     const currTime = moment();
     const finished = task.completed;
     if (!schedule) { return null; }
-    const scheduleMoment = convertDueToMoment(schedule);
+    const scheduleMoment = convertScheduleToMoment(schedule);
     const timeGap = moment.duration(scheduleMoment.diff(currTime)).asMinutes();
     // upcoming
     if (timeGap > 0 && timeGap < minuteGap) {
-      return TaskDueStatus.Upcoming;
+      return TaskScheduleStatus.Upcoming;
     }
     if (!duration) { duration = { hours: 0, minutes: 0 }; }
     if (!duration.hours) { duration.hours = 0; }
@@ -178,25 +178,25 @@
     // ongoing
     const endMoment = scheduleMoment.clone().add(duration.hours, 'hours').add(duration.minutes, 'minutes');
     if (currTime.isBetween(scheduleMoment, endMoment)) {
-      return TaskDueStatus.Ongoing;
+      return TaskScheduleStatus.Ongoing;
     }
     // pass schedule
     if (currTime.isAfter(endMoment) && !finished) {
-      return TaskDueStatus.PassDue;
+      return TaskScheduleStatus.PassSchedule;
     }
     // passed
     if (currTime.isAfter(endMoment) && finished) {
-      return TaskDueStatus.Passed;
+      return TaskScheduleStatus.Passed;
     }
     return null;
   }
 
-  const taskDueStatus = getTaskDueStatus(taskSyncManager.obsidianTask, 15);
+  const taskScheduleStatus = getTaskScheduleStatus(taskSyncManager.obsidianTask, 15);
 
 </script>
 
-{#if displayDue}
-  <div class="task-card-schedule-container {params.mode === 'single-line' ? 'mode-single-line' : 'mode-multi-line'} {taskDueStatus ? taskDueStatus : ''}"
+{#if displaySchedule}
+  <div class="task-card-schedule-container {params.mode === 'single-line' ? 'mode-single-line' : 'mode-multi-line'} {taskScheduleStatus ? taskScheduleStatus : ''}"
     on:click={toggleEditMode}
     on:keydown={toggleEditMode}
     aria-label="Schedule"
@@ -204,7 +204,7 @@
     tabindex="0"
   >
     <div class="task-card-schedule-left-part">
-      <span class="task-card-schedule-prefix {taskDueStatus ? taskDueStatus : ''}">
+      <span class="task-card-schedule-prefix {taskScheduleStatus ? taskScheduleStatus : ''}">
         <CalendarClock width={"14"} height={"14"} ariaLabel="schedule"/>
       </span>
     </div>
@@ -217,7 +217,7 @@
         class="task-card-schedule"
       />
     {:else}
-      <div class="task-card-schedule {taskDueStatus ? taskDueStatus : ''}">
+      <div class="task-card-schedule {taskScheduleStatus ? taskScheduleStatus : ''}">
         <div class="schedule-display">
           {scheduleDisplay}
         </div>
@@ -253,7 +253,7 @@
     color: var(--text-on-accent);
   }
 
-  .task-card-schedule-prefix.passDue {
+  .task-card-schedule-prefix.passSchedule {
     color: var(--text-warning);
   }
 
@@ -311,7 +311,7 @@
     text-decoration: underline;
   }
 
-  .task-card-schedule.passDue {
+  .task-card-schedule.passSchedule {
     color: var(--text-warning);
   }
 

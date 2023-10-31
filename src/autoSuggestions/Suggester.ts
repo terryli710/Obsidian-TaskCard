@@ -53,7 +53,7 @@ export class AttributeSuggester {
       this.getPrioritySuggestions(lineText, cursorPos)
     );
     suggestions = suggestions.concat(
-      this.getDueSuggestions(lineText, cursorPos)
+      this.getScheduleSuggestions(lineText, cursorPos)
     );
     suggestions = suggestions.concat(
       this.getDurationSuggestions(lineText, cursorPos)
@@ -137,7 +137,7 @@ export class AttributeSuggester {
   }
 
 
-  getDueSuggestions(lineText: string, cursorPos: number): SuggestInformation[] {
+  getScheduleSuggestions(lineText: string, cursorPos: number): SuggestInformation[] {
     let suggestions: SuggestInformation[] = [];
   
     const scheduleRegexText = `${escapeRegExp(this.startingNotation)}\\s?schedule:(.*?)${escapeRegExp(this.endingNotation)}`;

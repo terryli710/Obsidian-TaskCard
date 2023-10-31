@@ -10,7 +10,7 @@ export const DateOnly = String.withConstraint((s) =>
 );
 export const TimeOnly = String.withConstraint((s) => /^\d{2}:\d{2}$/.test(s));
 
-export type DueDate = {
+export type ScheduleDate = {
   isRecurring: boolean;
   date: Static<typeof DateOnly>;
   time?: Static<typeof TimeOnly> | null;
@@ -41,7 +41,7 @@ export interface TaskProperties {
   parent?: TaskProperties | ObsidianTask | null;
   children: TaskProperties[] | ObsidianTask[];
 
-  schedule?: DueDate | null;
+  schedule?: ScheduleDate | null;
   duration?: Duration | null;
   metadata?: {
     taskDisplayParams?: TaskDisplayParams | null;
@@ -64,7 +64,7 @@ export class ObsidianTask implements TaskProperties {
   public parent?: TaskProperties | ObsidianTask | null;
   public children: TaskProperties[] | ObsidianTask[];
 
-  public schedule?: DueDate | null;
+  public schedule?: ScheduleDate | null;
   public duration?: Duration | null;
   
   public metadata?: {
@@ -133,7 +133,7 @@ export class ObsidianTask implements TaskProperties {
     return this.children.length > 0;
   }
 
-  hasDue(): boolean {
+  hasSchedule(): boolean {
     if (!this.schedule) return false;
     // return if the schedule string is not empty
     return !!this.schedule.string.trim();
