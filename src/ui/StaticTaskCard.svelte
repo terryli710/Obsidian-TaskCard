@@ -21,10 +21,12 @@
   
   // Markdown to HTML
   import { markdownToHTML } from '../utils/markdownToHTML';
+  import { StaticTaskCardDisplayMode } from '../renderer/StaticTaskListRenderer';
 
 
   export let taskItem: PositionedObsidianTask;
   export let plugin: TaskCardPlugin;
+  export let staticTaskCardDisplayMode: StaticTaskCardDisplayMode = StaticTaskCardDisplayMode.normal;
 
   let taskDisplayParams: TaskDisplayParams = { mode: 'single-line' };
   let task = taskItem;

@@ -16,18 +16,30 @@
         querySyncManager.toEditMode();
     }
 
-    // Define a function to categorize tasks
+    let counts = {
+        do: 0,
+        plan: 0,
+        delegate: 0,
+        delete: 0
+    };
+
+    $: if(taskList) {
+        counts = taskList.reduce((acc, task) => {
+            const category = categorizeTasks(task);
+            acc[category] = (acc[category] || 0) + 1;
+            return acc;
+        }, counts);
+    }
+
     function categorizeTasks(task: PositionedObsidianTask): string {
-        // For demo purposes, you can design how to categorize tasks here
-        // For example, you can use task properties like 'important' and 'urgent'
         if (task.priority > 1 && task.due) {
-            return "important-urgent";
+            return "do"; // was "important-urgent"
         } else if (task.priority > 1 && !task.due) {
-            return "important-not-urgent";
+            return "plan"; // was "important-not-urgent"
         } else if (!(task.priority > 1) && task.due) {
-            return "not-important-urgent";
+            return "delegate"; // was "not-important-urgent"
         } else {
-            return "not-important-not-urgent";
+            return "delete"; // was "not-important-not-urgent"
         }
     }
 </script>
@@ -40,48 +52,48 @@
         </div>
     {:else if taskList.length > 0}
         <div class="matrix-container">
-            <div class="category important-urgent">
-                <h3>Important and Urgent</h3>
+            <div class="category do">
+                <div class="category-title">Do ({counts.do})</div>
                 <div class="task-list">
                     <ul class="contain-task-list has-list-bullet">
                     {#each taskList as taskItem}
-                        {#if categorizeTasks(taskItem) === "important-urgent"}
+                        {#if categorizeTasks(taskItem) === "do"}
                         <StaticTaskItem {taskItem} {plugin} />
                         {/if}
                     {/each}
                     </ul>
                 </div>
             </div>
-            <div class="category important-not-urgent">
-                <h3>Important and Not Urgent</h3>
+            <div class="category plan">
+                <div class="category-title">Plan ({counts.plan})</div>
                 <div class="task-list">
                     <ul class="contain-task-list has-list-bullet">
                     {#each taskList as taskItem}
-                        {#if categorizeTasks(taskItem) === "important-not-urgent"}
+                        {#if categorizeTasks(taskItem) === "plan"}
                         <StaticTaskItem {taskItem} {plugin} />
                         {/if}
                     {/each}
                     </ul>
                 </div>
             </div>
-            <div class="category not-important-urgent">
-                <h3>Not Important and Urgent</h3>
+            <div class="category delegate">
+                <div class="category-title">Delegate ({counts.delegate})</div>
                 <div class="task-list">
                     <ul class="contain-task-list has-list-bullet">
                     {#each taskList as taskItem}
-                        {#if categorizeTasks(taskItem) === "not-important-urgent"}
+                        {#if categorizeTasks(taskItem) === "delegate"}
                         <StaticTaskItem {taskItem} {plugin} />
                         {/if}
                     {/each}
                     </ul>
                 </div>
             </div>
-            <div class="category not-important-not-urgent">
-                <h3>Not Important and Not Urgent</h3>
+            <div class="category delete">
+                <div class="category-title">Delete ({counts.delete})</div>
                 <div class="task-list">
                     <ul class="contain-task-list has-list-bullet">
                     {#each taskList as taskItem}
-                        {#if categorizeTasks(taskItem) === "not-important-not-urgent"}
+                        {#if categorizeTasks(taskItem) === "delete"}
                         <StaticTaskItem {taskItem} {plugin} />
                         {/if}
                     {/each}
@@ -103,6 +115,11 @@
 
 
 <style>
+
+    *, *:before, *:after {
+    box-sizing: border-box;
+    }
+
     /* Add CSS for the 2x2 grid layout */
     .matrix-container {
         display: grid;
@@ -115,9 +132,11 @@
 
     /* Add styles for each category */
     .category {
+        flex: 1 1 auto;
+        overflow: auto;
         background-color: transparent; /* Set a transparent background */
         padding: 0; /* Remove padding */
-        max-height: 250px; /* Allow vertical scrolling within each category */
+        max-height: 50vh; /* Allow vertical scrolling within each category */
         overflow: hidden;
     }
 
@@ -128,5 +147,44 @@
         overflow-y: auto;
     }
 
-    /* Add any other styles you need */
+    .category-title {
+        font-size: 1em; /* Smaller size, adjust as needed */
+        font-weight: bold;
+        margin-bottom: 0.5em;
+        padding: 0.25em;
+        /* Add more styles as needed for prettiness */
+    }
+    
+    .button-menu {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .edit-button {
+        width: 40%;
+        color: var(--text-normal);
+        margin: 10px;
+    }
+
+    .error-page {
+        text-align: center;
+        font-size: 14px;
+        color: var(--text-muted);
+        margin: 20px;
+    }
+
+    .error-page h2 {
+        font-size: 24px;
+        margin-bottom: 10px;
+    }
+
+    .error-page p {
+        margin-bottom: 20px;
+    }
+
+    .list-stats {
+        font-size: var(--font-ui-small);
+        color: var(--text-muted);
+    }
 </style>
