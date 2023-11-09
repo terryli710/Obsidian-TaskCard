@@ -139,6 +139,25 @@
         });
       }
 
+      if (!taskSyncManager.obsidianTask.hasDue()) {
+        cardMenu.addItem((item) => {
+          item.setTitle('Add Due');
+          item.setIcon('plus');
+          item.onClick((evt) => {
+            taskSyncManager.taskCardStatus.dueStatus = 'editing';
+            displayDue = taskSyncManager.obsidianTask.hasDue() || taskSyncManager.getTaskCardStatus('dueStatus') === 'editing';
+          });
+        });
+      } else {
+        cardMenu.addItem((item) => {
+          item.setTitle('Delete Schedule');
+          item.setIcon('trash');
+          item.onClick((evt) => {
+            taskSyncManager.updateObsidianTaskAttribute('schedule', null);
+          });
+        });
+      }
+
       if (!taskSyncManager.obsidianTask.hasDuration()) {
         cardMenu.addItem((item) => {
           item.setTitle('Add Duration');
@@ -211,6 +230,7 @@
 
     let displaySchedule: boolean = taskSyncManager.obsidianTask.hasSchedule() || taskSyncManager.getTaskCardStatus('scheduleStatus') === 'editing';
     let displayDuration: boolean = taskSyncManager.obsidianTask.hasDuration() || taskSyncManager.getTaskCardStatus('durationStatus') === 'editing';
+    let displayDue: boolean = taskSyncManager.obsidianTask.hasDue() || taskSyncManager.getTaskCardStatus('dueStatus') === 'editing';
 
 </script>
 

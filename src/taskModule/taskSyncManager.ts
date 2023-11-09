@@ -128,6 +128,7 @@ export class ObsidianTaskSyncManager implements ObsidianTaskSyncProps {
       descriptionStatus: ['editing', 'done'],
       projectStatus: ['selecting', 'done'],
       scheduleStatus: ['editing', 'done'],
+      dueStatus: ['editing', 'done'],
       durationStatus: ['editing', 'done']
     };
     return allowedStatuses[key].includes(status);

@@ -7,7 +7,7 @@
   import { tick } from "svelte";
   import { TaskDisplayParams, TaskDisplayMode } from "../renderer/postProcessor";
   import { Notice } from "obsidian";
-  import CalendarClock from "../components/icons/CalendarClock.svelte";
+  import AlertTriangle from "../components/icons/AlertTriangle.svelte";
   import moment from "moment";
 
   export let taskSyncManager: ObsidianTaskSyncManager;
@@ -85,63 +85,86 @@
     }
   }
 
-  // function updateDueDisplay(): string {
-  //     if (!due) {
-  //         dueDisplay = '';
-  //         return dueDisplay;
-  //     }
-  //     let datePart = displayDate(due.date);
-  //     let timePart = displayTime(due.time);
-  //     dueDisplay = timePart ? `${datePart}, ${timePart}` : datePart;
-  //     return dueDisplay;
-  // }
-  
 
-function updateDueDisplay(): string {
+  function updateDueDisplay(mode = 'relative'): string {
     if (!due || !due.date) {
         dueDisplay = '';
         return dueDisplay;
     }
 
-    // Convert to Moment object, considering cases where due.time is null or ''
-    logger.debug(`${JSON.stringify(due)}`);
     const dueDateTime = due.time ? moment(`${due.date} ${due.time}`) : moment(`${due.date}`);
     const now = moment();
 
-    // Calculate differences
-    const yearsDiff = dueDateTime.diff(now, 'years');
-    const monthsDiff = dueDateTime.diff(now, 'months');
-    const weeksDiff = dueDateTime.diff(now, 'weeks');
-    const daysDiff = dueDateTime.diff(now, 'days');
-    const hoursDiff = dueDateTime.diff(now, 'hours');
+    const diff = {
+            years: dueDateTime.diff(now, 'years', true),
+            months: dueDateTime.diff(now, 'months', true),
+            weeks: dueDateTime.diff(now, 'weeks', true),
+            days: dueDateTime.diff(now, 'days', true),
+            hours: dueDateTime.diff(now, 'hours', true),
+            minutes: dueDateTime.diff(now, 'minutes', true)
+      };
 
-    // Choose display format based on the difference
-    if (yearsDiff > 1) {
-      dueDisplay = `${dueDateTime.year()}`;
-    } else if (yearsDiff === 1) {
-      dueDisplay = `${dueDateTime.format('MMM, YYYY')}`;
-    } else if (monthsDiff > 0) {
-      dueDisplay = `${dueDateTime.format('MMM DD')}`;
-    } else if (weeksDiff > 0) {
-      dueDisplay = `next ${dueDateTime.format('ddd, MMM DD')}`;
-    } else if (daysDiff > 1 || (daysDiff === 1 && hoursDiff >= 24)) {
-        // If due.time is null or empty, just show the day
-        if (!due.time) {
-          dueDisplay = `${dueDateTime.format('ddd')}`;
-        }
-        dueDisplay = `${dueDateTime.format('ddd, MMM DD, hA')}`;
-    } else if (daysDiff === 1) {
-      dueDisplay = "Tomorrow";
-    } else {
-        // If due.time is null or empty, return "Today"
-        if (!due.time) {
-          dueDisplay = "Today";
-        }
-        dueDisplay = `Today, ${dueDateTime.format('h:mmA')}`;
+    // If mode is 'absolute', use the existing logic to display a time point.
+    if (mode === 'absolute') {
+        
+      // Choose display format based on the difference
+      if (diff.years > 1) {
+        dueDisplay = `${dueDateTime.year()}`;
+      } else if (diff.years === 1) {
+        dueDisplay = `${dueDateTime.format('MMM, YYYY')}`;
+      } else if (diff.months > 0) {
+        dueDisplay = `${dueDateTime.format('MMM DD')}`;
+      } else if (diff.weeks > 0) {
+        dueDisplay = `next ${dueDateTime.format('ddd, MMM DD')}`;
+      } else if (diff.days > 1 || (diff.days === 1 && diff.hours >= 24)) {
+          // If due.time is null or empty, just show the day
+          if (!due.time) {
+            dueDisplay = `${dueDateTime.format('ddd')}`;
+          }
+          dueDisplay = `${dueDateTime.format('ddd, MMM DD, hA')}`;
+      } else if (diff.days === 1) {
+        dueDisplay = "Tomorrow";
+      } else {
+          // If due.time is null or empty, return "Today"
+          if (!due.time) {
+            dueDisplay = "Today";
+          }
+          dueDisplay = `${dueDateTime.format('h:mmA')}`;
+      }
+      return dueDisplay;
     }
+
+    // If mode is 'relative', calculate and display the time until the deadline.
+    else if (mode === 'relative') {
+        // Logic to determine which unit to display based on the difference.
+        // Always round down since we want to display until the deadline is reached.
+        // detect pass due
+        let prefix = '';
+        if (dueDateTime.isBefore(now)) {
+          prefix = '- ';
+          // make diff to be absolute
+          diff.years = -diff.years;
+          diff.months = -diff.months;
+          diff.weeks = -diff.weeks;
+          diff.days = -diff.days;
+          diff.hours = -diff.hours;
+          diff.minutes = -diff.minutes;
+        }
+        if (Math.floor(diff.years) > 0) {
+            dueDisplay = `${prefix}${Math.floor(diff.years)} year${Math.floor(diff.years) > 1 ? 's' : ''}`;
+        } else if (Math.floor(diff.months) > 0) {
+            dueDisplay = `${prefix}${Math.floor(diff.months)} month${Math.floor(diff.months) > 1 ? 's' : ''}`;
+        } else if (Math.floor(diff.days) > 0) {
+            dueDisplay = `${prefix}${Math.floor(diff.days)} day${Math.floor(diff.days) > 1 ? 's' : ''}`;
+        } else if (Math.floor(diff.hours) > 0) {
+            dueDisplay = `${prefix}${Math.floor(diff.hours)} hour${Math.floor(diff.hours) > 1 ? 's' : ''}`;
+        } else {
+            dueDisplay = `${prefix}${Math.floor(diff.minutes)} minute${Math.floor(diff.minutes) > 1 ? 's' : ''}`;
+        }
+    }
+
     return dueDisplay;
 }
-
 
 
   // Action function to focus and select the input content
@@ -253,7 +276,7 @@ function updateDueDisplay(): string {
   >
     <div class="task-card-due-left-part">
       <span class="task-card-due-prefix {taskDueStatus ? taskDueStatus : ''}">
-        <CalendarClock width={"14"} height={"14"} ariaLabel="due"/>
+        <AlertTriangle width={"14"} height={"14"} ariaLabel="due"/>
       </span>
     </div>
     {#if taskSyncManager.getTaskCardStatus('dueStatus') === 'editing'}
@@ -318,6 +341,7 @@ function updateDueDisplay(): string {
     display: flex;
     border-radius: 2em;
     overflow: hidden;
+    margin: 0 2px;
     font-size: var(--tag-size);
     border: var(--border-width) solid var(--text-accent);
   }

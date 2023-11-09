@@ -98,6 +98,7 @@
               descriptionStatus: 'done',
               projectStatus: 'done',
               scheduleStatus: 'done',
+              dueStatus: 'done',
               durationStatus: 'done'
             },
             markdownTask: null,

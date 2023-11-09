@@ -270,6 +270,7 @@
     display: flex;
     border-radius: 2em;
     overflow: hidden;
+    margin: 0 2px;
     font-size: var(--tag-size);
     border: var(--border-width) solid var(--text-accent);
   }

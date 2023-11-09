@@ -14,7 +14,7 @@
   export let displayDuration: boolean;
   let duration: Duration | null;
   duration = taskSyncManager.obsidianTask.hasDuration() ? taskSyncManager.obsidianTask.duration : null;
-
+  // TODO: distinguish due and schedule and duration;
 
   function customDurationHumanizer(duration: Duration) {
     if (duration.hours === 0) {
@@ -197,6 +197,7 @@ function parseDurationInput(input: string): { hours: number, minutes: number } |
     display: flex;
     border-radius: 2em;
     overflow: hidden;
+    margin: 0 2px;
     font-size: var(--tag-size);
     border: var(--border-width) solid var(--text-accent);
   }

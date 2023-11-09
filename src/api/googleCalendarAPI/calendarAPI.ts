@@ -38,6 +38,7 @@ export class GoogleCalendarAPI {
             this.calendars = await this.listCalendars();
         } catch (e) {
             logger.error(`Failed to list calendars: ${e}`);
+            return;
         }
         SettingStore.subscribe((settings) => {
             const defaultCalendarId = settings.syncSettings.googleSyncSetting.defaultCalendarId;
@@ -47,9 +48,6 @@ export class GoogleCalendarAPI {
             this.googleSyncSetting = settings.syncSettings.googleSyncSetting;
         });
 
-        // DEBUG
-        this.defaultCalendar = this.calendars[1];
-        // logger.debug(`defaultCalendar: ${JSON.stringify(this.defaultCalendar)}`);
     }
 
     async handleLocalTaskCreation(event: TaskChangeEvent): Promise<string> {
