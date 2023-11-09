@@ -64,6 +64,7 @@ export class GoogleCalendarAPI {
         // 1. intrinsic filter: task without schedule date won't be created
         if (!event.currentState.schedule?.date) return false; // Optional chaining is used here
         // 2. setting based filter: if there's filter project or tag, check if the task is in the project or tag
+        if (!this.googleSyncSetting) return false;
         if (this.googleSyncSetting.doesNeedFilters && this.googleSyncSetting.filterProject) {
             if (this.googleSyncSetting.filterProject !== event.currentState.project?.id) return false;
         }

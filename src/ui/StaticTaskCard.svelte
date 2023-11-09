@@ -7,15 +7,20 @@
     TaskDisplayParams
   } from '../renderer/postProcessor';
   import { LabelModule } from '../taskModule/labels';
-  import { DocPosition, ObsidianTask, PositionedObsidianTask } from '../taskModule/task';
-  import { displayDate, displayTime } from '../utils/dateTimeFormatter';
-  import { logger } from '../utils/log';
-  import { marked } from 'marked';
+  import { DocPosition, PositionedObsidianTask } from '../taskModule/task';
   import TaskCardPlugin from '..';
   import { DescriptionParser } from '../taskModule/description';
   import CircularProgressBar from '../components/CircularProgressBar.svelte';
   import SyncLogos from './SyncLogos.svelte';
-  marked.use({ mangle: false, headerIds: false, langPrefix: '' });
+  import Schedule from './Schedule.svelte';
+  // import Description from './Description.svelte';
+  import Content from './Content.svelte';
+  import Duration from './Duration.svelte';
+  import Due from './Due.svelte';
+  import { logger } from '../utils/log';
+  
+  // Markdown to HTML
+  import { markdownToHTML } from '../utils/markdownToHTML';
 
 
   export let taskItem: PositionedObsidianTask;
@@ -24,9 +29,9 @@
   let taskDisplayParams: TaskDisplayParams = { mode: 'single-line' };
   let task = taskItem;
   let docPosition = taskItem.docPosition;
-  let scheduleDisplay = '';
+  // let scheduleDisplay = '';
   let labelModule = new LabelModule();
-  let descriptionMarkdown = marked(task.description);
+  let descriptionMarkdown = markdownToHTML(task.description);
   let descriptionProgress = DescriptionParser.progressOfDescription(task.description);
 
   labelModule.setLabels(task.labels);
@@ -37,38 +42,25 @@
   }
 
   async function toggleCompleteOfTask(completed: boolean, docPosition: DocPosition) {
-  // Get the line from the file
-  const line = await plugin.fileOperator.getLineFromFile(
-    docPosition.filePath,
-    docPosition.start.line + 1,
-  );
+    // Get the line from the file
+    const line = await plugin.fileOperator.getLineFromFile(
+      docPosition.filePath,
+      docPosition.start.line + 1,
+    );
 
-  // Determine the symbol to use based on the 'completed' flag
-  const symbol = completed ? 'x' : ' ';
+    // Determine the symbol to use based on the 'completed' flag
+    const symbol = completed ? 'x' : ' ';
 
-  // Use a regular expression to find the task's current completion symbol and replace it
-  const updatedLine = line.replace(/- \[[^\]]\]/, `- [${symbol}]`);
+    // Use a regular expression to find the task's current completion symbol and replace it
+    const updatedLine = line.replace(/- \[[^\]]\]/, `- [${symbol}]`);
 
-  // Update the line in the file
-  plugin.fileOperator.updateLineInFile(
-    docPosition.filePath,
-    docPosition.start.line + 1,
-    updatedLine
-  );
-}
-
-  function updateScheduleDisplay(): string {
-    if (!task.schedule) {
-      scheduleDisplay = '';
-      return scheduleDisplay;
-    }
-    let datePart = displayDate(task.schedule.date);
-    let timePart = displayTime(task.schedule.time);
-    scheduleDisplay = timePart ? `${datePart}, ${timePart}` : datePart;
-    return scheduleDisplay;
+    // Update the line in the file
+    plugin.fileOperator.updateLineInFile(
+      docPosition.filePath,
+      docPosition.start.line + 1,
+      updatedLine
+    );
   }
-
-  updateScheduleDisplay();
 
   function switchMode(
     event: MouseEvent | KeyboardEvent | CustomEvent,
@@ -101,6 +93,11 @@
     )
   }
 
+  const displaySchedule = task.hasSchedule();
+  const displayDuration = task.hasDuration();
+  const displayDue = task.hasDue(); 
+  // const displayDescription = task.hasDescription();
+
 </script>
 
 {#if taskDisplayParams.mode === 'single-line'}
@@ -132,13 +129,7 @@
             <CircularProgressBar value={descriptionProgress[0]} max={descriptionProgress[1]} showDigits={false} />
           {/if}
           <!-- Schedule -->
-          {#if task.hasSchedule()}
-            <div class="task-card-schedule mode-single-line}" role="button" tabindex="0">
-              <div class="schedule-display">
-                {scheduleDisplay}
-              </div>
-            </div>
-          {/if}
+          <Schedule interactive={false} displaySchedule={displaySchedule} params={{ mode: 'single-line'}} taskItem={task} />
           <div class="task-card-project">
             {#if task.hasProject()}
               <span
@@ -181,9 +172,7 @@
     </div>
     <div class="task-card-content-project-line">
       <!-- Content -->
-      <div class="task-card-content mode-multi-line" role="button" tabindex="0">
-        {task.content}
-      </div>
+      <Content interactive={false} taskItem={task} />
       <SyncLogos providedMetadata={task.metadata} />
       <!-- Project -->
       <div class="project-wrapper">
@@ -222,17 +211,10 @@
 
   <div class="task-card-attribute-bottom-bar">
     <div class="task-card-attribute-bottom-bar-left">
-      <!-- Schedule -->
-      {#if task.hasSchedule()}
-        <div class="task-card-schedule mode-multi-line}" role="button" tabindex="0">
-          <div class="schedule-display">
-            {scheduleDisplay}
-          </div>
-        </div>
-        {#if taskDisplayParams.mode === 'multi-line'}
-          <div class="task-card-attribute-separator"></div>
-        {/if}
-      {/if}
+      <!-- Schedule/Duration/Due -->
+      <Schedule interactive={false} displaySchedule={displaySchedule} params={{ mode: 'multi-line'}} taskItem={task} />
+      <Duration interactive={false} params={{ mode: 'multi-line'}} taskItem={task} displayDuration={displayDuration} />
+      <Due interactive={false}  params={{ mode: 'multi-line'}} taskItem={task} displayDue={displayDue} />
       <!-- Labels -->
       <div class="task-card-labels">
         {#each labelModule.getLabels() as label}

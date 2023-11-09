@@ -150,10 +150,10 @@
         });
       } else {
         cardMenu.addItem((item) => {
-          item.setTitle('Delete Schedule');
+          item.setTitle('Delete Due');
           item.setIcon('trash');
           item.onClick((evt) => {
-            taskSyncManager.updateObsidianTaskAttribute('schedule', null);
+            taskSyncManager.updateObsidianTaskAttribute('due', null);
           });
         });
       }
@@ -231,6 +231,7 @@
     let displaySchedule: boolean = taskSyncManager.obsidianTask.hasSchedule() || taskSyncManager.getTaskCardStatus('scheduleStatus') === 'editing';
     let displayDuration: boolean = taskSyncManager.obsidianTask.hasDuration() || taskSyncManager.getTaskCardStatus('durationStatus') === 'editing';
     let displayDue: boolean = taskSyncManager.obsidianTask.hasDue() || taskSyncManager.getTaskCardStatus('dueStatus') === 'editing';
+    let displayDescription: boolean = taskSyncManager.obsidianTask.hasDescription() || taskSyncManager.getTaskCardStatus('descriptionStatus') === 'editing'
 
 </script>
 
@@ -272,9 +273,7 @@
       <SyncLogos taskSyncManager={taskSyncManager} />
       <Project taskSyncManager={taskSyncManager} params={params} />
     </div>
-    {#if taskSyncManager.obsidianTask.hasDescription() || taskSyncManager.getTaskCardStatus('descriptionStatus') === 'editing'}
-      <Description taskSyncManager={taskSyncManager} />
-    {/if}
+    <Description taskSyncManager={taskSyncManager} displayDescription={displayDescription} />
     <button class="task-card-menu-button mode-multi-line" on:click={(event) => showCardMenu(event)} tabindex="0">
       <MoreVertical ariaLabel="Show Menu"/>
     </button>
@@ -282,9 +281,9 @@
 
   <div class="task-card-attribute-bottom-bar">
     <div class="task-card-attribute-bottom-bar-left">
-      <Due taskSyncManager={taskSyncManager} plugin={plugin} params={params} displayDue={displayDuration} />
       <Schedule taskSyncManager={taskSyncManager} plugin={plugin} params={params} displaySchedule={displaySchedule} />
       <Duration taskSyncManager={taskSyncManager} params={params} displayDuration={displayDuration} />
+      <Due taskSyncManager={taskSyncManager} plugin={plugin} params={params} displayDue={displayDuration} />
       {#if displaySchedule || displayDuration}
         <div class="task-card-attribute-separator"></div>
       {/if}

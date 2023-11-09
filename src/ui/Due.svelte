@@ -10,19 +10,28 @@
   import AlertTriangle from "../components/icons/AlertTriangle.svelte";
   import moment from "moment";
 
-  export let taskSyncManager: ObsidianTaskSyncManager;
-  export let plugin: TaskCardPlugin;
+  export let interactive: boolean = true;
+  export let taskSyncManager: ObsidianTaskSyncManager = undefined;
+  export let taskItem: ObsidianTask = undefined;
+  export let plugin: TaskCardPlugin = undefined;
   export let params: TaskDisplayParams;
   export let displayDue: boolean;
 
-  let due: ScheduleDate | null;
-  let dueString: string;
-  let duration: Duration | null;
-  let dueDisplay = "";
+  let due: ScheduleDate;
+  let duration: Duration;
+  let dueString: string = "";
+  let dueDisplay: string = "";
   let inputElement: HTMLInputElement;
-  due = taskSyncManager.obsidianTask.hasDue() ? taskSyncManager.obsidianTask.due : null;
+
+  if (interactive) {
+    due = taskSyncManager.obsidianTask.hasDue() ? taskSyncManager.obsidianTask.due : undefined;
+    duration = taskSyncManager.obsidianTask.hasDuration() ? taskSyncManager.obsidianTask.duration : undefined;
+  } else {
+    due = taskItem.due;
+    duration = taskItem.duration;
+  } 
+
   dueString = due ? due.string : '';
-  duration = taskSyncManager.obsidianTask.hasDuration() ? taskSyncManager.obsidianTask.duration : null;
 
   updateDueDisplay();
 
@@ -209,19 +218,13 @@
     return moment(datetimeStr);
   }
 
-  $: displayDue = taskSyncManager.obsidianTask.hasDue() || taskSyncManager.taskCardStatus.dueStatus === 'editing';
-  
-  
-  // upcoming and ongoing
-  // function isUpcoming(due: ScheduleDate, currTime: moment.Moment, minuteGap: number = 15): boolean {
-  //   if (!due || !due.date || !due.time) { return false; }
-  //   // convert due to moment
-  //   const dueMoment = convertDueToMoment(due);
-  //   // calculate the time gap
-  //   const timeGap = moment.duration(dueMoment.diff(currTime)).asMinutes();
-  //   // check if the time gap is within the specified range
-  //   return timeGap > 0 && timeGap < minuteGap;
-  // }
+  $: {
+    if (interactive) {
+      displayDue = taskSyncManager.obsidianTask.hasDue() || taskSyncManager.taskCardStatus.dueStatus === 'editing';
+    } else {
+      displayDue = !!taskItem.due; // The double bang '!!' converts a truthy/falsy value to a boolean true/false
+    }
+  }
 
   enum TaskDueStatus {
     Upcoming = "upcoming",
@@ -262,24 +265,24 @@
     return null;
   }
 
-  const taskDueStatus = getTaskDueStatus(taskSyncManager.obsidianTask, 15);
+  const taskDueStatus = getTaskDueStatus(interactive ? taskSyncManager.obsidianTask : taskItem, 15);
 
 </script>
 
 {#if displayDue}
   <div class="task-card-due-container {params.mode === 'single-line' ? 'mode-single-line' : 'mode-multi-line'} {taskDueStatus ? taskDueStatus : ''}"
-    on:click={toggleEditMode}
-    on:keydown={toggleEditMode}
+    on:click={interactive ? toggleEditMode : null}
+    on:keydown={interactive ? toggleEditMode : null}
     aria-label="Due"
     role="button"
     tabindex="0"
   >
     <div class="task-card-due-left-part">
       <span class="task-card-due-prefix {taskDueStatus ? taskDueStatus : ''}">
-        <AlertTriangle width={"14"} height={"14"} ariaLabel="due"/>
+        <AlertTriangle width={"14"} height={"14"} ariaLabel="Due"/>
       </span>
     </div>
-    {#if taskSyncManager.getTaskCardStatus('dueStatus') === 'editing'}
+    {#if interactive && taskSyncManager.getTaskCardStatus('dueStatus') === 'editing'}
       <input
         type="text"
         on:input={() => adjustWidthForInput(inputElement)}

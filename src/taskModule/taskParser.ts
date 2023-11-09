@@ -77,7 +77,7 @@ export class TaskParser {
     const task = new ObsidianTask();
     const attributes = parseAttributes.bind(this)();
     if (attributes === null) { return task; }
-  
+
     task.id = attributes.id || '';
     task.priority = attributes.priority || '1';
     task.description = (attributes.description || '') + (DescriptionParser.parseDescriptionFromTaskEl(taskEl) || '');
@@ -322,10 +322,51 @@ export class TaskParser {
   parseFormattedTaskMarkdown(taskMarkdown: string): ObsidianTask {
     const task: ObsidianTask = new ObsidianTask();
 
-    // if taskMarkdown is multi-line, split it
+    // Utility function to convert leading tabs in a line to spaces
+    const convertLeadingTabsToSpaces = (line: string): string => {
+      let result = "";
+      let index = 0;
+  
+      while (index < line.length) {
+          if (line[index] === '\t') {
+              result += "    "; // Replace tab with 4 spaces
+          } else if (line[index] === ' ') {
+              result += line[index];
+          } else {
+              // Once we encounter a non-space, non-tab character, break
+              break;
+          }
+          index++;
+      }
+      
+      // Append the remainder of the line
+      result += line.slice(index);
+      return result;
+    };
+
+    // Utility function to check if all lines start with a space
+    const allLinesStartWithSpace = (lines: string[]): boolean => {
+      return lines.every(line => line.startsWith(" "));
+    };
+
+    // Utility function to remove the leading space from all lines
+    const removeLeadingSpace = (lines: string[]): string[] => {
+      return lines.map(line => line.startsWith(" ") ? line.slice(1) : line);
+    };
+
     if (taskMarkdown.includes('\n')) {
-      const lines = taskMarkdown.split('\n');
-      task.description = lines.slice(1).join('\n'); // From the second line to the last line, joined by '\n'
+      // process multi-line task - has description
+      let lines = taskMarkdown.split('\n');
+      let descLines = lines.slice(1);
+      // Convert tabs to spaces
+      descLines = descLines.map(convertLeadingTabsToSpaces);
+
+      // Iteratively remove indentation
+      while (allLinesStartWithSpace(descLines)) {
+        descLines = removeLeadingSpace(descLines);
+      }
+      // logger.debug(`Multi-line task: ${descLines.join('\n')}`);
+      task.description = descLines.join('\n');
       taskMarkdown = lines[0]; // The first line
     }
     

@@ -9,12 +9,18 @@
   import { Notice } from "obsidian";
   import History from "../components/icons/History.svelte";
 
-  export let taskSyncManager: ObsidianTaskSyncManager;
+  export let interactive: boolean = true;
+  export let taskSyncManager: ObsidianTaskSyncManager = undefined;
+  export let taskItem: ObsidianTask = undefined;
   export let params: TaskDisplayParams;
   export let displayDuration: boolean;
-  let duration: Duration | null;
-  duration = taskSyncManager.obsidianTask.hasDuration() ? taskSyncManager.obsidianTask.duration : null;
-  // TODO: distinguish due and schedule and duration;
+
+  let duration: Duration;
+  if (interactive) {
+    duration = taskSyncManager.obsidianTask.hasDuration() ? taskSyncManager.obsidianTask.duration : undefined;
+  } else {
+    duration = taskItem.duration;
+  }
 
   function customDurationHumanizer(duration: Duration) {
     if (duration.hours === 0) {
@@ -131,17 +137,21 @@ function parseDurationInput(input: string): { hours: number, minutes: number } |
     node.select();
   }
 
-  let displaySchedule: boolean = taskSyncManager.obsidianTask.hasSchedule() || taskSyncManager.getTaskCardStatus('scheduleStatus') === 'editing';
-  $: displayDuration = taskSyncManager.obsidianTask.hasDuration() || taskSyncManager.getTaskCardStatus('durationStatus') === 'editing';
-
+  $: {
+    if (interactive) {
+      displayDuration = taskSyncManager.obsidianTask.hasDuration() || taskSyncManager.getTaskCardStatus('durationStatus') === 'editing';
+    } else {
+      displayDuration = !!taskItem.duration; // The double bang '!!' converts a truthy/falsy value to a boolean true/false
+    }
+  }
 
   </script>
 
 <!-- Duration Display Section -->
 {#if displayDuration}
-  {#if displaySchedule}
+  <!-- {#if displaySchedule}
     <span class="schedule-duration-padding"></span>
-  {/if}
+  {/if} -->
   <div class="task-card-duration-container {params.mode === 'single-line' ? 'mode-single-line' : 'mode-multi-line'}"
     on:click={toggleDurationEditMode}
     on:keydown={toggleDurationEditMode}
@@ -206,9 +216,9 @@ function parseDurationInput(input: string): { hours: number, minutes: number } |
     margin-top: 2px;
   }
   
-  .schedule-duration-padding {
+  /* .schedule-duration-padding {
     padding: 2px;
-  }
+  } */
 
   .duration-display {
     display: flex;

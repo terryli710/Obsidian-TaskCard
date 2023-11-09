@@ -44,8 +44,7 @@ export class DescriptionParser {
                 throw new Error(`Failed to convert HTML to Markdown: ${error.message}`);
             }
         }
-
-        return descriptionMarkdown.trim();
+        return descriptionMarkdown;
     }
 
     static progressOfDescription(description: string): [number, number] {

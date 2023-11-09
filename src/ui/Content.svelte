@@ -3,8 +3,13 @@
     import { ObsidianTaskSyncManager } from '../taskModule/taskSyncManager';
     import { TaskDisplayMode } from '../renderer/postProcessor';
     import { logger } from '../utils/log';
-    export let taskSyncManager: ObsidianTaskSyncManager;
-    let content: string = taskSyncManager.obsidianTask.content;
+    import { ObsidianTask } from '../taskModule/task';
+
+    export let interactive: boolean = true;
+    export let taskSyncManager: ObsidianTaskSyncManager = undefined;
+    export let taskItem: ObsidianTask = undefined;
+
+    let content: string = interactive ? taskSyncManager.obsidianTask.content : taskItem.content;
     let isEditing = false;
     let inputElement: HTMLInputElement;
 
@@ -56,17 +61,17 @@
 
 {#if isEditing}
     <input 
-        class="task-card-content mode-multi-line" 
+        class="task-card-content mode-multi-line interactive" 
         bind:value={content} 
         bind:this={inputElement}
         on:keydown={finishEditing} />
 {:else}
     <div 
-        class="task-card-content mode-multi-line" 
+        class="task-card-content mode-multi-line {interactive ? 'interactive' : ''}" 
         role="button" 
         tabindex="0" 
-        on:click={enableEditMode} 
-        on:keydown={enableEditMode}
+        on:click={interactive ? enableEditMode : null} 
+        on:keydown={interactive ? enableEditMode : null}
         aria-label="Content"
         >
         {content}
@@ -75,11 +80,11 @@
 
 <style>
 
-    .task-card-content.mode-multi-line:hover {
+    .task-card-content.mode-multi-line.interactive:hover {
         background-color: var(--background-primary-alt); /* Background hover color */
     }
 
-    .task-card-content.mode-multi-line:active {
+    .task-card-content.mode-multi-line.interactive:active {
         background-color: var(--background-modifier-active-hover); /* Background active color */
     }
 

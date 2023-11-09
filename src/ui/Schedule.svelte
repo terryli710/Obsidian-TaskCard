@@ -8,21 +8,30 @@
   import { TaskDisplayParams, TaskDisplayMode } from "../renderer/postProcessor";
   import { Notice } from "obsidian";
   import CalendarClock from "../components/icons/CalendarClock.svelte";
-    import moment from "moment";
+  import moment from "moment";
 
-  export let taskSyncManager: ObsidianTaskSyncManager;
-  export let plugin: TaskCardPlugin;
+  export let interactive: boolean = true;
+  export let taskSyncManager: ObsidianTaskSyncManager = undefined;
+  export let taskItem: ObsidianTask = undefined;
+  export let plugin: TaskCardPlugin = undefined;
   export let params: TaskDisplayParams;
   export let displaySchedule: boolean;
-
-  let schedule: ScheduleDate | null;
-  let scheduleString: string;
-  let duration: Duration | null;
-  let scheduleDisplay = "";
+  
+  let schedule: ScheduleDate;
+  let duration: Duration;
+  let scheduleString: string = "";
+  let scheduleDisplay: string = "";
   let inputElement: HTMLInputElement;
-  schedule = taskSyncManager.obsidianTask.hasSchedule() ? taskSyncManager.obsidianTask.schedule : null;
+
+  if (interactive) {
+    schedule = taskSyncManager.obsidianTask.hasSchedule() ? taskSyncManager.obsidianTask.schedule : undefined;
+    duration = taskSyncManager.obsidianTask.hasDuration() ? taskSyncManager.obsidianTask.duration : undefined;
+  } else {
+    schedule = taskItem.schedule;
+    duration = taskItem.duration;
+  }  
+
   scheduleString = schedule ? schedule.string : '';
-  duration = taskSyncManager.obsidianTask.hasDuration() ? taskSyncManager.obsidianTask.duration : null;
 
   updateScheduleDisplay();
 
@@ -138,20 +147,14 @@
     return moment(datetimeStr);
   }
 
-  $: displaySchedule = taskSyncManager.obsidianTask.hasSchedule() || taskSyncManager.taskCardStatus.scheduleStatus === 'editing';
+  $: {
+    if (interactive) {
+      displaySchedule = taskSyncManager.obsidianTask.hasSchedule() || taskSyncManager.taskCardStatus.scheduleStatus === 'editing';
+    } else {
+      displaySchedule = !!taskItem.schedule; // The double bang '!!' converts a truthy/falsy value to a boolean true/false
+    }
+  }
   
-  
-  // upcoming and ongoing
-  // function isUpcoming(schedule: ScheduleDate, currTime: moment.Moment, minuteGap: number = 15): boolean {
-  //   if (!schedule || !schedule.date || !schedule.time) { return false; }
-  //   // convert schedule to moment
-  //   const scheduleMoment = convertScheduleToMoment(schedule);
-  //   // calculate the time gap
-  //   const timeGap = moment.duration(scheduleMoment.diff(currTime)).asMinutes();
-  //   // check if the time gap is within the specified range
-  //   return timeGap > 0 && timeGap < minuteGap;
-  // }
-
   enum TaskScheduleStatus {
     Upcoming = "upcoming",
     Ongoing = "ongoing",
@@ -191,24 +194,25 @@
     return null;
   }
 
-  const taskScheduleStatus = getTaskScheduleStatus(taskSyncManager.obsidianTask, 15);
+  const taskScheduleStatus = getTaskScheduleStatus(interactive ? taskSyncManager.obsidianTask : taskItem, 15);
 
 </script>
 
+<!-- svelte-ignore non-top-level-reactive-declaration -->
 {#if displaySchedule}
   <div class="task-card-schedule-container {params.mode === 'single-line' ? 'mode-single-line' : 'mode-multi-line'} {taskScheduleStatus ? taskScheduleStatus : ''}"
-    on:click={toggleEditMode}
-    on:keydown={toggleEditMode}
+    on:click={interactive ? toggleEditMode : null}
+    on:keydown={interactive ? toggleEditMode : null}
     aria-label="Schedule"
     role="button"
     tabindex="0"
   >
     <div class="task-card-schedule-left-part">
       <span class="task-card-schedule-prefix {taskScheduleStatus ? taskScheduleStatus : ''}">
-        <CalendarClock width={"14"} height={"14"} ariaLabel="schedule"/>
+        <CalendarClock width={"14"} height={"14"} ariaLabel="Schedule"/>
       </span>
     </div>
-    {#if taskSyncManager.getTaskCardStatus('scheduleStatus') === 'editing'}
+    {#if interactive && taskSyncManager.getTaskCardStatus('scheduleStatus') === 'editing'}
       <input
         type="text"
         on:input={() => adjustWidthForInput(inputElement)}
