@@ -5,6 +5,7 @@ import StaticTaskList from '../ui/StaticTaskList.svelte';
 import { QuerySyncManager } from "../query/querySyncManager"
 import { MarkdownPostProcessorContext, MarkdownSectionInformation } from "obsidian"
 import { logger } from "../utils/log";
+import StaticTaskMatrix from "../ui/StaticTaskMatrix.svelte";
 
 
 export class QueryAndTaskListSvelteAdapter {
@@ -57,7 +58,7 @@ export class QueryAndTaskListSvelteAdapter {
                 }
             })
         } else {
-            this.svelteComponent = new StaticTaskList({
+            this.svelteComponent = new StaticTaskMatrix({
                 target: this.codeBlockEl,
                 props: {
                     taskList: await this.querySyncManager.getFilteredTasks(),
