@@ -133,6 +133,7 @@
   overflow: scroll; /* Truncates any labels that don't fit */
   white-space: nowrap; /* Keeps labels on a single line */
   align-items: center;
+  min-width: 2em;
   gap: 4px;
   flex-grow: 1; /* Make it take up all available space */
   font-size: var(--font-ui-medium);

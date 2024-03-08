@@ -4,6 +4,7 @@
     import { MultipleAttributeTaskQuery } from "../query/cache";
     import { QuerySyncManager, TaskQueryOptions } from "../query/querySyncManager";
     import { logger } from "../utils/log";
+    import FixedOptionsMultiSelect from "./selections/FixedOptionsMultiSelect.svelte";
     import FixedOptionsSelect from "./selections/FixedOptionsSelect.svelte";
     import ProjectSelection from "./selections/ProjectSelection.svelte";
     import TagSelect from "./selections/TagSelect.svelte";
@@ -144,7 +145,7 @@
 
 <ul class="query-editor">
     <!-- Completed -->
-    <FixedOptionsSelect 
+    <FixedOptionsMultiSelect 
         title="Completed" 
         description="To include completed or uncompleted tasks" 
         choices={completedChoices} 
@@ -153,7 +154,7 @@
     />
 
     <!-- Priority -->
-    <FixedOptionsSelect 
+    <FixedOptionsMultiSelect 
         title="Priority" 
         description="To filter the priority of the task" 
         choices={priorityChoices} 
@@ -215,6 +216,7 @@
         </div>
     </li>
 
+    <!-- File Path -->
     <li class="query-section">
         <div class="header">
             <div class="inline-title-wrapper">
@@ -240,6 +242,7 @@
         </div>
     </li>
 
+    <!-- Save and Reset Buttons -->
     <div class="button-menu">
         <button class="save-button" on:click={saveQuery}>Save</button>
         <button class="reset-button" on:click={resetQuery}>Reset</button>

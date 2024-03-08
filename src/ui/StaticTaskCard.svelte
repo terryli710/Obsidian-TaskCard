@@ -21,12 +21,11 @@
   
   // Markdown to HTML
   import { markdownToHTML } from '../utils/markdownToHTML';
-  import { StaticTaskCardDisplayMode } from '../renderer/StaticTaskListRenderer';
 
 
   export let taskItem: PositionedObsidianTask;
   export let plugin: TaskCardPlugin;
-  export let staticTaskCardDisplayMode: StaticTaskCardDisplayMode = StaticTaskCardDisplayMode.normal;
+
 
   let taskDisplayParams: TaskDisplayParams = { mode: 'single-line' };
   let task = taskItem;
@@ -99,7 +98,6 @@
   const displayDuration = task.hasDuration();
   const displayDue = task.hasDue(); 
   // const displayDescription = task.hasDescription();
-
 </script>
 
 {#if taskDisplayParams.mode === 'single-line'}
@@ -241,7 +239,6 @@
 
 
 <style>
-
   .task-card-progress-position {
     position: absolute; /* Absolute positioning for the progress bar */
     top: 3px;
@@ -261,6 +258,7 @@
     font-size: var(--font-text-size);
     flex-grow: 1; /* Make it take up all available space */
   }
+
   .static-task-card-container {
     display: flex;
     align-items: center;
@@ -268,17 +266,16 @@
   }
 
   .static-task-card-left {
-    flex-shrink: 0;
     display: flex; /* Added */
     align-items: center; /* Center align items vertically */
   }
 
   .static-task-card-middle {
-    flex-grow: 1;
     display: flex;
-    flex-direction: row; /* Changed from column to row */
-    justify-content: space-between; /* Added */
-    align-items: center; /* Added */
+    flex-direction: row;
+    flex-grow: 1;
+    justify-content: space-between;
+    align-items: center;
     cursor: pointer;
     border-radius: var(--radius-s);
   }
@@ -287,8 +284,11 @@
     background-color: var(--background-modifier-hover);
   }
 
+  /* .task-card-project, .schedule, .sync-logos {
+    display: inline-block;
+  } */
+
   .static-task-card-right {
-    flex-shrink: 0;
     align-self: flex-end;
     display: flex; /* Added */
     align-items: center; /* Center align items vertically */
@@ -345,9 +345,11 @@
   .task-card-checkbox.priority-1 {
     border-color: var(--color-red);
   }
+  
   .task-card-checkbox.priority-2 {
     border-color: var(--color-yellow);
   }
+
   .task-card-checkbox.priority-3 {
     border-color: var(--color-cyan);
   }

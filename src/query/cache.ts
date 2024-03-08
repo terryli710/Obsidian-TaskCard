@@ -16,6 +16,7 @@ export interface MultipleAttributeTaskQuery {
     completedQuery?: boolean[];
     scheduleDateTimeQuery?: [string, string];
     filePathQuery?: string;
+    displayModeQuery?: string;
 }
 
 export interface TaskRow {

@@ -206,6 +206,7 @@ function parseDurationInput(input: string): { hours: number, minutes: number } |
     align-items: center;
     display: flex;
     border-radius: 2em;
+    min-width: 2em;
     overflow: hidden;
     margin: 0 2px;
     font-size: var(--tag-size);

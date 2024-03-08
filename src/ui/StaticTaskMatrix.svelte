@@ -3,30 +3,33 @@
     import StaticTaskItem from './StaticTaskItem.svelte';
     import TaskCardPlugin from "..";
     import { logger } from "../utils/log";
-    import { QuerySyncManager } from "../query/querySyncManager";
-    import StaticTaskCard from "./StaticTaskCard.svelte";
+    import LinearProgressBar from "../components/LinearProgressBar.svelte";
 
     export let taskList: PositionedObsidianTask[];
     export let plugin: TaskCardPlugin;
-    export let querySyncManager: QuerySyncManager;
-
-    const cacheInitialized = plugin.cache.taskCache.status.initialized;
-
-    function toEditMode() {
-        querySyncManager.toEditMode();
-    }
 
     let counts = {
-        do: 0,
-        plan: 0,
-        delegate: 0,
-        delete: 0
+        do: { count: 0, completedTasks: 0 },
+        plan: { count: 0, completedTasks: 0 },
+        delegate: { count: 0, completedTasks: 0 },
+        delete: { count: 0, completedTasks: 0 }
     };
 
     $: if(taskList) {
+        // Reset counts object to start fresh on each reactive update
+        counts = {
+            do: { count: 0, completedTasks: 0 },
+            plan: { count: 0, completedTasks: 0 },
+            delegate: { count: 0, completedTasks: 0 },
+            delete: { count: 0, completedTasks: 0 }
+        };
+
         counts = taskList.reduce((acc, task) => {
             const category = categorizeTasks(task);
-            acc[category] = (acc[category] || 0) + 1;
+            acc[category].count += 1;
+            if (task.completed) {
+                acc[category].completedTasks += 1;
+            }
             return acc;
         }, counts);
     }
@@ -44,73 +47,77 @@
     }
 </script>
 
-<ul class="contain-task-list has-list-bullet">
-    {#if !cacheInitialized}
-        <div class="error-page">
-            <h2>Task Card Query Failed</h2>
-            <p>Tasks Not Fully Indexed. Please make sure that the <a href="https://github.com/blacksmithgu/obsidian-dataview" target="_blank" rel="noopener noreferrer">dataview</a> plugin is also enabled in Obsidian. This is necessary for this feature to work properly</p>
-        </div>
-    {:else if taskList.length > 0}
-        <div class="matrix-container">
-            <div class="category do">
-                <div class="category-title">Do ({counts.do})</div>
-                <div class="task-list">
-                    <ul class="contain-task-list has-list-bullet">
-                    {#each taskList as taskItem}
-                        {#if categorizeTasks(taskItem) === "do"}
-                        <StaticTaskItem {taskItem} {plugin} />
-                        {/if}
-                    {/each}
-                    </ul>
+<div class="static-task-matrix">
+    <div class="matrix-container">
+        <div class="category do">
+            <div class="category-head">
+                <div class="category-title">Do</div>
+                <div class="category-count">
+                    <LinearProgressBar value={counts.do.completedTasks} max={counts.do.count} />
                 </div>
             </div>
-            <div class="category plan">
-                <div class="category-title">Plan ({counts.plan})</div>
-                <div class="task-list">
-                    <ul class="contain-task-list has-list-bullet">
-                    {#each taskList as taskItem}
-                        {#if categorizeTasks(taskItem) === "plan"}
-                        <StaticTaskItem {taskItem} {plugin} />
-                        {/if}
-                    {/each}
-                    </ul>
-                </div>
-            </div>
-            <div class="category delegate">
-                <div class="category-title">Delegate ({counts.delegate})</div>
-                <div class="task-list">
-                    <ul class="contain-task-list has-list-bullet">
-                    {#each taskList as taskItem}
-                        {#if categorizeTasks(taskItem) === "delegate"}
-                        <StaticTaskItem {taskItem} {plugin} />
-                        {/if}
-                    {/each}
-                    </ul>
-                </div>
-            </div>
-            <div class="category delete">
-                <div class="category-title">Delete ({counts.delete})</div>
-                <div class="task-list">
-                    <ul class="contain-task-list has-list-bullet">
-                    {#each taskList as taskItem}
-                        {#if categorizeTasks(taskItem) === "delete"}
-                        <StaticTaskItem {taskItem} {plugin} />
-                        {/if}
-                    {/each}
-                    </ul>
-                </div>
+            <div class="task-list">
+                <ul class="contain-task-list has-list-bullet">
+                {#each taskList as taskItem}
+                    {#if categorizeTasks(taskItem) === "do"}
+                    <StaticTaskItem {taskItem} {plugin} />
+                    {/if}
+                {/each}
+                </ul>
             </div>
         </div>
-    {:else}
-        <div class="error-page">
-            <h2>No Tasks Found</h2>
-            <p>It looks like there are no tasks that match your filter.</p>
+        <div class="category plan">
+            <div class="category-head">
+                <div class="category-title">Plan</div>
+                <div class="category-count">
+                    <LinearProgressBar value={counts.plan.completedTasks} max={counts.plan.count} />
+                </div>
+            </div>
+            <div class="task-list">
+                <ul class="contain-task-list has-list-bullet">
+                {#each taskList as taskItem}
+                    {#if categorizeTasks(taskItem) === "plan"}
+                    <StaticTaskItem {taskItem} {plugin} />
+                    {/if}
+                {/each}
+                </ul>
+            </div>
         </div>
-    {/if}
-</ul>
-<div class="button-menu">
-    <span class="list-stats">TaskCard Query: {taskList.length} / {querySyncManager.plugin.cache.taskCache.getLength()} tasks.</span>
-    <button class="edit-button" on:click={toEditMode}>Edit</button>
+        <div class="category delegate">
+            <div class="category-head">
+                <div class="category-title">Delegate</div>
+                <div class="category-count">
+                    <LinearProgressBar value={counts.delegate.completedTasks} max={counts.delegate.count} />
+                </div>
+            </div>
+            <div class="task-list">
+                <ul class="contain-task-list has-list-bullet">
+                {#each taskList as taskItem}
+                    {#if categorizeTasks(taskItem) === "delegate"}
+                    <StaticTaskItem {taskItem} {plugin} />
+                    {/if}
+                {/each}
+                </ul>
+            </div>
+        </div>
+        <div class="category delete">
+            <div class="category-head">
+                <div class="category-title">Delete</div>
+                <div class="category-count">
+                    <LinearProgressBar value={counts.delete.completedTasks} max={counts.delete.count} />
+                </div>
+            </div>
+            <div class="task-list">
+                <ul class="contain-task-list has-list-bullet">
+                {#each taskList as taskItem}
+                    {#if categorizeTasks(taskItem) === "delete"}
+                    <StaticTaskItem {taskItem} {plugin} />
+                    {/if}
+                {/each}
+                </ul>
+            </div>
+        </div>
+    </div>
 </div>
 
 
@@ -122,9 +129,6 @@
 
     /* Add CSS for the 2x2 grid layout */
     .matrix-container {
-        display: grid;
-        grid-template-columns: 1fr 1fr; /* 2 columns with equal width */
-        grid-template-rows: auto auto; /* Auto-size rows based on content */
         gap: 10px; /* Adjust the gap as needed */
         max-width: 100%; /* Set the maximum width to 100% */
         overflow-x: hidden; /* Disable horizontal scrolling for the whole grid */
@@ -133,12 +137,67 @@
     /* Add styles for each category */
     .category {
         flex: 1 1 auto;
-        overflow: auto;
         background-color: transparent; /* Set a transparent background */
-        padding: 0; /* Remove padding */
+        padding: 10px; /* Add padding as needed */
+        margin: 10px; /* Add margin as needed */
+        border-radius: var(--radius-m); /* Add border radius as needed */
         max-height: 50vh; /* Allow vertical scrolling within each category */
-        overflow: hidden;
+        overflow-x: hidden; /* Disable horizontal scrolling for each category */
+        overflow-y: auto; /* Enable vertical scrolling for each category */
+        /* put element in the middle */
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
     }
+
+    .category-head {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        /* some space between elements */
+        gap: 10px;
+        margin-bottom: 0.25em;
+    }
+
+    .category-title {
+        font-size: 1.5em; /* Adjust the font size as needed */
+        font-weight: bold; /* Add bold font weight */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .category-count {
+        font-size: 1.0em;
+        font-weight: thin;
+        margin: 0.25em;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+
+    /* Category-specific background and title colors for differentiation */
+    .category.do {
+        background-color: rgba(var(--color-purple-rgb), 0.05);
+        border: 1px solid var(--color-purple);
+    }
+
+    .category.plan  {
+        background-color: rgba(var(--color-cyan-rgb), 0.05);
+        border: 1px solid var(--color-cyan);
+    }
+
+    .category.delegate {
+        background-color: rgba(var(--color-orange-rgb), 0.05);
+        border: 1px solid var(--color-orange);
+    }
+
+    .category.delete {
+        background-color: rgba(var(--mono-rgb-100), 0.05);
+        border: 1px solid var(--mono-rgb-0);
+    }
+
 
     .task-list {
         width: 100%;
@@ -146,45 +205,5 @@
         overflow-x: hidden;
         overflow-y: auto;
     }
-
-    .category-title {
-        font-size: 1em; /* Smaller size, adjust as needed */
-        font-weight: bold;
-        margin-bottom: 0.5em;
-        padding: 0.25em;
-        /* Add more styles as needed for prettiness */
-    }
     
-    .button-menu {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .edit-button {
-        width: 40%;
-        color: var(--text-normal);
-        margin: 10px;
-    }
-
-    .error-page {
-        text-align: center;
-        font-size: 14px;
-        color: var(--text-muted);
-        margin: 20px;
-    }
-
-    .error-page h2 {
-        font-size: 24px;
-        margin-bottom: 10px;
-    }
-
-    .error-page p {
-        margin-bottom: 20px;
-    }
-
-    .list-stats {
-        font-size: var(--font-ui-small);
-        color: var(--text-muted);
-    }
 </style>

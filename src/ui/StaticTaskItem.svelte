@@ -14,3 +14,12 @@
         plugin={plugin}
     />
 </li>
+
+
+
+<style>
+    .obsidian-taskcard {
+        margin: 0;
+    }
+
+</style>

@@ -343,10 +343,12 @@
     align-items: center;
     display: flex;
     border-radius: 2em;
+    min-width: 2em;
     overflow: hidden;
     margin: 0 2px;
     font-size: var(--tag-size);
     border: var(--border-width) solid var(--text-accent);
+    mask-image: webkit-gradient(linear, left 90%, left bottom, from(rgba(0,0,0,1)), to(rgba(0,0,0,0)))
   }
 
   .task-card-due-container.ongoing {
