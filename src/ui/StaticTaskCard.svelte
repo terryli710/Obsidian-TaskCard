@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Platform, Workspace } from 'obsidian';
+  import { OpenViewState, Platform, Workspace } from 'obsidian';
   import ChevronsDownUp from '../components/icons/ChevronsDownUp.svelte';
   import ChevronsUpDown from '../components/icons/ChevronsUpDown.svelte';
   import {
@@ -42,12 +42,17 @@
     toggleCompleteOfTask(task.completed, taskItem.docPosition);
   }
 
-  async function toggleCompleteOfTask(completed: boolean, docPosition: DocPosition) {
-    // Get the line from the file
-    const line = await plugin.fileOperator.getLineFromFile(
+
+  async function getLineFromDocPosition(docPosition: DocPosition) {
+    return await plugin.fileOperator.getLineFromFile(
       docPosition.filePath,
       docPosition.start.line + 1,
     );
+  }
+
+  async function toggleCompleteOfTask(completed: boolean, docPosition: DocPosition) {
+    // Get the line from the file
+    const line = await getLineFromDocPosition(docPosition);
 
     // Determine the symbol to use based on the 'completed' flag
     const symbol = completed ? 'x' : ' ';
@@ -74,23 +79,33 @@
   function linkToTask(event: MouseEvent | KeyboardEvent) {
     event.stopPropagation();
 
-    const selectionState = {
-          eState: {
-              cursor: {
-                  from: { line: docPosition.start.line, 
-                          ch: 0 },
-                  to: { line: docPosition.start.line + 1, 
-                        ch: 0 },
-              },
-              line: docPosition.start.line,
-          },
+    const selectionEState = {
+        cursor: {
+            from: { line: docPosition.start.line, 
+                    ch: 0 },
+            to: { line: docPosition.start.line + 1, 
+                  ch: 0 },
+        },
+        line: docPosition.start.line,
       };
-    
+
+    const currentWorkspaceDisplayMode = plugin.app.workspace.activeLeaf.view.getState();
+    console.log(currentWorkspaceDisplayMode);
+
+    const openViewState: OpenViewState = {
+      active: true,
+      // mode should be the same as the current mode
+      state: {'mode': currentWorkspaceDisplayMode},
+      eState: selectionEState,
+    }
+
+    // const line: string = await getLineFromDocPosition(docPosition);
+
     plugin.app.workspace.openLinkText(
       docPosition.filePath,
       docPosition.filePath,
-      event.ctrlKey || (event.metaKey && Platform.isMacOS),
-      selectionState
+      event.ctrlKey || (event.metaKey && Platform.isMacOS), // Open in new pane if Ctrl or Cmd is pressed
+      openViewState
     )
   }
 

@@ -141,7 +141,7 @@
         padding: 10px; /* Add padding as needed */
         margin: 10px; /* Add margin as needed */
         border-radius: var(--radius-m); /* Add border radius as needed */
-        max-height: 50vh; /* Allow vertical scrolling within each category */
+        max-height: 80vh; /* Allow vertical scrolling within each category */
         overflow-x: hidden; /* Disable horizontal scrolling for each category */
         overflow-y: auto; /* Enable vertical scrolling for each category */
         /* put element in the middle */
