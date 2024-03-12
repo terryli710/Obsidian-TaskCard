@@ -15,8 +15,10 @@
   export let params: TaskDisplayParams;
   export let displayDuration: boolean;
 
+  const interactiveMode = interactive;
+
   let duration: Duration;
-  if (interactive) {
+  if (interactiveMode) {
     duration = taskSyncManager.obsidianTask.hasDuration() ? taskSyncManager.obsidianTask.duration : undefined;
   } else {
     duration = taskItem.duration;
@@ -105,7 +107,6 @@
                 new Notice(`[TaskCard] Invalid duration format: ${durationInputString}`);
             }
         }
-
         taskSyncManager.updateObsidianTaskAttribute('duration', duration);
         origDurationInputString = durationInputString;
         
@@ -138,7 +139,7 @@ function parseDurationInput(input: string): { hours: number, minutes: number } |
   }
 
   $: {
-    if (interactive) {
+    if (interactiveMode) {
       displayDuration = taskSyncManager.obsidianTask.hasDuration() || taskSyncManager.getTaskCardStatus('durationStatus') === 'editing';
     } else {
       displayDuration = !!taskItem.duration; // The double bang '!!' converts a truthy/falsy value to a boolean true/false
@@ -162,7 +163,7 @@ function parseDurationInput(input: string): { hours: number, minutes: number } |
     <div class="task-card-duration-left-part">
       <span class="task-card-duration-prefix"><History width={"14"} height={"14"} ariaLabel="duration"/></span>
     </div>
-    {#if taskSyncManager.getTaskCardStatus('durationStatus') === 'editing'}
+    {#if interactiveMode && taskSyncManager.getTaskCardStatus('durationStatus') === 'editing'}
       <input
         type="text"
         bind:value={durationInputString}
