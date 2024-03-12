@@ -197,10 +197,8 @@ export class QuerySyncManager {
     }
 
     async getFilteredTasks(): Promise<PositionedObsidianTask[]> {
-        const filteredTasksProps = await this.plugin.cache.taskCache.queryTasks(this.taskQuery)
-        const filteredTasks = filteredTasksProps.map((taskProps) => new PositionedObsidianTask(taskProps))
-        console.log(filteredTasks)
-        console.log(this.taskQuery)
-        return filteredTasks
+        const filteredTasksProps = await this.plugin.cache.taskCache.queryTasks(this.taskQuery);
+        const filteredTasks = filteredTasksProps.map((taskProps) => new PositionedObsidianTask(taskProps));
+        return filteredTasks;
     }
 }

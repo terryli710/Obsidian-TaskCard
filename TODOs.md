@@ -2,5 +2,15 @@
 
 # Finish Eisenhower Matrix
 - Fix the subtask display in static task card.
-- Fix the bugs in console.
-- 
+  
+
+
+
+
+# Known issues
+- Google calendar requires re-login after some time.
+
+
+
+
+

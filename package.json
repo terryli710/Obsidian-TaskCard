@@ -49,10 +49,13 @@
     "ts-jest": "^29.1.1"
   },
   "dependencies": {
+    "@ts-stack/markdown": "^1.5.0",
     "googleapis": "^126.0.1",
     "humanize-duration": "^3.30.0",
     "humanized-duration": "^0.0.1",
     "lucide-svelte": "^0.268.0",
+    "markdown-it": "^14.0.0",
+    "markdown-it-task-lists": "^2.1.1",
     "obsidian": "latest",
     "obsidian-dataview": "^0.5.56",
     "parse-duration": "^1.1.0",
@@ -60,6 +63,7 @@
     "showdown": "^2.1.0",
     "sugar": "^2.0.6",
     "svelte": "^4.1.1",
+    "svelte-markdown": "^0.4.1",
     "typescript": "^5.1.6",
     "uuid": "^9.0.0",
     "winston": "^3.10.0"
