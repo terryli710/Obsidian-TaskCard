@@ -133,6 +133,7 @@
   overflow: scroll; /* Truncates any labels that don't fit */
   white-space: nowrap; /* Keeps labels on a single line */
   align-items: center;
+  min-width: 2em;
   gap: 4px;
   flex-grow: 1; /* Make it take up all available space */
   font-size: var(--font-ui-medium);
@@ -153,7 +154,9 @@ button.label-plus-button {
   color: var(--tag-color);
   background-color: var(--tag-background);
   border-radius: 50%;
-  padding-top: 3px;
+  widows: 24px;
+  height: 24px;
+  /* padding-top: 3px; */
 }
 
 button.label-plus-button:hover {

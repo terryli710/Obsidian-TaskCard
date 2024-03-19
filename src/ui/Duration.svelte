@@ -1,7 +1,7 @@
 <script lang="ts">
   import { logger } from "../utils/log";
   import { displayDate, displayTime } from "../utils/dateTimeFormatter"
-  import { DueDate, Duration, ObsidianTask } from "../taskModule/task";
+  import { ScheduleDate, Duration, ObsidianTask } from "../taskModule/task";
   import { ObsidianTaskSyncManager } from "../taskModule/taskSyncManager";
   import TaskCardPlugin from "..";
   import { tick } from "svelte";
@@ -9,12 +9,20 @@
   import { Notice } from "obsidian";
   import History from "../components/icons/History.svelte";
 
-  export let taskSyncManager: ObsidianTaskSyncManager;
+  export let interactive: boolean = true;
+  export let taskSyncManager: ObsidianTaskSyncManager = undefined;
+  export let taskItem: ObsidianTask = undefined;
   export let params: TaskDisplayParams;
   export let displayDuration: boolean;
-  let duration: Duration | null;
-  duration = taskSyncManager.obsidianTask.hasDuration() ? taskSyncManager.obsidianTask.duration : null;
 
+  const interactiveMode = interactive;
+
+  let duration: Duration;
+  if (interactiveMode) {
+    duration = taskSyncManager.obsidianTask.hasDuration() ? taskSyncManager.obsidianTask.duration : undefined;
+  } else {
+    duration = taskItem.duration;
+  }
 
   function customDurationHumanizer(duration: Duration) {
     if (duration.hours === 0) {
@@ -99,7 +107,6 @@
                 new Notice(`[TaskCard] Invalid duration format: ${durationInputString}`);
             }
         }
-
         taskSyncManager.updateObsidianTaskAttribute('duration', duration);
         origDurationInputString = durationInputString;
         
@@ -131,17 +138,21 @@ function parseDurationInput(input: string): { hours: number, minutes: number } |
     node.select();
   }
 
-  let displayDue: boolean = taskSyncManager.obsidianTask.hasDue() || taskSyncManager.getTaskCardStatus('dueStatus') === 'editing';
-  $: displayDuration = taskSyncManager.obsidianTask.hasDuration() || taskSyncManager.getTaskCardStatus('durationStatus') === 'editing';
-
+  $: {
+    if (interactiveMode) {
+      displayDuration = taskSyncManager.obsidianTask.hasDuration() || taskSyncManager.getTaskCardStatus('durationStatus') === 'editing';
+    } else {
+      displayDuration = !!taskItem.duration; // The double bang '!!' converts a truthy/falsy value to a boolean true/false
+    }
+  }
 
   </script>
 
 <!-- Duration Display Section -->
 {#if displayDuration}
-  {#if displayDue}
-    <span class="due-duration-padding"></span>
-  {/if}
+  <!-- {#if displaySchedule}
+    <span class="schedule-duration-padding"></span>
+  {/if} -->
   <div class="task-card-duration-container {params.mode === 'single-line' ? 'mode-single-line' : 'mode-multi-line'}"
     on:click={toggleDurationEditMode}
     on:keydown={toggleDurationEditMode}
@@ -152,7 +163,7 @@ function parseDurationInput(input: string): { hours: number, minutes: number } |
     <div class="task-card-duration-left-part">
       <span class="task-card-duration-prefix"><History width={"14"} height={"14"} ariaLabel="duration"/></span>
     </div>
-    {#if taskSyncManager.getTaskCardStatus('durationStatus') === 'editing'}
+    {#if interactiveMode && taskSyncManager.getTaskCardStatus('durationStatus') === 'editing'}
       <input
         type="text"
         bind:value={durationInputString}
@@ -196,7 +207,9 @@ function parseDurationInput(input: string): { hours: number, minutes: number } |
     align-items: center;
     display: flex;
     border-radius: 2em;
+    min-width: 2em;
     overflow: hidden;
+    margin: 0 2px;
     font-size: var(--tag-size);
     border: var(--border-width) solid var(--text-accent);
   }
@@ -205,9 +218,9 @@ function parseDurationInput(input: string): { hours: number, minutes: number } |
     margin-top: 2px;
   }
   
-  .due-duration-padding {
+  /* .schedule-duration-padding {
     padding: 2px;
-  }
+  } */
 
   .duration-display {
     display: flex;

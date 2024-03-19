@@ -4,6 +4,7 @@
     import { MultipleAttributeTaskQuery } from "../query/cache";
     import { QuerySyncManager, TaskQueryOptions } from "../query/querySyncManager";
     import { logger } from "../utils/log";
+    import FixedOptionsMultiSelect from "./selections/FixedOptionsMultiSelect.svelte";
     import FixedOptionsSelect from "./selections/FixedOptionsSelect.svelte";
     import ProjectSelection from "./selections/ProjectSelection.svelte";
     import TagSelect from "./selections/TagSelect.svelte";
@@ -16,14 +17,14 @@
         projectQuery: [],
         labelQuery: [],
         completedQuery: [],
-        dueDateTimeQuery: ['', ''],
+        scheduleDateTimeQuery: ['', ''],
         filePathQuery: '',
     };
     export let querySyncManager: QuerySyncManager;
     export let paths: string[] = [];
 
-    let startDate = query.dueDateTimeQuery[0] ? new Date(query.dueDateTimeQuery[0]) : null;
-    let endDate = query.dueDateTimeQuery[1] ? new Date(query.dueDateTimeQuery[1]) : null;
+    let startDate = query.scheduleDateTimeQuery[0] ? new Date(query.scheduleDateTimeQuery[0]) : null;
+    let endDate = query.scheduleDateTimeQuery[1] ? new Date(query.scheduleDateTimeQuery[1]) : null;
 
     let startDateString = startDate? startDate.toLocaleString() : '';
     let endDateString = endDate? endDate.toLocaleString() : '';
@@ -51,7 +52,7 @@
             projectQuery: [],
             labelQuery: [],
             completedQuery: [],
-            dueDateTimeQuery: ['', ''],
+            scheduleDateTimeQuery: ['', ''],
             filePathQuery: '',
         };
         querySyncManager.updateTaskQueryToFile(query);
@@ -73,8 +74,8 @@
     }
 
     function saveDate() {
-        query.dueDateTimeQuery[0] = isValidDate(startDate) ? startDate.toLocaleString() : '';
-        query.dueDateTimeQuery[1] = isValidDate(endDate) ? endDate.toLocaleString() : '';
+        query.scheduleDateTimeQuery[0] = isValidDate(startDate) ? startDate.toLocaleString() : '';
+        query.scheduleDateTimeQuery[1] = isValidDate(endDate) ? endDate.toLocaleString() : '';
     }
 
     function isValidDate(date: Date) {
@@ -144,7 +145,7 @@
 
 <ul class="query-editor">
     <!-- Completed -->
-    <FixedOptionsSelect 
+    <FixedOptionsMultiSelect 
         title="Completed" 
         description="To include completed or uncompleted tasks" 
         choices={completedChoices} 
@@ -153,7 +154,7 @@
     />
 
     <!-- Priority -->
-    <FixedOptionsSelect 
+    <FixedOptionsMultiSelect 
         title="Priority" 
         description="To filter the priority of the task" 
         choices={priorityChoices} 
@@ -179,12 +180,12 @@
         on:selected={(evt) => handleSelection(evt, 'label')} 
     />
 
-    <!-- Due DateTime -->
+    <!-- Schedule DateTime -->
     <li class="query-section">
         <div class="header">
             <div class="inline-title-wrapper">
-                <div class="inline-title">Due Date</div>
-                <div class="inline-description">To filter by due date</div>
+                <div class="inline-title">Schedule Date</div>
+                <div class="inline-description">To filter by schedule date</div>
             </div>
             <div class="input-wrapper">
                 <div class="date-input-component">
@@ -215,6 +216,7 @@
         </div>
     </li>
 
+    <!-- File Path -->
     <li class="query-section">
         <div class="header">
             <div class="inline-title-wrapper">
@@ -240,6 +242,7 @@
         </div>
     </li>
 
+    <!-- Save and Reset Buttons -->
     <div class="button-menu">
         <button class="save-button" on:click={saveQuery}>Save</button>
         <button class="reset-button" on:click={resetQuery}>Reset</button>

@@ -8,10 +8,16 @@
     import { tick } from 'svelte';
     import { DescriptionParser } from '../taskModule/description';
     import CircularProgressBar from "../components/CircularProgressBar.svelte";
+    import { ObsidianTask } from "../taskModule/task";
 
-    export let taskSyncManager: ObsidianTaskSyncManager;
-    let description = taskSyncManager.obsidianTask.description;
-    let descriptionElList = DescriptionParser.extractListEls(taskSyncManager.taskItemEl);
+    export let interactive: boolean = true;
+    export let taskSyncManager: ObsidianTaskSyncManager = undefined;
+    export let taskItem: ObsidianTask = undefined;
+    export let displayDescription: boolean;
+
+    let description = interactive ? taskSyncManager.obsidianTask.description : taskItem.description;
+    let descriptionElList = interactive ? DescriptionParser.extractListEls(taskSyncManager.taskItemEl) : []; 
+    // Description currently doesn't work for static cards.
     let inputElement: HTMLTextAreaElement;
     let descriptionProgress = DescriptionParser.progressOfDescription(description)
 
@@ -109,39 +115,49 @@
         node.select();
     }
 
+    $: {
+        if (interactive) {
+            displayDescription = taskSyncManager.obsidianTask.hasDescription() || taskSyncManager.getTaskCardStatus('descriptionStatus') === 'editing';
+        } else {
+            displayDescription = description.length > 0;
+        }
+    }
+
 
 </script>
 
-<div class="task-card-description-wrapper">
-    {#if descriptionProgress[1] * descriptionProgress[0] > 0 }
-        <div class="task-card-progress-position">
-            <CircularProgressBar value={descriptionProgress[0]} max={descriptionProgress[1]} />
-        </div>
-    {/if}
+{#if displayDescription}
+    <div class="task-card-description-wrapper">
+        {#if descriptionProgress[1] * descriptionProgress[0] > 0 }
+            <div class="task-card-progress-position">
+                <CircularProgressBar value={descriptionProgress[0]} max={descriptionProgress[1]} />
+            </div>
+        {/if}
 
-    {#if taskSyncManager.getTaskCardStatus('descriptionStatus') === 'editing'}
-        <textarea 
-            bind:value={description} 
-            on:keydown={finishEditing}
-            bind:this={inputElement}
-            wrap="soft"
-            placeholder="Type in Description. Shift+Enter to Save. Esc to Cancel."
-            class="task-card-description"
-        ></textarea>
-    {:else}
-        <div 
-            class="task-card-description" 
-            role="button" 
-            tabindex="0"
-            on:click={enableEditMode}
-            on:keydown={enableEditMode}
-            use:appendDescription
-            aria-label="Description"
-        >
-            <!-- {@html descriptionMarkdown} -->
-        </div>
-    {/if}
-</div>
+        {#if taskSyncManager.getTaskCardStatus('descriptionStatus') === 'editing'}
+            <textarea 
+                bind:value={description} 
+                on:keydown={interactive ? finishEditing : null}
+                bind:this={inputElement}
+                wrap="soft"
+                placeholder="Type in Description. Shift+Enter to Save. Esc to Cancel."
+                class="task-card-description"
+            ></textarea>
+        {:else}
+            <div 
+                class="task-card-description" 
+                role="button" 
+                tabindex="0"
+                on:click={interactive ? enableEditMode : null}
+                on:keydown={interactive ? enableEditMode : null}
+                use:appendDescription
+                aria-label="Description"
+            >
+                <!-- {@html descriptionMarkdown} -->
+            </div>
+        {/if}
+    </div>
+{/if}
 
 
 <style>

@@ -59,4 +59,25 @@ export function cardDisplaySettings(
             }, 2000);  // 2000 milliseconds = 2 seconds delay
             });
         });
+
+    new Setting(containerEl)
+        .setName('Query Display Mode')
+        .setDesc('The default display mode when displaying a task query.')
+        .addDropdown((dropdown) => {
+        dropdown
+            .addOptions({
+                'list': 'List Mode',
+                'matrix': 'Eisenhower Matrix Mode'
+            })
+            .setValue(pluginSettings.displaySettings.queryDisplayMode)
+            .onChange(async (value: string) => {
+            await writeSettings(
+                (old) => (old.displaySettings.queryDisplayMode = value)
+            );
+            logger.info(`Query display mode updated: ${value}`);
+            new Notice(`[TaskCard] Query display mode updated: ${value}.`);
+            }
+            );
+        }
+        );
 }

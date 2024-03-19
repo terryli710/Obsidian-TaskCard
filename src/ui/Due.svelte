@@ -1,28 +1,37 @@
 <script lang="ts">
   import { logger } from "../utils/log";
   import { displayDate, displayTime } from "../utils/dateTimeFormatter"
-  import { DueDate, Duration, ObsidianTask } from "../taskModule/task";
+  import { ScheduleDate, Duration, ObsidianTask } from "../taskModule/task";
   import { ObsidianTaskSyncManager } from "../taskModule/taskSyncManager";
   import TaskCardPlugin from "..";
   import { tick } from "svelte";
   import { TaskDisplayParams, TaskDisplayMode } from "../renderer/postProcessor";
   import { Notice } from "obsidian";
-  import CalendarClock from "../components/icons/CalendarClock.svelte";
-    import moment from "moment";
+  import AlertTriangle from "../components/icons/AlertTriangle.svelte";
+  import moment from "moment";
 
-  export let taskSyncManager: ObsidianTaskSyncManager;
-  export let plugin: TaskCardPlugin;
+  export let interactive: boolean = true;
+  export let taskSyncManager: ObsidianTaskSyncManager = undefined;
+  export let taskItem: ObsidianTask = undefined;
+  export let plugin: TaskCardPlugin = undefined;
   export let params: TaskDisplayParams;
   export let displayDue: boolean;
 
-  let due: DueDate | null;
-  let dueString: string;
-  let duration: Duration | null;
-  let dueDisplay = "";
+  let due: ScheduleDate;
+  let duration: Duration;
+  let dueString: string = "";
+  let dueDisplay: string = "";
   let inputElement: HTMLInputElement;
-  due = taskSyncManager.obsidianTask.hasDue() ? taskSyncManager.obsidianTask.due : null;
+
+  if (interactive) {
+    due = taskSyncManager.obsidianTask.hasDue() ? taskSyncManager.obsidianTask.due : undefined;
+    duration = taskSyncManager.obsidianTask.hasDuration() ? taskSyncManager.obsidianTask.duration : undefined;
+  } else {
+    due = taskItem.due;
+    duration = taskItem.duration;
+  } 
+
   dueString = due ? due.string : '';
-  duration = taskSyncManager.obsidianTask.hasDuration() ? taskSyncManager.obsidianTask.duration : null;
 
   updateDueDisplay();
 
@@ -67,7 +76,7 @@
             due = null;
         } else {
             try {
-                let newDue = plugin.taskParser.parseDue(dueString);
+                let newDue = plugin.taskParser.parseSchedule(dueString);
                 if (newDue) {
                     due = newDue;
                 } else {
@@ -85,16 +94,87 @@
     }
   }
 
-  function updateDueDisplay(): string {
-      if (!due) {
-          dueDisplay = '';
-          return dueDisplay;
+
+  function updateDueDisplay(mode = 'relative'): string {
+    if (!due || !due.date) {
+        dueDisplay = '';
+        return dueDisplay;
+    }
+
+    const dueDateTime = due.time ? moment(`${due.date} ${due.time}`) : moment(`${due.date}`);
+    const now = moment();
+
+    const diff = {
+            years: dueDateTime.diff(now, 'years', true),
+            months: dueDateTime.diff(now, 'months', true),
+            weeks: dueDateTime.diff(now, 'weeks', true),
+            days: dueDateTime.diff(now, 'days', true),
+            hours: dueDateTime.diff(now, 'hours', true),
+            minutes: dueDateTime.diff(now, 'minutes', true)
+      };
+
+    // If mode is 'absolute', use the existing logic to display a time point.
+    if (mode === 'absolute') {
+        
+      // Choose display format based on the difference
+      if (diff.years > 1) {
+        dueDisplay = `${dueDateTime.year()}`;
+      } else if (diff.years === 1) {
+        dueDisplay = `${dueDateTime.format('MMM, YYYY')}`;
+      } else if (diff.months > 0) {
+        dueDisplay = `${dueDateTime.format('MMM DD')}`;
+      } else if (diff.weeks > 0) {
+        dueDisplay = `next ${dueDateTime.format('ddd, MMM DD')}`;
+      } else if (diff.days > 1 || (diff.days === 1 && diff.hours >= 24)) {
+          // If due.time is null or empty, just show the day
+          if (!due.time) {
+            dueDisplay = `${dueDateTime.format('ddd')}`;
+          }
+          dueDisplay = `${dueDateTime.format('ddd, MMM DD, hA')}`;
+      } else if (diff.days === 1) {
+        dueDisplay = "Tomorrow";
+      } else {
+          // If due.time is null or empty, return "Today"
+          if (!due.time) {
+            dueDisplay = "Today";
+          }
+          dueDisplay = `${dueDateTime.format('h:mmA')}`;
       }
-      let datePart = displayDate(due.date);
-      let timePart = displayTime(due.time);
-      dueDisplay = timePart ? `${datePart}, ${timePart}` : datePart;
       return dueDisplay;
-  }
+    }
+
+    // If mode is 'relative', calculate and display the time until the deadline.
+    else if (mode === 'relative') {
+        // Logic to determine which unit to display based on the difference.
+        // Always round down since we want to display until the deadline is reached.
+        // detect pass due
+        let prefix = '';
+        if (dueDateTime.isBefore(now)) {
+          prefix = '- ';
+          // make diff to be absolute
+          diff.years = -diff.years;
+          diff.months = -diff.months;
+          diff.weeks = -diff.weeks;
+          diff.days = -diff.days;
+          diff.hours = -diff.hours;
+          diff.minutes = -diff.minutes;
+        }
+        if (Math.floor(diff.years) > 0) {
+            dueDisplay = `${prefix}${Math.floor(diff.years)} year${Math.floor(diff.years) > 1 ? 's' : ''}`;
+        } else if (Math.floor(diff.months) > 0) {
+            dueDisplay = `${prefix}${Math.floor(diff.months)} month${Math.floor(diff.months) > 1 ? 's' : ''}`;
+        } else if (Math.floor(diff.days) > 0) {
+            dueDisplay = `${prefix}${Math.floor(diff.days)} day${Math.floor(diff.days) > 1 ? 's' : ''}`;
+        } else if (Math.floor(diff.hours) > 0) {
+            dueDisplay = `${prefix}${Math.floor(diff.hours)} hour${Math.floor(diff.hours) > 1 ? 's' : ''}`;
+        } else {
+            dueDisplay = `${prefix}${Math.floor(diff.minutes)} minute${Math.floor(diff.minutes) > 1 ? 's' : ''}`;
+        }
+    }
+
+    return dueDisplay;
+}
+
 
   // Action function to focus and select the input content
   function focusAndSelect(node: HTMLInputElement) {
@@ -125,7 +205,7 @@
   }
 
 
-  function convertDueToMoment(dueDate: DueDate): moment.Moment | null {
+  function convertDueToMoment(dueDate: ScheduleDate): moment.Moment | null {
     if (!dueDate.date) {
       return null;  // Ensure the date is present.
     }
@@ -138,18 +218,12 @@
     return moment(datetimeStr);
   }
 
-  $: displayDue = taskSyncManager.obsidianTask.hasDue() || taskSyncManager.taskCardStatus.dueStatus === 'editing';
-  
-  
-  // upcoming and ongoing
-  function isUpcoming(due: DueDate, currTime: moment.Moment, minuteGap: number = 15): boolean {
-    if (!due || !due.date || !due.time) { return false; }
-    // convert due to moment
-    const dueMoment = convertDueToMoment(due);
-    // calculate the time gap
-    const timeGap = moment.duration(dueMoment.diff(currTime)).asMinutes();
-    // check if the time gap is within the specified range
-    return timeGap > 0 && timeGap < minuteGap;
+  $: {
+    if (interactive) {
+      displayDue = taskSyncManager.obsidianTask.hasDue() || taskSyncManager.taskCardStatus.dueStatus === 'editing';
+    } else {
+      displayDue = !!taskItem.due; // The double bang '!!' converts a truthy/falsy value to a boolean true/false
+    }
   }
 
   enum TaskDueStatus {
@@ -191,24 +265,24 @@
     return null;
   }
 
-  const taskDueStatus = getTaskDueStatus(taskSyncManager.obsidianTask, 15);
+  const taskDueStatus = getTaskDueStatus(interactive ? taskSyncManager.obsidianTask : taskItem, 15);
 
 </script>
 
 {#if displayDue}
   <div class="task-card-due-container {params.mode === 'single-line' ? 'mode-single-line' : 'mode-multi-line'} {taskDueStatus ? taskDueStatus : ''}"
-    on:click={toggleEditMode}
-    on:keydown={toggleEditMode}
+    on:click={interactive ? toggleEditMode : null}
+    on:keydown={interactive ? toggleEditMode : null}
     aria-label="Due"
     role="button"
     tabindex="0"
   >
     <div class="task-card-due-left-part">
       <span class="task-card-due-prefix {taskDueStatus ? taskDueStatus : ''}">
-        <CalendarClock width={"14"} height={"14"} ariaLabel="due"/>
+        <AlertTriangle width={"14"} height={"14"} ariaLabel="Due"/>
       </span>
     </div>
-    {#if taskSyncManager.getTaskCardStatus('dueStatus') === 'editing'}
+    {#if interactive && taskSyncManager.getTaskCardStatus('dueStatus') === 'editing'}
       <input
         type="text"
         on:input={() => adjustWidthForInput(inputElement)}
@@ -269,9 +343,12 @@
     align-items: center;
     display: flex;
     border-radius: 2em;
+    min-width: 2em;
     overflow: hidden;
+    margin: 0 2px;
     font-size: var(--tag-size);
     border: var(--border-width) solid var(--text-accent);
+    mask-image: webkit-gradient(linear, left 90%, left bottom, from(rgba(0,0,0,1)), to(rgba(0,0,0,0)))
   }
 
   .task-card-due-container.ongoing {

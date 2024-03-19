@@ -25,6 +25,7 @@ export interface TaskCardSettings {
   displaySettings: {
     defaultMode: string;
     upcomingMinutes: number;
+    queryDisplayMode: string;
   };
   userMetadata: {
     projects: any;
@@ -53,6 +54,7 @@ export const DefaultSettings: TaskCardSettings = {
   displaySettings: {
     defaultMode: 'single-line',
     upcomingMinutes: 15,
+    queryDisplayMode: 'line'
   },
   userMetadata: {
     projects: {},
@@ -590,28 +592,6 @@ export class SettingsTab extends PluginSettingTab {
     updateUI();
   }
   
-
-  // cardDisplaySettings() {
-  //   new Setting(this.containerEl)
-  //     .setName('Default Display Mode')
-  //     .setDesc('The default display mode when creating a new task card.')
-  //     .addDropdown((dropdown) => {
-  //       dropdown
-  //         .addOptions({
-  //           'single-line': 'Preview Mode',
-  //           'multi-line': 'Detailed Mode'
-  //         })
-  //         .setValue(this.plugin.settings.displaySettings.defaultMode)
-  //         .onChange(async (value: string) => {
-  //           await this.plugin.writeSettings(
-  //             (old) => (old.displaySettings.defaultMode = value)
-  //           );
-  //           logger.info(`Default display mode updated: ${value}`);
-  //           new Notice(`[TaskCard] Default display mode updated: ${value}.`);
-  //         });
-  //     });
-  // }
-
 
 }
 export { GoogleSyncSetting };

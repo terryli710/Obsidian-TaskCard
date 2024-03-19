@@ -5,6 +5,8 @@ import StaticTaskList from '../ui/StaticTaskList.svelte';
 import { QuerySyncManager } from "../query/querySyncManager"
 import { MarkdownPostProcessorContext, MarkdownSectionInformation } from "obsidian"
 import { logger } from "../utils/log";
+import StaticTaskMatrix from "../ui/StaticTaskMatrix.svelte";
+import QueryDisplay from "../ui/QueryDisplay.svelte";
 
 
 export class QueryAndTaskListSvelteAdapter {
@@ -57,14 +59,16 @@ export class QueryAndTaskListSvelteAdapter {
                 }
             })
         } else {
-            this.svelteComponent = new StaticTaskList({
-                target: this.codeBlockEl,
-                props: {
-                    taskList: await this.querySyncManager.getFilteredTasks(),
-                    plugin: this.plugin,
-                    querySyncManager: this.querySyncManager
-                }
-            })
+            this.svelteComponent = new QueryDisplay({
+                    target: this.codeBlockEl,
+                    props: {
+                        taskList: await this.querySyncManager.getFilteredTasks(),
+                        plugin: this.plugin,
+                        querySyncManager: this.querySyncManager,
+                        displayMode: this.plugin.settings.displaySettings.queryDisplayMode,
+                    }
+                })
+
         }
 
     }

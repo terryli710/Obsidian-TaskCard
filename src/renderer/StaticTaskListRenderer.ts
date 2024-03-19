@@ -16,6 +16,11 @@ export interface CodeBlockProcessor {
     (source: string, el: HTMLElement, ctx: MarkdownPostProcessorContext): void | Promise<any>;
   }
 
+export enum StaticTaskCardDisplayMode {
+    normal,
+    compact,
+  }
+
 export class StaticTaskListRenderManager {
       plugin: TaskCardPlugin;
       constructor(plugin: TaskCardPlugin) {

@@ -35,7 +35,7 @@ export class AttributeSuggester {
     });
 
     this.inputtableAttributes = [
-      'due',
+      'schedule',
       'duration',
       'priority',
       'project',
@@ -53,7 +53,7 @@ export class AttributeSuggester {
       this.getPrioritySuggestions(lineText, cursorPos)
     );
     suggestions = suggestions.concat(
-      this.getDueSuggestions(lineText, cursorPos)
+      this.getScheduleSuggestions(lineText, cursorPos)
     );
     suggestions = suggestions.concat(
       this.getDurationSuggestions(lineText, cursorPos)
@@ -137,16 +137,16 @@ export class AttributeSuggester {
   }
 
 
-  getDueSuggestions(lineText: string, cursorPos: number): SuggestInformation[] {
+  getScheduleSuggestions(lineText: string, cursorPos: number): SuggestInformation[] {
     let suggestions: SuggestInformation[] = [];
   
-    const dueRegexText = `${escapeRegExp(this.startingNotation)}\\s?due:(.*?)${escapeRegExp(this.endingNotation)}`;
-    const dueRegex = new RegExp(dueRegexText, 'g');
-    const dueMatch = matchByPositionAndGroup(lineText, dueRegex, cursorPos, 1);
-    if (!dueMatch) return suggestions; 
+    const scheduleRegexText = `${escapeRegExp(this.startingNotation)}\\s?schedule:(.*?)${escapeRegExp(this.endingNotation)}`;
+    const scheduleRegex = new RegExp(scheduleRegexText, 'g');
+    const scheduleMatch = matchByPositionAndGroup(lineText, scheduleRegex, cursorPos, 1);
+    if (!scheduleMatch) return suggestions; 
   
-    const dueQuery = (dueMatch[1] || '').trim();
-    const dueQueryLower = dueQuery.toLowerCase();
+    const scheduleQuery = (scheduleMatch[1] || '').trim();
+    const scheduleQueryLower = scheduleQuery.toLowerCase();
   
     const level1Suggestions = [
       'today',
@@ -191,11 +191,11 @@ export class AttributeSuggester {
     ]
 
     const suggestionLevels = [level1Suggestions, level2Suggestions, level3Suggestions, level4Suggestions];
-    const levelInfo = determineLevel(dueQueryLower, suggestionLevels);
+    const levelInfo = determineLevel(scheduleQueryLower, suggestionLevels);
     const filteredSuggestions = levelInfo.filteredSuggestions;
 
     suggestions = filteredSuggestions.map((filteredSuggestion) => {
-        // Construct the replaceText with the dueQuery, the current suggestion, and a space if not the last level
+        // Construct the replaceText with the scheduleQuery, the current suggestion, and a space if not the last level
       const isLastLevel = suggestionLevels[suggestionLevels.length-1].contains(filteredSuggestion.trim());
       if (!filteredSuggestion.startsWith(":")) {
         filteredSuggestion = ` ${filteredSuggestion}`;
@@ -203,21 +203,21 @@ export class AttributeSuggester {
       if (!isLastLevel) {
         filteredSuggestion = `${filteredSuggestion} `;
       }
-      const replaceText = `${this.startingNotation}due: ${dueQuery.trim()}${filteredSuggestion}${this.endingNotation}`;
+      const replaceText = `${this.startingNotation}schedule: ${scheduleQuery.trim()}${filteredSuggestion}${this.endingNotation}`;
 
       // Set the cursor position to be right after the current suggestion
       let cursorPosition: number;
       if (isLastLevel) {
-        cursorPosition = dueMatch.index + `${this.startingNotation}due: ${dueQuery.trim()}${filteredSuggestion}${this.endingNotation}`.length;
+        cursorPosition = scheduleMatch.index + `${this.startingNotation}schedule: ${scheduleQuery.trim()}${filteredSuggestion}${this.endingNotation}`.length;
       } else {
-        cursorPosition = dueMatch.index + `${this.startingNotation}due: ${dueQuery.trim()}${filteredSuggestion}`.length;
+        cursorPosition = scheduleMatch.index + `${this.startingNotation}schedule: ${scheduleQuery.trim()}${filteredSuggestion}`.length;
       }
 
       return {
         displayText: filteredSuggestion,
         replaceText: replaceText,
-        replaceFrom: dueMatch.index,
-        replaceTo: dueMatch.index + dueMatch[0].length,
+        replaceFrom: scheduleMatch.index,
+        replaceTo: scheduleMatch.index + scheduleMatch[0].length,
         cursorPosition: cursorPosition
       };
     });
@@ -231,13 +231,13 @@ export class AttributeSuggester {
   ): SuggestInformation[] {
     let suggestions: SuggestInformation[] = [];
 
-    // Modify regex to capture the due date query
+    // Modify regex to capture the schedule date query
     const durationRegexText = `${escapeRegExp(this.startingNotation)}\\s?duration:(.*?)${escapeRegExp(this.endingNotation)}`;
     const durationRegex = new RegExp(durationRegexText, 'g');
     const durationMatch = matchByPositionAndGroup(lineText, durationRegex, cursorPos, 1);
     if (!durationMatch) return suggestions; // No match
 
-    // Get the due date query from the captured group
+    // Get the schedule date query from the captured group
     const durationQuery = (durationMatch[1] || '').trim();
 
     const durationStringSelections = [
@@ -250,7 +250,7 @@ export class AttributeSuggester {
       '3 hours',
     ];
 
-    // Use the dueQuery to filter the suggestions
+    // Use the scheduleQuery to filter the suggestions
     const filteredDurationStrings = durationStringSelections.filter((durationString) =>
       durationString.toLowerCase().startsWith(durationQuery.toLowerCase())
     );
@@ -396,8 +396,8 @@ interface LevelInfo {
   filteredSuggestions: string[];
 }
 
-function determineLevel(dueQuery: string, suggestionLevels: string[][]): LevelInfo {
-  let currentQuery = dueQuery.trim();
+function determineLevel(scheduleQuery: string, suggestionLevels: string[][]): LevelInfo {
+  let currentQuery = scheduleQuery.trim();
   let currentLevel = 0;
   let filteredSuggestions: string[] = [];
 
