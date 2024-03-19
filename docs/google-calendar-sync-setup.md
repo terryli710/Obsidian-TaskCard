@@ -39,7 +39,9 @@
      - **Scope** = `.../auth/userinfo.profile`;
      - **Scope** = `openid`;
      - ![alt text](image-7.png)
-     - **API** = `Google Calendar API` (you can search for API name in the filter);
+     - **API** = `Google Calendar API`;
+        > [!TIP]
+        > You can use the filter to search for "Google Calendar API" and "API"
      - ![alt text](image-6.png)
    - Click on `UPDATE`;
    - You should see 3 fields in **Your non-sensitive scopes**:
@@ -85,3 +87,9 @@
 - "*Google hasn’t verified this app*": Click on **Continue** because you created the application.
 - ![alt text](image-15.png) 
 - You should see login successful message.
+
+# Feedbacks and Problem Report
+
+> [!NOTE]
+> If you meet any problem in this tutorial, feel free to [contact the author](https://github.com/terryli710/Obsidian-TaskCard/discussions/new/choose) for help or [give feedbacks](https://github.com/terryli710/Obsidian-TaskCard/issues/new/choose).
+
