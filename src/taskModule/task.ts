@@ -10,7 +10,7 @@ export const DateOnly = String.withConstraint((s) =>
 );
 export const TimeOnly = String.withConstraint((s) => /^\d{2}:\d{2}$/.test(s));
 
-export type DueDate = {
+export type ScheduleDate = {
   isRecurring: boolean;
   date: Static<typeof DateOnly>;
   time?: Static<typeof TimeOnly> | null;
@@ -41,7 +41,8 @@ export interface TaskProperties {
   parent?: TaskProperties | ObsidianTask | null;
   children: TaskProperties[] | ObsidianTask[];
 
-  due?: DueDate | null;
+  schedule?: ScheduleDate | null;
+  due?: ScheduleDate | null;
   duration?: Duration | null;
   metadata?: {
     taskDisplayParams?: TaskDisplayParams | null;
@@ -64,7 +65,8 @@ export class ObsidianTask implements TaskProperties {
   public parent?: TaskProperties | ObsidianTask | null;
   public children: TaskProperties[] | ObsidianTask[];
 
-  public due?: DueDate | null;
+  public schedule?: ScheduleDate | null;
+  public due?: ScheduleDate | null;
   public duration?: Duration | null;
   
   public metadata?: {
@@ -85,6 +87,7 @@ export class ObsidianTask implements TaskProperties {
     this.completed = props?.completed || false;
     this.parent = props?.parent || null;
     this.children = props?.children || [];
+    this.schedule = props?.schedule || null;
     this.due = props?.due || null;
     this.duration = props?.duration || null;
     this.metadata = props?.metadata || {};
@@ -103,6 +106,7 @@ export class ObsidianTask implements TaskProperties {
       completed: this.completed,
       parent: this.parent,
       children: this.children,
+      schedule: this.schedule,
       due: this.due,
       duration: this.duration,
       metadata: this.metadata,
@@ -133,10 +137,16 @@ export class ObsidianTask implements TaskProperties {
     return this.children.length > 0;
   }
 
+  hasSchedule(): boolean {
+    if (!this.schedule) return false;
+    // return if the schedule string is not empty
+    return !!this.schedule.string.trim();
+  }
+
   hasDue(): boolean {
     if (!this.due) return false;
     // return if the due string is not empty
-    return !!this.due.string;
+    return !!this.due.string.trim();
   }
 
   hasDuration(): boolean {

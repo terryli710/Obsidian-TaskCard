@@ -7,6 +7,7 @@ import { logger } from '../utils/log';
 type TaskCardStatus = {
   descriptionStatus: 'editing' | 'done';
   projectStatus: 'selecting' | 'done';
+  scheduleStatus: 'editing' | 'done';
   dueStatus: 'editing' | 'done';
   durationStatus: 'editing' | 'done';
 };
@@ -46,6 +47,7 @@ export class ObsidianTaskSyncManager implements ObsidianTaskSyncProps {
     this.taskCardStatus = props?.taskCardStatus || {
       descriptionStatus: 'done',
       projectStatus: 'done',
+      scheduleStatus: 'done',
       dueStatus: 'done',
       durationStatus: 'done',
     };
@@ -125,6 +127,7 @@ export class ObsidianTaskSyncManager implements ObsidianTaskSyncProps {
     const allowedStatuses = {
       descriptionStatus: ['editing', 'done'],
       projectStatus: ['selecting', 'done'],
+      scheduleStatus: ['editing', 'done'],
       dueStatus: ['editing', 'done'],
       durationStatus: ['editing', 'done']
     };

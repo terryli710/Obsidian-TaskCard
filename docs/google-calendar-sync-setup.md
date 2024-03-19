@@ -3,7 +3,7 @@
 # Create a New Client of Google Calendar to Use Google Calendar Sync of Task Card Obsidian
 
 ## Step 1: Create a new project in Google Cloud Platform
-
+TODO: add msg to encourage users
 - Go to [Google Cloud Platform Console](https://console.cloud.google.com/welcome/);
 - Create a project:
   - Navigate to [Create Project](https://console.cloud.google.com/projectcreate);
@@ -31,7 +31,7 @@
     - **Scope** = `.../auth/userinfo.email`;
     - **Scope** = `.../auth/userinfo.profile`;
     - **Scope** = `openid`;
-    - **API** = `Google Calendar API` (you can search for API name in the filter);
+    - **API** = `Google Calendar API` (you can search for API name in the filter); TODO: more accurate description
   - Click on **Update**;
   - You should see 3 fields in **Your non-sensitive scopes**:
     - `.../auth/userinfo.email`

@@ -1,5 +1,5 @@
 <script lang="ts">
-    import Due from './Due.svelte';
+    import Schedule from './Schedule.svelte';
     import Project from "./Project.svelte";
     import Labels from "./Labels.svelte";
     import { TaskDisplayParams, TaskDisplayMode } from "../renderer/postProcessor";
@@ -19,6 +19,7 @@
     import CircularProgressBar from '../components/CircularProgressBar.svelte';
     import Duration from './Duration.svelte';
     import SyncLogos from './SyncLogos.svelte';
+    import Due from './Due.svelte';
 
     export let taskSyncManager: ObsidianTaskSyncManager;
     export let plugin: TaskCardPlugin;
@@ -100,7 +101,7 @@
       // Separator
       cardMenu.addSeparator();
 
-      // Group 1: Task Description and Due Date and Duration
+      // Group 1: Task Description and Schedule Date and Duration
       if (!taskSyncManager.obsidianTask.hasDescription()) {
         cardMenu.addItem((item) => {
           item.setTitle('Add Description');
@@ -115,6 +116,25 @@
           item.setIcon('trash');
           item.onClick((evt) => {
             taskSyncManager.updateObsidianTaskAttribute('description', '');
+          });
+        });
+      }
+
+      if (!taskSyncManager.obsidianTask.hasSchedule()) {
+        cardMenu.addItem((item) => {
+          item.setTitle('Add Schedule');
+          item.setIcon('plus');
+          item.onClick((evt) => {
+            taskSyncManager.taskCardStatus.scheduleStatus = 'editing';
+            displaySchedule = taskSyncManager.obsidianTask.hasSchedule() || taskSyncManager.getTaskCardStatus('scheduleStatus') === 'editing';
+          });
+        });
+      } else {
+        cardMenu.addItem((item) => {
+          item.setTitle('Delete Schedule');
+          item.setIcon('trash');
+          item.onClick((evt) => {
+            taskSyncManager.updateObsidianTaskAttribute('schedule', null);
           });
         });
       }
@@ -144,7 +164,7 @@
           item.setIcon('plus');
           item.onClick((evt) => {
             taskSyncManager.taskCardStatus.durationStatus = 'editing';
-            displayDuration = taskSyncManager.obsidianTask.hasDue() || taskSyncManager.getTaskCardStatus('dueStatus') === 'editing';
+            displayDuration = taskSyncManager.obsidianTask.hasSchedule() || taskSyncManager.getTaskCardStatus('scheduleStatus') === 'editing';
           });
         });
       } else {
@@ -208,8 +228,10 @@
       cardMenu.showAtPosition({ x: event.clientX, y: event.clientY });
     }
 
-    let displayDue: boolean = taskSyncManager.obsidianTask.hasDue() || taskSyncManager.getTaskCardStatus('dueStatus') === 'editing';
+    let displaySchedule: boolean = taskSyncManager.obsidianTask.hasSchedule() || taskSyncManager.getTaskCardStatus('scheduleStatus') === 'editing';
     let displayDuration: boolean = taskSyncManager.obsidianTask.hasDuration() || taskSyncManager.getTaskCardStatus('durationStatus') === 'editing';
+    let displayDue: boolean = taskSyncManager.obsidianTask.hasDue() || taskSyncManager.getTaskCardStatus('dueStatus') === 'editing';
+    let displayDescription: boolean = taskSyncManager.obsidianTask.hasDescription() || taskSyncManager.getTaskCardStatus('descriptionStatus') === 'editing'
 
 </script>
 
@@ -230,9 +252,7 @@
       {#if descriptionProgress[1] * descriptionProgress[0] > 0 && !task.completed }
         <CircularProgressBar value={descriptionProgress[0]} max={descriptionProgress[1]} showDigits={false} />
       {/if}
-      {#if taskSyncManager.obsidianTask.hasDue()}
-        <Due taskSyncManager={taskSyncManager} plugin={plugin} params={params} />
-      {/if}
+      <Schedule taskSyncManager={taskSyncManager} plugin={plugin} params={params} displaySchedule={displaySchedule} />
       <Project taskSyncManager={taskSyncManager} params={params} />
     </div>
   </div>
@@ -253,9 +273,7 @@
       <SyncLogos taskSyncManager={taskSyncManager} />
       <Project taskSyncManager={taskSyncManager} params={params} />
     </div>
-    {#if taskSyncManager.obsidianTask.hasDescription() || taskSyncManager.getTaskCardStatus('descriptionStatus') === 'editing'}
-      <Description taskSyncManager={taskSyncManager} />
-    {/if}
+    <Description taskSyncManager={taskSyncManager} displayDescription={displayDescription} />
     <button class="task-card-menu-button mode-multi-line" on:click={(event) => showCardMenu(event)} tabindex="0">
       <MoreVertical ariaLabel="Show Menu"/>
     </button>
@@ -263,13 +281,10 @@
 
   <div class="task-card-attribute-bottom-bar">
     <div class="task-card-attribute-bottom-bar-left">
-      {#if displayDue}
-        <Due taskSyncManager={taskSyncManager} plugin={plugin} params={params} />
-      {/if}
-      {#if displayDuration}
-        <Duration taskSyncManager={taskSyncManager} params={params} />
-      {/if}
-      {#if displayDue || displayDuration}
+      <Schedule taskSyncManager={taskSyncManager} plugin={plugin} params={params} displaySchedule={displaySchedule} />
+      <Duration taskSyncManager={taskSyncManager} params={params} displayDuration={displayDuration} />
+      <Due taskSyncManager={taskSyncManager} plugin={plugin} params={params} displayDue={displayDuration} />
+      {#if displaySchedule || displayDuration}
         <div class="task-card-attribute-separator"></div>
       {/if}
       <Labels taskSyncManager={taskSyncManager} />

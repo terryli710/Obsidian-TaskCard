@@ -89,11 +89,11 @@ describe('taskToMarkdown', () => {
     expect(result).toContain('#label1 #label2');
   });
 
-  it('should format a task with due date', () => {
+  it('should format a task with schedule date', () => {
     const task = new ObsidianTask({
       content: 'An example task',
       completed: false,
-      due: {
+      schedule: {
         isRecurring: false,
         date: '2024-08-15',
         string: '2023-08-15',
@@ -101,7 +101,7 @@ describe('taskToMarkdown', () => {
       }
     });
     const result = taskFormatter.taskToMarkdown(task);
-    expect(result).toContain('"due":{"isRecurring":false,"date":"2024-08-15","string":"2023-08-15","timezone":null}');
+    expect(result).toContain('"schedule":{"isRecurring":false,"date":"2024-08-15","string":"2023-08-15","timezone":null}');
   });
 
   it('should format a task with metadata', () => {

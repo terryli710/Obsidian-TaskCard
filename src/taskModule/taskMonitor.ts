@@ -70,7 +70,7 @@ export class TaskMonitor {
     const taskDetails = this.detectTasksFromLines(lines);
     if (taskDetails.length === 0) return;
     for (const taskDetail of taskDetails) {
-
+      // logger.debug(`taskDetail: ${JSON.stringify(taskDetail)}`);
       // notify API about creation of tasks
       let task = this.parseTaskWithLines(taskDetail.taskMarkdown.split('\n'));
       const syncMetadata = await this.plugin.externalAPIManager.createTask(task);
@@ -114,6 +114,7 @@ export class TaskMonitor {
       }
       return task;
     } else {
+      announceError('Failed to parse task: ' + taskMarkdown);
       return null;
     }
 
@@ -145,8 +146,6 @@ export class TaskMonitor {
           endLine: lineIndex + 1 + descriptionLineCount,
         });
 
-        // Skip the description lines in the next iterations
-        lineIndex += descriptionLineCount;
       }
       lineIndex++;
     }

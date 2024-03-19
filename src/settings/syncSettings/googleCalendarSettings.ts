@@ -1,10 +1,9 @@
 
 
-import { PluginSettingTab, ButtonComponent, Setting, Notice } from 'obsidian'; // Assuming obsidian types based on the code context.
-import { GoogleCalendarAuthenticator } from '../../api/googleCalendarAPI/authentication';
+import { ButtonComponent, Setting, Notice } from 'obsidian'; // Assuming obsidian types based on the code context.
 import { ProjectModule } from '../../taskModule/project';
 import { GoogleCalendarAPI } from '../../api/googleCalendarAPI/calendarAPI';
-import { SettingStore, SyncSetting } from '../../settings';
+import { SettingStore, SyncSetting, TaskCardSettings } from '../../settings';
 import { logger } from '../../utils/log';
 
 export interface GoogleSyncSetting extends SyncSetting {
@@ -18,7 +17,7 @@ export interface GoogleSyncSetting extends SyncSetting {
 
 export async function googleCalendarSyncSettings(
     containerEl: HTMLElement,
-    pluginSettings: any, // Adjust with the specific type.
+    pluginSettings: TaskCardSettings,
     writeSettings: Function,
     display: Function,
     projectModule: ProjectModule,
@@ -28,7 +27,7 @@ export async function googleCalendarSyncSettings(
     let loginButton: ButtonComponent;
 
     // 1. Google login settings
-    new Setting(containerEl)
+    const googleLoginSettings = new Setting(containerEl)
     .setName("Login via Google")
     .addText(text => {
         text
@@ -45,7 +44,7 @@ export async function googleCalendarSyncSettings(
             'a',
             {
                 text: 'the documentation',
-                href: 'https://github.com/terryli710/Obsidian-TaskCard/blob/feature/google-calendar-api/docs/google-calendar-sync-setup.md', // TODO: correct this link.
+                href: 'https://github.com/terryli710/Obsidian-TaskCard/blob/main/docs/google-calendar-sync-setup.md',
             }
         );
         frag.appendText(' for more details.');
@@ -59,7 +58,29 @@ export async function googleCalendarSyncSettings(
         })
         .setDisabled(googleSettings.isLogin);
     })
-    .addButton(button => {
+
+    if (googleSettings.isLogin) {
+        googleLoginSettings.addButton(button => {
+            button
+            .setButtonText("Test Login")
+            .onClick(async () => {
+                if (!googleCalendarAPI) {
+                    new Notice(`[TaskCard] Google Calendar API is not defined.`);
+                    return;
+                }
+                const calendars = googleCalendarAPI.listCalendars();
+                if (!calendars) {
+                    new Notice(`[TaskCard] Failed to list calendars. Login status test failed.`);
+                    return;
+                } else {
+                    new Notice(`[TaskCard] Login status test passed.`);
+                }
+
+            })
+        })
+    }
+
+    googleLoginSettings.addButton(button => {
         const isLoggedIn = googleSettings.isLogin;
         
         loginButton = button
@@ -70,7 +91,7 @@ export async function googleCalendarSyncSettings(
                     googleSettings.isLogin = false;
                     writeSettings(old => old.syncSettings.googleSyncSetting.isLogin = false);
                 } else {
-                    const loginSuccess = await new GoogleCalendarAuthenticator().login();
+                    const loginSuccess = await googleCalendarAPI.authenticator.login();
                     if (loginSuccess) {
                         googleSettings.isLogin = true;
                         writeSettings(old => old.syncSettings.googleSyncSetting.isLogin = true);

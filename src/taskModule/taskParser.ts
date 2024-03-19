@@ -2,7 +2,7 @@ import { logger } from '../utils/log';
 import { escapeRegExp, extractTags } from '../utils/regexUtils';
 import { kebabToCamel } from '../utils/stringCaseConverter';
 import { toArray, toBoolean } from '../utils/typeConversion';
-import { DueDate, Duration, ObsidianTask, Order, Priority, TaskProperties, TextPosition } from './task';
+import { ScheduleDate, Duration, ObsidianTask, Order, Priority, TaskProperties, TextPosition } from './task';
 import { Project, ProjectModule } from './project';
 import Sugar from 'sugar';
 import { SettingStore } from '../settings';
@@ -77,7 +77,7 @@ export class TaskParser {
     const task = new ObsidianTask();
     const attributes = parseAttributes.bind(this)();
     if (attributes === null) { return task; }
-  
+
     task.id = attributes.id || '';
     task.priority = attributes.priority || '1';
     task.description = (attributes.description || '') + (DescriptionParser.parseDescriptionFromTaskEl(taskEl) || '');
@@ -87,6 +87,7 @@ export class TaskParser {
     task.labels = attributes.labels || [];
     task.parent = attributes.parent || null;
     task.children = attributes.children || [];
+    task.schedule = attributes.schedule || null;
     task.due = attributes.due || null;
     task.duration = attributes.duration || null;
     task.metadata = attributes.metadata || {};
@@ -184,10 +185,51 @@ export class TaskParser {
       }
     };
 
-    // if taskMarkdown is multi-line, split it
+    // Utility function to convert leading tabs in a line to spaces
+    const convertLeadingTabsToSpaces = (line: string): string => {
+        let result = "";
+        let index = 0;
+    
+        while (index < line.length) {
+            if (line[index] === '\t') {
+                result += "    "; // Replace tab with 4 spaces
+            } else if (line[index] === ' ') {
+                result += line[index];
+            } else {
+                // Once we encounter a non-space, non-tab character, break
+                break;
+            }
+            index++;
+        }
+        
+        // Append the remainder of the line
+        result += line.slice(index);
+        return result;
+    };
+
+    // Utility function to check if all lines start with a space
+    const allLinesStartWithSpace = (lines: string[]): boolean => {
+      return lines.every(line => line.startsWith(" "));
+    };
+
+    // Utility function to remove the leading space from all lines
+    const removeLeadingSpace = (lines: string[]): string[] => {
+      return lines.map(line => line.startsWith(" ") ? line.slice(1) : line);
+    };
+
     if (taskMarkdown.includes('\n')) {
-      const lines = taskMarkdown.split('\n');
-      task.description = lines.slice(1).join('\n'); // From the second line to the last line, joined by '\n'
+      // process multi-line task - has description
+      let lines = taskMarkdown.split('\n');
+      let descLines = lines.slice(1);
+      // Convert tabs to spaces
+      descLines = descLines.map(convertLeadingTabsToSpaces);
+
+      // Iteratively remove indentation
+      while (allLinesStartWithSpace(descLines)) {
+        descLines = removeLeadingSpace(descLines);
+      }
+      // logger.debug(`Multi-line task: ${descLines.join('\n')}`);
+      task.description = descLines.join('\n');
       taskMarkdown = lines[0]; // The first line
     }
 
@@ -240,8 +282,11 @@ export class TaskParser {
       }
 
       switch (attributeName) {
+        case 'schedule':
+          task.schedule = tryParseAttribute('schedule', this.parseSchedule.bind(this), attributeValue, 'other');
+          break;
         case 'due':
-          task.due = tryParseAttribute('due', this.parseDue.bind(this), attributeValue, 'other');
+          task.due = tryParseAttribute('due', this.parseSchedule.bind(this), attributeValue, 'other');
           break;
         case 'duration':
           task.duration = tryParseAttribute('duration', this.parseDuration.bind(this), attributeValue, 'other');
@@ -277,10 +322,51 @@ export class TaskParser {
   parseFormattedTaskMarkdown(taskMarkdown: string): ObsidianTask {
     const task: ObsidianTask = new ObsidianTask();
 
-    // if taskMarkdown is multi-line, split it
+    // Utility function to convert leading tabs in a line to spaces
+    const convertLeadingTabsToSpaces = (line: string): string => {
+      let result = "";
+      let index = 0;
+  
+      while (index < line.length) {
+          if (line[index] === '\t') {
+              result += "    "; // Replace tab with 4 spaces
+          } else if (line[index] === ' ') {
+              result += line[index];
+          } else {
+              // Once we encounter a non-space, non-tab character, break
+              break;
+          }
+          index++;
+      }
+      
+      // Append the remainder of the line
+      result += line.slice(index);
+      return result;
+    };
+
+    // Utility function to check if all lines start with a space
+    const allLinesStartWithSpace = (lines: string[]): boolean => {
+      return lines.every(line => line.startsWith(" "));
+    };
+
+    // Utility function to remove the leading space from all lines
+    const removeLeadingSpace = (lines: string[]): string[] => {
+      return lines.map(line => line.startsWith(" ") ? line.slice(1) : line);
+    };
+
     if (taskMarkdown.includes('\n')) {
-      const lines = taskMarkdown.split('\n');
-      task.description = lines.slice(1).join('\n'); // From the second line to the last line, joined by '\n'
+      // process multi-line task - has description
+      let lines = taskMarkdown.split('\n');
+      let descLines = lines.slice(1);
+      // Convert tabs to spaces
+      descLines = descLines.map(convertLeadingTabsToSpaces);
+
+      // Iteratively remove indentation
+      while (allLinesStartWithSpace(descLines)) {
+        descLines = removeLeadingSpace(descLines);
+      }
+      // logger.debug(`Multi-line task: ${descLines.join('\n')}`);
+      task.description = descLines.join('\n');
       taskMarkdown = lines[0]; // The first line
     }
     
@@ -332,7 +418,8 @@ export class TaskParser {
     task.priority = parseJSONAttribute(metadata['priority'], 'priority', '4' as unknown as Priority);
     task.order = parseJSONAttribute(metadata['order'], 'order', 0);
     task.project = parseJSONAttribute(metadata['project'], 'project', null);
-    task.due = parseJSONAttribute(metadata['due'], 'due', null); 
+    task.schedule = parseJSONAttribute(metadata['schedule'], 'schedule', null); 
+    task.due = parseJSONAttribute(metadata['due'], 'due', null);
     task.duration = parseJSONAttribute(metadata['duration'], 'duration', null);
     task.metadata = parseJSONAttribute(metadata['metadata'], 'metadata', {}); 
 
@@ -399,8 +486,8 @@ export class TaskParser {
   }
 
 
-  parseDue(dueString: string): DueDate | null {
-    const parsedDateTime = Sugar.Date.create(dueString);
+  parseSchedule(scheduleString: string): ScheduleDate | null {
+    const parsedDateTime = Sugar.Date.create(scheduleString);
 
     // Check if the parsedDateTime is a valid date
     if (!parsedDateTime || !Sugar.Date.isValid(parsedDateTime)) {
@@ -416,15 +503,15 @@ export class TaskParser {
       return {
         isRecurring: false,
         date: parsedDate,
-        string: dueString
-      } as DueDate;
+        string: scheduleString
+      } as ScheduleDate;
     } else {
       return {
         isRecurring: false,
         date: parsedDate,
         time: parsedTime,
-        string: dueString
-      } as DueDate;
+        string: scheduleString
+      } as ScheduleDate;
     }
   }
 

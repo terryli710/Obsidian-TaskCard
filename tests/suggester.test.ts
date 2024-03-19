@@ -55,11 +55,11 @@ describe('AttributeSuggester', () => {
     expect(suggestions).toHaveLength(4); // Assuming 4 priority suggestions are returned
   });
 
-  it('gets due suggestions', () => {
-    const lineText = '{{ due: t }}';
+  it('gets schedule suggestions', () => {
+    const lineText = '{{ schedule: t }}';
     const cursorPos = 9;
-    const suggestions = suggester.getDueSuggestions(lineText, cursorPos);
-    expect(suggestions).toHaveLength(4); // Assuming 4 due suggestions are returned
+    const suggestions = suggester.getScheduleSuggestions(lineText, cursorPos);
+    expect(suggestions).toHaveLength(4); // Assuming 4 schedule suggestions are returned
   });
 
   it('wont get attribute suggestions if the endingNotation is not found', () => {
@@ -70,9 +70,9 @@ describe('AttributeSuggester', () => {
   });
 
   it('wont get priority suggestions if cursor is not at the correct position', () => {
-    const lineText = '{{ due: ';
+    const lineText = '{{ schedule: ';
     const cursorPos = 6;
-    const suggestions = suggester.getDueSuggestions(lineText, cursorPos);
+    const suggestions = suggester.getScheduleSuggestions(lineText, cursorPos);
     expect(suggestions).toHaveLength(0);
   });
 

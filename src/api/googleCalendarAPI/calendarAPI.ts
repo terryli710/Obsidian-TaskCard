@@ -38,6 +38,7 @@ export class GoogleCalendarAPI {
             this.calendars = await this.listCalendars();
         } catch (e) {
             logger.error(`Failed to list calendars: ${e}`);
+            return;
         }
         SettingStore.subscribe((settings) => {
             const defaultCalendarId = settings.syncSettings.googleSyncSetting.defaultCalendarId;
@@ -47,9 +48,6 @@ export class GoogleCalendarAPI {
             this.googleSyncSetting = settings.syncSettings.googleSyncSetting;
         });
 
-        // DEBUG
-        this.defaultCalendar = this.calendars[1];
-        // logger.debug(`defaultCalendar: ${JSON.stringify(this.defaultCalendar)}`);
     }
 
     async handleLocalTaskCreation(event: TaskChangeEvent): Promise<string> {
@@ -63,13 +61,14 @@ export class GoogleCalendarAPI {
 
     filterCreationEvent(event: TaskChangeEvent): boolean {
         // logic to filter creation events: some events should not be created by google calendar
-        // 1. intrinsic filter: task without due date won't be created
-        if (!event.currentState.due?.date) return false; // Optional chaining is used here
+        // 1. intrinsic filter: task without schedule date won't be created
+        if (!event.currentState.schedule?.date) return false; // Optional chaining is used here
         // 2. setting based filter: if there's filter project or tag, check if the task is in the project or tag
-        if (this.googleSyncSetting.filterProject) {
+        if (!this.googleSyncSetting) return false;
+        if (this.googleSyncSetting.doesNeedFilters && this.googleSyncSetting.filterProject) {
             if (this.googleSyncSetting.filterProject !== event.currentState.project?.id) return false;
         }
-        if (this.googleSyncSetting.filterTag) {
+        if (this.googleSyncSetting.doesNeedFilters && this.googleSyncSetting.filterTag) {
             if (!event.currentState.labels?.includes(this.googleSyncSetting.filterTag)) return false;
         }
         return true;
@@ -79,28 +78,28 @@ export class GoogleCalendarAPI {
         // local task updates can match to task update, create, or delete
         if (event.type !== TaskChangeType.UPDATE) return '';
         logger.debug(`handling local task update: ${JSON.stringify(event)}`);
-        logger.debug(`has google sync id: ${event.currentState.metadata.syncMappings.googleSyncSetting.id}`);
+        logger.debug(`has google sync id: ${event.currentState.metadata.syncMappings.googleSyncSetting?.id}`);
         logger.debug(`filtered: ${this.filterCreationEvent(event)}`);
         const googleEvent = this.convertTaskToGoogleEvent(event.currentState);
         
         // possible task creation events: 1. no google sync id 2. filter passed
-        if (!event.currentState.metadata.syncMappings.googleSyncSetting.id) {
+        if (!event.currentState.metadata.syncMappings.googleSyncSetting?.id) {
             if (this.filterCreationEvent(event) === false) return '';
             logger.debug(`try to create event`)
             const createdEvent = await this.createEvent(googleEvent);
-            return createdEvent.id;
+            return createdEvent?.id || '';
         }
         // possible task deletion events: 1. has google sync id; 2. filter failed
-        if (event.previousState.metadata.syncMappings.googleSyncSetting.id && !this.filterCreationEvent(event)) {
+        if (event.previousState.metadata.syncMappings.googleSyncSetting?.id && !this.filterCreationEvent(event)) {
             logger.debug(`try to delete event`)
             const deletedEvent = await this.deleteEvent(googleEvent);
             return '';
         }
         // possible task update events: 1. has google sync id; 2. filter passed
-        if (event.previousState.metadata.syncMappings.googleSyncSetting.id && this.filterCreationEvent(event)) {
+        if (event.previousState.metadata.syncMappings.googleSyncSetting?.id && this.filterCreationEvent(event)) {
             logger.debug(`try to update event`)
             const updatedEvent = await this.updateEvent(googleEvent);
-            return updatedEvent.id;
+            return updatedEvent?.id || '';
         }
         return '';
     }
@@ -127,38 +126,39 @@ export class GoogleCalendarAPI {
     }
 
     constructStartAndEnd(task: Partial<ObsidianTask>): {start: GoogleEventTimePoint, end: GoogleEventTimePoint} {
-        if (!task.due) {
-            throw new Error("Task must have a due date.");
+        if (!task.schedule) {
+            logger.error(`Task has no schedule date: ${JSON.stringify(task)}`);
+            return {start: {}, end: {}}
         }
 
-        const due = task.due;
+        const schedule = task.schedule;
         const duration = task.duration || { hours: 0, minutes: 0 }; // Default duration if not provided
 
         // Format start date and time
         let startDateTime: string | null = null;
-        if (due.time) {
+        if (schedule.time) {
             // Combine date and time if time is provided
-            startDateTime = this.dateTimeToGoogleDateTime(`${due.date}T${due.time}`);
+            startDateTime = this.dateTimeToGoogleDateTime(`${schedule.date}T${schedule.time}`);
         }
 
         const start: GoogleEventTimePoint = {
-            ...(startDateTime ? { dateTime: startDateTime } : { date: this.dateToGoogleDate(due.date) }),
-            timeZone: due.timezone || this.defaultCalendar.timeZone || null,
+            ...(startDateTime ? { dateTime: startDateTime } : { date: this.dateToGoogleDate(schedule.date) }),
+            timeZone: schedule.timezone || this.defaultCalendar.timeZone || null,
         };
 
         // Calculate the end time based on the duration
         const taskDuration = moment.duration({ hours: duration.hours, minutes: duration.minutes });
-        const endMoment = moment(startDateTime || due.date).add(taskDuration); // If time is not available, it assumes the start of the day
+        const endMoment = moment(startDateTime || schedule.date).add(taskDuration); // If time is not available, it assumes the start of the day
 
         // Check if duration is longer than one day
         const isMultiDay = taskDuration.asDays() >= 1;
 
         // Determine end date format based on whether time is specified and if duration is less than one day
-        const endDateFormat = (due.time && !isMultiDay) ? "YYYY-MM-DDTHH:mm:ss" : "YYYY-MM-DD";
+        const endDateFormat = (schedule.time && !isMultiDay) ? "YYYY-MM-DDTHH:mm:ss" : "YYYY-MM-DD";
 
         const end: GoogleEventTimePoint = {
             ...(startDateTime ? { dateTime: endMoment.format(endDateFormat) } : { date: endMoment.format("YYYY-MM-DD") }),
-            timeZone: due.timezone || this.defaultCalendar.timeZone || null,
+            timeZone: schedule.timezone || this.defaultCalendar.timeZone || null,
         };
 
         return { start, end };
@@ -328,9 +328,9 @@ export class GoogleCalendarAPI {
         }
 
         // Preprocess the event
-        // logger.debug(`event: ${JSON.stringify(event)}`);
+        logger.debug(`event: ${JSON.stringify(event)}`);
         const processedEvent = this.preprocessEvent(event, targetCalendar);
-        // logger.debug(`processedEvent: ${JSON.stringify(processedEvent)}`);
+        logger.debug(`processedEvent: ${JSON.stringify(processedEvent)}`);
 
         try {
             // Assuming callRequest is accessible here, either as a global function or a method on this class.

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Platform, Workspace } from 'obsidian';
+  import { OpenViewState, Platform, Workspace } from 'obsidian';
   import ChevronsDownUp from '../components/icons/ChevronsDownUp.svelte';
   import ChevronsUpDown from '../components/icons/ChevronsUpDown.svelte';
   import {
@@ -7,16 +7,19 @@
     TaskDisplayParams
   } from '../renderer/postProcessor';
   import { LabelModule } from '../taskModule/labels';
-  import { DocPosition, ObsidianTask, PositionedObsidianTask } from '../taskModule/task';
-  import { displayDate, displayTime } from '../utils/dateTimeFormatter';
-  import { logger } from '../utils/log';
-  import { marked } from 'marked';
+  import { DocPosition, PositionedObsidianTask } from '../taskModule/task';
   import TaskCardPlugin from '..';
   import { DescriptionParser } from '../taskModule/description';
   import CircularProgressBar from '../components/CircularProgressBar.svelte';
   import SyncLogos from './SyncLogos.svelte';
-  marked.use({ mangle: false, headerIds: false, langPrefix: '' });
+  import Schedule from './Schedule.svelte';
+  import Content from './Content.svelte';
+  import Duration from './Duration.svelte';
+  import Due from './Due.svelte';
 
+  var md = require('markdown-it');
+  var taskLists = require('markdown-it-task-lists');
+  var mdParser = md().use(taskLists);
 
   export let taskItem: PositionedObsidianTask;
   export let plugin: TaskCardPlugin;
@@ -24,10 +27,12 @@
   let taskDisplayParams: TaskDisplayParams = { mode: 'single-line' };
   let task = taskItem;
   let docPosition = taskItem.docPosition;
-  let dueDisplay = '';
+  // let scheduleDisplay = '';
   let labelModule = new LabelModule();
-  let descriptionMarkdown = marked(task.description);
-  let descriptionProgress = DescriptionParser.progressOfDescription(task.description);
+  // let descriptionMarkdown = markdownToHTML(task.description);
+  let descriptionProgress = DescriptionParser.progressOfDescription(
+    task.description
+  );
 
   labelModule.setLabels(task.labels);
 
@@ -36,39 +41,33 @@
     toggleCompleteOfTask(task.completed, taskItem.docPosition);
   }
 
-  async function toggleCompleteOfTask(completed: boolean, docPosition: DocPosition) {
-  // Get the line from the file
-  const line = await plugin.fileOperator.getLineFromFile(
-    docPosition.filePath,
-    docPosition.start.line + 1,
-  );
-
-  // Determine the symbol to use based on the 'completed' flag
-  const symbol = completed ? 'x' : ' ';
-
-  // Use a regular expression to find the task's current completion symbol and replace it
-  const updatedLine = line.replace(/- \[[^\]]\]/, `- [${symbol}]`);
-
-  // Update the line in the file
-  plugin.fileOperator.updateLineInFile(
-    docPosition.filePath,
-    docPosition.start.line + 1,
-    updatedLine
-  );
-}
-
-  function updateDueDisplay(): string {
-    if (!task.due) {
-      dueDisplay = '';
-      return dueDisplay;
-    }
-    let datePart = displayDate(task.due.date);
-    let timePart = displayTime(task.due.time);
-    dueDisplay = timePart ? `${datePart}, ${timePart}` : datePart;
-    return dueDisplay;
+  async function getLineFromDocPosition(docPosition: DocPosition) {
+    return await plugin.fileOperator.getLineFromFile(
+      docPosition.filePath,
+      docPosition.start.line + 1
+    );
   }
 
-  updateDueDisplay();
+  async function toggleCompleteOfTask(
+    completed: boolean,
+    docPosition: DocPosition
+  ) {
+    // Get the line from the file
+    const line = await getLineFromDocPosition(docPosition);
+
+    // Determine the symbol to use based on the 'completed' flag
+    const symbol = completed ? 'x' : ' ';
+
+    // Use a regular expression to find the task's current completion symbol and replace it
+    const updatedLine = line.replace(/- \[[^\]]\]/, `- [${symbol}]`);
+
+    // Update the line in the file
+    plugin.fileOperator.updateLineInFile(
+      docPosition.filePath,
+      docPosition.start.line + 1,
+      updatedLine
+    );
+  }
 
   function switchMode(
     event: MouseEvent | KeyboardEvent | CustomEvent,
@@ -81,26 +80,117 @@
   function linkToTask(event: MouseEvent | KeyboardEvent) {
     event.stopPropagation();
 
-    const selectionState = {
-          eState: {
-              cursor: {
-                  from: { line: docPosition.start.line, 
-                          ch: 0 },
-                  to: { line: docPosition.start.line + 1, 
-                        ch: 0 },
-              },
-              line: docPosition.start.line,
-          },
-      };
-    
+    const selectionEState = {
+      cursor: {
+        from: { line: docPosition.start.line, ch: 0 },
+        to: { line: docPosition.start.line + 1, ch: 0 }
+      },
+      line: docPosition.start.line
+    };
+
+    const currentWorkspaceDisplayMode =
+      plugin.app.workspace.activeLeaf.view.getState();
+    // console.log(currentWorkspaceDisplayMode);
+
+    const openViewState: OpenViewState = {
+      active: true,
+      // mode should be the same as the current mode
+      state: { mode: currentWorkspaceDisplayMode },
+      eState: selectionEState
+    };
+
+    // const line: string = await getLineFromDocPosition(docPosition);
+
     plugin.app.workspace.openLinkText(
       docPosition.filePath,
       docPosition.filePath,
-      event.ctrlKey || (event.metaKey && Platform.isMacOS),
-      selectionState
-    )
+      event.ctrlKey || (event.metaKey && Platform.isMacOS), // Open in new pane if Ctrl or Cmd is pressed
+      openViewState
+    );
   }
 
+  const displaySchedule = task.hasSchedule();
+  const displayDuration = task.hasDuration();
+  const displayDue = task.hasDue();
+  // const displayDescription = task.hasDescription();
+
+  const taskDescriptionHTML = transformTaskDescriptionHTML(
+    mdParser.render(task.description)
+  );
+
+  /**
+   * Transforms the HTML generated by the markdown parser for task descriptions to match a specified structure.
+   * It specifically adjusts <ul> and <li> elements within the task descriptions to ensure they have the correct
+   * classes and attributes. This includes adding 'contains-task-list' class to <ul> elements, ensuring 'task-list-item'
+   * class is present on relevant <li> elements, and adjusting <input> elements inside these list items to have the
+   * appropriate attributes.
+   *
+   * @param {string} taskDescriptionHTML - The HTML string generated by the markdown parser for a task description.
+   * @returns {string} The transformed HTML string with the updated structure.
+   */
+  function transformTaskDescriptionHTML(description) {
+    let parser = new DOMParser();
+    let doc = parser.parseFromString(description, 'text/html');
+
+    // Create a wrapper div for the final output
+    let wrapperDiv = document.createElement('div');
+    wrapperDiv.setAttribute('class', 'task-card-description');
+    wrapperDiv.setAttribute('role', 'button');
+    wrapperDiv.setAttribute('tabindex', '0');
+    wrapperDiv.setAttribute('aria-label', 'Description');
+
+    let ulElement = document.createElement('ul');
+    ulElement.classList.add('contains-task-list', 'has-list-bullet');
+    wrapperDiv.appendChild(ulElement);
+
+    let lis = doc.body.querySelectorAll('li');
+    
+    lis.forEach((li, index) => {
+      let newLi = document.createElement('li');
+      let lineIndex = index + 1;
+      let input = li.querySelector('input[type="checkbox"]');
+
+      newLi.setAttribute('data-line', lineIndex.toString());
+      newLi.setAttribute('data-real-line', lineIndex.toString());
+
+      if (input instanceof HTMLInputElement) {
+        // Ensure input is an HTMLInputElement
+        let clonedInput = input.cloneNode(true) as HTMLInputElement; // Cast the cloned node
+        clonedInput.setAttribute('class', 'task-list-item-checkbox');
+        clonedInput.setAttribute('data-line', lineIndex.toString());
+
+        if (input.hasAttribute('checked')) {
+          newLi.classList.add('is-checked');
+          newLi.setAttribute('data-task', 'x');
+          // newLi.setAttribute('style', 'color: var(--text-faint);');
+          clonedInput.setAttribute('checked', ''); // Ensure clonedInput maintains the checked state
+        } else {
+          newLi.setAttribute('data-task', '');
+          clonedInput.removeAttribute('checked');
+        }
+
+        let bulletDiv = document.createElement('div');
+        bulletDiv.classList.add('list-bullet');
+        newLi.appendChild(bulletDiv);
+        newLi.appendChild(clonedInput); // Use clonedInput instead of input
+        newLi.append(li.textContent.trim());
+      } else {
+        // Handle non-checkbox items
+        let bulletDiv = document.createElement('div');
+        bulletDiv.classList.add('list-bullet');
+        newLi.appendChild(bulletDiv);
+        newLi.append(li.textContent.trim());
+      }
+
+      ulElement.appendChild(newLi);
+    });
+
+    // Use XMLSerializer to convert the document back to a string
+    let serializer = new XMLSerializer();
+    let transformedHTML = serializer.serializeToString(wrapperDiv);
+
+    return transformedHTML;
+  }
 </script>
 
 {#if taskDisplayParams.mode === 'single-line'}
@@ -115,30 +205,33 @@
           on:click|stopPropagation={handleCheckboxClick}
         />
       </div>
-  
+
       <!-- Middle Element: Content and Project -->
-      <div 
+      <div
         class="static-task-card-middle"
-        role="button" 
-        tabindex="0" 
-        title="{docPosition.filePath}"
+        role="button"
+        tabindex="0"
+        title={docPosition.filePath}
         on:click={linkToTask}
         on:keydown={linkToTask}
       >
         <div class="static-task-card-content">{task.content}</div>
         <div class="static-task-card-middle-right">
           <SyncLogos providedMetadata={task.metadata} />
-          {#if descriptionProgress[1] * descriptionProgress[0] > 0 && !task.completed }
-            <CircularProgressBar value={descriptionProgress[0]} max={descriptionProgress[1]} showDigits={false} />
+          {#if descriptionProgress[1] * descriptionProgress[0] > 0 && !task.completed}
+            <CircularProgressBar
+              value={descriptionProgress[0]}
+              max={descriptionProgress[1]}
+              showDigits={false}
+            />
           {/if}
-          <!-- Due -->
-          {#if task.hasDue()}
-            <div class="task-card-due mode-single-line}" role="button" tabindex="0">
-              <div class="due-display">
-                {dueDisplay}
-              </div>
-            </div>
-          {/if}
+          <!-- Schedule -->
+          <Schedule
+            interactive={false}
+            {displaySchedule}
+            params={{ mode: 'single-line' }}
+            taskItem={task}
+          />
           <div class="task-card-project">
             {#if task.hasProject()}
               <span
@@ -149,7 +242,7 @@
           </div>
         </div>
       </div>
-  
+
       <!-- Right Element: Button -->
       <div class="static-task-card-right">
         <button
@@ -159,15 +252,15 @@
           <ChevronsUpDown ariaLabel="Toggle Task Display Mode" />
         </button>
       </div>
-    </div>    
+    </div>
   </div>
 {:else}
   <!-- mode = multi-line -->
-  <div 
+  <div
     class="task-card-major-block"
-    role="button" 
-    tabindex="0" 
-    title="{docPosition.filePath}"
+    role="button"
+    tabindex="0"
+    title={docPosition.filePath}
     on:click={linkToTask}
     on:keydown={linkToTask}
   >
@@ -181,9 +274,7 @@
     </div>
     <div class="task-card-content-project-line">
       <!-- Content -->
-      <div class="task-card-content mode-multi-line" role="button" tabindex="0">
-        {task.content}
-      </div>
+      <Content interactive={false} taskItem={task} />
       <SyncLogos providedMetadata={task.metadata} />
       <!-- Project -->
       <div class="project-wrapper">
@@ -207,14 +298,17 @@
     </div>
     <!-- Description -->
     <div class="task-card-description-wrapper">
-      {#if descriptionProgress[1] * descriptionProgress[0] > 0 }
+      {#if descriptionProgress[1] * descriptionProgress[0] > 0}
         <div class="task-card-progress-position">
-          <CircularProgressBar value={descriptionProgress[0]} max={descriptionProgress[1]} />
+          <CircularProgressBar
+            value={descriptionProgress[0]}
+            max={descriptionProgress[1]}
+          />
         </div>
       {/if}
       {#if task.hasDescription()}
         <div class="task-card-description" role="button" tabindex="0">
-          {@html descriptionMarkdown}
+          {@html taskDescriptionHTML}
         </div>
       {/if}
     </div>
@@ -222,17 +316,25 @@
 
   <div class="task-card-attribute-bottom-bar">
     <div class="task-card-attribute-bottom-bar-left">
-      <!-- Due -->
-      {#if task.hasDue()}
-        <div class="task-card-due mode-multi-line}" role="button" tabindex="0">
-          <div class="due-display">
-            {dueDisplay}
-          </div>
-        </div>
-        {#if taskDisplayParams.mode === 'multi-line'}
-          <div class="task-card-attribute-separator"></div>
-        {/if}
-      {/if}
+      <!-- Schedule/Duration/Due -->
+      <Schedule
+        interactive={false}
+        displaySchedule={displaySchedule}
+        params={{ mode: 'multi-line' }}
+        taskItem={task}
+      />
+      <Duration
+        interactive={false}
+        params={{ mode: 'multi-line' }}
+        taskItem={task}
+        displayDuration={displayDuration}
+      />
+      <Due
+        interactive={false}
+        params={{ mode: 'multi-line' }}
+        taskItem={task}
+        displayDue={displayDue}
+      />
       <!-- Labels -->
       <div class="task-card-labels">
         {#each labelModule.getLabels() as label}
@@ -255,9 +357,7 @@
   </div>
 {/if}
 
-
 <style>
-
   .task-card-progress-position {
     position: absolute; /* Absolute positioning for the progress bar */
     top: 3px;
@@ -277,6 +377,7 @@
     font-size: var(--font-text-size);
     flex-grow: 1; /* Make it take up all available space */
   }
+
   .static-task-card-container {
     display: flex;
     align-items: center;
@@ -284,17 +385,16 @@
   }
 
   .static-task-card-left {
-    flex-shrink: 0;
     display: flex; /* Added */
     align-items: center; /* Center align items vertically */
   }
 
   .static-task-card-middle {
-    flex-grow: 1;
     display: flex;
-    flex-direction: row; /* Changed from column to row */
-    justify-content: space-between; /* Added */
-    align-items: center; /* Added */
+    flex-direction: row;
+    flex-grow: 1;
+    justify-content: space-between;
+    align-items: center;
     cursor: pointer;
     border-radius: var(--radius-s);
   }
@@ -303,8 +403,11 @@
     background-color: var(--background-modifier-hover);
   }
 
+  /* .task-card-project, .schedule, .sync-logos {
+    display: inline-block;
+  } */
+
   .static-task-card-right {
-    flex-shrink: 0;
     align-self: flex-end;
     display: flex; /* Added */
     align-items: center; /* Center align items vertically */
@@ -335,7 +438,7 @@
     border: var(--border-width) solid var(--background-primary);
   }
 
-  .task-card-due {
+  .task-card-schedule {
     display: inline;
     padding: var(--tag-padding-y) var(--tag-padding-x);
     border: var(--border-width) solid var(--background-modifier-border);
@@ -361,9 +464,11 @@
   .task-card-checkbox.priority-1 {
     border-color: var(--color-red);
   }
+
   .task-card-checkbox.priority-2 {
     border-color: var(--color-yellow);
   }
+
   .task-card-checkbox.priority-3 {
     border-color: var(--color-cyan);
   }
@@ -383,34 +488,33 @@
     background-color: rgba(var(--color-cyan-rgb), 0.1);
   }
 
-  input[type=checkbox].task-card-checkbox.priority-1:checked {
+  input[type='checkbox'].task-card-checkbox.priority-1:checked {
     background-color: rgba(var(--color-red-rgb), 0.7);
   }
-  input[type=checkbox].task-card-checkbox.priority-2:checked {
+  input[type='checkbox'].task-card-checkbox.priority-2:checked {
     background-color: rgba(var(--color-yellow-rgb), 0.7);
   }
-  input[type=checkbox].task-card-checkbox.priority-3:checked {
+  input[type='checkbox'].task-card-checkbox.priority-3:checked {
     background-color: rgba(var(--color-cyan-rgb), 0.7);
   }
 
-  input[type=checkbox].task-card-checkbox.priority-1:checked:hover {
+  input[type='checkbox'].task-card-checkbox.priority-1:checked:hover {
     background-color: rgba(var(--color-red-rgb), 0.9);
   }
-  input[type=checkbox].task-card-checkbox.priority-2:checked:hover {
+  input[type='checkbox'].task-card-checkbox.priority-2:checked:hover {
     background-color: rgba(var(--color-yellow-rgb), 0.9);
   }
-  input[type=checkbox].task-card-checkbox.priority-3:checked:hover {
+  input[type='checkbox'].task-card-checkbox.priority-3:checked:hover {
     background-color: rgba(var(--color-cyan-rgb), 0.9);
   }
 
-
   .task-card-description-wrapper {
-        position: relative; /* Relative positioning for the wrapper */
-        grid-column: 2;
-        grid-row: 2;
-        width: 100%;
-        height: 100%;
-    }
+    position: relative; /* Relative positioning for the wrapper */
+    grid-column: 2;
+    grid-row: 2;
+    width: 100%;
+    height: 100%;
+  }
 
   .task-card-description {
     font-size: var(--font-smallest);
@@ -460,5 +564,4 @@
   button.mode-toggle-button {
     border-radius: var(--radius-m);
   }
-  
 </style>

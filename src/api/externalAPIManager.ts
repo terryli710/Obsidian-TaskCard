@@ -7,7 +7,7 @@ import { GoogleCalendarAPI } from "./googleCalendarAPI/calendarAPI";
 
 
 export interface SyncMappings {
-    googleSyncSetting: {
+    googleSyncSetting?: {
         id: string;
     }
 }
@@ -67,21 +67,29 @@ export class ExternalAPIManager {
 
     async notifyTaskCreations(event: TaskChangeEvent): Promise<SyncMappings> {
         if (event.type !== TaskChangeType.ADD) return;
-        const id = await this.googleCalendarAPI.handleLocalTaskCreation(event);
         const oldSyncMappings = event.currentState.metadata.syncMappings || {};
-        return { ...oldSyncMappings, googleSyncSetting: { id: id } };
+        let syncMappings = oldSyncMappings;
+        if (this.googleCalendarAPI) {
+            const id = await this.googleCalendarAPI.handleLocalTaskCreation(event);
+            syncMappings = { ...syncMappings, googleSyncSetting: { id: id } };
+        }
+        return syncMappings;
     }
 
     async notifyTaskUpdates(event: TaskChangeEvent): Promise<SyncMappings> {
         if (event.type !== TaskChangeType.UPDATE) return;
-        const id = await this.googleCalendarAPI.handleLocalTaskUpdate(event);
         const oldSyncMappings = event.currentState.metadata.syncMappings || {};
-        return { ...oldSyncMappings, googleSyncSetting: { id: id } };
+        let syncMappings = oldSyncMappings;
+        if (this.googleCalendarAPI) {
+            const id = await this.googleCalendarAPI.handleLocalTaskUpdate(event);
+            syncMappings = { ...syncMappings, googleSyncSetting: { id: id } };
+        }
+        return syncMappings;
     }
 
     notifyTaskDeletions(event: TaskChangeEvent) {
         if (event.type !== TaskChangeType.REMOVE) return;
-        this.googleCalendarAPI.handleLocalTaskDeletion(event);
+        if (this.googleCalendarAPI) this.googleCalendarAPI.handleLocalTaskDeletion(event);
     }
 
 

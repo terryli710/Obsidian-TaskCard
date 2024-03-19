@@ -1,8 +1,11 @@
 
 
 
+
+
 <script lang="ts">
     import { createEventDispatcher } from 'svelte';
+    import { logger } from '../../utils/log';
 
     // Input prop for the choices
     interface TagSelectChoice {
@@ -10,13 +13,13 @@
         displayHTML?: string;
         value: any;
     }
-    export let title: string = 'Select';
+    export let title: string = 'Multi Select';
     export let description: string = '';
     export let choices: TagSelectChoice[] = [];
-    export let initialChoice = null;
+    export let initialChoices = [];
 
-    // Internal state to keep track of selected tag
-    let selectedTag = initialChoice;
+    // Internal state to keep track of selected tags
+    let selectedTags = initialChoices;
 
     function isValidEvent(evt: MouseEvent | KeyboardEvent) {
         // return true if evt is mouse single click or keyboard "Enter" key press
@@ -24,16 +27,21 @@
         return evt instanceof KeyboardEvent && (evt.key === 'Enter' || evt.key === ' ');
     }
 
-    // Function to select a tag
-    function selectTag(tag, evt: MouseEvent | KeyboardEvent) {
+    // Function to toggle the selection of a tag
+    function toggleTag(tag, evt: MouseEvent | KeyboardEvent) {
         if (!isValidEvent(evt)) { return; }
-        selectedTag = tag; // Direct assignment for single selection
+        if (selectedTags.includes(tag)) {
+            selectedTags = selectedTags.filter(t => t !== tag);
+        } else {
+            selectedTags = [...selectedTags, tag];
+        }
     }
 
     const dispatch = createEventDispatcher();
 
-    $: dispatch('selected', selectedTag);
+    $: dispatch('selected', selectedTags);
 </script>
+
 
 <div class="container">
     <div class="header">
@@ -45,9 +53,9 @@
         <div class="choices-wrapper">
             {#each choices as choice (choice.value)}
                 <button 
-                    class="tag {selectedTag === choice.value ? 'selected' : ''}" 
-                    on:click={(evt) => selectTag(choice.value, evt)}
-                    on:keydown={(evt) => selectTag(choice.value, evt)}>
+                    class="tag {selectedTags.includes(choice.value) ? 'selected' : ''}" 
+                    on:click={(evt) => toggleTag(choice.value, evt)}
+                    on:keydown={(evt) => toggleTag(choice.value, evt)}>
                     {@html choice.displayText || choice.displayHTML}
                 </button>
             {/each}
