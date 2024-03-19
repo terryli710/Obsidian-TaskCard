@@ -101,10 +101,10 @@ export class SettingsTab extends PluginSettingTab {
     // projects
     this.projectSettings();
     // parsing settings
-    this.containerEl.createEl('h2', { text: 'Parsing Settings' });
+    this.containerEl.createEl('h2', { text: 'Parsing' });
     this.cardParsingSettings();
     // display settings
-    this.containerEl.createEl('h2', { text: 'Display Settings' });
+    this.containerEl.createEl('h2', { text: 'Display' });
     cardDisplaySettings(
         this.containerEl,
         this.plugin.settings,
@@ -113,8 +113,8 @@ export class SettingsTab extends PluginSettingTab {
     );
     // sync settings
     // 1. google calendar
-    this.containerEl.createEl('h2', { text: 'Sync Settings' });
-    this.containerEl.createEl('h3', { text: 'Google Calendar Sync Setting' });
+    this.containerEl.createEl('h2', { text: 'Syncing' });
+    this.containerEl.createEl('h3', { text: 'Google Calendar Sync' });
     googleCalendarSyncSettings(
         this.containerEl, 
         this.plugin.settings, 

@@ -25,7 +25,14 @@
 <ul class="contain-task-list has-list-bullet">
     {#if !cacheInitialized}
         <div class="error-page">
-            <h2>Task Card Query Failed</h2>
+            <h2>Tasks Not Fully Indexed in Obsidian TaskCard</h2>
+            <!-- TODO: Can we link to the plugin settings here? -->
+            <p>The <code>Obsidian TaskCard</code> plugin requires the <a href="https://obsidian.md/plugins?id=dataview" target="_blank"><code>Dataview</code></a> plugin to query tasks effectively. Please follow these steps to ensure full functionality:</p>
+            <ol>
+                <li><strong>Install Dataview Plugin:</strong> Navigate to <em>Settings &gt; Community Plugins &gt; Browse</em> in Obsidian, and search for "Dataview". Install the plugin.</li>
+                <li><strong>Enable Dataview:</strong> After installation, make sure the Dataview plugin is enabled in <em>Settings &gt; Community Plugins &gt; Installed Plugins</em>.</li>
+            </ol>
+            <p>For more detailed information and assistance, visit <a href="https://github.com/blacksmithgu/obsidian-dataview" target="_blank">Dataview GitHub</a>.</p>
             <p>Tasks Not Fully Indexed. Please make sure that the <a href="https://github.com/blacksmithgu/obsidian-dataview" target="_blank" rel="noopener noreferrer">dataview</a> plugin is also enabled in Obsidian. This is necessary for this feature to work properly</p>
         </div>
     {:else if taskList.length > 0}
@@ -61,13 +68,14 @@
     }
 
     .error-page {
-        text-align: center;
+        text-align: left;
         font-size: 14px;
         color: var(--text-muted);
         margin: 20px;
     }
 
     .error-page h2 {
+        text-align: center;
         font-size: 24px;
         margin-bottom: 10px;
     }
