@@ -1,5 +1,3 @@
-
-
 <script lang="ts">
     // import { marked } from 'marked';
     // marked.use({ mangle: false, headerIds: false, langPrefix: '' });
@@ -41,7 +39,8 @@
                 const checkbox = liElement.querySelector('.task-list-item-checkbox');
 
                 // Add a click event listener to the checkbox
-                checkbox.addEventListener('click', function() {
+                checkbox.addEventListener('click', function(event) {
+                    event.stopPropagation(); // Prevent event from bubbling up
                     const lineNumber = parseInt(liElement.getAttribute('data-real-line'));
                     // Log the "real" data-line when the checkbox is clicked
                     console.log('Real data-line:', lineNumber);
@@ -72,7 +71,6 @@
     }
 
     async function enableEditMode(event: MouseEvent | KeyboardEvent) {
-        event.stopPropagation();
         if (event instanceof KeyboardEvent) {
             if (event.key === 'Enter' || event.key === ' ') {
                 event.preventDefault();
@@ -82,10 +80,13 @@
                 adjustHeightForTextArea();
             }
         } else if (event instanceof MouseEvent) {
-            taskSyncManager.taskCardStatus.descriptionStatus = 'editing';
-            await tick();
-            focusAndSelect(inputElement);
-            adjustHeightForTextArea();
+            // Only enter edit mode if the click is not on a checkbox
+            if (!(event.target as HTMLElement).classList.contains('task-list-item-checkbox')) {
+                taskSyncManager.taskCardStatus.descriptionStatus = 'editing';
+                await tick();
+                focusAndSelect(inputElement);
+                adjustHeightForTextArea();
+            }
         }
     }
 
@@ -158,59 +159,3 @@
         {/if}
     </div>
 {/if}
-
-
-<style>
-
-    .task-card-progress-position {
-        position: absolute; /* Absolute positioning for the progress bar */
-        top: 3px;
-        right: 3px;
-        /* background: linear-gradient(to right, transparent 0%, var(--background-primary) 30%, var(--background-primary) 100%); */
-        background-color: rgba(0,0,0,0);
-        border-radius: var(--radius-s);
-        padding: 2px 5px 2px 5px;
-        display: flex;
-        align-items: center;
-        /* height: 35px; */
-    }
-
-
-    .task-card-description-wrapper {
-        position: relative; /* Relative positioning for the wrapper */
-        grid-column: 2;
-        grid-row: 2;
-        width: 100%;
-        height: 100%;
-    }
-
-    .task-card-description {
-        /* grid-column: 2;
-        grid-row: 2; */
-        font-size: var(--font-smallest);
-        line-height: var(--line-height-tight);
-        color: var(--text-faint);
-        border-radius: var(--radius-s);
-        cursor: pointer; /* Pointer cursor on hover */
-        margin: 0.1em; /* Padding for the content */
-        padding: 0.22em; /* Padding for the content */
-        word-wrap: break-word; /* To break words if too long */
-        white-space: normal; /* To auto change lines */
-    }
-
-    .task-card-description:hover {
-    background-color: var(--background-primary-alt);
-    }
-
-
-    textarea.task-card-description {
-        background-color: var(--background-primary-alt);
-        width: 100%;
-        height: 100%;
-        border-radius: 5px;
-        padding: 0.22em;
-        word-wrap: break-word; /* To break words if too long */
-        resize: vertical;
-    }
-
-</style>

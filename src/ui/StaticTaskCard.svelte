@@ -508,26 +508,6 @@
     background-color: rgba(var(--color-cyan-rgb), 0.9);
   }
 
-  .task-card-description-wrapper {
-    position: relative; /* Relative positioning for the wrapper */
-    grid-column: 2;
-    grid-row: 2;
-    width: 100%;
-    height: 100%;
-  }
-
-  .task-card-description {
-    font-size: var(--font-smallest);
-    line-height: var(--line-height-tight);
-    color: var(--text-faint);
-    border-radius: var(--radius-s);
-    border-radius: 5px; /* Rounded square */
-    margin: 0.1em; /* Padding for the content */
-    padding: 0.22em; /* Padding for the content */
-    word-wrap: break-word; /* To break words if too long */
-    white-space: normal; /* To auto change lines */
-  }
-
   .task-card-labels {
     display: flex;
     padding: 2px 0;

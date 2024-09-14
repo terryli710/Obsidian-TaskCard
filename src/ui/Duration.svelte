@@ -12,6 +12,7 @@
   export let interactive: boolean = true;
   export let taskSyncManager: ObsidianTaskSyncManager = undefined;
   export let taskItem: ObsidianTask = undefined;
+  export let plugin: TaskCardPlugin = undefined;
   export let params: TaskDisplayParams;
   export let displayDuration: boolean;
 
@@ -26,9 +27,9 @@
 
   function customDurationHumanizer(duration: Duration) {
     if (duration.hours === 0) {
-      return `${duration.minutes}min${duration.minutes === 1 ? '' : 's'}`;
+      return `${duration.minutes} min${duration.minutes === 1 ? '' : 's'}`;
     } else if (duration.minutes === 0) {
-      return `${duration.hours}hr${duration.hours === 1 ? '' : 's'}`;
+      return `${duration.hours} hour${duration.hours === 1 ? '' : 's'}`;
     } else {
       return `${duration.hours}h ${duration.minutes}m`;
     }
@@ -89,6 +90,7 @@
     if (event.key === 'Escape') {
         event.preventDefault();
         taskSyncManager.taskCardStatus.durationStatus = 'done';
+        updateDurationDisplay();
         return;
     }
 
@@ -100,7 +102,7 @@
         if (durationInputString.trim() === '' || isValidZeroDuration(durationInputString)) {
             duration = null;
         } else {
-            const parsedDuration = parseDurationInput(durationInputString);
+            const parsedDuration = plugin.taskParser.parseDuration(durationInputString);
             if (parsedDuration) {
                 duration = parsedDuration;
             } else {

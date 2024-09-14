@@ -1,21 +1,21 @@
+import moment from 'moment';
+import parse from 'parse-duration';
+import { SettingStore } from '../settings';
 import { logger } from '../utils/log';
 import { escapeRegExp, extractTags } from '../utils/regexUtils';
 import { kebabToCamel } from '../utils/stringCaseConverter';
 import { toArray, toBoolean } from '../utils/typeConversion';
-import { ScheduleDate, Duration, ObsidianTask, Order, Priority, TaskProperties, TextPosition } from './task';
-import { Project, ProjectModule } from './project';
-import Sugar from 'sugar';
-import { SettingStore } from '../settings';
 import { DescriptionParser } from './description';
-import parse from 'parse-duration';
-
+import { Project, ProjectModule } from './project';
+import { Duration, ObsidianTask, Priority, ScheduleDate } from './task';
+var DateTimeRecognizers = require('@microsoft/recognizers-text-date-time');
 
 export class TaskParser {
   indicatorTag: string;
   markdownStartingNotation: string;
   markdownEndingNotation: string;
   projectModule: ProjectModule;
-  descriptionParser: DescriptionParser
+  descriptionParser: DescriptionParser;
 
   constructor(
     settingsStore: typeof SettingStore,
@@ -34,10 +34,10 @@ export class TaskParser {
 
   // New method to parse labels from task content
   parseLabelsFromContent(taskEl: Element): string[] {
-    const tags = taskEl.querySelectorAll("a.tag");
+    const tags = taskEl.querySelectorAll('a.tag');
     const labels: string[] = [];
     tags.forEach((tagElement) => {
-      const tagContent = tagElement.textContent || "";
+      const tagContent = tagElement.textContent || '';
       if (tagContent) labels.push(tagContent);
     });
     return labels;
@@ -48,19 +48,21 @@ export class TaskParser {
     const allSpans = taskEl.querySelectorAll('span');
 
     // Filter those that have 'display:none' in their style attribute
-    const hiddenSpans = Array.from(allSpans).filter(span => {
+    const hiddenSpans = Array.from(allSpans).filter((span) => {
       const style = span.getAttribute('style');
       return style && style.replace(/\s/g, '').includes('display:none');
     });
 
     return hiddenSpans;
   }
-  
+
   parseTaskEl(taskEl: HTMLElement): ObsidianTask {
     function parseAttributes(): any {
       try {
         const hiddenSpans = this.selectHiddenSpans(taskEl);
-        if (hiddenSpans.length === 0) { return null; }
+        if (hiddenSpans.length === 0) {
+          return null;
+        }
         const spanElement = hiddenSpans[0];
         if (spanElement) {
           return JSON.parse(spanElement.textContent || '{}');
@@ -73,14 +75,18 @@ export class TaskParser {
     }
 
     // logger.debug(`Parsing task element: ${taskEl.outerHTML}`);
-  
+
     const task = new ObsidianTask();
     const attributes = parseAttributes.bind(this)();
-    if (attributes === null) { return task; }
+    if (attributes === null) {
+      return task;
+    }
 
     task.id = attributes.id || '';
     task.priority = attributes.priority || '1';
-    task.description = (attributes.description || '') + (DescriptionParser.parseDescriptionFromTaskEl(taskEl) || '');
+    task.description =
+      (attributes.description || '') +
+      (DescriptionParser.parseDescriptionFromTaskEl(taskEl) || '');
     task.order = attributes.order || 0;
     task.project = attributes.project || null;
     task.sectionID = attributes.sectionID || '';
@@ -91,10 +97,10 @@ export class TaskParser {
     task.due = attributes.due || null;
     task.duration = attributes.duration || null;
     task.metadata = attributes.metadata || {};
-  
+
     // Get labels from content
     let labelsFromContent = this.parseLabelsFromContent(taskEl);
-    
+
     // Conditional label setting
     if (attributes.labels && attributes.labels.length > 0) {
       task.labels = [...task.labels, ...labelsFromContent];
@@ -106,7 +112,7 @@ export class TaskParser {
     task.labels = Array.from(new Set(task.labels)).filter(
       (label) => label !== `#${this.indicatorTag}`
     );
-  
+
     // Make sure each label starts with exactly one "#"
     task.labels = task.labels.map((label) => {
       // Remove all leading '#' characters
@@ -114,40 +120,50 @@ export class TaskParser {
       // Add a single '#' at the beginning
       return '#' + cleanedLabel;
     });
-  
+
     // Isolate the task content excluding tags
     // Get reference to the input checkbox element
-    const checkboxElement = taskEl.querySelector('input.task-list-item-checkbox');
-  
+    const checkboxElement = taskEl.querySelector(
+      'input.task-list-item-checkbox'
+    );
+
     if (checkboxElement) {
       let currentNode: Node | null = checkboxElement;
       let content = '';
-  
+
       // Traverse through next siblings to accumulate text content
       while ((currentNode = currentNode.nextSibling) !== null) {
-        if (currentNode.nodeType === 3) { // Node.TEXT_NODE
+        if (currentNode.nodeType === 3) {
+          // Node.TEXT_NODE
           content += currentNode.textContent?.trim() + ' ';
         }
-        if (currentNode.nodeType === 1 && (currentNode as Element).tagName === 'A') { // Node.ELEMENT_NODE
+        if (
+          currentNode.nodeType === 1 &&
+          (currentNode as Element).tagName === 'A'
+        ) {
+          // Node.ELEMENT_NODE
           break;
         }
       }
-  
+
       task.content = content.trim();
     }
-  
+
     const checkbox = taskEl.querySelector(
       '.task-list-item-checkbox'
     ) as HTMLInputElement;
     task.completed = checkbox?.checked || false;
-  
+
     return task;
   }
 
-  parseTaskMarkdown(taskMarkdown: string, noticeFunc: (msg: string) => void = null): ObsidianTask {
+  parseTaskMarkdown(
+    taskMarkdown: string,
+    noticeFunc: (msg: string) => void = null
+  ): ObsidianTask {
     const task: ObsidianTask = new ObsidianTask();
     const errors: string[] = [];
-  
+
     const tryParseAttribute = (
       attributeName: string,
       parseFunc: (val: string) => any,
@@ -187,34 +203,34 @@ export class TaskParser {
 
     // Utility function to convert leading tabs in a line to spaces
     const convertLeadingTabsToSpaces = (line: string): string => {
-        let result = "";
-        let index = 0;
-    
-        while (index < line.length) {
-            if (line[index] === '\t') {
-                result += "    "; // Replace tab with 4 spaces
-            } else if (line[index] === ' ') {
-                result += line[index];
-            } else {
-                // Once we encounter a non-space, non-tab character, break
-                break;
-            }
-            index++;
+      let result = '';
+      let index = 0;
+
+      while (index < line.length) {
+        if (line[index] === '\t') {
+          result += '    '; // Replace tab with 4 spaces
+        } else if (line[index] === ' ') {
+          result += line[index];
+        } else {
+          // Once we encounter a non-space, non-tab character, break
+          break;
         }
-        
-        // Append the remainder of the line
-        result += line.slice(index);
-        return result;
+        index++;
+      }
+
+      // Append the remainder of the line
+      result += line.slice(index);
+      return result;
     };
 
     // Utility function to check if all lines start with a space
     const allLinesStartWithSpace = (lines: string[]): boolean => {
-      return lines.every(line => line.startsWith(" "));
+      return lines.every((line) => line.startsWith(' '));
     };
 
     // Utility function to remove the leading space from all lines
     const removeLeadingSpace = (lines: string[]): string[] => {
-      return lines.map(line => line.startsWith(" ") ? line.slice(1) : line);
+      return lines.map((line) => (line.startsWith(' ') ? line.slice(1) : line));
     };
 
     if (taskMarkdown.includes('\n')) {
@@ -246,11 +262,15 @@ export class TaskParser {
     // Extracting labels from the content line
     const [contentLabels, remainingContent] = extractTags(contentWithLabels);
     task.content = remainingContent;
-    task.labels = contentLabels.filter((label) => label !== `#${this.indicatorTag}`);
+    task.labels = contentLabels.filter(
+      (label) => label !== `#${this.indicatorTag}`
+    );
 
     // Parsing attributes
     const attributesString = taskMarkdown.slice(contentEndIndex);
-    const attributeRegexText = `${escapeRegExp(this.markdownStartingNotation)}(.*?)${escapeRegExp(this.markdownEndingNotation)}`;
+    const attributeRegexText = `${escapeRegExp(
+      this.markdownStartingNotation
+    )}(.*?)${escapeRegExp(this.markdownEndingNotation)}`;
     const attributesPattern = new RegExp(attributeRegexText, 'g');
 
     const matches = [...attributesString.matchAll(attributesPattern)];
@@ -262,7 +282,7 @@ export class TaskParser {
       const attributeName = kebabToCamel(
         attributeString.substring(0, attributeString.indexOf(':')).trim()
       );
-      
+
       // Check if this attribute has already been parsed
       if (parsedAttributeNames.includes(attributeName)) {
         logger.warn(`Duplicate attribute ignored: ${attributeName}`);
@@ -283,25 +303,55 @@ export class TaskParser {
 
       switch (attributeName) {
         case 'schedule':
-          task.schedule = tryParseAttribute('schedule', this.parseSchedule.bind(this), attributeValue, 'other');
+          task.schedule = tryParseAttribute(
+            'schedule',
+            this.parseSchedule.bind(this),
+            attributeValue,
+            'other'
+          );
           break;
         case 'due':
-          task.due = tryParseAttribute('due', this.parseSchedule.bind(this), attributeValue, 'other');
+          task.due = tryParseAttribute(
+            'due',
+            this.parseSchedule.bind(this),
+            attributeValue,
+            'other'
+          );
           break;
         case 'duration':
-          task.duration = tryParseAttribute('duration', this.parseDuration.bind(this), attributeValue, 'other');
+          task.duration = tryParseAttribute(
+            'duration',
+            this.parseDuration.bind(this),
+            attributeValue,
+            'other'
+          );
           break;
         case 'project':
-          task.project = tryParseAttribute('project', this.parseProject.bind(this), attributeValue, 'string');
+          task.project = tryParseAttribute(
+            'project',
+            this.parseProject.bind(this),
+            attributeValue,
+            'string'
+          );
           break;
         case 'metadata':
-          task.metadata = tryParseAttribute('metadata', JSON.parse, attributeValue, 'other');
+          task.metadata = tryParseAttribute(
+            'metadata',
+            JSON.parse,
+            attributeValue,
+            'other'
+          );
           break;
         default:
           const taskKey = attributeName as keyof ObsidianTask;
           if (taskKey in task) {
             const type = typeof task[taskKey];
-            (task as any)[taskKey] = tryParseAttribute(attributeName, (val) => val, attributeValue, type);
+            (task as any)[taskKey] = tryParseAttribute(
+              attributeName,
+              (val) => val,
+              attributeValue,
+              type
+            );
             if (task[taskKey] !== null) {
               parsedAttributeNames.push(taskKey);
             }
@@ -324,21 +374,21 @@ export class TaskParser {
 
     // Utility function to convert leading tabs in a line to spaces
     const convertLeadingTabsToSpaces = (line: string): string => {
-      let result = "";
+      let result = '';
       let index = 0;
-  
+
       while (index < line.length) {
-          if (line[index] === '\t') {
-              result += "    "; // Replace tab with 4 spaces
-          } else if (line[index] === ' ') {
-              result += line[index];
-          } else {
-              // Once we encounter a non-space, non-tab character, break
-              break;
-          }
-          index++;
+        if (line[index] === '\t') {
+          result += '    '; // Replace tab with 4 spaces
+        } else if (line[index] === ' ') {
+          result += line[index];
+        } else {
+          // Once we encounter a non-space, non-tab character, break
+          break;
+        }
+        index++;
       }
-      
+
       // Append the remainder of the line
       result += line.slice(index);
       return result;
@@ -346,12 +396,12 @@ export class TaskParser {
 
     // Utility function to check if all lines start with a space
     const allLinesStartWithSpace = (lines: string[]): boolean => {
-      return lines.every(line => line.startsWith(" "));
+      return lines.every((line) => line.startsWith(' '));
     };
 
     // Utility function to remove the leading space from all lines
     const removeLeadingSpace = (lines: string[]): string[] => {
-      return lines.map(line => line.startsWith(" ") ? line.slice(1) : line);
+      return lines.map((line) => (line.startsWith(' ') ? line.slice(1) : line));
     };
 
     if (taskMarkdown.includes('\n')) {
@@ -369,31 +419,39 @@ export class TaskParser {
       task.description = descLines.join('\n');
       taskMarkdown = lines[0]; // The first line
     }
-    
+
     // Global regex to capture task part, content, labels, and metadata
-    const regex = new RegExp(`- \\[(.)\\] (.+?)(?:\\s*<span style="display:none">({.+})<\\/span>)`);
+    const regex = new RegExp(
+      `- \\[(.)\\] (.+?)(?:\\s*<span style="display:none">({.+})<\\/span>)`
+    );
     const match = taskMarkdown.trim().match(regex);
-    
+
     if (!match || !match[1] || !match[2] || !match[3]) {
       logger.warn(`Failed to parse task: ${taskMarkdown}`);
       return task;
     }
-  
+
     // Extracting completion status
     task.completed = match[1] !== ' ';
-  
+
     // Extracting content
     task.content = match[2].trim();
 
     const contentWithLabels = match[2].trim();
-  
+
     // Extracting labels from the content line
     const [contentLabels, remainingContent] = extractTags(contentWithLabels);
     task.content = remainingContent;
-    task.labels = contentLabels.filter((label) => label !== `#${this.indicatorTag}`);
-  
+    task.labels = contentLabels.filter(
+      (label) => label !== `#${this.indicatorTag}`
+    );
+
     // Helper function to parse JSON attributes
-    function parseJSONAttribute<T>(attributeValue: any, attributeName: string, fallbackValue: T | null): T | null {
+    function parseJSONAttribute<T>(
+      attributeValue: any,
+      attributeName: string,
+      fallbackValue: T | null
+    ): T | null {
       try {
         return attributeValue !== undefined ? attributeValue : fallbackValue;
       } catch (e) {
@@ -401,7 +459,7 @@ export class TaskParser {
         return fallbackValue;
       }
     }
-  
+
     // Extracting and parsing the JSON attributes
     const metadata = JSON.parse(match[3]);
     if (!metadata) {
@@ -411,22 +469,30 @@ export class TaskParser {
 
     // For string attributes
     task.id = parseJSONAttribute(metadata['id'], 'id', '');
-    task.description += parseJSONAttribute(metadata['description'], 'description', '').replace(/\\n/g, '\n');
+    task.description += parseJSONAttribute(
+      metadata['description'],
+      'description',
+      ''
+    ).replace(/\\n/g, '\n');
     task.sectionID = parseJSONAttribute(metadata['sectionID'], 'sectionID', '');
 
     // For attributes that require JSON parsing
-    task.priority = parseJSONAttribute(metadata['priority'], 'priority', '4' as unknown as Priority);
+    task.priority = parseJSONAttribute(
+      metadata['priority'],
+      'priority',
+      '4' as unknown as Priority
+    );
     task.order = parseJSONAttribute(metadata['order'], 'order', 0);
     task.project = parseJSONAttribute(metadata['project'], 'project', null);
-    task.schedule = parseJSONAttribute(metadata['schedule'], 'schedule', null); 
+    task.schedule = parseJSONAttribute(metadata['schedule'], 'schedule', null);
     task.due = parseJSONAttribute(metadata['due'], 'due', null);
     task.duration = parseJSONAttribute(metadata['duration'], 'duration', null);
-    task.metadata = parseJSONAttribute(metadata['metadata'], 'metadata', {}); 
+    task.metadata = parseJSONAttribute(metadata['metadata'], 'metadata', {});
 
     // Optional attributes
     task.parent = parseJSONAttribute(metadata['parent'], 'parent', null); // Or a default parent
     task.children = parseJSONAttribute(metadata['children'], 'children', []); // Assuming children are in JSON array format
-    
+
     return task;
   }
 
@@ -438,10 +504,10 @@ export class TaskParser {
 
   /**
    * Determine the number of lines of the description of a task within a document.
-   * 
+   *
    * @param {string[]} lines - An array of strings, each representing a line in the document.
    * @returns {number} - The number of lines of the description of the task. Returns 0 if the line is not a task or has no description.
-   * 
+   *
    * The function follows this logic:
    * 1. Check if the first line is a task. A task starts with "<space>*- [<any one char>] ...".
    * 2. If it's not a task, return 0.
@@ -475,7 +541,10 @@ export class TaskParser {
       }
 
       // Check if the line is another task with the same or less indentation
-      if (taskRegex.test(line) && line.match(/^\s*/)[0].length <= taskIndentation) {
+      if (
+        taskRegex.test(line) &&
+        line.match(/^\s*/)[0].length <= taskIndentation
+      ) {
         break;
       }
 
@@ -485,18 +554,23 @@ export class TaskParser {
     return descriptionLineCount;
   }
 
-
   parseSchedule(scheduleString: string): ScheduleDate | null {
-    const parsedDateTime = Sugar.Date.create(scheduleString);
+    const dateTimeModel = new DateTimeRecognizers.DateTimeRecognizer(
+      DateTimeRecognizers.Culture.English
+    ).getDateTimeModel();
+    const results = dateTimeModel.parse(scheduleString);
 
-    // Check if the parsedDateTime is a valid date
-    if (!parsedDateTime || !Sugar.Date.isValid(parsedDateTime)) {
+    if (results.length === 0) {
       return null;
     }
 
-    const parsedDate = Sugar.Date.format(parsedDateTime, '{yyyy}-{MM}-{dd}');
-    const parsedTime = Sugar.Date.format(parsedDateTime, '{HH}:{mm}');
+    const parsedDateTime = moment(results[0].resolution.values[0].value);
+    if (!parsedDateTime.isValid()) {
+      return null;
+    }
 
+    const parsedDate = parsedDateTime.format('YYYY-MM-DD');
+    const parsedTime = parsedDateTime.format('HH:mm');
     const isDateOnly = ['00:00', '23:59'].includes(parsedTime);
 
     if (isDateOnly) {
@@ -516,17 +590,33 @@ export class TaskParser {
   }
 
   parseDuration(durationString: string): Duration | null {
-    const durationInMinutes = parse(durationString, 'm');
-    // Convert the difference to hours and minutes
-    const hours = Math.floor(durationInMinutes / 60);
-    const minutes = durationInMinutes % 60;
+    console.log("parseDuration function called with:", durationString);
+    const results = DateTimeRecognizers.recognizeDateTime(durationString, DateTimeRecognizers.Culture.English);
+    logger.debug(`Duration results: ${JSON.stringify(results)}`);
+    console.log(`Duration results: ${JSON.stringify(results)}`);
 
-    return {
-      hours: hours,
-      minutes: minutes
-    } as Duration;
-  }
-  
+    if (results.length === 0) {
+        return null;
+    }
+
+    for (const result of results) {
+        if (result.typeName === "datetimeV2.duration") {
+            const durationInSeconds = parseInt(result.resolution.values[0].value);
+            const durationInMinutes = Math.round(durationInSeconds / 60);
+
+            // Convert the difference to hours and minutes
+            const hours = Math.floor(durationInMinutes / 60);
+            const minutes = durationInMinutes % 60;
+
+            return {
+                hours: hours,
+                minutes: minutes
+            } as Duration;
+        }
+    }
+
+    return null;
+}
 
   parseProject(projectString: string): Project | null {
     const project = this.projectModule.getProjectByName(projectString);
