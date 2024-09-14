@@ -61,14 +61,16 @@
         </div>
     </li>
 {:else}
-    <li 
-        class="obsidian-taskcard task-list-item mode-multi-line"
-        data-line={dataLine}
-    >
-        <TaskCard 
-            taskSyncManager={taskSyncManager} 
-            plugin={plugin} 
-            params={params} 
-            on:switchMode={handleSwitchMode}/>
+    <li class="obsidian-taskcard-list-item" data-line={dataLine}>
+        <div 
+            class="obsidian-taskcard task-list-item mode-multi-line"
+            data-line={dataLine}
+        >
+            <TaskCard 
+                taskSyncManager={taskSyncManager} 
+                plugin={plugin} 
+                params={params} 
+                on:switchMode={handleSwitchMode}/>
+        </div>
     </li>
 {/if}
