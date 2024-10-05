@@ -283,7 +283,7 @@
     <div class="task-card-attribute-bottom-bar-left">
       <Schedule taskSyncManager={taskSyncManager} plugin={plugin} params={params} displaySchedule={displaySchedule} />
       <Duration taskSyncManager={taskSyncManager} plugin={plugin} params={params} />
-      <Due taskSyncManager={taskSyncManager} plugin={plugin} params={params} displayDue={displayDue} />
+      <Due taskSyncManager={taskSyncManager} plugin={plugin} params={params} />
       <div class="task-card-attribute-separator"></div>
       <!-- {#if displaySchedule || displayDuration}
         <div class="task-card-attribute-separator"></div>
