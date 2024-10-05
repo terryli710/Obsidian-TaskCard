@@ -200,14 +200,4 @@
     margin-top: 2px;
   }
 
-  .task-card-duration-container::after {
-    content: attr(data-tooltip);
-    position: absolute;
-    bottom: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: var(--background-modifier-hover);
-    color: var(--text-normal);
-    padding: 4px 8px;
-  }
 </style>

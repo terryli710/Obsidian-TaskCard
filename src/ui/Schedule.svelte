@@ -1,11 +1,10 @@
 <script lang="ts">
   import { logger } from "../utils/log";
-  import { displayDate, displayTime } from "../utils/dateTimeFormatter"
-  import { ScheduleDate, Duration, ObsidianTask } from "../taskModule/task";
+  import { ScheduleDate, ObsidianTask } from "../taskModule/task";
   import { ObsidianTaskSyncManager } from "../taskModule/taskSyncManager";
   import TaskCardPlugin from "..";
   import { tick } from "svelte";
-  import { TaskDisplayParams, TaskDisplayMode } from "../renderer/postProcessor";
+  import { TaskDisplayParams } from "../renderer/postProcessor";
   import { Notice } from "obsidian";
   import CalendarClock from "../components/icons/CalendarClock.svelte";
   import moment from "moment";
@@ -15,350 +14,253 @@
   export let taskItem: ObsidianTask = undefined;
   export let plugin: TaskCardPlugin = undefined;
   export let params: TaskDisplayParams;
-  export let displaySchedule: boolean;
-  
+
   let schedule: ScheduleDate;
-  let duration: Duration;
-  let scheduleString: string = "";
-  let scheduleDisplay: string = "";
-  let inputElement: HTMLInputElement;
+  let scheduleDisplay = "";
+  let scheduleInputElement: HTMLInputElement;
+  let scheduleInputString = "";
+  let editMode = false;
 
-  if (interactive) {
-    schedule = taskSyncManager.obsidianTask.hasSchedule() ? taskSyncManager.obsidianTask.schedule : undefined;
-    duration = taskSyncManager.obsidianTask.hasDuration() ? taskSyncManager.obsidianTask.duration : undefined;
-  } else {
-    schedule = taskItem.schedule;
-    duration = taskItem.duration;
-  }  
+  function updateSchedule() {
+    if (interactive) {
+      schedule = taskSyncManager.obsidianTask.hasSchedule() ? taskSyncManager.obsidianTask.schedule : null;
+    } else {
+      schedule = taskItem.schedule;
+    }
+    updateScheduleDisplay();
+  }
 
-  scheduleString = schedule ? schedule.string : '';
+  function updateScheduleDisplay(mode = 'relative'): string {
+    if (!schedule || !schedule.date) {
+      scheduleDisplay = '';
+      return scheduleDisplay;
+    }
 
-  updateScheduleDisplay();
+    const scheduleDateTime = schedule.time
+      ? moment(`${schedule.date} ${schedule.time}`)
+      : moment(`${schedule.date}`);
+    const now = moment();
 
-  async function toggleEditMode(event: KeyboardEvent | MouseEvent) {
-      if (taskSyncManager.taskCardStatus.scheduleStatus === 'done') {
-        enableScheduleEditMode(event);
+    const diff = {
+      years: scheduleDateTime.diff(now, 'years', true),
+      months: scheduleDateTime.diff(now, 'months', true),
+      weeks: scheduleDateTime.diff(now, 'weeks', true),
+      days: scheduleDateTime.diff(now, 'days', true),
+      hours: scheduleDateTime.diff(now, 'hours', true),
+      minutes: scheduleDateTime.diff(now, 'minutes', true)
+    };
+
+    if (mode === 'absolute') {
+      if (diff.years > 1) {
+        scheduleDisplay = `${scheduleDateTime.year()}`;
+      } else if (diff.years === 1) {
+        scheduleDisplay = `${scheduleDateTime.format('MMM, YYYY')}`;
+      } else if (diff.months > 0) {
+        scheduleDisplay = `${scheduleDateTime.format('MMM DD')}`;
+      } else if (diff.weeks > 0) {
+        scheduleDisplay = `next ${scheduleDateTime.format('ddd, MMM DD')}`;
+      } else if (diff.days > 1 || (diff.days === 1 && diff.hours >= 24)) {
+        scheduleDisplay = schedule.time ? `${scheduleDateTime.format('ddd, MMM DD, hA')}` : `${scheduleDateTime.format('ddd')}`;
+      } else if (diff.days === 1) {
+        scheduleDisplay = 'Tomorrow';
       } else {
-        finishScheduleEditing(event);
+        scheduleDisplay = schedule.time ? `${scheduleDateTime.format('h:mmA')}` : 'Today';
       }
-  }
+    } else if (mode === 'relative') {
+      let prefix = 'in ';
+      let suffix = '';
 
-  async function enableScheduleEditMode(event: KeyboardEvent | MouseEvent) {
-    if (event instanceof KeyboardEvent) {
-      if (event.key != 'Enter') {
-        return;
+      if (scheduleDateTime.isBefore(now)) {
+        prefix = '';
+        suffix = ' ago';
       }
-      if (event.key === 'Enter') {
-        event.preventDefault();
-      }
-    }
-      // taskSyncManager.setTaskCardStatus('scheduleStatus', 'editing');
-      taskSyncManager.taskCardStatus.scheduleStatus = 'editing';
-      scheduleString = schedule ? schedule.string : '';
-      await tick();
-      focusAndSelect(inputElement);
-      adjustWidthForInput(inputElement);
-  }
 
-  function finishScheduleEditing(event: KeyboardEvent | MouseEvent) {
-    if (event instanceof MouseEvent) {
-        return;
-    }
+      const units: Array<{ unit: string; method: moment.unitOfTime.Diff }> = [
+        { unit: 'year', method: 'year' },
+        { unit: 'month', method: 'month' },
+        { unit: 'day', method: 'day' },
+        { unit: 'hour', method: 'hour' },
+        { unit: 'minute', method: 'minute' },
+        { unit: 'second', method: 'second' }
+      ];
 
-    if (event.key === 'Enter' || event.key === 'Escape') {
-        taskSyncManager.taskCardStatus.scheduleStatus = 'done';
-        if (event.key === 'Escape') {
-            updateScheduleDisplay();
-            return;
-        }
+      for (let i = 0; i < units.length; i++) {
+        const { unit, method } = units[i];
+        const value = Math.abs(scheduleDateTime.diff(now, method));
 
-        if (scheduleString.trim() === '') {
-            schedule = null;
-        } else {
-            try {
-                let newSchedule = plugin.taskParser.parseSchedule(scheduleString);
-                if (newSchedule) {
-                    schedule = newSchedule;
-                } else {
-                    new Notice(`[TaskCard] Invalid schedule date: ${scheduleString}`);
-                    scheduleString = schedule ? schedule.string : '';
-                }
-            } catch (e) {
-                logger.error(e);
-                scheduleString = schedule ? schedule.string : '';
+        if (value > 0) {
+          if (i === units.length - 1 || value > 1 || (i + 1 < units.length && Math.abs(scheduleDateTime.diff(now, units[i + 1].method)) === 0)) {
+            const pluralSuffix = value !== 1 ? 's' : '';
+            scheduleDisplay = `${prefix}${value} ${unit}${pluralSuffix}${suffix}`;
+            return scheduleDisplay;
+          }
+          if (i + 1 < units.length) {
+            const nextUnit = units[i + 1];
+            let nextValue: number;
+            if (unit === 'year') {
+              nextValue = Math.abs(scheduleDateTime.diff(now, 'month') % 12);
+            } else if (unit === 'month') {
+              nextValue = Math.abs(scheduleDateTime.diff(now, 'day') % 30);
+            } else {
+              nextValue = Math.abs(scheduleDateTime.diff(now, nextUnit.method));
             }
+            if (nextValue > 0) {
+              const pluralSuffix1 = value !== 1 ? 's' : '';
+              const pluralSuffix2 = nextValue !== 1 ? 's' : '';
+              scheduleDisplay = `${prefix}${value} ${unit}${pluralSuffix1} and ${nextValue} ${nextUnit.unit}${pluralSuffix2}${suffix}`;
+              return scheduleDisplay;
+            }
+          }
         }
+      }
 
+      scheduleDisplay = 'just now';
+    }
+    return scheduleDisplay;
+  }
+
+  async function toggleScheduleEditMode(event: MouseEvent | KeyboardEvent) {
+    if (event instanceof KeyboardEvent && event.key !== 'Enter' && event.key !== ' ') {
+      return;
+    }
+    event.preventDefault();
+    editMode = true;
+    scheduleInputString = schedule ? schedule.string : '';
+    await tick();
+    focusAndSelect(scheduleInputElement);
+  }
+
+  function finishScheduleEditing(event: KeyboardEvent) {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      const parsedSchedule = plugin.taskParser.parseSchedule(scheduleInputString);
+      if (parsedSchedule || scheduleInputString.trim() === '') {
+        schedule = parsedSchedule;
         taskSyncManager.updateObsidianTaskAttribute('schedule', schedule);
         updateScheduleDisplay();
+      } else {
+        new Notice("[TaskCard] Invalid schedule format: " + scheduleInputString);
+      }
+      editMode = false;
+    } else if (event.key === 'Escape') {
+      event.preventDefault();
+      editMode = false;
+      updateScheduleDisplay();
     }
   }
 
-  function updateScheduleDisplay(): string {
-      if (!schedule) {
-          scheduleDisplay = '';
-          return scheduleDisplay;
-      }
-      let datePart = displayDate(schedule.date);
-      let timePart = displayTime(schedule.time);
-      scheduleDisplay = timePart ? `${datePart}, ${timePart}` : datePart;
-      return scheduleDisplay;
-  }
-
-  // Action function to focus and select the input content
   function focusAndSelect(node: HTMLInputElement) {
-    // Focus on the input element
     node.focus();
-    // Select all the content
     node.select();
   }
 
-  function adjustWidthForInput(node: HTMLInputElement) {
-    // Create a temporary element to measure the text width
-    const tempElement = document.createElement('span');
-    tempElement.style.font = window.getComputedStyle(node, null).getPropertyValue('font');
-    tempElement.style.padding = window.getComputedStyle(node, null).getPropertyValue('padding');
-    tempElement.style.position = 'absolute';
-    tempElement.style.left = '-9999px';
-    tempElement.innerHTML = node.value.replace(/ /g, '&nbsp;');
-    document.body.appendChild(tempElement);
-
-    // Get the width of the temporary element
-    const newWidth = tempElement.getBoundingClientRect().width * 1.15 ;
-    document.body.removeChild(tempElement);
-
-    // Set the new width to the input element, considering min and max width
-    const minWidth = 75; // Set your minimum width
-    const maxWidth = 200; // Set your maximum width
-    node.style.width = Math.min(Math.max(newWidth, minWidth), maxWidth) + 'px';
-  }
-
-
-  function convertScheduleToMoment(scheduleDate: ScheduleDate): moment.Moment | null {
-    if (!scheduleDate.date) {
-      return null;  // Ensure the date is present.
-    }
-
-    let datetimeStr = scheduleDate.date;
-    if (scheduleDate.time) {
-      datetimeStr += ' ' + scheduleDate.time;
-    }
-
-    return moment(datetimeStr);
-  }
-
-  $: {
-    if (interactive) {
-      displaySchedule = taskSyncManager.obsidianTask.hasSchedule() || taskSyncManager.taskCardStatus.scheduleStatus === 'editing';
-    } else {
-      displaySchedule = !!taskItem.schedule; // The double bang '!!' converts a truthy/falsy value to a boolean true/false
-    }
-  }
-  
-  enum TaskScheduleStatus {
-    Upcoming = "upcoming",
-    Ongoing = "ongoing",
-    PassSchedule = "passSchedule",
-    Passed= "passed"
-  }
-
-  function getTaskScheduleStatus(task: ObsidianTask, minuteGap: number = 15): TaskScheduleStatus | null {
-    const schedule = task.schedule;
-    let duration = task.duration;
-    const currTime = moment();
-    const finished = task.completed;
-    if (!schedule) { return null; }
-    const scheduleMoment = convertScheduleToMoment(schedule);
-    const timeGap = moment.duration(scheduleMoment.diff(currTime)).asMinutes();
-    // upcoming
-    if (timeGap > 0 && timeGap < minuteGap) {
-      return TaskScheduleStatus.Upcoming;
-    }
-    if (!duration) { duration = { hours: 0, minutes: 0 }; }
-    if (!duration.hours) { duration.hours = 0; }
-    if (!duration.minutes) { duration.minutes = 0; }
-    
-    // ongoing
-    const endMoment = scheduleMoment.clone().add(duration.hours, 'hours').add(duration.minutes, 'minutes');
-    if (currTime.isBetween(scheduleMoment, endMoment)) {
-      return TaskScheduleStatus.Ongoing;
-    }
-    // pass schedule
-    if (currTime.isAfter(endMoment) && !finished) {
-      return TaskScheduleStatus.PassSchedule;
-    }
-    // passed
-    if (currTime.isAfter(endMoment) && finished) {
-      return TaskScheduleStatus.Passed;
-    }
-    return null;
-  }
-
-  const taskScheduleStatus = getTaskScheduleStatus(interactive ? taskSyncManager.obsidianTask : taskItem, 15);
-
+  updateSchedule();
 </script>
 
-<!-- svelte-ignore non-top-level-reactive-declaration -->
-{#if displaySchedule}
-  <div class="task-card-schedule-container {params.mode === 'single-line' ? 'mode-single-line' : 'mode-multi-line'} {taskScheduleStatus ? taskScheduleStatus : ''}"
-    on:click={interactive ? toggleEditMode : null}
-    on:keydown={interactive ? toggleEditMode : null}
-    aria-label="Schedule"
-    role="button"
-    tabindex="0"
-  >
-    <div class="task-card-schedule-left-part">
-      <span class="task-card-schedule-prefix {taskScheduleStatus ? taskScheduleStatus : ''}">
-        <CalendarClock width={"14"} height={"14"} ariaLabel="Schedule"/>
-      </span>
-    </div>
-    {#if interactive && taskSyncManager.getTaskCardStatus('scheduleStatus') === 'editing'}
-      <input
-        type="text"
-        on:input={() => adjustWidthForInput(inputElement)}
-        bind:value={scheduleString}
-        bind:this={inputElement}
-        class="task-card-schedule"
-      />
-    {:else}
-      <div class="task-card-schedule {taskScheduleStatus ? taskScheduleStatus : ''}">
-        <div class="schedule-display">
-          {scheduleDisplay}
-        </div>
-      </div>
-    {/if}
+<div class="task-card-schedule-container {params.mode === 'single-line' ? 'mode-single-line' : 'mode-multi-line'} {schedule ? '' : 'no-schedule'} {editMode ? 'edit-mode' : ''}"
+  on:click={interactive ? toggleScheduleEditMode : null}
+  on:keydown={interactive ? toggleScheduleEditMode : null}
+  role="button"
+  tabindex="0"
+  aria-label="Schedule"
+>
+  <div class="task-card-schedule-left-part" aria-hidden="true" title="Schedule">
+    <span class="task-card-schedule-prefix" aria-hidden="true">
+      <CalendarClock width="14" height="14" ariaLabel="Schedule"/>
+    </span>
   </div>
-{/if}
+  {#if interactive && editMode}
+    <input
+      type="text"
+      bind:value={scheduleInputString}
+      bind:this={scheduleInputElement}
+      on:keydown={finishScheduleEditing}
+      on:blur={() => editMode = false}
+      class="task-card-schedule-input"
+      placeholder="Schedule"
+    />
+  {:else if schedule}
+    <div class="task-card-schedule">
+      <div class="schedule-display">
+        {scheduleDisplay}
+      </div>
+    </div>
+  {/if}
+</div>
 
 <style>
+  .task-card-schedule-container {
+    display: flex;
+    align-items: center;
+    border-radius: 2em;
+    overflow: hidden;
+    margin: 0 2px;
+    font-size: var(--tag-size);
+    border: var(--border-width) solid var(--text-accent);
+    padding: 0;
+    height: 22px;
+  }
 
+  .task-card-schedule-container.no-schedule {
+    width: 25px;
+    height: 22px;
+  }
+
+  .task-card-schedule-container.no-schedule.edit-mode {
+    width: auto;
+  }
 
   .task-card-schedule-left-part {
-      /* background-color: var(--background-secondary); */
-      border-top-left-radius: 2em;
-      border-bottom-left-radius: 2em;
-      border-top-right-radius: var(--radius-s);
-      border-bottom-right-radius: var(--radius-s);
-      display: flex;
-      align-items: center;
-      padding: 0 5px;
+    display: flex;
+    align-items: center;
+    padding: 3px 0px 3px 5px;
+    height: 100%;
   }
 
   .task-card-schedule-prefix {
     color: var(--text-accent);
     font-size: var(--tag-size);
     line-height: 1;
-    align-self: center;
-    align-items: center;
-    padding-top: 1.5px;
-  }
-
-  .task-card-schedule-prefix.ongoing {
-    color: var(--text-on-accent);
-  }
-
-  .task-card-schedule-prefix.passSchedule {
-    color: var(--text-warning);
-  }
-
-  .task-card-schedule-prefix.passed {
-    color: var(--text-faint);
-  }
-
-  .task-card-schedule-prefix.ongoing:hover {
-    color: var(--text-on-accent-hover);
-  }
-
-  .task-card-schedule-container {
-    align-items: center;
-    display: flex;
-    border-radius: 2em;
-    min-width: 2em;
-    overflow: hidden;
-    margin: 0 2px;
-    font-size: var(--tag-size);
-    border: var(--border-width) solid var(--text-accent);
-  }
-
-  .task-card-schedule-container.ongoing {
-    background-color: var(--interactive-accent);
-  }
-
-  .task-card-schedule-container.ongoing:hover {
-    background-color: var(--interactive-accent-hover);
-  }
-
-  .task-card-schedule-container.mode-multi-line {
-    margin-top: 2px;
-  }
-
-  .schedule-display {
     display: flex;
     align-items: center;
-    justify-content: center;
-    height: 100%;
-    width: 100%;
-    padding-top: 1.5px;
   }
-  
-  .task-card-schedule {
-    display: inline;
-    padding: var(--tag-padding-y) 0px;
-    padding-right: var(--tag-padding-x);
-    width: auto;
-    /* font-size: var(--tag-size); */
+
+  .task-card-schedule, .task-card-schedule-input {
+    padding: var(--tag-padding-y) var(--tag-padding-x) var(--tag-padding-y) calc(var(--tag-padding-x) / 2);
     color: var(--text-accent);
     white-space: nowrap;
     line-height: 1;
   }
 
-  .task-card-schedule.upcoming {
-    font-style: italic;
-    text-decoration: underline;
+  .task-card-schedule-input {
+    box-sizing: border-box;
+    border: none;
+    background-color: transparent;
+    width: 100px;
+    height: 100%;
+    font-family: var(--font-text);
+    font-size: var(--tag-size);
   }
 
-  .task-card-schedule.passSchedule {
-    color: var(--text-warning);
+  .task-card-schedule-input:focus {
+    outline: none;
+    box-shadow: none;
   }
 
-  .task-card-schedule.passed {
-    color: var(--text-faint);
+  .schedule-display {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    padding-top: 1.5px;
   }
 
-  .task-card-schedule.ongoing {
-    color: var(--text-on-accent);
-  }
-
-  /* This selector ensures that the cursor only changes to a hand pointer when the div is not empty */
-  .task-card-schedule-container.mode-multi-line:not(:empty):hover {
+  .task-card-schedule-container:hover {
     background-color: var(--background-modifier-hover);
     color: var(--text-accent-hover);
     cursor: pointer;
   }
 
-  .task-card-schedule-container.mode-multi-line.ongoing:not(:empty):hover {
-    background-color: var(--interactive-accent-hover);
-    color: var(--text-accent-hover);
-  }
-
-  input.task-card-schedule {
-    box-sizing: border-box;
-    border: none;
-    display: inline;
-    background-color: rgba(var(--background-primary-alt), 0.0);
-    padding: var(--tag-padding-y) 0px;
-    padding-right: var(--tag-padding-x);
-    width: auto;
-    height: auto;
-    /* color: var(--text-accent); */
-    white-space: nowrap;
-    line-height: 1;
-    font-family: var(--font-text);
-  }
-
-  /* Customize the focus styles */
-  input.task-card-schedule:focus {
-    outline: none; /* Remove the default outline */
-    box-shadow: none; /* Remove the default box-shadow */
+  .task-card-schedule-container.mode-multi-line {
+    margin-top: 2px;
   }
 </style>

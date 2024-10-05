@@ -10,7 +10,6 @@
     import { ObsidianTask } from '../taskModule/task';
     import { ObsidianTaskSyncManager } from '../taskModule/taskSyncManager';
     import Content from './Content.svelte';
-    // import { ChevronsDownUp } from 'lucide-svelte'; // BUG: somehow doesn't work
     import ChevronsDownUp from '../components/icons/ChevronsDownUp.svelte';
     import MoreVertical from '../components/icons/MoreVertical.svelte';
     import { Menu, Notice } from 'obsidian';
@@ -164,7 +163,7 @@
           item.setIcon('plus');
           item.onClick((evt) => {
             taskSyncManager.taskCardStatus.durationStatus = 'editing';
-            // displayDuration = taskSyncManager.obsidianTask.hasSchedule() || taskSyncManager.getTaskCardStatus('scheduleStatus') === 'editing';
+            displayDuration = taskSyncManager.obsidianTask.hasSchedule() || taskSyncManager.getTaskCardStatus('scheduleStatus') === 'editing';
           });
         });
       } else {
@@ -229,7 +228,7 @@
     }
 
     let displaySchedule: boolean = taskSyncManager.obsidianTask.hasSchedule() || taskSyncManager.getTaskCardStatus('scheduleStatus') === 'editing';
-    // let displayDuration: boolean = taskSyncManager.obsidianTask.hasDuration() || taskSyncManager.getTaskCardStatus('durationStatus') === 'editing';
+    let displayDuration: boolean = taskSyncManager.obsidianTask.hasDuration() || taskSyncManager.getTaskCardStatus('durationStatus') === 'editing';
     let displayDue: boolean = taskSyncManager.obsidianTask.hasDue() || taskSyncManager.getTaskCardStatus('dueStatus') === 'editing';
     let displayDescription: boolean = taskSyncManager.obsidianTask.hasDescription() || taskSyncManager.getTaskCardStatus('descriptionStatus') === 'editing'
 
@@ -252,7 +251,9 @@
       {#if descriptionProgress[1] * descriptionProgress[0] > 0 && !task.completed }
         <CircularProgressBar value={descriptionProgress[0]} max={descriptionProgress[1]} showDigits={false} />
       {/if}
-      <Schedule taskSyncManager={taskSyncManager} plugin={plugin} params={params} displaySchedule={displaySchedule} />
+      {#if displaySchedule}
+        <Schedule taskSyncManager={taskSyncManager} plugin={plugin} params={params} />
+      {/if}
       <Project taskSyncManager={taskSyncManager} params={params} />
     </div>
   </div>
@@ -281,7 +282,7 @@
 
   <div class="task-card-attribute-bottom-bar">
     <div class="task-card-attribute-bottom-bar-left">
-      <Schedule taskSyncManager={taskSyncManager} plugin={plugin} params={params} displaySchedule={displaySchedule} />
+      <Schedule taskSyncManager={taskSyncManager} plugin={plugin} params={params}/>
       <Duration taskSyncManager={taskSyncManager} plugin={plugin} params={params} />
       <Due taskSyncManager={taskSyncManager} plugin={plugin} params={params} />
       <div class="task-card-attribute-separator"></div>
