@@ -1,11 +1,10 @@
 <script lang="ts">
   import { logger } from "../utils/log";
-  import { displayDate, displayTime } from "../utils/dateTimeFormatter"
-  import { ScheduleDate, Duration, ObsidianTask } from "../taskModule/task";
+  import { Duration, ObsidianTask } from "../taskModule/task";
   import { ObsidianTaskSyncManager } from "../taskModule/taskSyncManager";
   import TaskCardPlugin from "..";
   import { tick } from "svelte";
-  import { TaskDisplayParams, TaskDisplayMode } from "../renderer/postProcessor";
+  import { TaskDisplayParams } from "../renderer/postProcessor";
   import { Notice } from "obsidian";
   import History from "../components/icons/History.svelte";
 
@@ -14,259 +13,201 @@
   export let taskItem: ObsidianTask = undefined;
   export let plugin: TaskCardPlugin = undefined;
   export let params: TaskDisplayParams;
-  export let displayDuration: boolean;
-
-  const interactiveMode = interactive;
 
   let duration: Duration;
-  if (interactiveMode) {
-    duration = taskSyncManager.obsidianTask.hasDuration() ? taskSyncManager.obsidianTask.duration : undefined;
-  } else {
-    duration = taskItem.duration;
+  let durationDisplay = "";
+  let durationInputElement: HTMLInputElement;
+  let durationInputString = "";
+  let editMode = false;
+
+  function updateDuration() {
+    if (interactive) {
+      duration = taskSyncManager.obsidianTask.hasDuration() ? taskSyncManager.obsidianTask.duration : null;
+    } else {
+      duration = taskItem.duration;
+    }
+    updateDurationDisplay();
+  }
+
+  function updateDurationDisplay(): void {
+    if (!duration) {
+      durationDisplay = '';
+      return;
+    }
+    durationDisplay = customDurationHumanizer(duration);
   }
 
   function customDurationHumanizer(duration: Duration) {
     if (duration.hours === 0) {
-      return `${duration.minutes} min${duration.minutes === 1 ? '' : 's'}`;
+      return duration.minutes + " min" + (duration.minutes === 1 ? '' : 's');
     } else if (duration.minutes === 0) {
-      return `${duration.hours} hour${duration.hours === 1 ? '' : 's'}`;
+      return duration.hours + " hour" + (duration.hours === 1 ? '' : 's');
     } else {
-      return `${duration.hours}h ${duration.minutes}m`;
+      return duration.hours + "h " + duration.minutes + "m";
     }
   }
 
-  let durationDisplay = "";
-  let durationInputElement: HTMLInputElement;
-  let durationInputString = duration ? `${pad(duration.hours, 2)}:${pad(duration.minutes, 2)}` : '00:00';
-  let origDurationInputString = durationInputString;
-
-  updateDurationDisplay();
-
-  function updateDurationDisplay(): string {
-      if (!duration) {
-          durationDisplay = '';
-          return durationDisplay;
-      }
-      durationDisplay = customDurationHumanizer(duration);
-      return durationDisplay;
-  }
-
-  async function toggleDurationEditMode(event: KeyboardEvent | MouseEvent) {
-      if (taskSyncManager.taskCardStatus.durationStatus === 'done') {
-          enableDurationEditMode(event);
-      } else {
-          finishDurationEditing(event);
-      }
-  }
-
-  function pad(num:number, size:number): string {
-      let s = num+"";
-      while (s.length < size) s = "0" + s;
-      return s;
-  }
-
-  async function enableDurationEditMode(event: KeyboardEvent | MouseEvent) {
-      if (event instanceof KeyboardEvent) {
-          if (event.key != 'Enter') {
-              return;
-          }
-          if (event.key === 'Enter') {
-              event.preventDefault();
-          }
-      }
-      taskSyncManager.taskCardStatus.durationStatus = 'editing';
-      durationInputString = duration ? `${pad(duration.hours, 2)}:${pad(duration.minutes, 2)}` : '01:00';
-      origDurationInputString = durationInputString;
-      await tick();
-      focusAndSelect(durationInputElement);
-  }
-
-  function finishDurationEditing(event: KeyboardEvent | MouseEvent) {
-    if (event instanceof MouseEvent) {
-        return;
+  async function toggleDurationEditMode(event: MouseEvent | KeyboardEvent) {
+    if (event instanceof KeyboardEvent && event.key !== 'Enter' && event.key !== ' ') {
+      return;
     }
+    event.preventDefault();
+    editMode = true;
+    durationInputString = duration ? pad(duration.hours, 2) + ":" + pad(duration.minutes, 2) : '';
+    await tick();
+    focusAndSelect(durationInputElement);
+  }
 
-    // Handle the Escape key, as the logic is simpler
-    if (event.key === 'Escape') {
-        event.preventDefault();
-        taskSyncManager.taskCardStatus.durationStatus = 'done';
-        updateDurationDisplay();
-        return;
-    }
-
-    // Main logic for the Enter key
+  function finishDurationEditing(event: KeyboardEvent) {
     if (event.key === 'Enter') {
-        // logger.debug(`duration finished: ${durationInputString}`);
-        
-        // Early exit for empty string or 00:00 duration
-        if (durationInputString.trim() === '' || isValidZeroDuration(durationInputString)) {
-            duration = null;
-        } else {
-            const parsedDuration = plugin.taskParser.parseDuration(durationInputString);
-            if (parsedDuration) {
-                duration = parsedDuration;
-            } else {
-                new Notice(`[TaskCard] Invalid duration format: ${durationInputString}`);
-            }
-        }
+      event.preventDefault();
+      const parsedDuration = plugin.taskParser.parseDuration(durationInputString);
+      if (parsedDuration || durationInputString.trim() === '') {
+        duration = parsedDuration;
         taskSyncManager.updateObsidianTaskAttribute('duration', duration);
-        origDurationInputString = durationInputString;
-        
         updateDurationDisplay();
-        event.preventDefault();
-        taskSyncManager.taskCardStatus.durationStatus = 'done';
+      } else {
+        new Notice("[TaskCard] Invalid duration format: " + durationInputString);
+      }
+      editMode = false;
+    } else if (event.key === 'Escape') {
+      event.preventDefault();
+      editMode = false;
+      updateDurationDisplay();
     }
-}
+  }
 
-function isValidZeroDuration(input: string): boolean {
-    const [hours, minutes] = input.split(":").map(Number);
-    return hours === 0 && minutes === 0;
-}
+  function pad(num: number, size: number): string {
+    let s = num + "";
+    while (s.length < size) s = "0" + s;
+    return s;
+  }
 
-function parseDurationInput(input: string): { hours: number, minutes: number } | null {
-    const [hours, minutes] = input.split(":").map(Number);
-    if (!isNaN(hours) && !isNaN(minutes)) {
-        return { hours, minutes };
-    }
-    return null;
-}
-
-
-  // Action function to focus and select the input content
   function focusAndSelect(node: HTMLInputElement) {
-    // Focus on the input element
     node.focus();
-    // Select all the content
     node.select();
   }
 
-  $: {
-    if (interactiveMode) {
-      displayDuration = taskSyncManager.obsidianTask.hasDuration() || taskSyncManager.getTaskCardStatus('durationStatus') === 'editing';
-    } else {
-      displayDuration = !!taskItem.duration; // The double bang '!!' converts a truthy/falsy value to a boolean true/false
-    }
-  }
+  updateDuration();
+</script>
 
-  </script>
-
-<!-- Duration Display Section -->
-{#if displayDuration}
-  <!-- {#if displaySchedule}
-    <span class="schedule-duration-padding"></span>
-  {/if} -->
-  <div class="task-card-duration-container {params.mode === 'single-line' ? 'mode-single-line' : 'mode-multi-line'}"
-    on:click={toggleDurationEditMode}
-    on:keydown={toggleDurationEditMode}
-    role="button"
-    tabindex="0"
-    aria-label="Duration"
-  >
-    <div class="task-card-duration-left-part">
-      <span class="task-card-duration-prefix"><History width={"14"} height={"14"} ariaLabel="duration"/></span>
-    </div>
-    {#if interactiveMode && taskSyncManager.getTaskCardStatus('durationStatus') === 'editing'}
-      <input
-        type="text"
-        bind:value={durationInputString}
-        bind:this={durationInputElement}
-        class="task-card-duration"
-        placeholder="hh:mm"
-      />
-    {:else}
-      <div class="task-card-duration">
-        <div class="duration-display">
-          {durationDisplay}
-        </div>
-      </div>
-    {/if}
+<div class="task-card-duration-container {params.mode === 'single-line' ? 'mode-single-line' : 'mode-multi-line'} {duration ? '' : 'no-duration'} {editMode ? 'edit-mode' : ''}"
+  on:click={interactive ? toggleDurationEditMode : null}
+  on:keydown={interactive ? toggleDurationEditMode : null}
+  role="button"
+  tabindex="0"
+  aria-label="Duration"
+>
+  <div class="task-card-duration-left-part" aria-hidden="true" title="Duration">
+    <span class="task-card-duration-prefix" aria-hidden="true">
+      <History width="14" height="14" ariaLabel="Duration"/>
+    </span>
   </div>
-{/if}
+  {#if interactive && editMode}
+    <input
+      type="text"
+      bind:value={durationInputString}
+      bind:this={durationInputElement}
+      on:keydown={finishDurationEditing}
+      on:blur={() => editMode = false}
+      class="task-card-duration-input"
+      placeholder="hh:mm"
+    />
+  {:else if duration}
+    <div class="task-card-duration">
+      <div class="duration-display">
+        {durationDisplay}
+      </div>
+    </div>
+  {/if}
+</div>
 
 <style>
+  .task-card-duration-container {
+    display: flex;
+    align-items: center;
+    border-radius: 2em;
+    overflow: hidden;
+    margin: 0 2px;
+    font-size: var(--tag-size);
+    border: var(--border-width) solid var(--text-accent);
+    padding: 0;
+    height: 22px;
+  }
+
+  .task-card-duration-container.no-duration {
+    width: 25px;
+    height: 22px;
+  }
+
+  .task-card-duration-container.no-duration.edit-mode {
+    width: auto;
+    /* height: auto; */
+  }
 
   .task-card-duration-left-part {
-        /* background-color: var(--background-secondary); */
-        border-top-left-radius: 2em;
-        border-bottom-left-radius: 2em;
-        border-top-right-radius: var(--radius-s);
-        border-bottom-right-radius: var(--radius-s);
-        display: flex;
-        align-items: center;
-        padding: 0 5px;
-    }
+    display: flex;
+    align-items: center;
+    padding: 3px 1px 3px 5px;
+    height: 100%;
+  }
 
   .task-card-duration-prefix {
     color: var(--text-accent);
     font-size: var(--tag-size);
     line-height: 1;
-    align-self: center;
-    align-items: center;
-    padding-top: 1.5px;
-  }
-
-  .task-card-duration-container {
-    align-items: center;
-    display: flex;
-    border-radius: 2em;
-    min-width: 2em;
-    overflow: hidden;
-    margin: 0 2px;
-    font-size: var(--tag-size);
-    border: var(--border-width) solid var(--text-accent);
-  }
-
-  .task-card-duration-container.mode-multi-line {
-    margin-top: 2px;
-  }
-  
-  /* .schedule-duration-padding {
-    padding: 2px;
-  } */
-
-  .duration-display {
     display: flex;
     align-items: center;
-    justify-content: center;
-    height: 100%;
-    width: 100%;
-    padding-top: 1.5px;
   }
 
-  .task-card-duration {
-    display: inline;
-    padding: var(--tag-padding-y) 0px;
+  .task-card-duration, .task-card-duration-input {
+    padding: var(--tag-padding-y) var(--tag-padding-x) var(--tag-padding-y) calc(var(--tag-padding-x) / 2);
     padding-right: var(--tag-padding-x);
-    width: auto;
-    /* font-size: var(--tag-size); */
     color: var(--text-accent);
     white-space: nowrap;
     line-height: 1;
   }
 
-  .task-card-duration-container.mode-multi-line:not(:empty):hover {
+  .task-card-duration-input {
+    box-sizing: border-box;
+    border: none;
+    background-color: transparent;
+    width: 50px;
+    height: 100%;
+    font-family: var(--font-text);
+    font-size: var(--tag-size);
+  }
+
+  .task-card-duration-input:focus {
+    outline: none;
+    box-shadow: none;
+  }
+
+  .duration-display {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    padding-top: 1.5px;
+  }
+
+  .task-card-duration-container:hover {
     background-color: var(--background-modifier-hover);
     color: var(--text-accent-hover);
     cursor: pointer;
   }
 
-  input.task-card-duration {
-    box-sizing: border-box;
-    border: none;
-    display: inline;
-    background-color: rgba(var(--background-primary-alt), 0.0);
-    padding: var(--tag-padding-y) 0px;
-    padding-right: var(--tag-padding-x);
-    width: 50px;
-    height: auto;
-    color: var(--text-accent);
-    white-space: nowrap;
-    line-height: 1;
-    font-family: var(--font-text);
+  .task-card-duration-container.mode-multi-line {
+    margin-top: 2px;
   }
 
-  input.task-card-duration:focus {
-    outline: none;
-    box-shadow: none;
+  .task-card-duration-container::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: var(--background-modifier-hover);
+    color: var(--text-normal);
+    padding: 4px 8px;
   }
 </style>

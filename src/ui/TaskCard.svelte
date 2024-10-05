@@ -164,7 +164,7 @@
           item.setIcon('plus');
           item.onClick((evt) => {
             taskSyncManager.taskCardStatus.durationStatus = 'editing';
-            displayDuration = taskSyncManager.obsidianTask.hasSchedule() || taskSyncManager.getTaskCardStatus('scheduleStatus') === 'editing';
+            // displayDuration = taskSyncManager.obsidianTask.hasSchedule() || taskSyncManager.getTaskCardStatus('scheduleStatus') === 'editing';
           });
         });
       } else {
@@ -229,7 +229,7 @@
     }
 
     let displaySchedule: boolean = taskSyncManager.obsidianTask.hasSchedule() || taskSyncManager.getTaskCardStatus('scheduleStatus') === 'editing';
-    let displayDuration: boolean = taskSyncManager.obsidianTask.hasDuration() || taskSyncManager.getTaskCardStatus('durationStatus') === 'editing';
+    // let displayDuration: boolean = taskSyncManager.obsidianTask.hasDuration() || taskSyncManager.getTaskCardStatus('durationStatus') === 'editing';
     let displayDue: boolean = taskSyncManager.obsidianTask.hasDue() || taskSyncManager.getTaskCardStatus('dueStatus') === 'editing';
     let displayDescription: boolean = taskSyncManager.obsidianTask.hasDescription() || taskSyncManager.getTaskCardStatus('descriptionStatus') === 'editing'
 
@@ -282,11 +282,12 @@
   <div class="task-card-attribute-bottom-bar">
     <div class="task-card-attribute-bottom-bar-left">
       <Schedule taskSyncManager={taskSyncManager} plugin={plugin} params={params} displaySchedule={displaySchedule} />
-      <Duration taskSyncManager={taskSyncManager} plugin={plugin} params={params} displayDuration={displayDuration} />
-      <Due taskSyncManager={taskSyncManager} plugin={plugin} params={params} displayDue={displayDuration} />
-      {#if displaySchedule || displayDuration}
+      <Duration taskSyncManager={taskSyncManager} plugin={plugin} params={params} />
+      <Due taskSyncManager={taskSyncManager} plugin={plugin} params={params} displayDue={displayDue} />
+      <div class="task-card-attribute-separator"></div>
+      <!-- {#if displaySchedule || displayDuration}
         <div class="task-card-attribute-separator"></div>
-      {/if}
+      {/if} -->
       <Labels taskSyncManager={taskSyncManager} />
     </div>
     <div class="task-card-attribute-bottom-bar-right">
