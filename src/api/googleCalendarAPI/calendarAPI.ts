@@ -77,9 +77,9 @@ export class GoogleCalendarAPI {
     async handleLocalTaskUpdate(event: TaskChangeEvent): Promise<string> {
         // local task updates can match to task update, create, or delete
         if (event.type !== TaskChangeType.UPDATE) return '';
-        logger.debug(`handling local task update: ${JSON.stringify(event)}`);
-        logger.debug(`has google sync id: ${event.currentState.metadata.syncMappings.googleSyncSetting?.id}`);
-        logger.debug(`filtered: ${this.filterCreationEvent(event)}`);
+        // logger.debug(`handling local task update: ${JSON.stringify(event)}`);
+        // logger.debug(`has google sync id: ${event.currentState.metadata.syncMappings.googleSyncSetting?.id}`);
+        // logger.debug(`filtered: ${this.filterCreationEvent(event)}`);
         const googleEvent = this.convertTaskToGoogleEvent(event.currentState);
         
         // possible task creation events: 1. no google sync id 2. filter passed

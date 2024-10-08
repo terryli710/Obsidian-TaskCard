@@ -120,6 +120,7 @@ export class ObsidianTaskSyncManager implements ObsidianTaskSyncProps {
     const markdownTask = this.plugin.taskFormatter.taskToMarkdown(
       this.obsidianTask
     );
+    logger.debug(`update task to file: ${markdownTask}`);
     this.updateMarkdownTaskToFile(markdownTask);
   }
 

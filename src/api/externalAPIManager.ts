@@ -3,6 +3,7 @@
 import { SettingStore, TaskCardSettings } from "../settings";
 import { ObsidianTask } from "../taskModule/task";
 import { TaskChangeEvent, TaskChangeType } from "../taskModule/taskAPI";
+import { logger } from "../utils/log";
 import { GoogleCalendarAPI } from "./googleCalendarAPI/calendarAPI";
 
 
@@ -81,8 +82,20 @@ export class ExternalAPIManager {
         const oldSyncMappings = event.currentState.metadata.syncMappings || {};
         let syncMappings = oldSyncMappings;
         if (this.googleCalendarAPI) {
-            const id = await this.googleCalendarAPI.handleLocalTaskUpdate(event);
-            syncMappings = { ...syncMappings, googleSyncSetting: { id: id } };
+            try {
+                const id = await this.googleCalendarAPI.handleLocalTaskUpdate(event);
+                syncMappings = { ...syncMappings, googleSyncSetting: { id: id } };
+            } catch (error) {
+                logger.error(`Failed to update task in Google Calendar: ${error.message}`, {
+                    taskId: event.taskId,
+                    error
+                });
+
+                // If there was an existing Google Calendar ID, we keep it
+                if (oldSyncMappings.googleSyncSetting?.id) {
+                    syncMappings.googleSyncSetting = { id: oldSyncMappings.googleSyncSetting.id };
+                }
+            }
         }
         return syncMappings;
     }
