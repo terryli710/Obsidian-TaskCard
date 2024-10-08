@@ -8,6 +8,7 @@
   import { Notice } from "obsidian";
   import CalendarClock from "../components/icons/CalendarClock.svelte";
   import moment from "moment";
+  import { getRelativeTimeDisplay, getAbsoluteTimeDisplay } from '../utils/timeDisplay';
 
   export let interactive: boolean = true;
   export let taskSyncManager: ObsidianTaskSyncManager = undefined;
@@ -36,86 +37,16 @@
       return scheduleDisplay;
     }
 
-    const scheduleDateTime = schedule.time
+    const schduleDateTime = schedule.time
       ? moment(`${schedule.date} ${schedule.time}`)
       : moment(`${schedule.date}`);
-    const now = moment();
-
-    const diff = {
-      years: scheduleDateTime.diff(now, 'years', true),
-      months: scheduleDateTime.diff(now, 'months', true),
-      weeks: scheduleDateTime.diff(now, 'weeks', true),
-      days: scheduleDateTime.diff(now, 'days', true),
-      hours: scheduleDateTime.diff(now, 'hours', true),
-      minutes: scheduleDateTime.diff(now, 'minutes', true)
-    };
 
     if (mode === 'absolute') {
-      if (diff.years > 1) {
-        scheduleDisplay = `${scheduleDateTime.year()}`;
-      } else if (diff.years === 1) {
-        scheduleDisplay = `${scheduleDateTime.format('MMM, YYYY')}`;
-      } else if (diff.months > 0) {
-        scheduleDisplay = `${scheduleDateTime.format('MMM DD')}`;
-      } else if (diff.weeks > 0) {
-        scheduleDisplay = `next ${scheduleDateTime.format('ddd, MMM DD')}`;
-      } else if (diff.days > 1 || (diff.days === 1 && diff.hours >= 24)) {
-        scheduleDisplay = schedule.time ? `${scheduleDateTime.format('ddd, MMM DD, hA')}` : `${scheduleDateTime.format('ddd')}`;
-      } else if (diff.days === 1) {
-        scheduleDisplay = 'Tomorrow';
-      } else {
-        scheduleDisplay = schedule.time ? `${scheduleDateTime.format('h:mmA')}` : 'Today';
-      }
+      scheduleDisplay = getAbsoluteTimeDisplay(schduleDateTime);
     } else if (mode === 'relative') {
-      let prefix = 'in ';
-      let suffix = '';
-
-      if (scheduleDateTime.isBefore(now)) {
-        prefix = '';
-        suffix = ' ago';
-      }
-
-      const units: Array<{ unit: string; method: moment.unitOfTime.Diff }> = [
-        { unit: 'year', method: 'year' },
-        { unit: 'month', method: 'month' },
-        { unit: 'day', method: 'day' },
-        { unit: 'hour', method: 'hour' },
-        { unit: 'minute', method: 'minute' },
-        { unit: 'second', method: 'second' }
-      ];
-
-      for (let i = 0; i < units.length; i++) {
-        const { unit, method } = units[i];
-        const value = Math.abs(scheduleDateTime.diff(now, method));
-
-        if (value > 0) {
-          if (i === units.length - 1 || value > 1 || (i + 1 < units.length && Math.abs(scheduleDateTime.diff(now, units[i + 1].method)) === 0)) {
-            const pluralSuffix = value !== 1 ? 's' : '';
-            scheduleDisplay = `${prefix}${value} ${unit}${pluralSuffix}${suffix}`;
-            return scheduleDisplay;
-          }
-          if (i + 1 < units.length) {
-            const nextUnit = units[i + 1];
-            let nextValue: number;
-            if (unit === 'year') {
-              nextValue = Math.abs(scheduleDateTime.diff(now, 'month') % 12);
-            } else if (unit === 'month') {
-              nextValue = Math.abs(scheduleDateTime.diff(now, 'day') % 30);
-            } else {
-              nextValue = Math.abs(scheduleDateTime.diff(now, nextUnit.method));
-            }
-            if (nextValue > 0) {
-              const pluralSuffix1 = value !== 1 ? 's' : '';
-              const pluralSuffix2 = nextValue !== 1 ? 's' : '';
-              scheduleDisplay = `${prefix}${value} ${unit}${pluralSuffix1} and ${nextValue} ${nextUnit.unit}${pluralSuffix2}${suffix}`;
-              return scheduleDisplay;
-            }
-          }
-        }
-      }
-
-      scheduleDisplay = 'just now';
+      scheduleDisplay = getRelativeTimeDisplay(schduleDateTime);
     }
+
     return scheduleDisplay;
   }
 

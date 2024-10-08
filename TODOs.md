@@ -6,7 +6,7 @@
 # Known Issues
 - Google calendar requires re-login after some time.
 - ~~When hitting "space" editing due/duration/schedule, text will be erased.~~
-- Due date display is off. e.g. in 2 days would be displayed as " in 1 day and 47 hours".
+- ~~Due date display is off. e.g. in 2 days would be displayed as " in 1 day and 47 hours".~~
 - ~~Schedule saving - when hitting enter to save schedule it doesn't exit edit mode.~~
 
 

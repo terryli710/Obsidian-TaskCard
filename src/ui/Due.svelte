@@ -8,6 +8,7 @@
   import { Notice } from 'obsidian';
   import AlertTriangle from '../components/icons/AlertTriangle.svelte';
   import moment from 'moment';
+  import { getRelativeTimeDisplay, getAbsoluteTimeDisplay } from '../utils/timeDisplay';
 
   export let interactive: boolean = true;
   export let taskSyncManager: ObsidianTaskSyncManager = undefined;
@@ -70,102 +71,14 @@
     const dueDateTime = due.time
       ? moment(`${due.date} ${due.time}`)
       : moment(`${due.date}`);
-    const now = moment();
 
-    const diff = {
-      years: dueDateTime.diff(now, 'years', true),
-      months: dueDateTime.diff(now, 'months', true),
-      weeks: dueDateTime.diff(now, 'weeks', true),
-      days: dueDateTime.diff(now, 'days', true),
-      hours: dueDateTime.diff(now, 'hours', true),
-      minutes: dueDateTime.diff(now, 'minutes', true)
-    };
-
-    // If mode is 'absolute', use the existing logic to display a time point.
     if (mode === 'absolute') {
-      // Choose display format based on the difference
-      if (diff.years > 1) {
-        dueDisplay = `${dueDateTime.year()}`;
-      } else if (diff.years === 1) {
-        dueDisplay = `${dueDateTime.format('MMM, YYYY')}`;
-      } else if (diff.months > 0) {
-        dueDisplay = `${dueDateTime.format('MMM DD')}`;
-      } else if (diff.weeks > 0) {
-        dueDisplay = `next ${dueDateTime.format('ddd, MMM DD')}`;
-      } else if (diff.days > 1 || (diff.days === 1 && diff.hours >= 24)) {
-        // If due.time is null or empty, just show the day
-        if (!due.time) {
-          dueDisplay = `${dueDateTime.format('ddd')}`;
-        }
-        dueDisplay = `${dueDateTime.format('ddd, MMM DD, hA')}`;
-      } else if (diff.days === 1) {
-        dueDisplay = 'Tomorrow';
-      } else {
-        // If due.time is null or empty, return "Today"
-        if (!due.time) {
-          dueDisplay = 'Today';
-        }
-        dueDisplay = `${dueDateTime.format('h:mmA')}`;
-      }
-      return dueDisplay;
+      dueDisplay = getAbsoluteTimeDisplay(dueDateTime);
     } else if (mode === 'relative') {
-      let prefix = 'in ';
-      let suffix = '';
-
-      if (dueDateTime.isBefore(now)) {
-        prefix = '';
-        suffix = ' ago';
-      }
-
-      const units: Array<{ unit: string; method: moment.unitOfTime.Diff }> = [
-        { unit: 'year', method: 'year' },
-        { unit: 'month', method: 'month' },
-        { unit: 'day', method: 'day' },
-        { unit: 'hour', method: 'hour' },
-        { unit: 'minute', method: 'minute' },
-        { unit: 'second', method: 'second' }
-      ];
-
-      for (let i = 0; i < units.length; i++) {
-        const { unit, method } = units[i];
-        const value = Math.abs(dueDateTime.diff(now, method));
-
-        if (value > 0) {
-          // If it's the last unit, the value is significant, or the next unit is 0
-          if (
-            i === units.length - 1 ||
-            value > 1 ||
-            (i + 1 < units.length &&
-              Math.abs(dueDateTime.diff(now, units[i + 1].method)) === 0)
-          ) {
-            const pluralSuffix = value !== 1 ? 's' : '';
-            dueDisplay = `${prefix}${value} ${unit}${pluralSuffix}${suffix}`;
-            return dueDisplay;
-          }
-          // Check if we should display this unit and the next one
-          if (i + 1 < units.length) {
-            const nextUnit = units[i + 1];
-            let nextValue: number;
-            if (unit === 'year') {
-              nextValue = Math.abs(dueDateTime.diff(now, 'month') % 12);
-            } else if (unit === 'month') {
-              nextValue = Math.abs(dueDateTime.diff(now, 'day') % 30); // Approximation
-            } else {
-              nextValue = Math.abs(dueDateTime.diff(now, nextUnit.method));
-            }
-            if (nextValue > 0) {
-              const pluralSuffix1 = value !== 1 ? 's' : '';
-              const pluralSuffix2 = nextValue !== 1 ? 's' : '';
-              dueDisplay = `${prefix}${value} ${unit}${pluralSuffix1} and ${nextValue} ${nextUnit.unit}${pluralSuffix2}${suffix}`;
-              return dueDisplay;
-            }
-          }
-        }
-      }
-
-      dueDisplay = 'just now';
-      return dueDisplay;
+      dueDisplay = getRelativeTimeDisplay(dueDateTime);
     }
+
+    return dueDisplay;
   }
 
 
