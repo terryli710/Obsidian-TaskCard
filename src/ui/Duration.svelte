@@ -48,7 +48,7 @@
   }
 
   async function toggleDurationEditMode(event: MouseEvent | KeyboardEvent) {
-    if (event instanceof KeyboardEvent && event.key !== 'Enter' && event.key !== ' ') {
+    if (event instanceof KeyboardEvent && event.key !== 'Enter') {
       return;
     }
     event.preventDefault();

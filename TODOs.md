@@ -5,6 +5,8 @@
 
 # Known Issues
 - Google calendar requires re-login after some time.
+- ~~When hitting "space" editing due/duration/schedule, text will be erased.~~
+- Due date display is off. e.g. in 2 days would be displayed as " in 1 day and 47 hours".
 
 
 # Other Bugs
@@ -16,6 +18,6 @@
 # Small Improvements
 ## Add
 - ~~When adding duration/due, cannot interpret some text like "1h" or "next hour"~~
-- When adding duration/due, lacking icon to add.
+- ~~When adding duration/due, lacking icon to add.~~
 - 
 

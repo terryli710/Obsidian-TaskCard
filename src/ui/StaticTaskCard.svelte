@@ -228,7 +228,6 @@
           <!-- Schedule -->
           <Schedule
             interactive={false}
-            {displaySchedule}
             params={{ mode: 'single-line' }}
             taskItem={task}
           />
@@ -319,7 +318,6 @@
       <!-- Schedule/Duration/Due -->
       <Schedule
         interactive={false}
-        displaySchedule={displaySchedule}
         params={{ mode: 'multi-line' }}
         taskItem={task}
       />
@@ -327,13 +325,11 @@
         interactive={false}
         params={{ mode: 'multi-line' }}
         taskItem={task}
-        displayDuration={displayDuration}
       />
       <Due
         interactive={false}
         params={{ mode: 'multi-line' }}
         taskItem={task}
-        displayDue={displayDue}
       />
       <!-- Labels -->
       <div class="task-card-labels">
