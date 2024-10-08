@@ -51,9 +51,13 @@
   }
 
   async function toggleScheduleEditMode(event: MouseEvent | KeyboardEvent) {
+    if (editMode) {
+      return;
+    }
     if (event instanceof KeyboardEvent && event.key !== 'Enter') {
       return;
     }
+    logger.debug(`entering schedule edit mode: ${event.key}, editMode: ${editMode}`);
     event.preventDefault();
     editMode = true;
     scheduleInputString = schedule ? schedule.string : '';
@@ -64,6 +68,7 @@
   function finishScheduleEditing(event: KeyboardEvent) {
     if (event.key === 'Enter') {
       event.preventDefault();
+      event.stopPropagation();
       const parsedSchedule = plugin.taskParser.parseSchedule(scheduleInputString);
       if (parsedSchedule || scheduleInputString.trim() === '') {
         schedule = parsedSchedule;
@@ -72,9 +77,11 @@
       } else {
         new Notice("[TaskCard] Invalid schedule format: " + scheduleInputString);
       }
+      logger.debug(`exiting schedule edit mode: ${event.key}, editMode: ${editMode}`);
       editMode = false;
     } else if (event.key === 'Escape') {
       event.preventDefault();
+      event.stopPropagation();
       editMode = false;
       updateScheduleDisplay();
     }

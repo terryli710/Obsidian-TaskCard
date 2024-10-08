@@ -48,6 +48,9 @@
   }
 
   async function toggleDurationEditMode(event: MouseEvent | KeyboardEvent) {
+    if (editMode) {
+      return;
+    }
     if (event instanceof KeyboardEvent && event.key !== 'Enter') {
       return;
     }
@@ -61,6 +64,7 @@
   function finishDurationEditing(event: KeyboardEvent) {
     if (event.key === 'Enter') {
       event.preventDefault();
+      event.stopPropagation();
       const parsedDuration = plugin.taskParser.parseDuration(durationInputString);
       if (parsedDuration || durationInputString.trim() === '') {
         duration = parsedDuration;
@@ -72,6 +76,7 @@
       editMode = false;
     } else if (event.key === 'Escape') {
       event.preventDefault();
+      event.stopPropagation();
       editMode = false;
       updateDurationDisplay();
     }

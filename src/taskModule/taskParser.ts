@@ -590,10 +590,22 @@ export class TaskParser {
   }
 
   parseDuration(durationString: string): Duration | null {
-    console.log("parseDuration function called with:", durationString);
+
+    // Check for "hh:mm" format
+    const hhmmRegex = /^(\d{1,2}):(\d{2})$/;
+    const hhmmMatch = durationString.match(hhmmRegex);
+    if (hhmmMatch) {
+        const hours = parseInt(hhmmMatch[1]);
+        const minutes = parseInt(hhmmMatch[2]);
+        return {
+            hours: hours,
+            minutes: minutes
+        } as Duration;
+    }
+
+    // Existing functionality using DateTimeRecognizers
     const results = DateTimeRecognizers.recognizeDateTime(durationString, DateTimeRecognizers.Culture.English);
     logger.debug(`Duration results: ${JSON.stringify(results)}`);
-    console.log(`Duration results: ${JSON.stringify(results)}`);
 
     if (results.length === 0) {
         return null;

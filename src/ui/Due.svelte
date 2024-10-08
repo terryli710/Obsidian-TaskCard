@@ -32,6 +32,9 @@
   }
 
   async function toggleDueEditMode(event: MouseEvent | KeyboardEvent) {
+    if (editMode) {
+      return;
+    }
     if (event instanceof KeyboardEvent && event.key !== 'Enter') {
       return;
     }
@@ -45,6 +48,7 @@
   function finishDueEditing(event: KeyboardEvent) {
     if (event.key === 'Enter') {
       event.preventDefault();
+      event.stopPropagation();
       const parsedDue = plugin.taskParser.parseSchedule(dueInputString);
       if (parsedDue || dueInputString.trim() === '') {
         due = parsedDue;
@@ -56,6 +60,7 @@
       editMode = false;
     } else if (event.key === 'Escape') {
       event.preventDefault();
+      event.stopPropagation();
       editMode = false;
       updateDueDisplay();
     }
