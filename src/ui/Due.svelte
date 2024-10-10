@@ -66,6 +66,26 @@
     }
   }
 
+  function getTaskDueStatus(task: ObsidianTask): string {
+    if (!task.due) return '';
+
+    const now = moment();
+    const dueDateTime = moment(`${task.due.date} ${task.due.time || '23:59'}`);
+    
+    if (task.completed) {
+      return 'passed';
+    } else if (dueDateTime.isBefore(now)) {
+      return 'passDue';
+    } else if (dueDateTime.isSame(now, 'day')) {
+      return 'ongoing';
+    } else if (dueDateTime.isBefore(now.clone().add(1, 'day'))) {
+      return 'upcoming';
+    }
+    
+    return '';
+  }
+
+  $: dueStatus = getTaskDueStatus(interactive ? taskSyncManager.obsidianTask : taskItem);
 
   function updateDueDisplay(mode = 'relative'): string {
     if (!due || !due.date) {
@@ -86,7 +106,6 @@
     return dueDisplay;
   }
 
-
   function focusAndSelect(node: HTMLInputElement) {
     node.focus();
     node.select();
@@ -95,15 +114,15 @@
   updateDue();
 </script>
 
-<div class="task-card-due-container {params.mode === 'single-line' ? 'mode-single-line' : 'mode-multi-line'} {due ? '' : 'no-due'} {editMode ? 'edit-mode' : ''}"
+<div class="task-card-due-container {params.mode === 'single-line' ? 'mode-single-line' : 'mode-multi-line'} {due ? '' : 'no-due'} {editMode ? 'edit-mode' : ''} {dueStatus}"
   on:click={interactive ? toggleDueEditMode : null}
   on:keydown={interactive ? toggleDueEditMode : null}
   role="button"
   tabindex="0"
   aria-label="Due date"
 >
-  <div class="task-card-due-left-part" aria-hidden="true" title="Due date">
-    <span class="task-card-due-prefix" aria-hidden="true">
+  <div class="task-card-due-left-part {dueStatus}" aria-hidden="true" title="Due date">
+    <span class="task-card-due-prefix {dueStatus}" aria-hidden="true">
       <AlertTriangle width="14" height="14" ariaLabel="Due"/>
     </span>
   </div>
@@ -118,7 +137,7 @@
       placeholder="Due date"
     />
   {:else if due}
-    <div class="task-card-due">
+    <div class="task-card-due {dueStatus}">
       <div class="due-display">
         {dueDisplay}
       </div>
@@ -200,5 +219,32 @@
 
   .task-card-due-container.mode-multi-line {
     margin-top: 2px;
+  }
+
+  .task-card-due-container {
+    &.ongoing {
+      background-color: var(--interactive-accent);
+      border-color: var(--interactive-accent);
+      &:hover {
+        background-color: var(--interactive-accent-hover);
+      }
+    }
+    /* &.passDue { border-color: var(--text-error); }
+    &.upcoming { border-color: var(--text-warning); }
+    &.passed { border-color: var(--text-faint); } */
+  }
+
+  .task-card-due-left-part,
+  .task-card-due,
+  .task-card-due-prefix {
+    &.ongoing { color: var(--text-on-accent); }
+    &.passDue { color: var(--text-error); }
+    &.upcoming { color: var(--text-warning); }
+    &.passed { color: var(--text-faint); }
+  }
+
+  .task-card-due.upcoming {
+    font-style: italic;
+    text-decoration: underline;
   }
 </style>
