@@ -73,6 +73,8 @@
             query.priorityQuery = selectedValues;
         } else if (queryName === 'label') {
             query.labelQuery = selectedValues;
+        } else if (queryName === 'displayMode') {
+            query.displayModeQuery = selectedValues;
         }
     }
 
@@ -129,17 +131,6 @@
         }
     }
 
-    function handleDisplayModeSelection(event: any) {
-        // Handle display mode selection
-        if (displayMode === 'list' || displayMode === 'matrix') {
-            query.displayModeQuery = displayMode;
-        } else {
-            // Default to 'list' if invalid mode is selected
-            query.displayModeQuery = 'list';
-        }
-    }
-
-
     // choices
     const completedChoices = [
         { value: true, displayText: 'Yes' }, 
@@ -153,8 +144,8 @@
     ];
 
     const displayModeChoices = [
-        { value: DisplayMode.List, displayText: 'List' },
-        { value: DisplayMode.Matrix, displayText: 'Matrix' }
+        { value: 'list', displayText: 'List Mode' },
+        { value: 'matrix', displayText: 'Eisenhower Matrix Mode' }
     ];
 
 </script>
@@ -265,7 +256,7 @@
         description="To display tasks in list or matrix" 
         choices={displayModeChoices} 
         initialChoice={query.displayModeQuery} 
-        on:selected={(evt) => handleDisplayModeSelection(evt)}
+        on:selected={(evt) => handleSelection(evt, 'displayMode')}
     />
 
     <!-- Save and Reset Buttons -->

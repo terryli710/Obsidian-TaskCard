@@ -28,6 +28,6 @@
 
 ## Display
 - ~~Due date color change with due status~~
-- Display query in list or matrix based on their own settings.
+- ~~Display query in list or matrix based on their own settings.~~
 
 
