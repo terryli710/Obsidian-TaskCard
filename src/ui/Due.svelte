@@ -65,20 +65,47 @@
       updateDueDisplay();
     }
   }
-
   function getTaskDueStatus(task: ObsidianTask): string {
     if (!task.due) return '';
 
     const now = moment();
     const dueDateTime = moment(`${task.due.date} ${task.due.time || '23:59'}`);
+    const taskDuration = task.duration ? moment.duration(task.duration) : null;
+    const taskSchedule = task.schedule ? moment(`${task.schedule.date} ${task.schedule.time || '00:00'}`) : null;
     
     if (task.completed) {
       return 'passed';
     } else if (dueDateTime.isBefore(now)) {
       return 'passDue';
-    } else if (dueDateTime.isSame(now, 'day')) {
-      return 'ongoing';
-    } else if (dueDateTime.isBefore(now.clone().add(1, 'day'))) {
+    }
+
+    // Check if the task is ongoing
+    if (!taskDuration && !taskSchedule) {
+      // No duration, no schedule: ongoing if due within 24 hours
+      if (dueDateTime.diff(now, 'hours') <= 24) {
+        return 'ongoing';
+      }
+    } else if (taskDuration && !taskSchedule) {
+      // Duration yes, schedule no: ongoing if within duration to due 
+      const startTime = dueDateTime.clone().subtract(taskDuration);
+      if (now.isBetween(startTime, dueDateTime)) {
+        return 'ongoing';
+      }
+    } else if (taskDuration && taskSchedule) {
+      // Duration yes, schedule yes: ongoing if within schedule to schedule + duration
+      const endTime = taskSchedule.clone().add(taskDuration);
+      if (now.isBetween(taskSchedule, endTime)) {
+        return 'ongoing';
+      }
+    } else if (!taskDuration && taskSchedule) {
+      // Duration no, schedule yes: ongoing if between schedule and due
+      if (now.isBetween(taskSchedule, dueDateTime)) {
+        return 'ongoing';
+      }
+    }
+
+    // If not ongoing, check if it's upcoming (due within the next 24 hours)
+    if (dueDateTime.diff(now, 'hours') <= 24) {
       return 'upcoming';
     }
     
