@@ -57,7 +57,6 @@
     if (event instanceof KeyboardEvent && event.key !== 'Enter') {
       return;
     }
-    logger.debug(`entering schedule edit mode: ${event.key}, editMode: ${editMode}`);
     event.preventDefault();
     editMode = true;
     scheduleInputString = schedule ? schedule.string : '';

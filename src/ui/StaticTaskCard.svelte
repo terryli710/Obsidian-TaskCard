@@ -226,11 +226,13 @@
             />
           {/if}
           <!-- Schedule -->
-          <Schedule
-            interactive={false}
-            params={{ mode: 'single-line' }}
-            taskItem={task}
-          />
+          {#if displaySchedule}
+            <Schedule
+              interactive={false}
+              params={{ mode: 'single-line' }}
+              taskItem={task}
+            />
+          {/if}
           <div class="task-card-project">
             {#if task.hasProject()}
               <span

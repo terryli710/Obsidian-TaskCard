@@ -5,21 +5,25 @@
 
 # Known Issues
 - Google calendar requires re-login after some time.
-- ~~When hitting "space" editing due/duration/schedule, text will be erased.~~
-- ~~Due date display is off. e.g. in 2 days would be displayed as " in 1 day and 47 hours".~~
-- ~~Schedule saving - when hitting enter to save schedule it doesn't exit edit mode.~~
 - ~~When saving schedule, due, and duration with the same text, enter "enter" doesn't quit the edit mode.~~
+- ~~dataview indexing error. Even if dataview is installed, it still shows doesn't index error. Fixed by updating dataview.~~
+
+
 
 
 # Other Bugs
-- ~~When finishing sub tasks it opens the edit mode.~~
 - Google calendar prompts error about timeZone.
-- ~~When editing description, the box is not 100% width.~~
 
 
 # Small Improvements
 ## Add
 - ~~When adding duration/due, cannot interpret some text like "1h" or "next hour"~~
 - ~~When adding duration/due, lacking icon to add.~~
-- 
 
+
+# Static Task Card
+- ~~Schedule shown in static card even when there's no schedule.~~
+
+
+# Display
+- ~~Progress bar position in task card.~~

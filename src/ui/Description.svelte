@@ -159,3 +159,20 @@
         {/if}
     </div>
 {/if}
+
+
+
+<style>
+    .task-card-progress-position {
+        position: absolute; /* Absolute positioning for the progress bar */
+        top: 3px;
+        right: 3px;
+        /* background: linear-gradient(to right, transparent 0%, var(--background-primary) 30%, var(--background-primary) 100%); */
+        background-color: var(--background-primary);
+        border-radius: var(--radius-s);
+        padding: 2px 5px 2px 5px;
+        display: flex;
+        align-items: center;
+        /* height: 35px; */
+    }
+</style>
