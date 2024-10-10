@@ -61,7 +61,7 @@ export function cardDisplaySettings(
         });
 
     new Setting(containerEl)
-        .setName('Query Display Mode')
+        .setName('Default Query Display Mode')
         .setDesc('The default display mode when displaying a task query.')
         .addDropdown((dropdown) => {
         dropdown
@@ -69,10 +69,10 @@ export function cardDisplaySettings(
                 'list': 'List Mode',
                 'matrix': 'Eisenhower Matrix Mode'
             })
-            .setValue(pluginSettings.displaySettings.queryDisplayMode)
+            .setValue(pluginSettings.displaySettings.defaultQueryDisplayMode)
             .onChange(async (value: string) => {
             await writeSettings(
-                (old) => (old.displaySettings.queryDisplayMode = value)
+                (old) => (old.displaySettings.defaultQueryDisplayMode = value)
             );
             logger.info(`Query display mode updated: ${value}`);
             new Notice(`[TaskCard] Query display mode updated: ${value}.`);

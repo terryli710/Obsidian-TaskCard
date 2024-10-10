@@ -7,6 +7,7 @@ import { MarkdownPostProcessorContext, MarkdownSectionInformation } from "obsidi
 import { logger } from "../utils/log";
 import StaticTaskMatrix from "../ui/StaticTaskMatrix.svelte";
 import QueryDisplay from "../ui/QueryDisplay.svelte";
+import { DisplayMode } from '../types';
 
 
 export class QueryAndTaskListSvelteAdapter {
@@ -65,7 +66,6 @@ export class QueryAndTaskListSvelteAdapter {
                         taskList: await this.querySyncManager.getFilteredTasks(),
                         plugin: this.plugin,
                         querySyncManager: this.querySyncManager,
-                        displayMode: this.plugin.settings.displaySettings.queryDisplayMode,
                     }
                 })
 

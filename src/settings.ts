@@ -25,7 +25,7 @@ export interface TaskCardSettings {
   displaySettings: {
     defaultMode: string;
     upcomingMinutes: number;
-    queryDisplayMode: string;
+    defaultQueryDisplayMode: string;
   };
   userMetadata: {
     projects: any;
@@ -54,7 +54,7 @@ export const DefaultSettings: TaskCardSettings = {
   displaySettings: {
     defaultMode: 'single-line',
     upcomingMinutes: 15,
-    queryDisplayMode: 'line'
+    defaultQueryDisplayMode: 'line'
   },
   userMetadata: {
     projects: {},

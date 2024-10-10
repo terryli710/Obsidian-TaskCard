@@ -35,7 +35,7 @@
     $: dispatch('selected', selectedTag);
 </script>
 
-<div class="container">
+<li class="container">
     <div class="header">
         <div class="inline-title-wrapper">
             <div class="inline-title">{title}</div>
@@ -53,7 +53,7 @@
             {/each}
         </div>
     </div>
-</div>
+</li>
 
 
 

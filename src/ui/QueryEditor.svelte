@@ -1,5 +1,3 @@
-
-
 <script lang="ts">
     import { MultipleAttributeTaskQuery } from "../query/cache";
     import { QuerySyncManager, TaskQueryOptions } from "../query/querySyncManager";
@@ -10,6 +8,7 @@
     import TagSelect from "./selections/TagSelect.svelte";
     import Sugar from "sugar";
     import { filePathSuggest } from "../utils/filePathSuggester";
+    import { DisplayMode } from '../types';
 
     export let options: TaskQueryOptions;
     export let query: MultipleAttributeTaskQuery = {
@@ -22,6 +21,9 @@
     };
     export let querySyncManager: QuerySyncManager;
     export let paths: string[] = [];
+    
+    let defaultDisplayMode: DisplayMode = querySyncManager.plugin.settings.displaySettings.defaultQueryDisplayMode;
+    let displayMode: DisplayMode = querySyncManager.taskQuery.displayModeQuery || defaultDisplayMode;
 
     let startDate = query.scheduleDateTimeQuery[0] ? new Date(query.scheduleDateTimeQuery[0]) : null;
     let endDate = query.scheduleDateTimeQuery[1] ? new Date(query.scheduleDateTimeQuery[1]) : null;
@@ -54,6 +56,7 @@
             completedQuery: [],
             scheduleDateTimeQuery: ['', ''],
             filePathQuery: '',
+            displayModeQuery: '',
         };
         querySyncManager.updateTaskQueryToFile(query);
     }
@@ -126,6 +129,16 @@
         }
     }
 
+    function handleDisplayModeSelection(event: any) {
+        // Handle display mode selection
+        if (displayMode === 'list' || displayMode === 'matrix') {
+            query.displayModeQuery = displayMode;
+        } else {
+            // Default to 'list' if invalid mode is selected
+            query.displayModeQuery = 'list';
+        }
+    }
+
 
     // choices
     const completedChoices = [
@@ -139,6 +152,10 @@
         { value: 4, displayText: 'None' }
     ];
 
+    const displayModeChoices = [
+        { value: DisplayMode.List, displayText: 'List' },
+        { value: DisplayMode.Matrix, displayText: 'Matrix' }
+    ];
 
 </script>
 
@@ -241,6 +258,15 @@
             </div>
         </div>
     </li>
+
+    <!-- Display Mode -->
+    <FixedOptionsSelect 
+        title="Display Mode" 
+        description="To display tasks in list or matrix" 
+        choices={displayModeChoices} 
+        initialChoice={query.displayModeQuery} 
+        on:selected={(evt) => handleDisplayModeSelection(evt)}
+    />
 
     <!-- Save and Reset Buttons -->
     <div class="button-menu">

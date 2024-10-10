@@ -6,11 +6,12 @@
     import { QuerySyncManager } from "../query/querySyncManager";
     import StaticTaskList from "./StaticTaskList.svelte";
     import StaticTaskMatrix from "./StaticTaskMatrix.svelte";
+    import { DisplayMode } from "../types";
 
     export let taskList: PositionedObsidianTask[];
     export let plugin: TaskCardPlugin;
     export let querySyncManager: QuerySyncManager;
-    export let displayMode: string = "list";
+    let displayMode: string = querySyncManager.taskQuery.displayModeQuery || DisplayMode.List;
 
     const cacheInitialized = plugin.cache.taskCache.status.initialized;
 

@@ -71,6 +71,7 @@ export class QuerySyncManager {
             completedQuery: [],
             scheduleDateTimeQuery: ['', ''],
             filePathQuery: '',
+            displayModeQuery: ''
         };
     
         for (const line of lines) {
@@ -93,6 +94,8 @@ export class QuerySyncManager {
                 query.filePathQuery = value.replace(/['"]+/g, '');
             } else if (key === 'editMode') {
                 this.editMode = JSON.parse(value);
+            } else if (key === 'displayMode') {
+                query.displayModeQuery = value;
             }
         }
     
@@ -163,6 +166,10 @@ export class QuerySyncManager {
 
         if (this.editMode !== undefined && this.editMode !== null) {
             source += `editMode: ${JSON.stringify(this.editMode)}\n`;
+        }
+
+        if (query.displayModeQuery !== undefined && query.displayModeQuery !== null) {
+            source += `displayMode: ${query.displayModeQuery}\n`;
         }
         
         return source.trim(); // Remove the trailing newline
