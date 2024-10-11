@@ -11,7 +11,7 @@ import { cardDisplaySettings } from './settings/displaySettings';
 
 export let emptyProject: Project = {
   id: '',
-  name: ''
+  name: 'No Project'
 }
 
 export interface TaskCardSettings {
@@ -386,52 +386,64 @@ export class SettingsTab extends PluginSettingTab {
   }
 
   defaultProjectSetting(projects: Project[]) {
+
     // Check if the default project is still in the projects list
     let defaultProject = this.plugin.settings.userMetadata.defaultProject;
-    if (defaultProject && !projects.find(p => p.id === defaultProject.id)) {
+
+    if (!defaultProject || !projects.find(p => p.id === defaultProject.id)) {
       defaultProject = emptyProject;
     }
 
     let defaultProjectId = defaultProject.id;
-  
+    
     const setting = new Setting(this.containerEl);
     setting.setName('Default Project');
-  
+
     if (!projects.length) {
       setting.setDesc('No projects available.');
       return;
     }
-  
+
     // Create a dropdown with project names as choices
     setting.addDropdown(dropdown => {
       const choices = projects.reduce((acc, project) => {
         acc[project.id] = `${project.name}`; // Displaying name and color
         return acc;
       }, {});
+
       const projectChoices = projects.reduce((acc, project) => {
         acc[project.id] = project 
-        acc[''] = undefined;
         return acc
       }, {})
-  
+
       dropdown.addOption('', 'No default project');
       dropdown.addOptions(choices);
-  
+
       dropdown.setValue(defaultProjectId || '');
+
       dropdown.onChange(value => {
-        defaultProjectId = value;
+
         if (!value) {
           this.plugin.settings.userMetadata.defaultProject = emptyProject;
           new Notice(`[TaskCard] Default project set to no project.`);
+        } else {
+          const selectedProject = projectChoices[value];
+
+          if (selectedProject) {
+            this.plugin.settings.userMetadata.defaultProject = selectedProject;
+            new Notice(`[TaskCard] Default project changed to: ${selectedProject.name}.`);
+          } else {
+            logger.error(`Selected project with id ${value} not found.`);
+            new Notice(`[TaskCard] Error: Selected project not found.`);
+          }
         }
-        defaultProject = projectChoices[value];
-        this.plugin.settings.userMetadata.defaultProject = defaultProject;
-        new Notice(`[TaskCard] Default project changed to: ${defaultProject.name}.`);
+
         this.plugin.writeSettings((old) => {
-          old.userMetadata.defaultProject
-        })
+          old.userMetadata.defaultProject = this.plugin.settings.userMetadata.defaultProject;
+        });
       });
     });
+
   }
   
   announceProjectChange(originalProject: Project, newProject: Project) {
@@ -595,4 +607,3 @@ export class SettingsTab extends PluginSettingTab {
 
 }
 export { GoogleSyncSetting };
-

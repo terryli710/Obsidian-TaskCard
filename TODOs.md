@@ -7,6 +7,7 @@
 - Google calendar requires re-login after some time.
 - ~~When saving schedule, due, and duration with the same text, enter "enter" doesn't quit the edit mode.~~
 - ~~dataview indexing error. Even if dataview is installed, it still shows doesn't index error. Fixed by updating dataview.~~
+- When setting default project to be None, the setting collapses.
 
 
 

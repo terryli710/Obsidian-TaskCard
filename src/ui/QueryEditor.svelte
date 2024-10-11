@@ -22,8 +22,8 @@
     export let querySyncManager: QuerySyncManager;
     export let paths: string[] = [];
     
-    let defaultDisplayMode: DisplayMode = querySyncManager.plugin.settings.displaySettings.defaultQueryDisplayMode;
-    let displayMode: DisplayMode = querySyncManager.taskQuery.displayModeQuery || defaultDisplayMode;
+    let defaultDisplayMode: DisplayMode = querySyncManager.plugin.settings.displaySettings.defaultQueryDisplayMode as DisplayMode;
+    let displayMode: DisplayMode = querySyncManager.taskQuery.displayModeQuery as DisplayMode || defaultDisplayMode;
 
     let startDate = query.scheduleDateTimeQuery[0] ? new Date(query.scheduleDateTimeQuery[0]) : null;
     let endDate = query.scheduleDateTimeQuery[1] ? new Date(query.scheduleDateTimeQuery[1]) : null;
