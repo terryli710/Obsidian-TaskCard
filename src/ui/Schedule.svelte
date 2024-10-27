@@ -136,6 +136,8 @@
     border: var(--border-width) solid var(--text-accent);
     padding: 0;
     height: 22px;
+    min-width: 25px;
+    flex-shrink: 0;
   }
 
   .task-card-schedule-container.no-schedule {
@@ -152,6 +154,7 @@
     align-items: center;
     padding: 3px 0px 3px 5px;
     height: 100%;
+    width: 25px;
   }
 
   .task-card-schedule-prefix {

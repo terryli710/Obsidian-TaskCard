@@ -1,6 +1,3 @@
-
-
-
 <script lang="ts">
   import { TaskDisplayParams } from "../renderer/postProcessor";
   import { Project } from "../taskModule/project";
@@ -8,6 +5,7 @@
   import { logger } from "../utils/log";
   import { SettingStore } from "../settings";
   import { tick, afterUpdate } from "svelte";
+  import { onMount } from "svelte";
 
   export let taskSyncManager: ObsidianTaskSyncManager;
   export let params: TaskDisplayParams;
@@ -23,19 +21,28 @@
   let projectPopup: HTMLDivElement;
   let projectWrapper: HTMLDivElement;
 
+  let isProjectPopupOpen = false;
+
   async function toggleProjectPopup() {
-    if (taskSyncManager.getTaskCardStatus('projectStatus') === 'selecting') {
-      taskSyncManager.taskCardStatus.projectStatus = 'done';
-    } else {
+    isProjectPopupOpen = !isProjectPopupOpen;
+    if (isProjectPopupOpen) {
       taskSyncManager.taskCardStatus.projectStatus = 'selecting';
       await adjustWrapperHeight();
+    } else {
+      taskSyncManager.taskCardStatus.projectStatus = 'done';
     }
   }
 
   function selectProject(selectedProject: Project) {
-    project = selectedProject;
+    if (isSameProject(project, selectedProject)) {
+      // If selecting the same project, just close the popup
+      isProjectPopupOpen = false;
+    } else {
+      project = selectedProject;
+      taskSyncManager.updateObsidianTaskAttribute('project', selectedProject);
+    }
     taskSyncManager.taskCardStatus.projectStatus = 'done';
-    taskSyncManager.updateObsidianTaskAttribute('project', selectedProject);
+    isProjectPopupOpen = false;
   }
 
   function isSameProject(project1: Project | null, project2: Project | null): boolean {
@@ -75,6 +82,32 @@
     // @ts-ignore
     const searchResult = taskSyncManager.plugin.app.internalPlugins.getPluginById('global-search').instance.openGlobalSearch(`line:\(\"\\\"name\\\":\\\"${projectName}\\\"\"\)`);
   }
+
+  function handleClickOutside(event: MouseEvent) {
+    logger.debug("handleClickOutside triggered");
+    if (isProjectPopupOpen && projectWrapper && !projectWrapper.contains(event.target as Node)) {
+      logger.debug("Click outside detected, closing project popup");
+      toggleProjectPopup();
+    }
+  }
+
+  function handleKeydown(event: KeyboardEvent) {
+    logger.debug("handleKeydown triggered");
+    if (isProjectPopupOpen && event.key === 'Escape') {
+      logger.debug("Escape key detected, closing project popup");
+      toggleProjectPopup();
+    }
+  }
+
+  onMount(() => {
+    document.addEventListener('click', handleClickOutside);
+    document.addEventListener('keydown', handleKeydown);
+
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+      document.removeEventListener('keydown', handleKeydown);
+    };
+  });
 </script>
 
 {#if params.mode === "single-line"}
@@ -89,7 +122,7 @@
   </div>
 {:else}
   <div class="project-wrapper" bind:this={projectWrapper}>
-    {#if taskSyncManager.getTaskCardStatus('projectStatus') === 'selecting' && availableProjects.length > 0}
+    {#if isProjectPopupOpen && availableProjects.length > 0}
       <div class="project-popup" bind:this={projectPopup}>
         {#if project}
             <div

@@ -5,14 +5,13 @@
 
 # Known Issues
 - Google calendar requires re-login after some time.
-- ~~When saving schedule, due, and duration with the same text, enter "enter" doesn't quit the edit mode.~~
-- ~~dataview indexing error. Even if dataview is installed, it still shows doesn't index error. Fixed by updating dataview.~~
-- When setting default project to be None, the setting collapses.
+- ~~For tasks with limited width, the icon of schedule, duration etc will be cut off (not centered)~~
 
 
 
 # Other Bugs
 - Google calendar prompts error about timeZone.
+- When changing project, it won't quit when clicking on other things or hitting escape.
 
 ## Static Task Card
 - ~~Schedule shown in static card even when there's no schedule.~~

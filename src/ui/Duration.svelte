@@ -138,6 +138,8 @@
     border: var(--border-width) solid var(--text-accent);
     padding: 0;
     height: 22px;
+    min-width: 25px;
+    flex-shrink: 0;
   }
 
   .task-card-duration-container.no-duration {
