@@ -1,5 +1,61 @@
 :root {
   --project-popup-padding: 4px;
+  --taskcard-detailed-padding-top: 0.5em;
+  --taskcard-detailed-padding-bottom: 0.45em;
+  --taskcard-add-attribute-plus-offset-y: 0px;
+}
+
+.markdown-source-view.is-live-preview .cm-line .taskcard-lp-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  margin-left: 0.2em;
+  font-size: var(--font-ui-smaller);
+  line-height: inherit;
+  vertical-align: baseline;
+}
+
+.markdown-source-view.is-live-preview .cm-line .taskcard-lp-field + .taskcard-lp-field {
+  margin-left: 0.65em;
+}
+
+.markdown-source-view.is-live-preview .cm-line .taskcard-lp-field-icon {
+  display: inline-flex;
+  width: 11px;
+  height: 11px;
+  color: currentColor;
+}
+
+.markdown-source-view.is-live-preview .cm-line .taskcard-lp-field-icon svg {
+  width: 11px;
+  height: 11px;
+  stroke-width: 2.1;
+}
+
+.markdown-source-view.is-live-preview .cm-line .taskcard-lp-field-accent {
+  color: var(--text-accent);
+}
+
+.markdown-source-view.is-live-preview .cm-line .taskcard-lp-field-muted {
+  color: var(--text-muted);
+}
+
+.markdown-source-view.is-live-preview .cm-line .taskcard-lp-hidden {
+  display: inline-block;
+  width: 0;
+  overflow: hidden;
+}
+
+.markdown-source-view.is-live-preview .cm-line.taskcard-lp-priority-1 .task-list-item-checkbox {
+  border-color: var(--color-red);
+}
+
+.markdown-source-view.is-live-preview .cm-line.taskcard-lp-priority-2 .task-list-item-checkbox {
+  border-color: var(--color-yellow);
+}
+
+.markdown-source-view.is-live-preview .cm-line.taskcard-lp-priority-3 .task-list-item-checkbox {
+  border-color: var(--color-cyan);
 }
 
 .obsidian-taskcard {
@@ -10,23 +66,22 @@
   line-height: var(--line-height-normal);
   border-radius: var(--radius-m);
   border: var(--border-width) solid var(--background-modifier-border);
-  height: var(--input-height);
-  margin: 1px 0;
-  display: inline-flex;
+  min-height: 0;
+  margin: 0;
+  display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 2px;
   white-space: normal;
   outline: none;
   align-items: flex-start;
   text-align: inherit; /* Aligns text as in a regular div */
   width: 100%;
-  height: 100%;
-  margin-inline-start: calc(-1 * var(--list-indent));
+  box-sizing: border-box;
 }
 
 .obsidian-taskcard.mode-single-line {
   cursor: var(--cursor-link);
-  padding: 0.25em 0.5em 0.25em 0.48em;
+  padding: 0.5em 0.75em;
 }
 
 .obsidian-taskcard.mode-single-line:hover {
@@ -38,24 +93,270 @@
 }
 
 .obsidian-taskcard.mode-multi-line {
-  padding: 0.25em 0.5em 0.25em 0.48em;
+  /* User-tuned visual balance; variables keep both rendering paths aligned
+     and make later optical adjustment a one-line change. */
+  padding: var(--taskcard-detailed-padding-top) 0.75em
+    var(--taskcard-detailed-padding-bottom);
 }
 
-.obsidian-taskcard.mode-multi-line.is-flashing {
-  box-shadow: 0px 0px 10px var(--text-highlight-bg);
-  background-color: var(--background-primary) !important;
+.obsidian-taskcard.mode-multi-line:hover {
+  border-color: var(--background-modifier-border-hover);
 }
 
-.obsidian-taskcard-list-item.is-flashing .obsidian-taskcard.mode-single-line {
-  box-shadow: 0px 0px 10px var(--text-highlight-bg);
+.obsidian-taskcard-hitbox {
+  width: 100%;
 }
+
+/* Raw task item awaiting its card mount: kept invisible (but space-holding)
+   so a re-render never paints the plain checkbox line before the card
+   replaces it. The class is removed on mount, on unload, and for items
+   that turn out not to become cards. */
+li.task-list-item.obsidian-taskcard-mount-pending {
+  visibility: hidden;
+}
+
+.obsidian-taskcard-live {
+  margin: 0;
+  margin-inline-start: 0;
+  padding: 0 !important;
+  background: transparent;
+  border: none;
+  gap: 0;
+}
+
+.obsidian-taskcard-live.task-list-item {
+  margin-inline-start: 0;
+}
+
+.obsidian-taskcard-live > .obsidian-taskcard-hitbox {
+  margin-inline-start: 0;
+  border-radius: var(--radius-m);
+  border: var(--border-width) solid var(--background-modifier-border);
+  background-color: var(--background-primary);
+  box-sizing: border-box;
+}
+
+.obsidian-taskcard-live.mode-single-line > .obsidian-taskcard-hitbox {
+  cursor: var(--cursor-link);
+  padding: 0.5em 0.75em;
+}
+
+.obsidian-taskcard-live.mode-single-line > .obsidian-taskcard-hitbox:hover {
+  background-color: var(--background-primary-alt);
+}
+
+.obsidian-taskcard-live.mode-single-line > .obsidian-taskcard-hitbox:active {
+  background-color: var(--background-modifier-active-hover);
+}
+
+.obsidian-taskcard-live.mode-multi-line > .obsidian-taskcard-hitbox {
+  padding: var(--taskcard-detailed-padding-top) 0.75em
+    var(--taskcard-detailed-padding-bottom);
+}
+
+.obsidian-taskcard-live.mode-multi-line > .obsidian-taskcard-hitbox:hover {
+  border-color: var(--background-modifier-border-hover);
+}
+
+/* ---- card stacking & elevation ("soft elevation", decided 2026-07-07) ---- */
+
+/* Gap between adjacent cards. A card's original li stays in the DOM
+   (display: none) right after it, so card-to-card adjacency in reading view
+   is card ← hidden original ← card; matching on any preceding task li
+   covers that plus static query lists and the matrix. */
+li.task-list-item + li.obsidian-taskcard {
+  margin-top: 0.55em;
+}
+
+/* The card surface is the li itself for static cards, the hitbox for live
+   cards (the live li is a transparent shell). */
+.obsidian-taskcard:not(.obsidian-taskcard-live),
+.obsidian-taskcard-live > .obsidian-taskcard-hitbox {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: box-shadow 120ms ease, transform 120ms ease,
+    border-color 120ms ease, background-color 120ms ease;
+}
+
+.obsidian-taskcard:not(.obsidian-taskcard-live):hover,
+.obsidian-taskcard-live > .obsidian-taskcard-hitbox:hover {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08), 0 5px 14px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
+  border-color: var(--background-modifier-border-hover);
+}
+
+/* Dark theme: shadows barely read on a dark page — elevate the surface
+   (lighter than the page) instead of relying on the border. */
+.theme-dark .obsidian-taskcard:not(.obsidian-taskcard-live),
+.theme-dark .obsidian-taskcard-live > .obsidian-taskcard-hitbox {
+  background-color: var(--background-secondary);
+  border-color: transparent;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+.theme-dark .obsidian-taskcard:not(.obsidian-taskcard-live):hover,
+.theme-dark .obsidian-taskcard-live > .obsidian-taskcard-hitbox:hover {
+  background-color: var(--background-secondary-alt);
+  border-color: transparent;
+}
+
+.theme-dark .obsidian-taskcard.mode-single-line:not(.obsidian-taskcard-live):active,
+.theme-dark .obsidian-taskcard-live.mode-single-line > .obsidian-taskcard-hitbox:active {
+  background-color: var(--background-modifier-active-hover);
+}
+
+/* A card with an open popover (project picker or the quick-add "+"
+   popover) must paint above its sibling cards. The hover lift's transform
+   turns the hitbox into a stacking context, capping every descendant
+   z-index inside the card — so the raise has to happen out here, on the
+   li that competes with the other cards. */
+li.obsidian-taskcard:has(.project-popup),
+li.obsidian-taskcard:has(.task-card-add-attribute-popover),
+li.obsidian-taskcard:has(.task-card-value-suggestions) {
+  position: relative;
+  z-index: 10;
+}
+
+/* Static query rows (hairline design, 2026-07-12): flat, no card chrome.
+   Must out-rank the .theme-dark elevation rules above, which otherwise
+   paint query rows --background-secondary + shadow in dark mode. */
+.block-language-taskcard li.obsidian-taskcard:not(.obsidian-taskcard-live),
+.theme-dark .block-language-taskcard li.obsidian-taskcard:not(.obsidian-taskcard-live) {
+  background-color: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 6px 2px;
+}
+
+.block-language-taskcard li.obsidian-taskcard:not(.obsidian-taskcard-live):hover,
+.theme-dark .block-language-taskcard li.obsidian-taskcard:not(.obsidian-taskcard-live):hover {
+  background-color: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  transform: none;
+}
+
+/* card-to-card gap is replaced by the hairline dividers inside query blocks */
+.block-language-taskcard li.task-list-item + li.obsidian-taskcard {
+  margin-top: 0;
+}
+
+/* ---- Live Preview embed framing (2026-07-14) ----
+   In LP the block sits inside .cm-embed-block, whose hover state paints a
+   1px outline and an absolute edit-block button (30×26px at top:4 right:4).
+   Inset the content so nothing touches that frame; reading mode is
+   unaffected. */
+.markdown-source-view.mod-cm6 .cm-embed-block.cm-lang-taskcard > .block-language-taskcard {
+  padding: 8px 14px 10px;
+}
+
+/* keep the header's top-right (the count) clear of the edit-block button */
+.markdown-source-view.mod-cm6 .cm-embed-block.cm-lang-taskcard .query-header {
+  padding-right: 24px;
+}
+
+/* ---- end card stacking & elevation ---- */
+
+.obsidian-taskcard-live .task-card-content {
+  padding-left: 0;
+}
+
+/* ---- jump-to-task flash: accent wash with a lingering left rail ----
+   Obsidian's native rule is `.is-flashing { background-color:
+   var(--text-highlight-bg) !important; ... }` — an !important declaration
+   outranks keyframe animations, so the yellow has to be neutralized with an
+   !important of our own and the wash painted on pseudo-elements instead.
+   Where the class lands (verified via CDP, Obsidian 1.12):
+   - editor (LP/source): a text span inside the .cm-line (editor.addHighlights),
+     so the line-level treatment hangs off `.cm-line:has(...)`;
+   - reading mode: the section wrapper (div.el-p / div.el-ul), never the
+     rendered task card itself — so there is no card-specific flash path. */
+
+body {
+  --taskcard-flash-wash-color: color-mix(in srgb, var(--interactive-accent) 14%, transparent);
+}
+
+body.theme-dark {
+  /* low-alpha accent barely reads on a dark page — pump it up */
+  --taskcard-flash-wash-color: color-mix(in srgb, var(--interactive-accent) 24%, transparent);
+}
+
+body .is-flashing {
+  background-color: transparent !important;
+}
+
+/* flash host: the whole editor line, or the reading-mode section block */
+.markdown-source-view .cm-line:has(.is-flashing),
+.markdown-preview-view .is-flashing {
+  position: relative;
+}
+
+.markdown-source-view .cm-line:has(.is-flashing)::after,
+.markdown-preview-view .is-flashing::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-s);
+  pointer-events: none;
+  animation: taskcard-flash-wash 2.8s ease-out forwards;
+}
+
+.markdown-source-view .cm-line:has(.is-flashing)::before,
+.markdown-preview-view .is-flashing::before {
+  content: '';
+  position: absolute;
+  left: -2px;
+  top: 12%;
+  bottom: 12%;
+  width: 3px;
+  border-radius: 3px;
+  background: var(--interactive-accent);
+  transform-origin: top;
+  animation: taskcard-flash-rail 3.2s ease-out forwards;
+  pointer-events: none;
+}
+
+@keyframes taskcard-flash-wash {
+  0%,
+  30% {
+    background-color: var(--taskcard-flash-wash-color);
+  }
+
+  100% {
+    background-color: transparent;
+  }
+}
+
+@keyframes taskcard-flash-rail {
+  0% {
+    transform: scaleY(0);
+    opacity: 1;
+  }
+
+  14% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+
+  70% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+
+  100% {
+    transform: scaleY(1);
+    opacity: 0;
+  }
+}
+
+/* ---- end jump-to-task flash ---- */
 
 .obsidian-taskcard-list-item {
   position: relative;
+  list-style: none;
   padding: 0;
   margin: 0;
   font: inherit;
-  cursor: pointer;
   outline: inherit;
   background-color: inherit !important;
 }
@@ -68,6 +369,20 @@
   justify-content: space-between; /* Align the two main containers */
   width: 100%;
   box-shadow: none;
+}
+
+.task-card-checkbox {
+  /* stays in the middle */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Obsidian's .task-list-item-checkbox carries a baseline offset
+   (position: relative; top: ~2.7px) meant for plain reading-view lists;
+   inside the card's flex/grid centering it just skews the checkbox low. */
+li.obsidian-taskcard input[type='checkbox'].task-list-item-checkbox {
+  top: 0;
 }
 
 
@@ -83,6 +398,7 @@
   flex-direction: row;
   align-items: center; /* Vertically center the children */
   align-self: center;
+  gap: 6px; /* chips carry no margins of their own (chip-polish) */
 }
 
 .task-card-checkbox-wrapper {
@@ -90,6 +406,10 @@
   grid-row: 1;
   display: flex;
   align-items: center;
+  /* pin to the first text line: one line-box tall, centered within it,
+     so the checkbox stays on line 1 even when the content wraps */
+  align-self: start;
+  height: calc(var(--line-height-normal) * 1em);
   /* margin-right: 4px; */
 }
 
@@ -115,37 +435,48 @@
 .task-card-menu-button.mode-multi-line {
   grid-column: 3;
   grid-row: 1;
+  /* don't let the button inflate row 1 past the text line height,
+     which would re-center the content line lower in the row; sized on the
+     note font (not the button's smaller UI font) so the icon centers on
+     the same axis as the content text line */
+  align-self: start;
+  height: calc(var(--line-height-normal) * var(--font-text-size));
+  /* same box as .task-card-button (the bottom-bar shrink toggle), flush
+     against the card's padding edge, so both right-corner icons sit on
+     one vertical axis */
+  width: calc(var(--icon-xs) + 10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .task-card-attribute-bottom-bar {
   display: flex; /* Use Flexbox layout */
-  align-items: center; /* Center children vertically */
+  align-items: flex-start; /* Keep controls pinned to the first chip row */
   justify-content: space-between; /* Align the first 3 elements to the left and the button to the right */
   width: 100%;
   flex-direction: row; /* Not necessary, as 'row' is the default value, but can be included for clarity */
+  /* on the bar, not the left container, so the right-side toggle button
+     centers on the chip row instead of floating high in a taller bar */
+  margin-top: 6px;
 }
 
 .task-card-attribute-bottom-bar-left {
   display: flex; /* Enables Flexbox for the left-aligned elements */
   align-items: center;  /* Center children vertically */
-  overflow: hidden; /* Hide the overflow */
+  flex-wrap: wrap; /* a full bar wraps; chips never shrink-clip (chip-polish) */
   flex-grow: 1; /* Takes up remaining left space */
+  gap: 4px 6px; /* one rhythm for every chip; chips carry no margins */
 }
 
 .task-card-attribute-bottom-bar-right {
   display: flex;
   align-items: center;
   margin-left: calc(0.1 * var(--list-indent));
-}
-
-.task-card-attribute-separator {
-  flex-shrink: 0; /* Prevents shrinking */
-  margin: 0 3px 0 2px;
-  margin-top: 3px;
-  border-left: 1px solid var(--interactive-hover);
-  height: 13px;
-  align-items: center;
-  align-self: center;
+  /* optical alignment: overhang by the icon button's internal padding
+     ((box - icon) / 2) so the icon box, not the hitbox, sits flush with
+     the card's content edge */
+  margin-right: -5px;
 }
 
 .task-card-icon {
@@ -185,4 +516,244 @@
 
 .task-card-menu-button:active svg {
   color: var(--icon-color-active);
+}
+
+.task-card-add-attribute {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.task-card-plus-button {
+  width: 21px;
+  height: 21px;
+  min-width: 21px;
+  min-height: 21px;
+  border-radius: 999px;
+  color: var(--tag-color);
+  background-color: var(--tag-background);
+}
+
+.task-card-plus-button:hover {
+  background-color: var(--tag-background-hover);
+}
+
+.task-card-add-attribute-button {
+  flex-shrink: 0;
+}
+
+.task-card-add-attribute-button > svg {
+  transform: translateY(var(--taskcard-add-attribute-plus-offset-y));
+}
+
+.task-card-add-attribute-popover {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  min-width: 180px;
+  padding: 5px;
+  overflow: hidden;
+  background-color: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-m);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.15);
+  z-index: 10;
+}
+
+.task-card-add-attribute-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.task-card-add-attribute-item + .task-card-add-attribute-item {
+  margin-top: 2px;
+}
+
+.task-card-add-attribute-row,
+.task-card-add-attribute-submenu-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  box-sizing: border-box;
+  border: none;
+  border-radius: 7px;
+  box-shadow: none !important;
+  background: none;
+  color: var(--text-normal);
+  font-size: var(--font-ui-small);
+  text-align: left;
+  cursor: pointer;
+}
+
+.task-card-add-attribute-row:hover,
+.task-card-add-attribute-submenu-row:hover {
+  background-color: var(--background-modifier-hover);
+}
+
+.task-card-add-attribute-submenu {
+  margin: 2px 0 2px 12px;
+  padding-left: 4px;
+}
+
+.task-card-add-attribute-icon {
+  flex-shrink: 0;
+}
+
+.taskcard-quick-add-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.taskcard-quick-add-subtitle {
+  margin: -6px 0 0;
+  color: var(--text-muted);
+  font-size: var(--font-ui-small);
+}
+
+.taskcard-quick-add-editor {
+  position: relative;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-m);
+  background: var(--background-primary);
+  min-height: 104px;
+  overflow: hidden;
+}
+
+.taskcard-quick-add-backdrop,
+.taskcard-quick-add-input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 104px;
+  margin: 0;
+  padding: 12px 14px;
+  font: var(--font-ui-medium);
+  line-height: 1.55;
+  white-space: pre-wrap;
+  overflow: auto;
+}
+
+.taskcard-quick-add-backdrop {
+  color: var(--text-normal);
+  pointer-events: none;
+}
+
+.taskcard-quick-add-input {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  outline: none;
+  resize: vertical;
+  background: transparent;
+  color: transparent;
+  caret-color: var(--text-normal);
+}
+
+.taskcard-quick-add-highlight {
+  border-radius: 6px;
+  padding: 1px 0;
+}
+
+.taskcard-quick-add-token-due.taskcard-quick-add-highlight,
+.taskcard-quick-add-chip.taskcard-quick-add-token-due {
+  background: color-mix(in srgb, var(--color-accent) 14%, transparent);
+}
+
+.taskcard-quick-add-token-priority.taskcard-quick-add-highlight,
+.taskcard-quick-add-chip.taskcard-quick-add-token-priority {
+  background: color-mix(in srgb, var(--color-red) 16%, transparent);
+}
+
+.taskcard-quick-add-token-label.taskcard-quick-add-highlight,
+.taskcard-quick-add-chip.taskcard-quick-add-token-label {
+  background: color-mix(in srgb, var(--tag-background) 88%, white 12%);
+}
+
+.taskcard-quick-add-token-project.taskcard-quick-add-highlight,
+.taskcard-quick-add-chip.taskcard-quick-add-token-project {
+  background: color-mix(in srgb, var(--color-cyan) 14%, transparent);
+}
+
+.taskcard-quick-add-token-duration.taskcard-quick-add-highlight,
+.taskcard-quick-add-token-repeat.taskcard-quick-add-highlight,
+.taskcard-quick-add-chip.taskcard-quick-add-token-duration,
+.taskcard-quick-add-chip.taskcard-quick-add-token-repeat {
+  background: color-mix(in srgb, var(--background-modifier-border) 70%, transparent);
+}
+
+.taskcard-quick-add-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.taskcard-quick-add-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 21px;
+  padding: 0 8px;
+  border-radius: 999px;
+  color: var(--text-normal);
+  font-size: var(--font-ui-smaller);
+}
+
+.taskcard-quick-add-chip-icon {
+  display: inline-flex;
+  align-items: center;
+  width: 14px;
+  height: 14px;
+}
+
+.taskcard-quick-add-chip-remove {
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+  padding: 0;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.taskcard-quick-add-chip-remove:hover {
+  color: var(--text-normal);
+}
+
+.taskcard-quick-add-preview {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-s);
+  background: var(--background-secondary);
+  color: var(--text-faint);
+  font-size: var(--font-ui-smaller);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.taskcard-quick-add-footer {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.taskcard-quick-add-target {
+  flex: 1;
+}
+
+.taskcard-quick-add-target-label {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--text-muted);
+  font-size: var(--font-ui-small);
+}
+
+.taskcard-quick-add-target-value {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--text-normal);
+  font-size: var(--font-ui-smaller);
+  word-break: break-word;
 }

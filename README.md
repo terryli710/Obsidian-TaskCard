@@ -1,164 +1,99 @@
-# Obsidian-TaskCard
+# TaskCard
 
+**Interactive task cards for Obsidian — stored as plain markdown.**
 
+TaskCard turns any tagged markdown task into an interactive card with priorities, due dates, projects, labels, durations, and recurrence — plus queryable task lists, an Eisenhower matrix, and two-way Google Calendar sync. Everything is saved in your notes as readable text.
 
-## Table of Contents
-- [Obsidian-TaskCard](#obsidian-taskcard)
-  - [Table of Contents](#table-of-contents)
-  - [Highlights](#highlights)
-  - [Features](#features)
-  - [Examples](#examples)
-    - [Usage Preview](#usage-preview)
-    - [Add a task](#add-a-task)
-    - [Edit a task](#edit-a-task)
-    - [Query](#query)
-  - [Usage](#usage)
-    - [Task Creation](#task-creation)
-      - [Create a task](#create-a-task)
-      - [Add normal attributes to a task](#add-normal-attributes-to-a-task)
-      - [Add special attributes to a task](#add-special-attributes-to-a-task)
-    - [Task Modification](#task-modification)
-    - [Create a query](#create-a-query)
-  - [Installation](#installation)
-    - [Obsidian Plugins](#obsidian-plugins)
-    - [Manual](#manual)
-    - [Beta Testing](#beta-testing)
-  - [License](#license)
-  - [Frequently Asked Questions](#frequently-asked-questions)
-    - [1. Why do some user interface elements appear incorrect? What steps can be taken to resolve this?](#1-why-do-some-user-interface-elements-appear-incorrect-what-steps-can-be-taken-to-resolve-this)
+![Create a task and complete it as a card](assets/Quick%20Start.gif)
 
-## Highlights
+## Plain text first
 
-Obsidian-TaskCard is an Obsidian plugin designed to revolutionize your task management experience within Obsidian. It offers a visually appealing and efficient way to organize and manage your tasks. With two distinct display modes and a plethora of features like tags, projects, and descriptions, Obsidian-TaskCard turns your Obsidian vault into a powerful task management tool.
+A TaskCard task is an ordinary markdown task with visible, human-readable fields:
 
-## Features
-
-- **Intuitive and easy-to-use**: the plugin doesn't deviate you from <u>*normal markdown task workflow*</u>. You can create, modify, delete your tasks very similarly when you are using pure markdown in Obsidian. Just by adding a tag (indicator tag in the settings) you can turn your tasks into a task card, which supports two display modes and that allows you to see and edit all attributes of a task, such as the project, schedule date, and description.
-
-- **Two Display Modes**: Choose between two display modes for your tasks.
-    - **Preview Mode**: Designed for quick browsing, this mode displays tasks at the same height as a normal markdown task, showing only the most essential information.
-    - **Detailed Mode**: This mode provides a comprehensive task card that allows you to see and edit all attributes of a task, such as the project, schedule date, and description.
-
-- **Schedule Date**: Add a schedule date to your tasks to indicate when the task is schedule.
-
-- **Tags and Projects**: Easily categorize your tasks with tags and associate them with specific projects.
-  
-- **Task Descriptions**: Add detailed descriptions to your tasks to capture additional information and context. You can also use the description to create sub tasks, the same way you do in normal markdown. The task card will track the progress of the sub tasks.
-
-
-## Examples
-
-### Usage Preview
-
-
-
-![quick-start](assets/Quick%20Start.gif)
-
-### Add a task
-
-![add-a-task](assets/Add%20A%20Task.gif)
-
-### Edit a task
-
-![edit-a-task](assets/Modify%20A%20Task.gif)
-
-### Query
-
-![query](assets/Add%20A%20Query.gif)
-
-
-## Usage
-
-### Task Creation
-
-Attributes | Addition | Example |
---- | --- | ---
-Content | Task in markdown | `- [ ] some content` |
-Tag | Tag in markdown | `- [ ] some content #tag` |
-Description | Description in markdown (change line + indent) | `- [ ] some content \n    - some description` |
-Schedule Date | Special attribute: `schedule` | `%%* schedule: 2021-01-01 *%%` |
-Project | Special attribute: `project` | `%%* project: project name *%%` |
-
-#### Create a task 
-- Create a task in the normal way by typing `- [ ] some content`;
-- To make it recognizable as a task card, add a tag (indicator tag in the settings, default to "`#TaskCard`") to the task.
-
-#### Add normal attributes to a task
-Some attributes are native for a markdown task, we can add them to the task in the same way as normal markdown.
-- Tags: add tags in the content. e.g. `- [ ] some content #tag`;
-- Description: Add description to the task in the same way as normal markdown. e.g.
 ```markdown
-- [ ] some content
-  - some description
-  - [ ] sub task
+- [ ] Book flights to Tokyo #travel #TaskCard [priority:: high] [due:: 2026-07-18] [project:: Japan Trip] ^tc-b3xr9d
 ```
 
-#### Add special attributes to a task
-Some added ingredients for a task card, we can add them in a special way: `%%* key: value *%%`. this is will show nicely in the editing mode of obsidian, while invisible in the preview mode.
-- Schedule Date: Add a schedule date to the task. e.g. `%%* schedule: 2021-01-01 *%%`
-- Project: Add a project to the task. e.g. `%%* project: project name *%%`
+- **Readable anywhere.** GitHub, VS Code, a phone's text editor — the task makes sense without the plugin.
+- **Nothing hidden in your notes.** No invisible JSON, no proprietary blobs. Uninstall TaskCard and your files are exactly what you see.
+- **Built from native pieces.** Fields use Dataview's inline-field syntax, labels are real `#tags`, and each task's identity is a native block id (`^tc-…`) that you can link to and that survives moving the line around.
+- **Plays well with others.** Dataview indexes every field natively, and tasks written by the [Tasks](https://github.com/obsidian-tasks-group/obsidian-tasks) plugin (emoji or dataview flavor) are recognized as-is — they keep their original dialect until you edit them through a card.
 
-### Task Modification
-- Tasks are shown in two view: preview and detailed views. Most attributes are editable in the detailed view.
-- Add `description`, `schedule`, and `project`: click the ⋮ button in the bottom right corner.
-- Add `tags`: click the + button.
-- Add `priority`: right click the checkbox.
-- Modify `description`, `schedule`: click on them.
-- Modify `tags`: right click on the tag and select `edit`.
-- Modify `project`: click on the project color dot.
-- Modify `priority`: right click on the checkbox.
+## Capture tasks fast
 
-### Create a query
-- Create a query by inserting a code block of `taskcard`.
-    ```markdown
-    >>> ```taskcard
-    >>> 
-    >>> ```
-    ```
-    - You don't have to create anything, the plugin will parse it and display the query for you.
-- Use command (⌘ + p) - "Task Card: Add Query". It will automatically add the query code block at your cursor position.
+Write a markdown task, add the indicator tag (default `#TaskCard`), and it becomes a card in reading view:
 
+![Adding a task](assets/Add%20A%20Task.gif)
+
+- **Autosuggest while you type.** Typing `[` after a task offers the available fields; each field then suggests values — including natural-language dates like `tomorrow` or `next fri 2pm`, which are resolved and written as real dates.
+- **Quick add.** The *Quick add task* command opens a one-line capture box that understands shorthand: `Review PR tomorrow 3pm for 1h !high #code @Work every week`.
+- **Live Preview stays tidy.** In editing mode, field syntax is styled into compact chips instead of raw brackets, so metadata doesn't drown the task text.
+
+## Edit everything in place
+
+Cards have two display modes: a one-line preview that sits at normal task height, and a detailed mode for working with all attributes. Click a preview card to expand it, then click any attribute to edit it in place — content, description, due, scheduled time, duration, recurrence, labels, project, priority:
+
+![Editing a task card](assets/Modify%20A%20Task.gif)
+
+- Indented lines under a task become its **description**; child checkboxes become **subtasks**, and the card tracks their progress.
+- Edits patch only the task's own lines in the file — TaskCard never rewrites your whole note.
+- Completing a **recurring task** (`[repeat:: every week]`, using Tasks' recurrence grammar) completes it in place and inserts the next occurrence on the line below.
+
+## Query your tasks anywhere
+
+Drop a `taskcard` code block into any note to get a live task list. A visual editor lets you filter by project, label, priority, completion, schedule window, or file path — no query language to learn:
+
+![Building a query](assets/Add%20A%20Query.gif)
+
+````markdown
+```taskcard
+project: ["Japan Trip"]
+completed: [false]
+editMode: false
+```
+````
+
+Tasks can be completed right from the results, and clicking a result jumps to its source line. Queries need the [Dataview](https://github.com/blacksmithgu/obsidian-dataview) plugin enabled — it powers the task index.
+
+## Plan your week with the matrix
+
+Add `display: "matrix"` to a query block to lay the results out as an Eisenhower matrix — importance from priority, urgency from due dates:
+
+![Weekly review with the Eisenhower matrix](assets/Plan%20Your%20Week.gif)
+
+## Two-way Google Calendar sync
+
+Link tasks to Google Calendar and they stay in sync in both directions (desktop only):
+
+- Scheduled tasks are pushed as events, durations included.
+- Reschedules and resizes made in Google Calendar flow back into the task's `[scheduled::]` and `[duration::]` fields.
+- Conflicts resolve in favor of your notes; events deleted remotely are unlinked cleanly.
+- A guided in-app wizard walks through the one-time OAuth setup with your own credentials.
+
+Setup and behavior details: [Google Calendar sync guide](docs/google-calendar-sync-setup.md).
 
 ## Installation
 
-### Obsidian Plugins
+TaskCard is not yet in the community plugin market.
 
-The plugin will be available on Obsidian's plugin market when it reaches version 1.0.0.
+**With [BRAT](https://tfthacker.com/BRAT)** (recommended): add `terryli710/Obsidian-TaskCard` as a beta plugin.
 
-### Manual
+**Manual:** download `plugin-release.zip` from the [latest release](https://github.com/terryli710/Obsidian-TaskCard/releases), unzip it, and place the folder in your vault's `.obsidian/plugins/` directory.
 
-1. Go to the [releases page](https://github.com/terryli710/Obsidian-TaskCard/releases).
-2. Select the latest stable release.
-3. Download the `plugin-release.zip` file.
-4. Unzip the downloaded file.
-5. Place the unzipped folder under your Obsidian plugins folder.
+## FAQ
 
-### Beta Testing
+**Do I need Dataview?**
+Only for query blocks and the matrix — the task index is built on it. Cards themselves render without it.
 
-To test some of the features in the pre-release versions, you can use [this plugin](https://tfthacker.com/BRAT). After installation, follow these steps:
+**Does it work on mobile?**
+Cards and queries work on mobile; Google Calendar sync is desktop-only (it needs a local OAuth callback server).
 
-1. In the plugin setting, click on `Add Beta plugin with frozen version`.
-2. In the popup modal, input the following:
+**What about my existing tasks?**
+Tasks in the Tasks plugin's emoji or dataview format just need the indicator tag to render as cards. Tasks from TaskCard versions before the plain-text format can be converted vault-wide with the *Migrate Legacy Tasks to the New Format* command.
 
-```
-url: https://github.com/terryli710/Obsidian-TaskCard
-version: x.x.x
-```
-
-<!-- ## Contributing
-
-Contributions are welcome! Please read the [contributing guidelines](CONTRIBUTING.md) to get started. -->
+**A card looks wrong in my theme.**
+Card styling aims to follow your theme's variables, but not every theme has been tested. Please [open an issue](https://github.com/terryli710/Obsidian-TaskCard/issues) with the theme name.
 
 ## License
 
-This project is licensed under the Apache License - see the [LICENSE.md](LICENSE.md) file for details.
-
-
-## Frequently Asked Questions
-
-### 1. Why do some user interface elements appear incorrect? What steps can be taken to resolve this?
-- **Theme Compatibility**: Our plugin has not been exhaustively tested across all available themes. Therefore, compatibility issues related to the active theme could lead to the user interface not displaying as intended. To address this:
-  - Ensure your theme is up-to-date;
-  - Use the plugin settings to switch to a different theme for troubleshooting purposes.
-
-Should the issue persist, we welcome you to report it by opening an [issue](https://github.com/terryli710/Obsidian-TaskCard/issues) on our GitHub repository.
+[Apache 2.0](LICENSE)
