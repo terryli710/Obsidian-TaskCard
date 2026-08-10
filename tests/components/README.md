@@ -1,0 +1,9 @@
+# Svelte component tests
+
+All suites are jsdom (`/** @jest-environment jsdom */`) and use `./testUtils.ts` — **not** `@testing-library/svelte`, which is unusable here: it is ESM-only and `svelte-jester@3` refuses Svelte 4 in CJS-mode Jest, so `testUtils.loadSvelte()` compiles `.svelte` files on the fly (svelte.config.js preprocess → svelte/compiler → TS ESM→CJS) and `render`/`fireEvent`/`cleanup` re-implement the testing-library slice we need. testUtils also polyfills `setImmediate` (jsdom strips it; winston logger needs it).
+
+**Covered:** `CircularProgressBar`, `LinearProgressBar`, icons (`LucideIcon`, `Plus`, `AlertTriangle`), `Labels`, `Due` (non-interactive, pinned clock — only `Date` faked, timers left real for svelte's tick), `Duration` (static + interactive edit), `Project` (SettingStore set directly; Google Calendar API jest.mock'ed away), `Description` (interactive), plus smoke tests for `TaskCard`/`TaskItem` (real `ObsidianTask` + `ObsidianTaskSyncManager`, plugin stubbed to `taskFormatter`/`fileOperator`/`externalAPIManager`).
+
+**Skipped and why:** `Schedule`/`Content` (same patterns as Due/Description, lower marginal value), `LabelInput` (covered via Labels), `SyncLogos`/other icons (trivial), `QueryEditor`/`QueryDisplay`/`StaticTask*`/`selections/*`/`calendar` (need Dataview query results, `plugin.query`/cache, or `date-picker-svelte` context — too much plugin surface for jsdom).
+
+**Known component bugs found (documented in tests, not fixed):** `Duration.svelte` click handler is not gated on `interactive` (clicking a static duration chip throws — see Duration.test.ts header); `Description.svelte` non-interactive mode calls `taskSyncManager.getTaskCardStatus` unguarded (see Description.test.ts header); `AlertTriangle.svelte` default ariaLabel is a copy-paste leftover.

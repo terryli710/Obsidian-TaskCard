@@ -2,7 +2,7 @@
 
 **Interactive task cards for Obsidian — stored as plain markdown.**
 
-TaskCard turns any tagged markdown task into an interactive card with priorities, due dates, projects, labels, durations, and recurrence — plus queryable task lists, an Eisenhower matrix, and two-way Google Calendar sync. Everything is saved in your notes as readable text.
+TaskCard turns any tagged markdown task into an interactive card with priorities, due dates, projects, labels, durations, and recurrence — plus queryable task lists and an Eisenhower matrix. Everything is saved in your notes as readable text.
 
 ![Create a task and complete it as a card](assets/Quick%20Start.gif)
 
@@ -61,17 +61,6 @@ Add `display: "matrix"` to a query block to lay the results out as an Eisenhower
 
 ![Weekly review with the Eisenhower matrix](assets/Plan%20Your%20Week.gif)
 
-## Two-way Google Calendar sync
-
-Link tasks to Google Calendar and they stay in sync in both directions (desktop only):
-
-- Scheduled tasks are pushed as events, durations included.
-- Reschedules and resizes made in Google Calendar flow back into the task's `[scheduled::]` and `[duration::]` fields.
-- Conflicts resolve in favor of your notes; events deleted remotely are unlinked cleanly.
-- A guided in-app wizard walks through the one-time OAuth setup with your own credentials.
-
-Setup and behavior details: [Google Calendar sync guide](docs/google-calendar-sync-setup.md).
-
 ## Installation
 
 TaskCard is not yet in the community plugin market.
@@ -86,7 +75,7 @@ TaskCard is not yet in the community plugin market.
 Only for query blocks and the matrix — the task index is built on it. Cards themselves render without it.
 
 **Does it work on mobile?**
-Cards and queries work on mobile; Google Calendar sync is desktop-only (it needs a local OAuth callback server).
+Yes — cards and queries both work on mobile.
 
 **What about my existing tasks?**
 Tasks in the Tasks plugin's emoji or dataview format just need the indicator tag to render as cards. Tasks from TaskCard versions before the plain-text format can be converted vault-wide with the *Migrate Legacy Tasks to the New Format* command.

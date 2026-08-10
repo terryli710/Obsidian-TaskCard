@@ -1,0 +1,25 @@
+# npm
+/node_modules
+
+# python tooling (demo recorder)
+__pycache__/
+
+# vscode
+.vscode
+
+# intellJ
+.idea
+
+# Don't include the compiled main.js file in the repo.
+# They should be uploaded to GitHub releases instead.
+main.js
+
+# Exclude sourcemaps
+*.map
+
+# obsidian
+data.json
+userData
+
+# Exclude macOS Finder (System Explorer) View States
+.DS_Store

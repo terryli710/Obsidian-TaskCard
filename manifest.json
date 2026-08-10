@@ -1,11 +1,10 @@
 {
   "author": "Terry Li",
-  "description": "Task formatter with card view.",
-  "id": "obsidian-taskcard",
+  "description": "Turn tagged Markdown tasks into interactive cards with due dates, projects, labels, and recurrence. Query them as lists or an Eisenhower matrix, and sync them two-way with Google Calendar.",
+  "id": "task-card",
   "isDesktopOnly": false,
-  "minAppVersion": "0.3.0",
+  "minAppVersion": "1.8.0",
   "name": "Task Card",
-  "version": "0.4.0",
-  "authorUrl": "https://github.com/terryli710",
-  "fundingUrl": "https://github.com/sponsors/terryli710"
+  "version": "0.5.0",
+  "authorUrl": "https://github.com/terryli710"
 }

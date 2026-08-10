@@ -1,0 +1,334 @@
+import { App, Plugin } from 'obsidian';
+import type { Editor, EditorPosition, PluginManifest, Workspace, WorkspaceLeaf } from 'obsidian';
+import type { TaskCardSettings } from './settings';
+import { DefaultSettings, SettingStore, SettingsTab } from './settings';
+import { logger } from './utils/log';
+import AttributeSuggest from './autoSuggestions/EditorSuggestions';
+import { Project, ProjectModule } from './taskModule/project';
+import { TaskParser } from './taskModule/taskParser';
+import { TaskValidator } from './taskModule/taskValidator';
+import { StaticTaskListRenderManager, TaskCardRenderManager } from './renderer/index';
+import { FileOperator } from './renderer/fileOperator';
+import { TaskFormatter } from './taskModule/taskFormatter';
+import { TaskMonitor } from './taskModule/taskMonitor';
+import { TaskCardCache } from './query';
+import { CreateProjectModal } from './modal/createProjectModal';
+import { TaskChangeAPI, TaskChangeEvent, TaskChangeType, getUpdatedProperties } from './taskModule/taskAPI';
+import { CodeBlockProcessor } from './renderer/StaticTaskListRenderer';
+import type { SyncMappings } from './api/syncTypes';
+import { ObsidianTask } from './taskModule/task';
+import { Notice } from 'obsidian';
+import _ from 'lodash';
+import { createTaskCardLivePreviewConcealExtension } from './editor';
+import { QuickAddTaskModal } from './modal/quickAddTaskModal';
+import { getAPI } from 'obsidian-dataview';
+
+
+export default class TaskCardPlugin extends Plugin {
+  public settings: TaskCardSettings;
+  public projectModule: ProjectModule;
+  public taskParser: TaskParser;
+  public taskFormatter: TaskFormatter;
+  public taskValidator: TaskValidator;
+  public taskCardRenderManager: TaskCardRenderManager;
+  public staticTaskListRenderManager: StaticTaskListRenderManager;
+  public fileOperator: FileOperator;
+  public taskMonitor: TaskMonitor;
+  public taskChangeAPI: TaskChangeAPI;
+  public cache: TaskCardCache;
+  // Calendar sync is suspended in this release: no provider is constructed, so
+  // these stay null and every sync notification below no-ops. They remain
+  // declared (loosely typed) so the dev-only provider modules and the tests
+  // that inject a fake manager still compile.
+  public externalAPIManager: any = null;
+  public googleCalendarPull: any = null;
+  public quickAddLastTargetPath: string | null = null;
+
+  private static instance: TaskCardPlugin;
+
+  constructor(app: App, pluginManifest: PluginManifest) {
+    super(app, pluginManifest);
+    SettingStore.subscribe((settings) => {
+      // logger.info(`Settings updated: ${JSON.stringify(settings)}`);
+      this.settings = settings;
+    });
+    this.projectModule = new ProjectModule();
+    this.taskParser = new TaskParser(SettingStore, this.projectModule);
+    this.taskFormatter = new TaskFormatter(SettingStore);
+    this.taskValidator = new TaskValidator(SettingStore);
+    this.taskCardRenderManager = new TaskCardRenderManager(this);
+    this.fileOperator = new FileOperator(this, this.app);
+    this.taskMonitor = new TaskMonitor(this, this.app, SettingStore);
+    this.staticTaskListRenderManager = new StaticTaskListRenderManager(this);
+    this.taskChangeAPI = new TaskChangeAPI();
+
+    function printChangeListener(event: TaskChangeEvent): void {
+      if (event.type === TaskChangeType.UPDATE) {
+        const updatedProperties = getUpdatedProperties(event.previousState, event.currentState);
+        logger.info(`Updated properties: ${JSON.stringify(updatedProperties)}`);
+      } else {
+        logger.info(`Received Task Change Event`, event);
+      }
+    }
+    this.taskChangeAPI.registerListener(printChangeListener);
+  
+    this.cache = new TaskCardCache(this);
+  }
+
+  public static getInstance(): TaskCardPlugin {
+		return TaskCardPlugin.instance;
+	}
+  
+  async loadSettings() {
+    // Load saved settings from storage
+    const loadedSettings = await this.loadData();
+  
+    // Initialize settings with default values
+    let initialSettings = JSON.parse(JSON.stringify(DefaultSettings));
+  
+    // Deep merge the objects
+    const mergedSettings = _.merge({}, initialSettings, loadedSettings);
+  
+    // Update the settings in your store
+    SettingStore.update(() => mergedSettings);
+  }
+  
+
+  async writeSettings(
+    changeOpts: (settings: TaskCardSettings) => void
+  ): Promise<void> {
+    SettingStore.update((old) => {
+      changeOpts(old);
+      return old;
+    });
+    await this.saveData(this.settings);
+  }
+
+  // v2 keeps external sync mappings out of the note: they live in the plugin
+  // data store keyed by the task's block id (docs/format-spec.md § Machine tier)
+
+  getSyncMappings(taskId: string): SyncMappings | undefined {
+    return this.settings.userMetadata.syncMappingsById?.[taskId];
+  }
+
+  async storeSyncMappings(taskId: string, syncMappings: SyncMappings): Promise<void> {
+    if (!taskId || !syncMappings || Object.keys(syncMappings).length === 0) return;
+    await this.writeSettings((old) => {
+      old.userMetadata.syncMappingsById = {
+        ...(old.userMetadata.syncMappingsById || {}),
+        [taskId]: syncMappings
+      };
+    });
+  }
+
+  async removeSyncMappings(taskId: string): Promise<void> {
+    if (!taskId || !this.settings.userMetadata.syncMappingsById?.[taskId]) return;
+    await this.writeSettings((old) => {
+      delete old.userMetadata.syncMappingsById[taskId];
+    });
+  }
+
+  /** Attach stored sync mappings to a task parsed from a v2 line. */
+  hydrateSyncMappings(task: ObsidianTask): void {
+    if (task.metadata.syncMappings) return;
+    const stored = this.getSyncMappings(task.id);
+    if (stored) task.metadata.syncMappings = stored;
+  }
+
+  registerEvents() {
+    this.registerEvent(
+      this.app.workspace.on(
+        'layout-change', 
+        this.taskMonitor.layoutChangeHandler.bind(this.taskMonitor)
+        )
+    );
+
+    // @ts-ignore
+    this.registerEvent(this.app.metadataCache.on("dataview:metadata-change",
+    (type, file, oldPath?) => { 
+      // update cache tasks
+      this.cache.taskCache.refreshTasksByFileList([file.path]);
+    }));
+
+    // this.registerEvent(this.app.workspace.on('file-open', () => logger.debug('file-open')));
+    // this.registerEvent(this.app.workspace.on('layout-change', () => logger.debug('layout-change')));
+    // this.registerEvent(this.app.workspace.on('window-open', () => logger.debug('window-open')));
+    // this.registerEvent(this.app.workspace.on('window-close', () => logger.debug('window-close')));4
+    // this.registerEvent(this.app.workspace.on('active-leaf-change', () => logger.debug('active-leaf-change')));
+
+  }
+
+  registerCommands() {
+    // v2: display mode is a plugin setting, not per-line metadata in notes
+    this.addCommand({
+      id: 'task-card-preview-display-mode',
+      name: 'Preview Display Mode',
+      callback: () => {
+        this.writeSettings((old) => (old.displaySettings.defaultMode = 'single-line'));
+      }
+    })
+
+    this.addCommand({
+      id: 'task-card-detailed-display-mode',
+      name: 'Detailed Display Mode',
+      callback: () => {
+        this.writeSettings((old) => (old.displaySettings.defaultMode = 'multi-line'));
+      }
+    })
+
+    this.addCommand({
+      id: 'task-card-migrate-legacy-tasks',
+      name: 'Migrate Legacy Tasks to the New Format',
+      callback: async () => {
+        const migratedCount = await this.taskMonitor.migrateLegacyTasksInVault(
+          this.app.vault
+        );
+        new Notice(
+          `[TaskCard] Migrated ${migratedCount} legacy task${
+            migratedCount === 1 ? '' : 's'
+          } to the new format.`
+        );
+      }
+    })
+
+    this.addCommand({
+      id: 'task-card-add-query',
+      name: 'Add Query',
+      editorCallback: (editor: Editor) => {
+        editor.replaceRange(
+          `\n\`\`\`${this.settings.parsingSettings.blockLanguage}\n\`\`\``,
+          editor.getCursor()
+        )
+      }
+    })
+
+    this.addCommand({
+      id: 'task-card-add-task',
+      name: 'Add Task in a New Line',
+      editorCallback: (editor: Editor) => {
+        const editorPos: EditorPosition = editor.getCursor();
+        editor.replaceRange(
+          `\n- [ ]  #${this.settings.parsingSettings.indicatorTag}\n`,
+          editorPos
+        )
+        editor.setCursor(editor.getCursor().line + 1, 6)
+      }
+    })
+
+    this.addCommand({
+      id: 'task-card-quick-add-task',
+      name: 'Quick add task',
+      callback: () => {
+        new QuickAddTaskModal(this.app, this).open();
+      }
+    })
+
+    this.addCommand({
+      id: 'task-card-append-indicator-tag',
+      name: 'Append Indicator Tag',
+      editorCallback: (editor: Editor) => {
+        const editorPos: EditorPosition = editor.getCursor();
+        const currentLine = editor.getLine(editorPos.line);
+        editor.replaceRange(` #${this.settings.parsingSettings.indicatorTag}`, { line: editorPos.line, ch: currentLine.length });
+      }
+    })
+
+    // a command to pop up a modal to create a new project
+    this.addCommand({
+      id: 'task-card-create-project',
+      name: 'Create a New Project',
+      callback: () => {
+        const projectCreationModel = new CreateProjectModal(this.app, this.projectModule.addProject.bind(this.projectModule));
+        projectCreationModel.open();
+      }
+    })
+
+    // a command to append indicator tag to each of the selected line, if they are tasks (and not subtasks)
+    this.addCommand({
+      id: 'task-card-add-indicator-tag',
+      name: 'Add Indicator Tags to Selected Tasks',
+      editorCallback: (editor: Editor) => {
+        const selectionLines = editor.getSelection().split('\n');
+        let isTask: boolean = false;
+        let indentation: number = 0;
+        let prevIsTask: boolean = false;
+        let prevIndentation: number = 0;
+        let newLines: string[] = [];
+        for (let i = 0; i < selectionLines.length; i++) {
+          const line = selectionLines[i];
+          isTask = /^\-\s*\[[ \-\+\*]\]/.test(line.trim());
+          indentation = line.length - line.trimStart().length;
+          const isSubTask = prevIsTask && prevIndentation < indentation;
+          if (isTask && !isSubTask) {
+            // Append the indicator tag to the task and continue the loop instead of breaking it
+            newLines.push(line + ` #${this.settings.parsingSettings.indicatorTag}`);
+          } else {
+            // If it's not a task, or it's a subtask, just add the original line
+            newLines.push(line);
+          }
+          // Save the current task status and indentation for the next iteration
+          prevIsTask = isTask;
+          prevIndentation = indentation;
+        }
+        // After exiting the loop, we need to join the new lines and replace the editor's selection with the new string
+        const newSelection = newLines.join('\n');
+        editor.replaceSelection(newSelection);
+      },
+    });
+  }
+
+  registerPostProcessors() {
+    this.registerMarkdownPostProcessor(
+      this.taskCardRenderManager.getPostProcessor()
+    );
+
+  let taskCardMarkdownCodeBlockProcessor: CodeBlockProcessor;
+
+  const registerCodeBlockProcessor = () => {
+    if (taskCardMarkdownCodeBlockProcessor) return;
+    this.registerMarkdownCodeBlockProcessor('taskcard',
+      taskCardMarkdownCodeBlockProcessor = this.staticTaskListRenderManager.getCodeBlockProcessor()
+    );
+  };
+
+  const initializeCache = () => {
+    this.cache.taskCache.initializeAndRefreshAllTasks()
+      .catch((error) => logger.error('Initial task indexing failed:', error))
+      // register after the first fill so open query blocks render with data
+      .finally(registerCodeBlockProcessor);
+  };
+
+  // "dataview:index-ready" fires only once per Dataview load; when this plugin
+  // loads after Dataview is already indexed (e.g. plugin reload) the event
+  // never arrives, so the current index state must be checked directly.
+  if (getAPI(this.app)?.index?.initialized) {
+    initializeCache();
+  }
+
+  //@ts-ignore
+  this.registerEvent(this.app.metadataCache.on("dataview:index-ready", () => {
+    initializeCache();
+  }));
+
+  // Dataview missing or never ready: still render query blocks so they can
+  // show the Dataview guidance page.
+  setTimeout(registerCodeBlockProcessor, 3000);
+
+  }
+
+  async onload() {
+    await this.loadSettings();
+    this.projectModule.updateProjects(
+      this.settings.userMetadata.projects as Project[]
+    );
+    this.addSettingTab(new SettingsTab(this.app, this));
+    this.registerEditorExtension(createTaskCardLivePreviewConcealExtension());
+    this.registerEditorSuggest(new AttributeSuggest(this.app));
+    this.registerPostProcessors();
+    this.registerEvents();
+    this.registerCommands();
+    TaskCardPlugin.instance = this;
+
+    logger.info('Plugin loaded.');
+  }
+}
