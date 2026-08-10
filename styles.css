@@ -757,3 +757,54 @@ li.obsidian-taskcard input[type='checkbox'].task-list-item-checkbox {
   font-size: var(--font-ui-smaller);
   word-break: break-word;
 }
+
+/* Autosuggest rows and the mounted-card source hide.
+   These replace inline style assignments in EditorSuggestions.ts and
+   taskItemSvelteAdapter.ts (obsidianmd/no-static-styles-assignment): styling
+   belongs in CSS so themes and snippets can reach it. The only value still set
+   from code is a project's colour, passed in as a custom property. */
+
+.taskcard-suggest-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.taskcard-suggest-accent {
+  color: var(--text-accent);
+  font-weight: 600;
+}
+
+.taskcard-suggest-icon {
+  flex-shrink: 0;
+  color: var(--text-faint);
+}
+
+.taskcard-suggest-icon.taskcard-suggest-dot {
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background-color: var(--taskcard-suggest-dot-color, var(--text-faint));
+}
+
+.taskcard-suggest-main {
+  color: var(--text-normal);
+}
+
+.taskcard-suggest-hint {
+  color: var(--text-faint);
+  white-space: nowrap;
+}
+
+.taskcard-suggest-right {
+  margin-left: auto;
+  color: var(--text-faint);
+  white-space: nowrap;
+}
+
+/* The raw markdown list item stays in the DOM behind its mounted card so the
+   card can be unmounted cleanly; it is hidden rather than removed. */
+.obsidian-taskcard-source-hidden {
+  display: none;
+}

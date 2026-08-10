@@ -77,64 +77,50 @@ export default class AttributeSuggest extends EditorSuggest<SuggestInformation> 
       });
     }
 
+    // Presentation lives in styles.css under these classes; only the
+    // per-project dot colour is set from code, and it goes through a custom
+    // property rather than a direct style assignment.
     const row = el.createDiv({ cls: 'taskcard-suggest-row' });
-    row.style.display = 'flex';
-    row.style.alignItems = 'center';
-    row.style.gap = '0.5rem';
 
     if (
       (suggestion.kind === 'date-preview' || suggestion.kind === 'value-preview') &&
       suggestion.accentText
     ) {
-      const accent = row.createSpan({
+      row.createSpan({
         cls: 'taskcard-suggest-accent',
         text: suggestion.accentText
       });
-      accent.style.color = 'var(--text-accent)';
-      accent.style.fontWeight = '600';
       return;
     }
 
     const iconEl = row.createSpan({ cls: 'taskcard-suggest-icon' });
     if (suggestion.kind === 'field' && suggestion.key === 'project' && suggestion.color) {
-      iconEl.style.width = '0.5rem';
-      iconEl.style.height = '0.5rem';
-      iconEl.style.borderRadius = '999px';
-      iconEl.style.backgroundColor = suggestion.color;
-      iconEl.style.display = 'inline-block';
-      iconEl.style.flexShrink = '0';
+      iconEl.addClass('taskcard-suggest-dot');
+      iconEl.setCssProps({ '--taskcard-suggest-dot-color': suggestion.color });
     } else if (suggestion.icon) {
       setIcon(iconEl, suggestion.icon);
-      iconEl.style.color = 'var(--text-faint)';
-      iconEl.style.flexShrink = '0';
     }
 
-    const mainText = row.createSpan({
+    row.createSpan({
       cls: 'taskcard-suggest-main',
       text:
         suggestion.kind === 'field' && suggestion.sectionLabel
           ? `${suggestion.key}:: ${suggestion.displayText}`
           : suggestion.displayText
     });
-    mainText.style.color = 'var(--text-normal)';
 
     if (suggestion.hint) {
-      const hint = row.createSpan({
+      row.createSpan({
         cls: 'taskcard-suggest-hint',
         text: suggestion.hint
       });
-      hint.style.color = 'var(--text-faint)';
-      hint.style.whiteSpace = 'nowrap';
     }
 
     if (suggestion.rightText) {
-      const right = row.createSpan({
+      row.createSpan({
         cls: 'taskcard-suggest-right',
         text: suggestion.rightText
       });
-      right.style.marginLeft = 'auto';
-      right.style.color = 'var(--text-faint)';
-      right.style.whiteSpace = 'nowrap';
     }
   }
 

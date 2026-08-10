@@ -1,4 +1,5 @@
-import moment from 'moment';
+import { moment } from './obsidianMoment';
+import type { Moment } from './obsidianMoment';
 import type { Duration, ScheduleDate } from '../taskModule/task';
 
 export const RELATIVE_TIME_WINDOW_HOURS = 48;
@@ -16,13 +17,13 @@ export interface TemporalPresentation {
   tooltip: string;
 }
 
-function localMoment(value: ScheduleDate): moment.Moment {
+function localMoment(value: ScheduleDate): Moment {
   return value.time
     ? moment(`${value.date}T${value.time}`, 'YYYY-MM-DDTHH:mm', true)
     : moment(value.date, 'YYYY-MM-DD', true);
 }
 
-function formatAbsolute(value: ScheduleDate, now: moment.Moment): string {
+function formatAbsolute(value: ScheduleDate, now: Moment): string {
   const date = localMoment(value);
   const dateFormat = date.year() === now.year() ? 'ddd, MMM D' : 'ddd, MMM D, YYYY';
   return value.time
@@ -30,7 +31,7 @@ function formatAbsolute(value: ScheduleDate, now: moment.Moment): string {
     : date.format(dateFormat);
 }
 
-function formatDayResolution(value: ScheduleDate, now: moment.Moment): string {
+function formatDayResolution(value: ScheduleDate, now: Moment): string {
   const date = localMoment(value).startOf('day');
   const today = now.clone().startOf('day');
   const dayDifference = date.diff(today, 'days');
@@ -41,7 +42,7 @@ function formatDayResolution(value: ScheduleDate, now: moment.Moment): string {
   return date.year() === today.year() ? date.format('MMM D') : date.format('MMM D, YYYY');
 }
 
-function relativeDistance(target: moment.Moment, now: moment.Moment): string {
+function relativeDistance(target: Moment, now: Moment): string {
   const minutes = Math.abs(target.diff(now, 'minutes', true));
   if (minutes < 1) return 'now';
   if (minutes < 60) {
@@ -62,7 +63,7 @@ function relativeDistance(target: moment.Moment, now: moment.Moment): string {
 export function getTemporalPresentation(
   value: ScheduleDate,
   kind: TemporalKind,
-  now: moment.Moment = moment()
+  now: Moment = moment()
 ): TemporalPresentation {
   if (!value.time) {
     return {
@@ -97,7 +98,7 @@ export function getTemporalStatus(
   value: ScheduleDate | null | undefined,
   duration: Duration | null | undefined,
   completed: boolean,
-  now: moment.Moment = moment(),
+  now: Moment = moment(),
   upcomingMinutes = 15
 ): TemporalStatus {
   if (!value?.date) return null;

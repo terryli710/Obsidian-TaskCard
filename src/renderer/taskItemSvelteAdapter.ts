@@ -35,7 +35,7 @@ export class TaskItemSvelteAdapter extends MarkdownRenderChild {
     });
 
     // New element has been created right before the target element, now hide the target element
-    this.taskSync.taskItemEl.style.display = 'none';
+    this.taskSync.taskItemEl.addClass('obsidian-taskcard-source-hidden');
     // the card now covers for the raw item; drop the pre-mount visibility hide
     this.taskSync.taskItemEl.classList.remove('obsidian-taskcard-mount-pending');
   }
@@ -46,7 +46,7 @@ export class TaskItemSvelteAdapter extends MarkdownRenderChild {
       this.svelteComponent = null;
     }
     if (this.taskSync.taskItemEl) {
-      this.taskSync.taskItemEl.style.display = '';
+      this.taskSync.taskItemEl.removeClass('obsidian-taskcard-source-hidden');
       this.taskSync.taskItemEl.classList.remove('obsidian-taskcard-mount-pending');
     }
   }

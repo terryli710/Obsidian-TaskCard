@@ -1,5 +1,5 @@
 import { RRule } from 'rrule';
-import moment from 'moment';
+import { moment } from '../utils/obsidianMoment';
 import { ObsidianTask, ScheduleDate } from './task';
 import { mintTaskId } from './fieldSyntax';
 import type TaskCardPlugin from '..';

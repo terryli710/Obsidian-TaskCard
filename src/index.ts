@@ -161,7 +161,7 @@ export default class TaskCardPlugin extends Plugin {
   registerCommands() {
     // v2: display mode is a plugin setting, not per-line metadata in notes
     this.addCommand({
-      id: 'task-card-preview-display-mode',
+      id: 'preview-display-mode',
       name: 'Preview Display Mode',
       callback: () => {
         this.writeSettings((old) => (old.displaySettings.defaultMode = 'single-line'));
@@ -169,7 +169,7 @@ export default class TaskCardPlugin extends Plugin {
     })
 
     this.addCommand({
-      id: 'task-card-detailed-display-mode',
+      id: 'detailed-display-mode',
       name: 'Detailed Display Mode',
       callback: () => {
         this.writeSettings((old) => (old.displaySettings.defaultMode = 'multi-line'));
@@ -177,7 +177,7 @@ export default class TaskCardPlugin extends Plugin {
     })
 
     this.addCommand({
-      id: 'task-card-migrate-legacy-tasks',
+      id: 'migrate-legacy-tasks',
       name: 'Migrate Legacy Tasks to the New Format',
       callback: async () => {
         const migratedCount = await this.taskMonitor.migrateLegacyTasksInVault(
@@ -192,7 +192,7 @@ export default class TaskCardPlugin extends Plugin {
     })
 
     this.addCommand({
-      id: 'task-card-add-query',
+      id: 'add-query',
       name: 'Add Query',
       editorCallback: (editor: Editor) => {
         editor.replaceRange(
@@ -203,7 +203,7 @@ export default class TaskCardPlugin extends Plugin {
     })
 
     this.addCommand({
-      id: 'task-card-add-task',
+      id: 'add-task',
       name: 'Add Task in a New Line',
       editorCallback: (editor: Editor) => {
         const editorPos: EditorPosition = editor.getCursor();
@@ -216,7 +216,7 @@ export default class TaskCardPlugin extends Plugin {
     })
 
     this.addCommand({
-      id: 'task-card-quick-add-task',
+      id: 'quick-add-task',
       name: 'Quick add task',
       callback: () => {
         new QuickAddTaskModal(this.app, this).open();
@@ -224,7 +224,7 @@ export default class TaskCardPlugin extends Plugin {
     })
 
     this.addCommand({
-      id: 'task-card-append-indicator-tag',
+      id: 'append-indicator-tag',
       name: 'Append Indicator Tag',
       editorCallback: (editor: Editor) => {
         const editorPos: EditorPosition = editor.getCursor();
@@ -235,7 +235,7 @@ export default class TaskCardPlugin extends Plugin {
 
     // a command to pop up a modal to create a new project
     this.addCommand({
-      id: 'task-card-create-project',
+      id: 'create-project',
       name: 'Create a New Project',
       callback: () => {
         const projectCreationModel = new CreateProjectModal(this.app, this.projectModule.addProject.bind(this.projectModule));
@@ -245,7 +245,7 @@ export default class TaskCardPlugin extends Plugin {
 
     // a command to append indicator tag to each of the selected line, if they are tasks (and not subtasks)
     this.addCommand({
-      id: 'task-card-add-indicator-tag',
+      id: 'add-indicator-tag',
       name: 'Add Indicator Tags to Selected Tasks',
       editorCallback: (editor: Editor) => {
         const selectionLines = editor.getSelection().split('\n');

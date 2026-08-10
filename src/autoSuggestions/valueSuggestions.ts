@@ -1,4 +1,4 @@
-import moment from 'moment';
+import { moment } from '../utils/obsidianMoment';
 import parse from 'parse-duration';
 import type { Project } from '../taskModule/project';
 import { formatDurationValue, formatScheduleValue } from '../taskModule/fieldSyntax';

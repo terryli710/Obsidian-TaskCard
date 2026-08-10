@@ -1,7 +1,7 @@
 import { Prec, RangeSetBuilder } from '@codemirror/state';
 import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate, WidgetType } from '@codemirror/view';
 import { setIcon } from 'obsidian';
-import moment from 'moment';
+import { moment } from '../utils/obsidianMoment';
 import { get } from 'svelte/store';
 import { SettingStore } from '../settings';
 import {

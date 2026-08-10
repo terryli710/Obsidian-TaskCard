@@ -61,13 +61,6 @@ class MarkdownFileSuggestModal extends FuzzySuggestModal<TFile> {
   }
 }
 
-function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
-}
-
 function tokenLabel(token: QuickAddToken): string {
   switch (token.type) {
     case 'due':
@@ -85,22 +78,31 @@ function tokenLabel(token: QuickAddToken): string {
   }
 }
 
-function renderHighlightedInput(value: string, tokens: QuickAddToken[]): string {
-  if (tokens.length === 0) {
-    return `${escapeHtml(value)}<br />`;
-  }
+/** Paints the highlight backdrop behind the quick-add input.
+ *
+ * Builds the nodes directly rather than assigning an HTML string: `value` is
+ * whatever the user typed, so it must never be parsed as markup. appendText
+ * and createSpan set text content, which cannot inject elements. */
+function renderHighlightedInput(
+  container: HTMLElement,
+  value: string,
+  tokens: QuickAddToken[]
+): void {
+  container.empty();
 
-  let html = '';
   let cursor = 0;
   for (const token of tokens) {
-    html += escapeHtml(value.slice(cursor, token.start));
-    html += `<span class="taskcard-quick-add-highlight ${TOKEN_CLASS_BY_TYPE[token.type]}">${escapeHtml(
-      value.slice(token.start, token.end)
-    )}</span>`;
+    container.appendText(value.slice(cursor, token.start));
+    container.createSpan({
+      cls: ['taskcard-quick-add-highlight', TOKEN_CLASS_BY_TYPE[token.type]],
+      text: value.slice(token.start, token.end)
+    });
     cursor = token.end;
   }
-  html += escapeHtml(value.slice(cursor));
-  return `${html}<br />`;
+  container.appendText(value.slice(cursor));
+  // trailing break keeps the backdrop's height in step with the textarea when
+  // the input ends on a newline
+  container.createEl('br');
 }
 
 export interface QuickAddInsertionPlan {
@@ -276,7 +278,7 @@ export class QuickAddTaskModal extends Modal {
       ? this.plugin.taskFormatter.taskToLine(parsed.task, { mintId: false })
       : '';
 
-    this.backdropEl.innerHTML = renderHighlightedInput(this.input, parsed.tokens);
+    renderHighlightedInput(this.backdropEl, this.input, parsed.tokens);
     this.renderChips(parsed.tokens);
     this.previewEl.setText(previewLine);
     this.refreshTargetLabel();

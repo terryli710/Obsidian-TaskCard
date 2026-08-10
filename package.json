@@ -53,6 +53,7 @@
     "@ts-stack/markdown": "^1.5.0",
     "humanize-duration": "^3.30.0",
     "humanized-duration": "^0.0.1",
+    "lodash": "^4.17.21",
     "lucide-svelte": "^0.268.0",
     "markdown-it": "^14.0.0",
     "markdown-it-task-lists": "^2.1.1",

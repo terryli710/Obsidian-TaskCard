@@ -1,5 +1,5 @@
 import { MarkdownPostProcessorContext, MarkdownSectionInformation, Notice } from 'obsidian';
-import moment from 'moment';
+import { moment } from '../utils/obsidianMoment';
 import { ObsidianTask } from './task';
 import { advanceRecurringTask } from './recurrence';
 import { taskIdToken } from './fieldSyntax';
