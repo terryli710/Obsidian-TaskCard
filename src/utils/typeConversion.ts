@@ -1,4 +1,3 @@
-import { logger } from '../utils/log';
 
 export function toArray(value: string): string[] {
   if (!value) return [];
@@ -6,7 +5,7 @@ export function toArray(value: string): string[] {
     // If the value is single-quoted, replace with double quotes
     const formattedValue = value.replace(/'/g, '"');
     return JSON.parse(formattedValue);
-  } catch (e) {
+  } catch {
     throw new Error(`Failed to convert string to array: ${value}`);
   }
 }

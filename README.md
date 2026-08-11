@@ -78,7 +78,7 @@ Only for query blocks and the matrix — the task index is built on it. Cards th
 Yes — cards and queries both work on mobile.
 
 **What about my existing tasks?**
-Tasks in the Tasks plugin's emoji or dataview format just need the indicator tag to render as cards. Tasks from TaskCard versions before the plain-text format can be converted vault-wide with the *Migrate Legacy Tasks to the New Format* command.
+Tasks in the Tasks plugin's emoji or dataview format just need the indicator tag to render as cards. Tasks from TaskCard versions before the plain-text format can be converted vault-wide with the *Migrate legacy tasks to the new format* command.
 
 **A card looks wrong in my theme.**
 Card styling aims to follow your theme's variables, but not every theme has been tested. Please [open an issue](https://github.com/terryli710/Obsidian-TaskCard/issues) with the theme name.

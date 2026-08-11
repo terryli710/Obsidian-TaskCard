@@ -13,7 +13,7 @@ export class LabelModule {
     // The label should not be empty
     if (!label) return false;
     // The label should contain at least one non-numerical character
-    if (!/[A-Za-z_\-\/]/.test(label)) return false;
+    if (!/[A-Za-z_\-/]/.test(label)) return false;
     // The label should not contain spaces
     if (/\s/.test(label)) return false;
     return true;
@@ -22,7 +22,7 @@ export class LabelModule {
   // Validate and possibly format a label
   public validateLabel(label: string): string {
     // Remove symbols not accepted in a label, replace with space
-    label = label.replace(/[^A-Za-z0-9_\-\/\s]/g, ' ');
+    label = label.replace(/[^A-Za-z0-9_\-/\s]/g, ' ');
     // Trim consecutive spaces to one, trim start and end spaces
     label = label.replace(/\s+/g, ' ').trim();
     // Convert to camelCase if not strict

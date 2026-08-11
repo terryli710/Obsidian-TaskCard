@@ -2,7 +2,11 @@ import esbuild from 'esbuild';
 import esbuildSvelte from 'esbuild-svelte';
 import sveltePreprocess from 'svelte-preprocess';
 import process from 'process';
-import builtins from 'builtin-modules';
+import { builtinModules } from 'node:module';
+
+// Node's own list, so the build needs no dependency to know what a builtin is.
+// Both bare ("fs") and prefixed ("node:fs") spellings must be externalised.
+const builtins = [...builtinModules, ...builtinModules.map((m) => `node:${m}`)];
 
 const prod = process.env.NODE_ENV === 'production';
 

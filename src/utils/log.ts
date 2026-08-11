@@ -17,9 +17,13 @@ const LEVEL_ORDER: Record<LogLevel, number> = {
 
 const LABEL = 'Obsidian Task Card';
 
-// esbuild substitutes process.env.NODE_ENV at build time, so this is a constant
-// in the bundle rather than a runtime lookup. Released builds stay quiet unless
-// something actually went wrong.
+// esbuild substitutes process.env.NODE_ENV at build time (see esbuild.config.mjs
+// `define`), so this is a constant in the bundle rather than a runtime lookup —
+// no `process` object is ever touched on mobile. Declared locally because the
+// shipped code runs in a browser context where `process` is not a real global.
+// Released builds stay quiet unless something actually went wrong.
+declare const process: { env: { NODE_ENV?: string } };
+
 const MIN_LEVEL: LogLevel =
   process.env.NODE_ENV === 'production' ? 'warn' : 'debug';
 
@@ -35,8 +39,22 @@ function timestamp(): string {
 function emit(level: LogLevel, message: unknown, ...meta: unknown[]): void {
   if (LEVEL_ORDER[level] < LEVEL_ORDER[MIN_LEVEL]) return;
   const prefix = `${timestamp()} [${LABEL}] ${level}:`;
-  const sink = level === 'debug' ? console.debug : console[level];
-  sink(prefix, message, ...meta);
+  // Called as methods rather than pulled off `console` into a local: a detached
+  // console method loses its receiver, which some hosts rely on.
+  switch (level) {
+    case 'debug':
+      console.debug(prefix, message, ...meta);
+      break;
+    case 'info':
+      console.info(prefix, message, ...meta);
+      break;
+    case 'warn':
+      console.warn(prefix, message, ...meta);
+      break;
+    case 'error':
+      console.error(prefix, message, ...meta);
+      break;
+  }
 }
 
 export const logger = {

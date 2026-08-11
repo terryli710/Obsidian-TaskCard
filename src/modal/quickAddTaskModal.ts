@@ -45,7 +45,7 @@ class MarkdownFileSuggestModal extends FuzzySuggestModal<TFile> {
   constructor(app: App, onChoose: (file: TFile) => void) {
     super(app);
     this.onChoose = onChoose;
-    this.setPlaceholder('Choose a markdown note');
+    this.setPlaceholder('Choose a Markdown note');
   }
 
   getItems(): TFile[] {
@@ -169,7 +169,7 @@ export class QuickAddTaskModal extends Modal {
     contentEl.createEl('h1', { text: 'Quick add task' });
     contentEl.createEl('p', {
       cls: 'taskcard-quick-add-subtitle',
-      text: 'type naturally — attributes are recognized as you type'
+      text: 'Type naturally — attributes are recognized as you type'
     });
 
     const editorShell = contentEl.createDiv({ cls: 'taskcard-quick-add-editor' });
@@ -178,7 +178,7 @@ export class QuickAddTaskModal extends Modal {
     });
     this.inputEl = editorShell.createEl('textarea', {
       cls: 'taskcard-quick-add-input'
-    }) as HTMLTextAreaElement;
+    });
     this.inputEl.rows = 3;
     this.inputEl.placeholder = 'Review PR tomorrow 3pm for 1h !high #code @Work every week';
     this.inputEl.addEventListener('input', () => {
@@ -193,7 +193,7 @@ export class QuickAddTaskModal extends Modal {
     this.chipsEl = contentEl.createDiv({ cls: 'taskcard-quick-add-chips' });
     this.previewEl = contentEl.createEl('pre', {
       cls: 'taskcard-quick-add-preview'
-    }) as HTMLPreElement;
+    });
 
     const footer = contentEl.createDiv({ cls: 'taskcard-quick-add-footer' });
     const targetSection = footer.createDiv({ cls: 'taskcard-quick-add-target' });
@@ -203,7 +203,7 @@ export class QuickAddTaskModal extends Modal {
     });
     this.targetLabelEl = targetSection.createSpan({
       cls: 'taskcard-quick-add-target-value'
-    }) as HTMLSpanElement;
+    });
 
     new Setting(targetSection).addButton((button) =>
       button.setButtonText('Choose note').onClick(() => {
@@ -254,7 +254,7 @@ export class QuickAddTaskModal extends Modal {
   private getActiveMarkdownFile(): TFile | null {
     const activeView = this.app.workspace.getActiveViewOfType(
       MarkdownView
-    ) as MarkdownView | null;
+    );
     const file = activeView?.file ?? this.app.workspace.getActiveFile();
     return file?.extension === 'md' ? file : null;
   }
@@ -369,7 +369,7 @@ export class QuickAddTaskModal extends Modal {
   ): Promise<boolean> {
     const activeView = this.app.workspace.getActiveViewOfType(
       MarkdownView
-    ) as MarkdownView | null;
+    );
     const editor = activeView?.editor;
     if (!activeView || !editor || activeView.file?.path !== target.path) {
       return false;

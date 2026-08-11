@@ -165,7 +165,7 @@ export class IndexedMapDatabase<T> {
     };
   
     const finalIds = evaluateExpression(expression);
-    return Array.from(finalIds).map(id => this.data.get(id)!).filter(Boolean);
+    return Array.from(finalIds).map(id => this.data.get(id)).filter(Boolean);
   }
 
   getLength(): number {

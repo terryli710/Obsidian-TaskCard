@@ -77,12 +77,12 @@ export function getTaskCardConcealPlan(
     .map((field) => ({
       from: field.from,
       to: field.to,
-      key: field.canonicalKey as KnownFieldKey,
+      key: field.canonicalKey,
       displayText: formatFieldDisplayValue(
-        field.canonicalKey as KnownFieldKey,
+        field.canonicalKey,
         field.value
       ),
-      icon: FIELD_ICONS[field.canonicalKey as KnownFieldKey] ?? null,
+      icon: FIELD_ICONS[field.canonicalKey] ?? null,
       tone:
         field.canonicalKey === 'due' || field.canonicalKey === 'scheduled'
           ? 'accent'
@@ -133,7 +133,7 @@ function rangeTouchesSelection(
 
 class HiddenWidget extends WidgetType {
   toDOM(): HTMLElement {
-    const span = document.createElement('span');
+    const span = createSpan();
     span.className = 'taskcard-lp-hidden';
     span.setAttribute('aria-hidden', 'true');
     return span;
@@ -166,18 +166,18 @@ class FieldWidget extends WidgetType {
   }
 
   toDOM(): HTMLElement {
-    const span = document.createElement('span');
+    const span = createSpan();
     span.className = `taskcard-lp-field taskcard-lp-field-${this.tone}`;
     span.setAttribute('aria-hidden', 'true');
 
     if (this.icon) {
-      const iconEl = document.createElement('span');
+      const iconEl = createSpan();
       iconEl.className = 'taskcard-lp-field-icon';
       setIcon(iconEl, this.icon);
       span.appendChild(iconEl);
     }
 
-    const textEl = document.createElement('span');
+    const textEl = createSpan();
     textEl.className = 'taskcard-lp-field-text';
     textEl.textContent = this.displayText;
     span.appendChild(textEl);

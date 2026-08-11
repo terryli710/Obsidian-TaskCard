@@ -230,7 +230,7 @@ export class PositionedObsidianTask extends ObsidianTask implements PositionedTa
 
   toObsidianTask(): ObsidianTask {
     const { docPosition, ...taskProps } = this.toPositionedTaskProps();
-    return new ObsidianTask(taskProps as Partial<ObsidianTask>);
+    return new ObsidianTask(taskProps);
   }
 
   toDocPosition(): DocPosition {

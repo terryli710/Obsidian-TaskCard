@@ -1,8 +1,9 @@
 import { App, Plugin } from 'obsidian';
-import type { Editor, EditorPosition, PluginManifest, Workspace, WorkspaceLeaf } from 'obsidian';
+import type { Editor, EditorPosition, PluginManifest } from 'obsidian';
 import type { TaskCardSettings } from './settings';
 import { DefaultSettings, SettingStore, SettingsTab } from './settings';
 import { logger } from './utils/log';
+import { deepMerge } from './utils/deepMerge';
 import AttributeSuggest from './autoSuggestions/EditorSuggestions';
 import { Project, ProjectModule } from './taskModule/project';
 import { TaskParser } from './taskModule/taskParser';
@@ -18,7 +19,6 @@ import { CodeBlockProcessor } from './renderer/StaticTaskListRenderer';
 import type { SyncMappings } from './api/syncTypes';
 import { ObsidianTask } from './taskModule/task';
 import { Notice } from 'obsidian';
-import _ from 'lodash';
 import { createTaskCardLivePreviewConcealExtension } from './editor';
 import { QuickAddTaskModal } from './modal/quickAddTaskModal';
 import { getAPI } from 'obsidian-dataview';
@@ -87,7 +87,7 @@ export default class TaskCardPlugin extends Plugin {
     let initialSettings = JSON.parse(JSON.stringify(DefaultSettings));
   
     // Deep merge the objects
-    const mergedSettings = _.merge({}, initialSettings, loadedSettings);
+    const mergedSettings = deepMerge<TaskCardSettings>({}, initialSettings, loadedSettings);
   
     // Update the settings in your store
     SettingStore.update(() => mergedSettings);
@@ -147,7 +147,11 @@ export default class TaskCardPlugin extends Plugin {
     this.registerEvent(this.app.metadataCache.on("dataview:metadata-change",
     (type, file, oldPath?) => { 
       // update cache tasks
-      this.cache.taskCache.refreshTasksByFileList([file.path]);
+      this.cache.taskCache
+        .refreshTasksByFileList([file.path])
+        .catch((err) =>
+          logger.error(`Failed to refresh task cache for ${file.path}: ${err}`)
+        );
     }));
 
     // this.registerEvent(this.app.workspace.on('file-open', () => logger.debug('file-open')));
@@ -162,23 +166,27 @@ export default class TaskCardPlugin extends Plugin {
     // v2: display mode is a plugin setting, not per-line metadata in notes
     this.addCommand({
       id: 'preview-display-mode',
-      name: 'Preview Display Mode',
+      name: 'Preview display mode',
       callback: () => {
-        this.writeSettings((old) => (old.displaySettings.defaultMode = 'single-line'));
+        this.writeSettings(
+          (old) => (old.displaySettings.defaultMode = 'single-line')
+        ).catch((err) => logger.error(`Failed to save display mode: ${err}`));
       }
     })
 
     this.addCommand({
       id: 'detailed-display-mode',
-      name: 'Detailed Display Mode',
+      name: 'Detailed display mode',
       callback: () => {
-        this.writeSettings((old) => (old.displaySettings.defaultMode = 'multi-line'));
+        this.writeSettings(
+          (old) => (old.displaySettings.defaultMode = 'multi-line')
+        ).catch((err) => logger.error(`Failed to save display mode: ${err}`));
       }
     })
 
     this.addCommand({
       id: 'migrate-legacy-tasks',
-      name: 'Migrate Legacy Tasks to the New Format',
+      name: 'Migrate legacy tasks to the new format',
       callback: async () => {
         const migratedCount = await this.taskMonitor.migrateLegacyTasksInVault(
           this.app.vault
@@ -193,7 +201,7 @@ export default class TaskCardPlugin extends Plugin {
 
     this.addCommand({
       id: 'add-query',
-      name: 'Add Query',
+      name: 'Add query',
       editorCallback: (editor: Editor) => {
         editor.replaceRange(
           `\n\`\`\`${this.settings.parsingSettings.blockLanguage}\n\`\`\``,
@@ -204,7 +212,7 @@ export default class TaskCardPlugin extends Plugin {
 
     this.addCommand({
       id: 'add-task',
-      name: 'Add Task in a New Line',
+      name: 'Add task in a new line',
       editorCallback: (editor: Editor) => {
         const editorPos: EditorPosition = editor.getCursor();
         editor.replaceRange(
@@ -225,7 +233,7 @@ export default class TaskCardPlugin extends Plugin {
 
     this.addCommand({
       id: 'append-indicator-tag',
-      name: 'Append Indicator Tag',
+      name: 'Append indicator tag',
       editorCallback: (editor: Editor) => {
         const editorPos: EditorPosition = editor.getCursor();
         const currentLine = editor.getLine(editorPos.line);
@@ -236,7 +244,7 @@ export default class TaskCardPlugin extends Plugin {
     // a command to pop up a modal to create a new project
     this.addCommand({
       id: 'create-project',
-      name: 'Create a New Project',
+      name: 'Create a new project',
       callback: () => {
         const projectCreationModel = new CreateProjectModal(this.app, this.projectModule.addProject.bind(this.projectModule));
         projectCreationModel.open();
@@ -246,7 +254,7 @@ export default class TaskCardPlugin extends Plugin {
     // a command to append indicator tag to each of the selected line, if they are tasks (and not subtasks)
     this.addCommand({
       id: 'add-indicator-tag',
-      name: 'Add Indicator Tags to Selected Tasks',
+      name: 'Add indicator tags to selected tasks',
       editorCallback: (editor: Editor) => {
         const selectionLines = editor.getSelection().split('\n');
         let isTask: boolean = false;
@@ -256,7 +264,7 @@ export default class TaskCardPlugin extends Plugin {
         let newLines: string[] = [];
         for (let i = 0; i < selectionLines.length; i++) {
           const line = selectionLines[i];
-          isTask = /^\-\s*\[[ \-\+\*]\]/.test(line.trim());
+          isTask = /^-\s*\[[ \-+*]\]/.test(line.trim());
           indentation = line.length - line.trimStart().length;
           const isSubTask = prevIsTask && prevIndentation < indentation;
           if (isTask && !isSubTask) {
@@ -312,7 +320,7 @@ export default class TaskCardPlugin extends Plugin {
 
   // Dataview missing or never ready: still render query blocks so they can
   // show the Dataview guidance page.
-  setTimeout(registerCodeBlockProcessor, 3000);
+  window.setTimeout(registerCodeBlockProcessor, 3000);
 
   }
 

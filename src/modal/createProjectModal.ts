@@ -17,10 +17,10 @@ export class CreateProjectModal extends Modal {
   onOpen() {
     const { contentEl } = this;
 
-    contentEl.createEl('h1', { text: "Task Card: Create a Project" });
+    contentEl.createEl('h1', { text: 'Create a project' });
 
     new Setting(contentEl)
-        .setName('Project Name')
+        .setName('Project name')
         .setDesc('The name of the project. Cannot be empty.')
         .addText((text) =>
       text.onChange((value) => {
@@ -29,7 +29,7 @@ export class CreateProjectModal extends Modal {
     );
 
     new Setting(contentEl)
-        .setName('Project Color')
+        .setName('Project color')
         .setDesc('The color of the project. Optional. If not provided, a random color will be assigned.')
         .addColorPicker((colorPicker) =>
       colorPicker.onChange((value) => {

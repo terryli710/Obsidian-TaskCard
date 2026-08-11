@@ -1,6 +1,5 @@
-import { App, TAbstractFile, TFile } from 'obsidian';
+import { App, TFile } from 'obsidian';
 import TaskCardPlugin from '..';
-import { logger } from '../utils/log';
 
 export class FileOperator {
   app: App;
@@ -11,11 +10,21 @@ export class FileOperator {
     this.app = app;
   }
 
+  /**
+   * getAbstractFileByPath returns a TFile or a TFolder. Casting a folder to
+   * TFile and handing it to vault.read/modify fails deep inside Obsidian
+   * rather than here, so narrow properly and treat "not a file" the same as
+   * "not found" — every caller already handles null.
+   */
+  private getMarkdownFile(filePath: string): TFile | null {
+    const file = this.app.vault.getAbstractFileByPath(filePath);
+    return file instanceof TFile ? file : null;
+  }
+
   async getFileContent(filePath: string): Promise<string | null> {
-    const file: TAbstractFile = this.app.vault.getAbstractFileByPath(filePath);
+    const file = this.getMarkdownFile(filePath);
     if (!file) return null;
-    const content = await this.app.vault.read(file as TFile);
-    return content;
+    return await this.app.vault.read(file);
   }
 
   async getFileLines(filePath: string): Promise<string[] | null> {
@@ -46,9 +55,9 @@ export class FileOperator {
   // raw section HTML, which is the visible "blink" when a card re-renders
   // after its own write-back. Write paths keep vault.read for freshness.
   async getFileContentForDisplay(filePath: string): Promise<string | null> {
-    const file: TAbstractFile = this.app.vault.getAbstractFileByPath(filePath);
+    const file = this.getMarkdownFile(filePath);
     if (!file) return null;
-    return await this.app.vault.cachedRead(file as TFile);
+    return await this.app.vault.cachedRead(file);
   }
 
   async getMarkdownBetweenLinesForDisplay(
@@ -67,22 +76,23 @@ export class FileOperator {
     lineStart: number,
     lineEnd: number
   ): Promise<void> {
-    const file = await this.app.vault.getAbstractFileByPath(filePath);
+    const file = this.getMarkdownFile(filePath);
     if (!file) return;
     const fileLines = await this.getFileLines(filePath);
     if (fileLines == null) return;
     const newFileLines: string[] = [...fileLines];
     newFileLines.splice(lineStart, lineEnd - lineStart, newContent);
-    await this.app.vault.modify(file as TFile, newFileLines.join('\n'));
+    await this.app.vault.modify(file, newFileLines.join('\n'));
   }
 
   async updateLineInFile(filePath: string, lineNumber: number, newContent: string): Promise<void> {
-    const file = await this.app.vault.getAbstractFileByPath(filePath);
+    const file = this.getMarkdownFile(filePath);
     if (!file) return;
     const fileLines = await this.getFileLines(filePath);
+    if (fileLines == null) return;
     const newFileLines: string[] = [...fileLines];
     newFileLines[lineNumber - 1] = newContent;
-    await this.app.vault.modify(file as TFile, newFileLines.join('\n'));
+    await this.app.vault.modify(file, newFileLines.join('\n'));
   }
 
   getAllFilesAndFolders(): string[] {

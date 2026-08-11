@@ -1,4 +1,3 @@
-import { logger } from '../utils/log';
 import { SettingStore } from '../settings';
 import { escapeRegExp } from '../utils/regexUtils';
 import { ObsidianTask } from './task';

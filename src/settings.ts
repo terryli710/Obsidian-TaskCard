@@ -134,7 +134,7 @@ export class SettingsTab extends PluginSettingTab {
   }
 
   private projectSettings(): void {
-    this.containerEl.createEl('div', {
+    this.containerEl.createDiv({
       text: 'Renaming or recoloring a project updates every task in that project.',
       cls: 'setting-item-description'
     });
@@ -147,7 +147,7 @@ export class SettingsTab extends PluginSettingTab {
         this.projectSetting(project);
       }
     } else {
-      this.containerEl.createEl('div', {
+      this.containerEl.createDiv({
         text: 'No projects yet — add one above.',
         cls: 'setting-item-description'
       });

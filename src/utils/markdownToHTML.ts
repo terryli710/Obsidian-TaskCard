@@ -1,7 +1,7 @@
 import { logger } from "./log";
 
 
-var showdown = require('showdown');
+import showdown from 'showdown';
 
 export function markdownToHTML(markdown: string) {
     const converter = new showdown.Converter();

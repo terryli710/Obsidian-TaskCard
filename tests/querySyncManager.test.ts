@@ -11,7 +11,9 @@ import { MultipleAttributeTaskQuery } from '../src/query/cache';
 
 function makePlugin() {
   return {
-    fileOperator: { updateFile: jest.fn() },
+    // FileOperator.updateFile is async; the stub must resolve so callers can
+    // attach rejection handling to it the way the real one allows.
+    fileOperator: { updateFile: jest.fn().mockResolvedValue(undefined) },
     cache: {
       taskCache: {
         database: {

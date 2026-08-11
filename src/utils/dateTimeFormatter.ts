@@ -1,12 +1,11 @@
 import { DateOnly, TimeOnly } from '../taskModule/task';
-import { logger } from '../utils/log';
 
 export function displayDate(date: string): string {
   // the date string is local time.
   // if (!DateOnly.check(date)) return date;
   try {
     DateOnly.check(date);
-  } catch (e) {
+  } catch {
     return date;
   }
 
@@ -52,7 +51,7 @@ export function displayTime(time: string): string {
   // the date string is local time.
   try {
     TimeOnly.check(time);
-  } catch (e) {
+  } catch {
     return time;
   }
   try {
@@ -60,7 +59,7 @@ export function displayTime(time: string): string {
     return `${parseInt(hours) % 12 || 12}:${minutes} ${
       parseInt(hours) >= 12 ? 'PM' : 'AM'
     }`;
-  } catch (e) {
+  } catch {
     return time;
   }
 }

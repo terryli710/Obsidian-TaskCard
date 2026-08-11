@@ -2,7 +2,6 @@ import { MarkdownPostProcessorContext } from 'obsidian';
 import { DocPosition, TextPosition } from '../taskModule/task';
 import TaskCardPlugin from "..";
 import { QueryResult } from "obsidian-dataview/lib/api/plugin-api";
-import { logger } from "../utils/log";
 import { get } from 'svelte/store';
 import { SettingStore } from "../settings";
 import { QueryAndTaskListSvelteAdapter } from './queryAndTaskListSvelteAdapter';

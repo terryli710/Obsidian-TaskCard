@@ -1,6 +1,4 @@
 import { v4 as uuidv4 } from 'uuid';
-import { HSLToRGB, RGBToHEX, stringToHSL } from '../../utils/colorConverter';
-import { logger } from '../../utils/log';
 import { ColorPaletteManager } from '../../utils/colorPalette';
 
 export type Project = {
@@ -152,7 +150,7 @@ export class ProjectModule {
       // New project, create
       const newProject: Project = {
         id: project.id || uuidv4(),
-        name: project.name!,
+        name: project.name,
         color: project.color || this.assignColor(project.name)
       };
       this.ensureProjectData(newProject);

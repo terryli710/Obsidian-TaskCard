@@ -1,4 +1,4 @@
-import { PositionedTaskProperties, DocPosition, Priority, ScheduleDate, ObsidianTask, TextPosition, PositionedObsidianTask } from '../taskModule/task';
+import { PositionedTaskProperties, TextPosition, PositionedObsidianTask } from '../taskModule/task';
 import TaskCardPlugin from '..';
 import { getAPI } from 'obsidian-dataview';
 import { QueryResult } from 'obsidian-dataview/lib/api/plugin-api';
@@ -67,29 +67,36 @@ export class PositionedTaskCache {
       this.updateStatus(taskList.length, true);
     }
 
+    // Polls for the Dataview API until it appears or `totalTime` elapses.
+    // The executor is deliberately NOT async: an async executor swallows any
+    // throw from getAPI() into a rejected promise nobody holds, leaving this
+    // one pending forever. Routing every failure through reject() means a
+    // broken Dataview surfaces as a timeout/error instead of a silent hang.
     async getDataviewAPI(totalTime = 1000, interval = 100) {
       let elapsed = 0;
-    
-      return new Promise(async (resolve, reject) => {
+
+      return new Promise((resolve, reject) => {
         const tryFetching = async () => {
           const dataviewAPI = await getAPI();
-          
+
           if (dataviewAPI) {
             resolve(dataviewAPI);
             return;
           }
-    
+
           elapsed += interval;
-    
+
           if (elapsed >= totalTime) {
             reject(new Error("Timed out while fetching dataviewAPI"));
             return;
           }
-    
-          setTimeout(tryFetching, interval);
+
+          window.setTimeout(() => {
+            tryFetching().catch(reject);
+          }, interval);
         };
-    
-        tryFetching();
+
+        tryFetching().catch(reject);
       });
     }
     

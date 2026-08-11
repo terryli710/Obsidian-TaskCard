@@ -1,4 +1,4 @@
-import { App, MarkdownView, TFile, Vault, WorkspaceLeaf } from 'obsidian';
+import { App, MarkdownView, TFile, Vault } from 'obsidian';
 import TaskCardPlugin from '..';
 import { Notice } from 'obsidian';
 import { logger } from '../utils/log';
@@ -6,6 +6,7 @@ import { escapeRegExp } from '../utils/regexUtils';
 import { Project } from './project';
 import { SettingStore } from '../settings';
 import { ObsidianTask } from './task';
+import type { SyncMappings } from '../api/syncTypes';
 import {
   TASKS_EMOJI_SIGNIFIER,
   appendBlockId,
@@ -43,23 +44,29 @@ export class TaskMonitor {
     if (!view) return;
     const mode = view.getMode();
     if (mode !== 'preview') return;
-    setTimeout(() => {
-      this.monitorFileToFormatTasks(file);
+    window.setTimeout(() => {
+      this.monitorFileToFormatTasks(file).catch((err) =>
+        logger.error(`Failed to format tasks in ${file.path}: ${err}`)
+      );
     }, 2);
   }
 
   // MONITORS
+  // These two rewrite every markdown file in the vault. The per-file calls are
+  // awaited rather than fired off together: unawaited, a large vault issues
+  // thousands of concurrent reads/modifies and any failure becomes an
+  // unhandled rejection. Sequential is slower but bounded and reportable.
   async monitorVaultToChangeIndicatorTags(vault: Vault, newIndicatorTag, oldIndicatorTag) {
     // iterate over all markdown files in the vault
     for (const file of vault.getMarkdownFiles()) {
-      this.changeIndicatorTagsForFile(file, newIndicatorTag, oldIndicatorTag);
+      await this.changeIndicatorTagsForFile(file, newIndicatorTag, oldIndicatorTag);
     }
   }
 
   async monitorVaultToChangeProjects(vault: Vault, newProject: Project, oldProject: Project) {
     // iterate over all markdown files in the vault
     for (const file of vault.getMarkdownFiles()) {
-      this.changeProjectForFile(file, newProject, oldProject);
+      await this.changeProjectForFile(file, newProject, oldProject);
     }
   }
 
@@ -118,6 +125,12 @@ export class TaskMonitor {
       const lines = await this.getLinesFromFile(file);
       if (!lines) continue;
       let fileChanged = false;
+      // storeSyncMappings is a read-modify-write of the plugin's data.json, so
+      // it cannot be fired off from inside the (synchronous) map callback:
+      // concurrent writers each start from the same snapshot and the last one
+      // to land silently drops the others' mappings. Collect, then persist
+      // sequentially once the file's lines are known.
+      const pendingMappings: { id: string; mappings: SyncMappings }[] = [];
       const updatedLines = lines.map((line) => {
         if (!this.plugin.taskValidator.isTaskCardTaskMarkdown(line)) return line;
         if (!this.plugin.taskValidator.hasLegacyNotation(line)) return line;
@@ -125,11 +138,14 @@ export class TaskMonitor {
         if (!task || task.content.length === 0) return line;
         const indent = line.match(/^\s*/)[0];
         const newLine = indent + this.plugin.taskFormatter.taskToLine(task);
-        this.plugin.storeSyncMappings(task.id, task.metadata.syncMappings);
+        pendingMappings.push({ id: task.id, mappings: task.metadata.syncMappings });
         migratedCount++;
         fileChanged = true;
         return newLine;
       });
+      for (const { id, mappings } of pendingMappings) {
+        await this.plugin.storeSyncMappings(id, mappings);
+      }
       if (fileChanged) {
         await this.updateFileWithNewLines(file, updatedLines);
       }

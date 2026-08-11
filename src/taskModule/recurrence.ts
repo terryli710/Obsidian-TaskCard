@@ -26,7 +26,7 @@ export function parseRecurrenceRule(text: string): string | null {
     // approximations for options its grammar cannot express).
     if (!RRule.parseText(normalized)) return null;
     return normalized;
-  } catch (e) {
+  } catch {
     return null;
   }
 }

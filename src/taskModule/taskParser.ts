@@ -2,7 +2,7 @@ import { logger } from '../utils/log';
 import { escapeRegExp, extractTags } from '../utils/regexUtils';
 import { kebabToCamel } from '../utils/stringCaseConverter';
 import { toArray, toBoolean } from '../utils/typeConversion';
-import { ScheduleDate, Duration, ObsidianTask, Order, Priority, TaskProperties, TextPosition } from './task';
+import { ScheduleDate, Duration, ObsidianTask } from './task';
 import { Project, ProjectModule } from './project';
 import { parseRecurrenceRule } from './recurrence';
 import { SettingStore } from '../settings';
@@ -148,9 +148,11 @@ export class TaskParser {
       task.content = content.trim();
     }
   
-    const checkbox = taskEl.querySelector(
+    // querySelector types this as Element; the generic keeps `.checked`
+    // reachable without an assertion the linter then reads as redundant.
+    const checkbox = taskEl.querySelector<HTMLInputElement>(
       '.task-list-item-checkbox'
-    ) as HTMLInputElement;
+    );
     task.completed = checkbox?.checked || false;
   
     return task;
@@ -171,8 +173,6 @@ export class TaskParser {
         if (parsedValue === null) {
           throw new Error(`Failed to parse ${attributeName}: ${value}`);
         }
-
-        console.log(`Parsed ${attributeName}: ${parsedValue}`);
 
         // Type specific parsing if needed
         switch (type) {
@@ -339,7 +339,7 @@ export class TaskParser {
         case 'metadata':
           task.metadata = tryParseAttribute('metadata', JSON.parse, attributeValue, 'other');
           break;
-        default:
+        default: {
           const taskKey = attributeName as keyof ObsidianTask;
           if (taskKey in task) {
             const type = typeof task[taskKey];
@@ -349,6 +349,7 @@ export class TaskParser {
             }
           }
           break;
+        }
       }
     }
 
@@ -371,11 +372,11 @@ export class TaskParser {
     known: Partial<Record<KnownFieldKey, string>>,
     errors: string[]
   ): void {
-    const applyOrReport = (
+    const applyOrReport = <V>(
       key: string,
       rawValue: string,
-      value: any,
-      assign: (v: any) => void
+      value: V | null | undefined,
+      assign: (v: V) => void
     ) => {
       if (value === null || value === undefined) {
         errors.push(`${key} attribute error: failed to parse "${rawValue}"`);
@@ -544,7 +545,7 @@ export class TaskParser {
     task.sectionID = parseJSONAttribute(metadata['sectionID'], 'sectionID', '');
 
     // For attributes that require JSON parsing
-    task.priority = parseJSONAttribute(metadata['priority'], 'priority', 4 as Priority);
+    task.priority = parseJSONAttribute(metadata['priority'], 'priority', 4);
     task.order = parseJSONAttribute(metadata['order'], 'order', 0);
     task.project = parseJSONAttribute(metadata['project'], 'project', null);
     task.schedule = parseJSONAttribute(metadata['schedule'], 'schedule', null);
@@ -632,7 +633,7 @@ export class TaskParser {
     return {
       hours: hours,
       minutes: minutes
-    } as Duration;
+    };
   }
   
 

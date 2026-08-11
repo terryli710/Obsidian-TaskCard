@@ -128,13 +128,20 @@ export class QuerySyncManager {
         // Index keys are the comma-joined labels of each task
         // (cache.ts: createIndex('labels', ...)): a task with no labels
         // yields '' and a multi-label task '#a,#b' — split and drop empties.
+        // Only strings and string arrays are meaningful here; anything else
+        // used to be String()-ed into the literal text "[object Object]" and
+        // offered to the user as a selectable label.
         const labels = this.plugin.cache.taskCache.database
             .getAllIndexValues('labels')
-            .reduce(
-                (acc: string[], val: unknown) =>
-                    acc.concat(Array.isArray(val) ? val : String(val).split(',')),
-                [] as string[]
-            );
+            .reduce((acc: string[], val: unknown) => {
+                if (Array.isArray(val)) {
+                    return acc.concat(
+                        val.filter((v): v is string => typeof v === 'string')
+                    );
+                }
+                if (typeof val === 'string') return acc.concat(val.split(','));
+                return acc;
+            }, [] as string[]);
         return Array.from(new Set(labels.filter((l) => l && l.trim())));
     }
 
@@ -216,12 +223,18 @@ export class QuerySyncManager {
             new Notice('TaskCard: unable to locate this query block in the file. The query was not saved — please re-open the note and try again.');
             return;
         }
+        // Callers are Svelte event handlers, so this stays sync; a failed write
+        // still has to reach the user rather than vanishing as an unhandled
+        // rejection, matching the "not saved" Notice above.
         this.plugin.fileOperator.updateFile(
             this.codeBlockMetadata.sourcePath,
             newQuery,
             this.codeBlockMetadata.lineStart,
             this.codeBlockMetadata.lineEnd + 1
-        );
+        ).catch((err) => {
+            logger.error(`Failed to write query block to ${this.codeBlockMetadata.sourcePath}: ${err}`);
+            new Notice('TaskCard: failed to save the query block. Please try again.');
+        });
     }
 
     updateCodeBlockMetadata() {

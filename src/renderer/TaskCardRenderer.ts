@@ -13,7 +13,6 @@
   import { TaskValidator } from '../taskModule/taskValidator';
   import { TaskItemSvelteAdapter } from './postProcessor';
   import { ObsidianTaskSyncProps } from '../taskModule/taskSyncManager';
-  import { logger } from '../utils/log';
   
   export interface TaskItemData {
     // HTML information about the TaskItem

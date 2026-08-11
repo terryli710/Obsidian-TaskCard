@@ -311,7 +311,7 @@ export function parseIsoScheduleValue(value: string): ScheduleDate | null {
     date: match[1],
     ...(match[2] ? { time: match[2] } : {}),
     string: value.trim()
-  } as ScheduleDate;
+  };
 }
 
 export function formatScheduleValue(sd: ScheduleDate): string {

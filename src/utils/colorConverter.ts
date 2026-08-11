@@ -1,11 +1,8 @@
-import { logger } from '../utils/log';
 
 type RGB = { r: number; g: number; b: number };
-type RGBA = { r: number; g: number; b: number; a: number };
 type HSL = { h: number; s: number; l: number };
 type HEX = `#${string}`;
 
-type AvailableColor = RGB | RGBA | HEX;
 
 export function HEXToRGB(HEX: HEX): RGB {
   if (!validHEX(HEX)) return null;
@@ -47,7 +44,7 @@ export function darkenHEXColor(HEX: HEX, darkenPercent: number): HEX {
 function validRGB(RGB: RGB): boolean {
   try {
     return RGB.r >= 0 && RGB.g >= 0 && RGB.b >= 0;
-  } catch (e) {
+  } catch {
     return false;
   }
 }
@@ -55,19 +52,19 @@ function validRGB(RGB: RGB): boolean {
 function validHEX(HEX: HEX): boolean {
   try {
     return /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.test(HEX);
-  } catch (e) {
+  } catch {
     return false;
   }
 }
 
 export function stringToColor(str) {
-  var hash = 0;
-  for (var i = 0; i < str.length; i++) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
     hash = str.charCodeAt(i) + ((hash << 5) - hash);
   }
-  var color = '#';
-  for (var i = 0; i < 3; i++) {
-    var value = (hash >> (i * 8)) & 0xff;
+  let color = '#';
+  for (let i = 0; i < 3; i++) {
+    let value = (hash >> (i * 8)) & 0xff;
     color += ('00' + value.toString(16)).slice(-2);
   }
   return color;

@@ -13,7 +13,10 @@ module.exports = {
   moduleNameMapper: {
     '^obsidian$': '<rootDir>/tests/__mocks__/obsidian.ts'
   },
-  setupFilesAfterEnv: ['@testing-library/jest-dom/extend-expect'],
+  setupFilesAfterEnv: [
+    '@testing-library/jest-dom/extend-expect',
+    '<rootDir>/tests/setupObsidianDom.ts'
+  ],
   testPathIgnorePatterns: ['node_modules'],
   transformIgnorePatterns: [
     'node_modules/(?!(svelte)/)' // This will make sure svelte is transformed but other node_modules are not.

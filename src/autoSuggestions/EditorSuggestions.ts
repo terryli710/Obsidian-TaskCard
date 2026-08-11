@@ -20,13 +20,14 @@ export type SuggestInfoWithContext = SuggestInformation & {
 };
 
 export default class AttributeSuggest extends EditorSuggest<SuggestInformation> {
-  private app: App;
+  // `app` comes from PopoverSuggest and is public there; redeclaring it
+  // private narrows an inherited member's visibility, which TypeScript 5.4
+  // rejects. super(app) already assigns it.
   private attributeSuggester: AttributeSuggester;
   private taskValidator: TaskValidator;
 
   constructor(app: App) {
     super(app);
-    this.app = app;
 
     this.attributeSuggester = new AttributeSuggester(SettingStore);
     this.taskValidator = new TaskValidator(SettingStore);

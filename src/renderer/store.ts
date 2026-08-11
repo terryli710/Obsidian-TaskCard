@@ -1,13 +1,16 @@
 import { Writable, writable } from 'svelte/store';
 import { TaskDisplayMode } from './postProcessor';
 import { SettingStore } from '../settings';
-import { MarkdownView, Workspace, WorkspaceLeaf } from 'obsidian';
-import { logger } from '../utils/log';
+import { MarkdownView, WorkspaceLeaf } from 'obsidian';
 import { ObsidianTaskSyncProps } from '../taskModule/taskSyncManager';
 
+type TaskModes = { [key: string]: TaskDisplayMode };
+
 export class TaskStore {
-  private taskModes: Writable<{ [key: string]: TaskDisplayMode }>;
-  public readonly subscribe: Function;
+  private taskModes: Writable<TaskModes>;
+  // Re-exported so TaskStore itself satisfies Svelte's store contract and can
+  // be used with `$taskStore`; typed from the store it delegates to.
+  public readonly subscribe: Writable<TaskModes>['subscribe'];
   private filePath: string = '';
   private defaultMode: TaskDisplayMode = 'single-line'; // Default value
 

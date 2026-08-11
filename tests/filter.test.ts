@@ -6,10 +6,13 @@ import {
 } from '../src/renderer/filters';
 
 import { JSDOM } from 'jsdom';
+import { installInstanceOf } from './__helpers__/obsidianDom';
 
 const { window } = new JSDOM('');
 const { document } = window;
 global.HTMLElement = window.HTMLElement;
+// this suite owns its JSDOM realm, so it installs the shim itself
+installInstanceOf(window as unknown as Window & typeof globalThis);
 
 // Mocking TaskValidator's isValidTaskElement function
 jest.mock('../src/taskModule/taskValidator', () => {

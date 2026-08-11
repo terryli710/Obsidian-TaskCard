@@ -1,17 +1,16 @@
 import { SvelteComponent } from "svelte"
 import TaskCardPlugin from ".."
 import QueryEditor from "../ui/QueryEditor.svelte";
-import StaticTaskList from '../ui/StaticTaskList.svelte';
 import { normalizeQueryDisplayMode, QuerySyncManager } from "../query/querySyncManager"
 import { MarkdownPostProcessorContext, MarkdownRenderChild, MarkdownSectionInformation } from "obsidian"
-import { logger } from "../utils/log";
-import StaticTaskMatrix from "../ui/StaticTaskMatrix.svelte";
 import QueryDisplay from "../ui/QueryDisplay.svelte";
+import { logger } from "../utils/log";
 
 
 export class QueryAndTaskListSvelteAdapter extends MarkdownRenderChild {
     plugin: TaskCardPlugin
     svelteComponent: SvelteComponent
+    private unloaded = false
     codeBlockEl: HTMLElement
     codeBlockMetadata: {
         sectionEl: HTMLElement
@@ -50,7 +49,18 @@ export class QueryAndTaskListSvelteAdapter extends MarkdownRenderChild {
         )
     }
 
-    async onload() {
+    // MarkdownRenderChild.onload is declared void; returning a promise from it
+    // means Obsidian never sees the failure and cannot know the mount is still
+    // in flight. Keep the override sync and own the async work here — including
+    // the unload race, since getFilteredTasks() can resolve after the block has
+    // already been torn down, which would otherwise leak an orphan component.
+    onload(): void {
+        void this.mount().catch((err) =>
+            logger.error(`Failed to render taskcard query block: ${err}`)
+        );
+    }
+
+    private async mount(): Promise<void> {
         if (this.querySyncManager.editMode) {
             this.svelteComponent = new QueryEditor({
                 target: this.codeBlockEl,
@@ -62,10 +72,12 @@ export class QueryAndTaskListSvelteAdapter extends MarkdownRenderChild {
                 }
             })
         } else {
+            const taskList = await this.querySyncManager.getFilteredTasks();
+            if (this.unloaded) return;
             this.svelteComponent = new QueryDisplay({
                     target: this.codeBlockEl,
                     props: {
-                        taskList: await this.querySyncManager.getFilteredTasks(),
+                        taskList,
                         plugin: this.plugin,
                         querySyncManager: this.querySyncManager,
                         displayMode: this.querySyncManager.displayMode
@@ -78,6 +90,7 @@ export class QueryAndTaskListSvelteAdapter extends MarkdownRenderChild {
     }
 
     onunload() {
+        this.unloaded = true;
         if (this.svelteComponent) {
             this.svelteComponent.$destroy();
             this.svelteComponent = null;

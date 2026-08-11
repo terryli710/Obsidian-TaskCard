@@ -1,5 +1,4 @@
 import type { TaskValidator } from '../taskModule/taskValidator';
-import { logger } from '../utils/log';
 
 export function isTaskList(el: HTMLElement): boolean {
   // ul, class contains: contains-task-list and has-list-bullet
@@ -27,7 +26,7 @@ export function isTaskItemEl(
     return false;
   }
 
-  return taskValidator.isValidTaskElement(el as HTMLElement);
+  return taskValidator.isValidTaskElement(el);
 }
 
 /**
@@ -50,7 +49,11 @@ export function filterTaskItems(
   }
 
   return elems.filter((el) => {
-    if (!(el instanceof HTMLElement)) {
+    // instanceOf() is cross-window safe where the `instanceof` operator is
+    // not, but it's a method on Node rather than an operator: it throws on the
+    // null/undefined/non-node entries this filter is specifically meant to
+    // drop, so probe for it before calling.
+    if (typeof el?.instanceOf !== 'function' || !el.instanceOf(HTMLElement)) {
       return false;
     }
     return (
