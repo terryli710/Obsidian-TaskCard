@@ -8,6 +8,7 @@ import { parseRecurrenceRule } from './recurrence';
 import { SettingStore } from '../settings';
 import { DescriptionParser } from './description';
 import parse from 'parse-duration';
+import { paletteColorForName } from '../utils/colorPalette';
 import {
   KnownFieldKey,
   extractBlockId,
@@ -414,9 +415,11 @@ export class TaskParser {
           applyOrReport(key, rawValue, this.parseRecurrence(rawValue), (v) => (task.recurrence = v));
           break;
         case 'project':
-          // Unknown names are preserved (id-less) so the field survives a rewrite
+          // Unknown names are preserved (id-less) so the field survives a
+          // rewrite, with a name-derived color so the card's dot still shows
           task.project =
-            this.parseProject(rawValue) ?? { id: '', name: rawValue };
+            this.parseProject(rawValue) ??
+            { id: '', name: rawValue, color: paletteColorForName(rawValue) };
           break;
         case 'completion':
           if (/^\d{4}-\d{2}-\d{2}$/.test(rawValue)) {

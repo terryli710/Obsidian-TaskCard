@@ -30,6 +30,10 @@
     // Get the value of the 'data-line' attribute
     const dataLine = inputElement ? inputElement.getAttribute('data-line') : null;
 
+    // Obsidian marks native task items with data-task; themes key checkbox
+    // styling off it (Cupertino masks checkboxes in items without it)
+    $: dataTask = taskSyncManager.obsidianTask.completed ? 'x' : ' ';
+
 
     function handleSwitchMode(event: MouseEvent | KeyboardEvent | CustomEvent) {
         if (event instanceof KeyboardEvent && (event.key !== 'Enter' && event.key !== ' ')) {
@@ -50,6 +54,7 @@
     <li
         class="obsidian-taskcard obsidian-taskcard-live task-list-item mode-single-line"
         data-line={dataLine}
+        data-task={dataTask}
     >
         <div
             class="obsidian-taskcard-hitbox"
@@ -69,6 +74,7 @@
     <li
         class="obsidian-taskcard obsidian-taskcard-live task-list-item mode-multi-line"
         data-line={dataLine}
+        data-task={dataTask}
     >
         <div class="obsidian-taskcard-hitbox">
             <TaskCard 

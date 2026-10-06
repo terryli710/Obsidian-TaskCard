@@ -168,6 +168,35 @@ describe('TaskValidator', () => {
       expect(taskValidator.isValidTaskElement(mockElement)).toBe(true);
     });
 
+    // issue #1: only the item's own checkbox and tags count
+    function nestedListItem(outerHtml: string): HTMLElement {
+      const document = new JSDOM().window.document;
+      const ul = document.createElement('ul');
+      ul.innerHTML = outerHtml;
+      return ul.firstElementChild as HTMLElement;
+    }
+
+    it('should invalidate a plain bullet whose nested child is a tagged task', () => {
+      const li = nestedListItem(
+        '<li>Plain bullet<ul><li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox"> Child <a class="tag" href="#TaskCard">#TaskCard</a></li></ul></li>'
+      );
+      expect(taskValidator.isValidTaskElement(li)).toBe(false);
+    });
+
+    it('should invalidate an untagged task whose nested child is tagged', () => {
+      const li = nestedListItem(
+        '<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox"> Untagged<ul><li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox"> Child <a class="tag" href="#TaskCard">#TaskCard</a></li></ul></li>'
+      );
+      expect(taskValidator.isValidTaskElement(li)).toBe(false);
+    });
+
+    it('should validate a tagged task that has nested subtasks', () => {
+      const li = nestedListItem(
+        '<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox"> Parent <a class="tag" href="#TaskCard">#TaskCard</a><ul><li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox"> Child</li></ul></li>'
+      );
+      expect(taskValidator.isValidTaskElement(li)).toBe(true);
+    });
+
     it('should invalidate a task element without the indicator tag', () => {
       const mockElement = createMockTaskElementWithSingleSpan(false);
       mockElement.querySelector('a.tag').textContent = '#other';

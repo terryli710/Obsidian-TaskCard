@@ -176,6 +176,32 @@ export function findBlockIdSpan(
   };
 }
 
+/**
+ * A source line as it should read inside a card: block id, indicator tag and
+ * inline fields removed, indentation and list marker kept. Display only - the
+ * line count is unchanged, so rendered rows still map 1:1 to source lines.
+ */
+export function stripTaskSyntaxForDisplay(
+  line: string,
+  indicatorTag: string
+): string {
+  const { rest } = extractBlockId(line);
+  const indent = rest.match(/^\s*/)[0];
+  const body = rest
+    .slice(indent.length)
+    .replace(BRACKET_FIELD, ' ')
+    .replace(PAREN_FIELD, ' ')
+    .replace(
+      new RegExp(`(^|\\s)#${escapeRegExp(indicatorTag)}(?![A-Za-z0-9_/-])`, 'g'),
+      ' '
+    );
+  const display = body.replace(/\s{2,}/g, ' ').trimEnd();
+  // a subtask that is nothing but syntax would collapse to "- [ ]", which
+  // markdown renders as literal text with no checkbox; show it as written
+  if (/^(?:[-*+]|\d+[.)])\s+\[.\]$/.test(display)) return line;
+  return indent + display;
+}
+
 /** Tasks-plugin emoji signifiers → canonical/foreign fields. */
 const EMOJI_DATE_KEYS: Record<string, KnownFieldKey | 'start' | 'created' | 'cancelled'> = {
   '📅': 'due',

@@ -158,11 +158,15 @@ export class TaskValidator {
   isValidTaskElement(taskElement: HTMLElement): boolean {
     // v2: a rendered task item qualifies by carrying the indicator tag and a
     // checkbox — no hidden span required (attributes are parsed from the
-    // source line, not the DOM)
-    if (!taskElement.querySelector('.task-list-item-checkbox')) return false;
+    // source line, not the DOM). Only the item's own content counts: a plain
+    // bullet or untagged task whose *nested* child is a tagged task must not
+    // qualify, or the card hijacks the parent's line.
+    const checkbox = Array.from(
+      taskElement.querySelectorAll('.task-list-item-checkbox')
+    ).some((el) => ownedByItem(el, taskElement));
+    if (!checkbox) return false;
 
-    // Check for the presence of the indicator tag
-    return this.checkTaskElementIndicatorTag(taskElement);
+    return this.checkTaskElementIndicatorTag(taskElement, true);
   }
 
   isValidUnformattedTaskMarkdown(taskMarkdown: string, indicatorTag: string | null  = null): boolean {
@@ -220,12 +224,13 @@ export class TaskValidator {
     return true;
   }
 
-  private checkTaskElementIndicatorTag(taskElement: HTMLElement): boolean {
+  private checkTaskElementIndicatorTag(taskElement: HTMLElement, ownOnly = false): boolean {
     // Find all elements with the class 'tag'
     const tagElements = taskElement.querySelectorAll('.tag');
     
     // Loop through each tag element to see if it contains the indicator tag
     for (const tagElement of tagElements) {
+      if (ownOnly && !ownedByItem(tagElement, taskElement)) continue;
       if (tagElement.textContent?.includes(`#${this.indicatorTag}`)) {
         return true; // Found the indicator tag, so return true
       }
@@ -249,4 +254,10 @@ export class TaskValidator {
       (attr) => spans[attr] !== undefined && spans[attr] !== null
     );
   }
+}
+
+// True when `el` belongs to `item` itself rather than to a list item nested
+// inside it.
+function ownedByItem(el: Element, item: HTMLElement): boolean {
+  return el.closest('li') === item;
 }

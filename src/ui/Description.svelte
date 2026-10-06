@@ -3,6 +3,9 @@
     import { tick } from 'svelte';
     import { DescriptionParser } from '../taskModule/description';
     import { ObsidianTask } from "../taskModule/task";
+    import { stripTaskSyntaxForDisplay } from '../taskModule/fieldSyntax';
+    import { SettingStore } from '../settings';
+    import { get } from 'svelte/store';
 
     var md = require('markdown-it');
     var taskLists = require('markdown-it-task-lists');
@@ -23,7 +26,14 @@
             return;
         }
 
-        const html = mdParser.render(markdown);
+        // subtasks are stored as full task lines; show them without the
+        // indicator tag, inline fields and block id
+        const indicatorTag = get(SettingStore).parsingSettings.indicatorTag;
+        const displayMarkdown = markdown
+            .split('\n')
+            .map((line) => stripTaskSyntaxForDisplay(line, indicatorTag))
+            .join('\n');
+        const html = mdParser.render(displayMarkdown);
         const doc = new DOMParser().parseFromString(html, 'text/html');
 
         Array.from(doc.body.children).forEach((child) => {
@@ -35,8 +45,15 @@
             liElement.setAttribute('data-real-line', realLineNumber.toString());
             liElement.style.color = 'var(--text-faint)';
 
-            const checkbox = liElement.querySelector('.task-list-item-checkbox') as HTMLInputElement | null;
+            // the item's own checkbox: a direct child, or inside the <p> markdown-it
+            // wraps loose-list items in; never a nested subtask's
+            const checkbox = Array.from(
+                liElement.querySelectorAll('.task-list-item-checkbox')
+            ).find((el) => el.closest('li') === liElement) as HTMLInputElement | undefined;
             if (checkbox) {
+                // mirror Obsidian's native task markup; themes key checkbox
+                // styling off [data-task] (Cupertino masks checkboxes without it)
+                liElement.setAttribute('data-task', checkbox.checked ? 'x' : ' ');
                 checkbox.removeAttribute('disabled');
                 checkbox.addEventListener('click', (evt) => {
                     evt.stopPropagation();
@@ -145,8 +162,13 @@
 
 {#if displayDescription}
     <div class="task-card-description-wrapper">
-        {#if descriptionProgress[1] > 0}
-            <div class="task-card-progress-row" aria-label="Subtask progress">
+        <!-- hidden while editing: the float would push the textarea down -->
+        {#if descriptionProgress[1] > 0 && !(interactive && taskSyncManager.getTaskCardStatus('descriptionStatus') === 'editing')}
+            <div
+                class="task-card-progress-row"
+                aria-label="Subtask progress"
+                title="{descriptionProgress[0]} of {descriptionProgress[1]} subtasks"
+            >
                 <div class="task-card-progress-track">
                     <div
                         class="task-card-progress-fill"
@@ -154,7 +176,7 @@
                     />
                 </div>
                 <span class="task-card-progress-text">
-                    {descriptionProgress[0]} of {descriptionProgress[1]} subtasks
+                    {descriptionProgress[0]}/{descriptionProgress[1]}
                 </span>
             </div>
         {/if}
@@ -192,12 +214,18 @@
     .task-card-progress-row {
         display: flex;
         align-items: center;
-        gap: 8px;
-        margin: 0.15em 0.22em 0;
+        gap: 6px;
+        /* inside the subtask block, top-right: floated before the description
+           div (which is rebuilt via innerHTML, so it cannot live in it), so
+           the first subtask row and any wrapped continuation flow around it.
+           One subtask line tall so it centers on that row. */
+        float: right;
+        height: calc(var(--line-height-tight) * var(--font-smallest));
+        margin: calc(0.1 * var(--font-smallest)) 0 0 8px;
     }
 
     .task-card-progress-track {
-        width: 72px;
+        width: 36px;
         height: 3px;
         border-radius: 2px;
         background-color: var(--background-modifier-border);
@@ -215,6 +243,7 @@
         font-size: var(--font-ui-smaller);
         color: var(--text-muted);
         white-space: nowrap;
+        font-variant-numeric: tabular-nums;
     }
 
 
@@ -234,10 +263,21 @@
         color: var(--text-faint);
         border-radius: var(--radius-s);
         cursor: pointer; /* Pointer cursor on hover */
-        margin: 0.1em; /* Padding for the content */
-        padding: 0.22em; /* Padding for the content */
+        /* the title text has no left inset (styles.css), so the list starts at
+           the column edge; the hover fill keeps 0.22em via an equal negative
+           margin */
+        margin: 0 0 0 calc(-0.22 * var(--font-smallest));
+        padding: calc(0.1 * var(--font-smallest)) 0 calc(0.1 * var(--font-smallest))
+            calc(0.22 * var(--font-smallest));
         word-wrap: break-word; /* To break words if too long */
         white-space: normal; /* To auto change lines */
+    }
+
+    /* subtask text is smaller than body text, so Obsidian's baseline
+       checkbox alignment leaves the box riding above the line; center it on
+       the text instead (top offset is reset in styles.css) */
+    .task-card-description :global(.task-list-item-checkbox) {
+        vertical-align: middle;
     }
 
     .task-card-description:hover {

@@ -15,6 +15,19 @@ const HUSLColor15 = ['#f67088',
 '#cc79f4',
 '#f45fe3',
 '#f569b7'];
+/**
+ * A stable palette color for a project name that isn't in the registry
+ * (e.g. typed inline as [project:: Work]). Pure: the same name always gets
+ * the same color, and nothing is registered or persisted (issue #8).
+ */
+export function paletteColorForName(name: string, palette: string[] = HUSLColor15): string {
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) {
+        hash = (name.charCodeAt(i) + ((hash << 5) - hash)) | 0;
+    }
+    return palette[((hash % palette.length) + palette.length) % palette.length];
+}
+
 export class ColorPaletteManager {
     private colorPalette: string[];
     private usedColors: Set<string>;

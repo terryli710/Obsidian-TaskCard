@@ -4,6 +4,7 @@ import { TaskParser } from '../src/taskModule/taskParser';
 import { TaskFormatter } from '../src/taskModule/taskFormatter';
 import { Project, ProjectModule } from '../src/taskModule/project';
 import { logger } from '../src/utils/log';
+import { paletteColorForName } from '../src/utils/colorPalette';
 
 /**
  * Round-trip invariant (v2 field format): for a task written by
@@ -178,6 +179,9 @@ describe('parser/formatter round trip', () => {
       });
       const parsed = roundTrip(task);
       expect(parsed.project?.name).toBe('Not In Registry');
+      // issue #8: a stable name-derived color so the card's dot shows
+      expect(parsed.project?.color).toBe(paletteColorForName('Not In Registry'));
+      expect(parsed.project?.id).toBe('');
     });
 
     it('should round-trip a schedule without time', () => {
@@ -390,5 +394,14 @@ describe('parser/formatter round trip', () => {
       expect(parsed.id).toBe('legacy-1');
       expect(parsed.project?.name).toBe('Project Name');
     });
+  });
+});
+
+describe('paletteColorForName (issue #8)', () => {
+  it('is stable and stays inside the project palette', () => {
+    const a = paletteColorForName('Work');
+    expect(paletteColorForName('Work')).toBe(a);
+    expect(a).toMatch(/^#[0-9a-f]{6}$/i);
+    expect(paletteColorForName('', ['#111111', '#222222'])).toBe('#111111');
   });
 });

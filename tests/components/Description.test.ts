@@ -70,7 +70,11 @@ describe('Description (interactive)', () => {
     // progress row: 1 of 2 sub-tasks done
     expect(
       container.querySelector('.task-card-progress-text')!.textContent
-    ).toContain('1 of 2 subtasks');
+    ).toContain('1/2');
+    // compact count (issue #7); the long form stays as the tooltip
+    expect(
+      container.querySelector('.task-card-progress-row')!.getAttribute('title')
+    ).toBe('1 of 2 subtasks');
   });
 
   test('renders nothing for an empty description', () => {
@@ -102,7 +106,11 @@ describe('Description (interactive)', () => {
     // progress count updates reactively
     expect(
       container.querySelector('.task-card-progress-text')!.textContent
-    ).toContain('2 of 2 subtasks');
+    ).toContain('2/2');
+    // compact count (issue #7); the long form stays as the tooltip
+    expect(
+      container.querySelector('.task-card-progress-row')!.getAttribute('title')
+    ).toBe('2 of 2 subtasks');
   });
 
   test('clicking the description opens the editor; Shift+Enter saves the edit', async () => {

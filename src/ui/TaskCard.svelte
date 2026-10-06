@@ -400,10 +400,6 @@
     color: var(--text-accent);
   }
 
-  button.mode-toggle-button {
-    border-radius: var(--radius-m);
-  }
-
   .task-card-major-block {
     display: grid;
     grid-template-columns: auto 1fr; /* Checkbox takes only the space it needs, rest for content and description */

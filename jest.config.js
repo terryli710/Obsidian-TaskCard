@@ -17,7 +17,9 @@ module.exports = {
     '@testing-library/jest-dom/extend-expect',
     '<rootDir>/tests/setupObsidianDom.ts'
   ],
-  testPathIgnorePatterns: ['node_modules'],
+  // agent worktrees live under .claude/worktrees and carry their own tests/
+  testPathIgnorePatterns: ['node_modules', '<rootDir>/.claude/'],
+  modulePathIgnorePatterns: ['<rootDir>/.claude/'],
   transformIgnorePatterns: [
     'node_modules/(?!(svelte)/)' // This will make sure svelte is transformed but other node_modules are not.
   ],

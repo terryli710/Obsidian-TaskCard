@@ -636,7 +636,8 @@
     cursor: pointer;
   }
 
-  button.mode-toggle-button {
+  /* single-line toggle only; the expanded footer's toggle is styled in styles.css */
+  .task-card-single-line button.mode-toggle-button {
     border-radius: var(--radius-m);
   }
 </style>
