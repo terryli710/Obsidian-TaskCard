@@ -378,6 +378,44 @@ body .is-flashing {
   justify-content: center;
 }
 
+/* Card checkboxes follow their text size, including smaller subtasks. Keep
+   --checkbox-size in sync so the theme's checkmark uses the same geometry
+   as the input instead of a 15px marker inside a hardcoded 20px box (#14). */
+li.obsidian-taskcard input[type='checkbox'].task-card-checkbox,
+.task-card-description input[type='checkbox'].task-list-item-checkbox {
+  --checkbox-size: max(12px, 1em) !important;
+  font-size: inherit !important;
+  width: var(--checkbox-size) !important;
+  height: var(--checkbox-size) !important;
+  min-width: var(--checkbox-size) !important;
+  min-height: var(--checkbox-size) !important;
+  max-width: var(--checkbox-size) !important;
+  max-height: var(--checkbox-size) !important;
+  padding: 0 !important;
+  box-sizing: border-box;
+  flex: none;
+}
+
+/* Some themes remove checked borders while component styles keep them.
+   Center the marker in the input's padding box in either case (#14). */
+li.obsidian-taskcard input[type='checkbox'].task-card-checkbox:checked::after,
+.task-card-description input[type='checkbox'].task-list-item-checkbox:checked::after {
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+}
+
+/* Themes can give clickable icons a toolbar-sized minimum width (Cupertino:
+   40px). Project dots are fixed circles rather than toolbar controls (#13). */
+.obsidian-taskcard .project-color {
+  min-width: 10px !important;
+  min-height: 10px !important;
+  max-width: 10px !important;
+  max-height: 10px !important;
+  padding: 0 !important;
+  box-sizing: border-box;
+}
+
 /* Obsidian's .task-list-item-checkbox carries a baseline offset
    (position: relative; top: ~2.7px) meant for plain reading-view lists;
    inside the card's flex/grid centering it just skews the checkbox low. */

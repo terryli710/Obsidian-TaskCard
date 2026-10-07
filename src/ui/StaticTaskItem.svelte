@@ -8,7 +8,7 @@
 </script>
 
 
-<li class="obsidian-taskcard task-list-item mode-multi-line">
+<li class="obsidian-taskcard task-list-item mode-multi-line" data-task={taskItem.completed ? 'x' : ' '}>
     <StaticTaskCard
         taskItem={taskItem}
         plugin={plugin}

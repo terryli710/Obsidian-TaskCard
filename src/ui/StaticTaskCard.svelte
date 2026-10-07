@@ -243,7 +243,7 @@
   <div class="task-card-single-line">
     <div class="static-task-card-container">
       <!-- Left Element: Checkbox -->
-      <div class="static-task-card-left">
+      <div class="static-task-card-left task-card-checkbox-wrapper">
         <input
           type="checkbox"
           class={`task-card-checkbox priority-${task.priority}`}
@@ -484,13 +484,19 @@
   }
 
   .project-color {
+    /* a solid dot (issue #11): fixed size so a tight flex row can't squash
+       it into an oval, and no resting border, which showed as a dark ring
+       wherever the card surface isn't --background-primary. 10px + 5px
+       margin keeps the old 20px footprint. */
     display: inline-block;
-    width: 12px;
-    height: 12px;
-    padding: 4px;
+    flex: none;
+    width: 10px;
+    height: 10px;
+    aspect-ratio: 1;
+    padding: 0;
+    margin: 5px;
+    border: none;
     border-radius: 50%;
-    margin: 4px;
-    border: var(--border-width) solid var(--background-primary);
   }
 
   .task-card-schedule {

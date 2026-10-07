@@ -252,19 +252,25 @@
     }
 
   .project-color {
+    /* a solid dot (issue #11): fixed size so a tight flex row can't squash
+       it into an oval, and no resting border, which showed as a dark ring
+       wherever the card surface isn't --background-primary. 10px + 5px
+       margin keeps the old 20px footprint. */
     display: inline-block;
-    width: 12px;
-    height: 12px;
-    padding: 4px;
+    flex: none;
+    width: 10px;
+    height: 10px;
+    aspect-ratio: 1;
+    padding: 0;
+    margin: 5px;
+    border: none;
     border-radius: 50%;
-    margin: 4px;
-    /* box-sizing: border-box; */
-    border: var(--border-width) solid var(--background-primary);
   }
 
   .project-color.clickable-icon:hover {
-    cursor: pointer; /* Change the cursor to a pointer on hover */
-    border: var(--border-width) solid var(--background-modifier-border); /* Add a border on hover */
+    cursor: pointer;
+    /* hover ring outside the dot, so the layout doesn't shift */
+    box-shadow: 0 0 0 2px var(--background-modifier-border);
   }
 
   .project-name {
