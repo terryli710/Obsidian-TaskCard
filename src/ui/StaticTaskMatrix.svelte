@@ -58,7 +58,7 @@
                 <ul class="contain-task-list has-list-bullet">
                 {#each taskList as taskItem}
                     {#if categorizeTasks(taskItem) === "do"}
-                    <StaticTaskItem {taskItem} {plugin} />
+                    <StaticTaskItem {taskItem} {plugin} compact={true} />
                     {/if}
                 {/each}
                 </ul>
@@ -73,7 +73,7 @@
                 <ul class="contain-task-list has-list-bullet">
                 {#each taskList as taskItem}
                     {#if categorizeTasks(taskItem) === "plan"}
-                    <StaticTaskItem {taskItem} {plugin} />
+                    <StaticTaskItem {taskItem} {plugin} compact={true} />
                     {/if}
                 {/each}
                 </ul>
@@ -88,7 +88,7 @@
                 <ul class="contain-task-list has-list-bullet">
                 {#each taskList as taskItem}
                     {#if categorizeTasks(taskItem) === "delegate"}
-                    <StaticTaskItem {taskItem} {plugin} />
+                    <StaticTaskItem {taskItem} {plugin} compact={true} />
                     {/if}
                 {/each}
                 </ul>
@@ -103,7 +103,7 @@
                 <ul class="contain-task-list has-list-bullet">
                 {#each taskList as taskItem}
                     {#if categorizeTasks(taskItem) === "delete"}
-                    <StaticTaskItem {taskItem} {plugin} />
+                    <StaticTaskItem {taskItem} {plugin} compact={true} />
                     {/if}
                 {/each}
                 </ul>

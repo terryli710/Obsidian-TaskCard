@@ -306,6 +306,8 @@
         {plugin}
         enableSuggestions={true}
       />
+    </div>
+    <div class="task-card-attribute-bottom-bar-right">
       <AddAttributePopover
         task={task}
         onStartEditing={startInlineAttributeEdit}
@@ -313,8 +315,6 @@
         onOpenProjectPicker={openProjectPicker}
         onAddLabel={openAddLabelInput}
       />
-    </div>
-    <div class="task-card-attribute-bottom-bar-right">
       <button class="task-card-button mode-toggle-button" on:click={(event) => switchMode(event, 'single-line')}>
         <ChevronsDownUp ariaLabel="Toggle Task Display Mode"/>
       </button>

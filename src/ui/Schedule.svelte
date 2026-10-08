@@ -299,6 +299,7 @@
   .task-card-schedule-left-part {
       display: flex;
       align-items: center;
+      flex-shrink: 0;
   }
 
   .task-card-schedule-prefix {
@@ -319,6 +320,7 @@
     height: 21px;
     border-radius: 999px;
     min-width: 2em;
+    max-width: 100%;
     flex-shrink: 0;
     overflow: hidden;
     padding: 0 10px;
@@ -354,13 +356,15 @@
   }
 
   .schedule-display {
-    display: flex;
-    align-items: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .task-card-schedule {
     display: flex;
     align-items: center;
+    min-width: 0;
+    overflow: hidden;
     white-space: nowrap;
     line-height: 1;
   }

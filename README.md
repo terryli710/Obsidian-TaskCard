@@ -1,49 +1,94 @@
-# TaskCard
+# Task Card
 
-**Interactive task cards for Obsidian — stored as plain markdown.**
+**Your tasks, beautifully in view.**
 
-TaskCard turns any tagged markdown task into an interactive card with priorities, due dates, projects, labels, durations, and recurrence — plus queryable task lists and an Eisenhower matrix. Everything is saved in your notes as readable text.
+Turn Markdown checkboxes into interactive cards. Give each project its own color, break big plans into subtasks, and bring everything together in a list or a weekly matrix. Your tasks stay in your Obsidian notes.
 
-![Create a task and complete it as a card](assets/Quick%20Start.gif)
+[Find Task Card in Obsidian](https://community.obsidian.md/plugins/task-card) · [Get started](#start-with-one-task) · [Download the latest release](https://github.com/terryli710/Obsidian-TaskCard/releases/latest)
 
-## Plain text first
+[![Expanded Studio and Fitness task cards alongside a compact Japan Trip task in a complete Obsidian window using Things, with project colors, subtasks, progress, and dates](assets/showcase/project-cards.png)](assets/showcase/project-cards.png "View full size")
 
-A TaskCard task is an ordinary markdown task with visible, human-readable fields:
+**A card for the whole plan.** See the next step, the deadline, and the details together. Check off subtasks as you go; the progress bar keeps track. Expand a card to work on it, or collapse it to keep your notes light.
+
+## See your projects from every angle
+
+### Make room for what matters
+
+The Eisenhower matrix gives your tasks four places: **Do, Plan, Delegate, and Delete**. Priority and due dates determine where each task appears, while project colors keep its context close. Compact rows keep the board tidy; hover for a full title or expand a task for its details.
+
+[![A weekly Eisenhower matrix in the real Obsidian app, with twelve tasks across four projects arranged into Do, Plan, Delegate, and Delete](assets/showcase/weekly-matrix.png)](assets/showcase/weekly-matrix.png "View full size")
+
+### Bring it all into one calm list
+
+Gather tasks from different notes into a single view. Compact rows keep project dots and expand controls aligned; open individual tasks to see their subtasks and metadata alongside the rest of your list. Filter by project, label, priority, completion, schedule, or file. Complete a task from the results, or jump straight to its original note.
+
+[![An aligned query list combining Studio, Japan Trip, Fitness, and Home tasks, with two tasks expanded to show subtasks and metadata alongside compact rows](assets/showcase/project-list.png)](assets/showcase/project-list.png "View full size")
+
+### Keep writing in your notes
+
+In **Live Preview**, dates, projects, and recurring schedules become compact metadata chips alongside your task text. Write a note, add a subtask, or edit a field in place; switch to Reading view when you want the full card.
+
+[![The actual Obsidian Live Preview editor with Studio, Japan Trip, and Fitness tasks, inline metadata chips, Markdown headings, and subtasks](assets/showcase/edit-mode.png)](assets/showcase/edit-mode.png "View full size")
+
+## Your theme. Your tasks.
+
+Task Card takes its colors and typography from Obsidian, so it feels at home in the workspace you've already made your own.
+
+Here are the same project cards in [Minimal](assets/showcase/themes/minimal.png), [Things](assets/showcase/themes/things.png), [AnuPpuccin](assets/showcase/themes/anuppuccin.png), [Blue Topaz](assets/showcase/themes/blue-topaz.png), [Cupertino](assets/showcase/themes/cupertino.png), and [Obsidianite](assets/showcase/themes/obsidianite.png). Select a theme name to see its full-size window. The gallery mixes light and dark appearances; all six were checked in both modes.
+
+[![The same task cards rendered in six Obsidian themes: Minimal and Things in light mode, AnuPpuccin and Blue Topaz in dark mode, Cupertino in light mode, and Obsidianite in dark mode](assets/showcase/themes.png)](assets/showcase/themes.png "View full size")
+
+Minimal, Things, AnuPpuccin, and Blue Topaz are among the [most downloaded Obsidian themes](https://releases.obsidian.md/stats/theme). The screenshots above come from the actual plugin in Obsidian.
+
+## Start with one task
+
+### 1. Write it. Tag it. Make it a card.
+
+Add `#TaskCard` to an ordinary Markdown task:
 
 ```markdown
-- [ ] Book flights to Tokyo #travel #TaskCard [priority:: high] [due:: 2026-07-18] [project:: Japan Trip] ^tc-b3xr9d
+- [ ] Book a weekend away #TaskCard
 ```
 
-- **Readable anywhere.** GitHub, VS Code, a phone's text editor — the task makes sense without the plugin.
-- **Nothing hidden in your notes.** No invisible JSON, no proprietary blobs. Uninstall TaskCard and your files are exactly what you see.
-- **Built from native pieces.** Fields use Dataview's inline-field syntax, labels are real `#tags`, and each task's identity is a native block id (`^tc-…`) that you can link to and that survives moving the line around.
-- **Plays well with others.** Dataview indexes every field natively, and tasks written by the [Tasks](https://github.com/obsidian-tasks-group/obsidian-tasks) plugin (emoji or dataview flavor) are recognized as-is — they keep their original dialect until you edit them through a card.
+Switch to **Reading view** to see the card. Click it to expand, and click the checkbox when it's done. You can change the indicator tag in Task Card's settings.
 
-## Capture tasks fast
+<details>
+<summary>Watch: create your first card</summary>
 
-Write a markdown task, add the indicator tag (default `#TaskCard`), and it becomes a card in reading view:
+[![Create and complete a task in a native Retina Obsidian window with rounded corners and a desktop shadow](assets/showcase/demos/quick-start.png)](assets/showcase/demos/quick-start.png "View full size")
 
-![Adding a task](assets/Add%20A%20Task.gif)
+</details>
 
-- **Autosuggest while you type.** Typing `[` after a task offers the available fields; each field then suggests values — including natural-language dates like `tomorrow` or `next fri 2pm`, which are resolved and written as real dates.
-- **Quick add.** The *Quick add task* command opens a one-line capture box that understands shorthand: `Review PR tomorrow 3pm for 1h !high #code @Work every week`.
-- **Live Preview stays tidy.** In editing mode, field syntax is styled into compact chips instead of raw brackets, so metadata doesn't drown the task text.
+### 2. Add the details as you need them
 
-## Edit everything in place
+Click an attribute to edit it in place, or use **+** to add one. Cards support projects, priorities, due dates, scheduled time, duration, labels, and recurrence. Indented text becomes the description; indented checkboxes become subtasks.
 
-Cards have two display modes: a one-line preview that sits at normal task height, and a detailed mode for working with all attributes. Click a preview card to expand it, then click any attribute to edit it in place — content, description, due, scheduled time, duration, recurrence, labels, project, priority:
+```markdown
+- [ ] Plan a weekend in Kyoto #TaskCard #travel [project:: Japan Trip]
+    - [x] Save the train tickets
+    - [ ] Reserve a place by the river
+    - [ ] Map a quiet morning walk
+```
 
-![Editing a task card](assets/Modify%20A%20Task.gif)
+<details>
+<summary>Watch: edit a card without leaving your note</summary>
 
-- Indented lines under a task become its **description**; child checkboxes become **subtasks**, and the card tracks their progress.
-- Edits patch only the task's own lines in the file — TaskCard never rewrites your whole note.
-- Completing a **recurring task** (`[repeat:: every week]`, using Tasks' recurrence grammar) completes it in place and inserts the next occurrence on the line below.
+[![Edit a card title and check off a subtask directly in the real Obsidian app](assets/showcase/demos/edit-a-card.png)](assets/showcase/demos/edit-a-card.png "View full size")
 
-## Query your tasks anywhere
+</details>
 
-Drop a `taskcard` code block into any note to get a live task list. A visual editor lets you filter by project, label, priority, completion, schedule window, or file path — no query language to learn:
+For quick captures, use **Quick add task** from the command palette. It understands shorthand like `Review the draft tomorrow 3pm for 1h !high #writing @Studio every week`. When typing fields in a note, autosuggest helps you choose attributes and natural-language dates such as `tomorrow` or `next fri 2pm`.
 
-![Building a query](assets/Add%20A%20Query.gif)
+<details>
+<summary>Watch: add a task in your note</summary>
+
+[![Type a Markdown task and turn it into a card in a native Retina Obsidian window](assets/showcase/demos/add-a-task.png)](assets/showcase/demos/add-a-task.png "View full size")
+
+</details>
+
+### 3. Build a view of your own
+
+Add a `taskcard` code block to any note. Use the visual editor to choose filters, or write a small query yourself:
 
 ````markdown
 ```taskcard
@@ -53,36 +98,61 @@ editMode: false
 ```
 ````
 
-Tasks can be completed right from the results, and clicking a result jumps to its source line. Queries need the [Dataview](https://github.com/blacksmithgu/obsidian-dataview) plugin enabled — it powers the task index.
+Queries and the matrix need [Dataview](https://github.com/blacksmithgu/obsidian-dataview). Individual cards work without it.
 
-## Plan your week with the matrix
+<details>
+<summary>Watch: gather tasks with the visual query editor</summary>
 
-Add `display: "matrix"` to a query block to lay the results out as an Eisenhower matrix — importance from priority, urgency from due dates:
+[![Filter tasks with the visual query editor in the real Obsidian app, recorded at native Retina resolution](assets/showcase/demos/query-builder.png)](assets/showcase/demos/query-builder.png "View full size")
 
-![Weekly review with the Eisenhower matrix](assets/Plan%20Your%20Week.gif)
+</details>
 
-## Installation
+To make the same view a matrix, add `display: "matrix"`:
 
-TaskCard is not yet in the community plugin market.
+````markdown
+```taskcard
+completed: [false]
+display: "matrix"
+editMode: false
+```
+````
 
-**With [BRAT](https://tfthacker.com/BRAT)** (recommended): add `terryli710/Obsidian-TaskCard` as a beta plugin.
+<details>
+<summary>Watch: complete tasks and review your week</summary>
 
-**Manual:** download `plugin-release.zip` from the [latest release](https://github.com/terryli710/Obsidian-TaskCard/releases), unzip it, and place the folder in your vault's `.obsidian/plugins/` directory.
+[![Complete a task in the Eisenhower matrix and review an errands list in a native Retina Obsidian window](assets/showcase/demos/weekly-review.png)](assets/showcase/demos/weekly-review.png "View full size")
 
-## FAQ
+</details>
 
-**Do I need Dataview?**
-Only for query blocks and the matrix — the task index is built on it. Cards themselves render without it.
+## Beautiful cards. Ordinary Markdown.
 
-**Does it work on mobile?**
-Yes — cards and queries both work on mobile.
+Everything you add through a card stays readable in your notes. Projects and dates use Dataview inline fields, labels are normal hashtags, and task identity uses Obsidian block IDs.
 
-**What about my existing tasks?**
-Tasks in the Tasks plugin's emoji or dataview format just need the indicator tag to render as cards. Tasks from TaskCard versions before the plain-text format can be converted vault-wide with the *Migrate legacy tasks to the new format* command.
+```markdown
+- [ ] Book flights to Tokyo #travel #TaskCard [priority:: high] [due:: 2026-10-16] [project:: Japan Trip] ^tc-b3xr9d
+```
 
-**A card looks wrong in my theme.**
-Card styling aims to follow your theme's variables, but not every theme has been tested. Please [open an issue](https://github.com/terryli710/Obsidian-TaskCard/issues) with the theme name.
+- **Keep your notes yours.** Read and edit your tasks in Obsidian, a text editor, or on your phone. The task text remains useful if you remove the plugin.
+- **Work with existing tasks.** Tasks from the [Tasks plugin](https://github.com/obsidian-tasks-group/obsidian-tasks) can use their existing emoji or Dataview fields; their format is preserved until you edit them through a card.
+- **Build a routine.** Complete a recurring task and Task Card creates its next occurrence using the Tasks recurrence grammar.
+- **Stay close to your writing.** Live Preview displays task metadata as compact chips while you edit the note.
 
-## License
+## Install Task Card
 
-[Apache 2.0](LICENSE)
+Open the [Task Card community page](https://community.obsidian.md/plugins/task-card). If installation is available, choose **Add to Obsidian**, then install and enable the plugin. Install **Dataview** as well if you want queries or the matrix.
+
+For early access while a directory review is pending, add `terryli710/Obsidian-TaskCard` through [BRAT](https://tfthacker.com/BRAT).
+
+For manual installation, download `plugin-release.zip` from the [latest release](https://github.com/terryli710/Obsidian-TaskCard/releases/latest), create `.obsidian/plugins/task-card/` in your vault, and place `main.js`, `manifest.json`, and `styles.css` inside it. Enable Task Card under **Settings → Community plugins**.
+
+## A few useful answers
+
+**Does it work on mobile?** Yes. Cards and queries support desktop and mobile Obsidian.
+
+**Do I need Dataview?** Only for query lists and the matrix. Cards themselves work without it.
+
+**Can I migrate older Task Card tasks?** Use **Migrate legacy tasks to the new format** to convert tasks from the older format into plain-text fields.
+
+**What if my theme needs a little attention?** [Open an issue](https://github.com/terryli710/Obsidian-TaskCard/issues) with the theme name and a screenshot. The showcase covers several popular themes; individual theme customizations can still affect rendering.
+
+[Apache 2.0 license](LICENSE)

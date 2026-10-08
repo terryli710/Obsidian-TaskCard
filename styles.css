@@ -536,11 +536,11 @@ li.obsidian-taskcard,
 }
 
 .task-card-attribute-bottom-bar {
-  display: flex; /* Use Flexbox layout */
-  align-items: flex-start; /* Keep controls pinned to the first chip row */
-  justify-content: space-between; /* Align the first 3 elements to the left and the button to the right */
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  column-gap: 6px;
   width: 100%;
-  flex-direction: row; /* Not necessary, as 'row' is the default value, but can be included for clarity */
   /* on the bar, not the left container, so the right-side toggle button
      centers on the chip row instead of floating high in a taller bar */
   margin-top: 3px;
@@ -551,7 +551,21 @@ li.obsidian-taskcard,
   align-items: center;  /* Center children vertically */
   flex-wrap: wrap; /* a full bar wraps; chips never shrink-clip (chip-polish) */
   flex-grow: 1; /* Takes up remaining left space */
+  min-width: 0;
   gap: 4px 6px; /* one rhythm for every chip; chips carry no margins */
+}
+
+/* Let each label join the same 21px flex rows as the other metadata. A
+   padded or independently wrapping labels box makes its neighbors center
+   against a taller box and drifts them away from the action row (#16). */
+.obsidian-taskcard .task-card-attribute-bottom-bar .task-card-attribute-bottom-bar-left .task-card-labels,
+.obsidian-taskcard .task-card-attribute-bottom-bar .task-card-attribute-bottom-bar-left .label-container {
+  display: contents;
+}
+
+.task-card-attribute-bottom-bar-left .task-card-labels a.tag {
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .task-card-attribute-bottom-bar-right {
@@ -560,7 +574,7 @@ li.obsidian-taskcard,
   /* one chip row tall (21px): centers the toggle on the first chip row,
      like the + button; the gap to + matches the chip gap */
   height: 21px;
-  margin-left: 6px;
+  gap: 6px;
   /* optical alignment: the icon box, not the hitbox, sits flush with the
      card's content edge. The toggle is a 21px box (the menu button is
      icon-xs + 10px with a -5px overhang), so its overhang is

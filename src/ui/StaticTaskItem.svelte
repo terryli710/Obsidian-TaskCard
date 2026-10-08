@@ -5,6 +5,7 @@
 
     export let taskItem: PositionedObsidianTask;
     export let plugin: TaskCardPlugin;
+    export let compact = false;
 </script>
 
 
@@ -12,6 +13,7 @@
     <StaticTaskCard
         taskItem={taskItem}
         plugin={plugin}
+        {compact}
     />
 </li>
 

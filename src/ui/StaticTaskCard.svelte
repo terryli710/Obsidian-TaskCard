@@ -17,6 +17,7 @@
   import Due from './Due.svelte';
   import Recurrence from './Recurrence.svelte';
   import Repeat from '../components/icons/Repeat.svelte';
+  import LucideIcon from '../components/icons/LucideIcon.svelte';
   import { completeRecurringTaskInFile } from '../taskModule/recurrence';
   import { taskIdToken } from '../taskModule/fieldSyntax';
 
@@ -26,6 +27,7 @@
 
   export let taskItem: PositionedObsidianTask;
   export let plugin: TaskCardPlugin;
+  export let compact = false;
 
   let taskDisplayParams: TaskDisplayParams = { mode: 'single-line' };
   let task = taskItem;
@@ -241,6 +243,31 @@
 
 {#if taskDisplayParams.mode === 'single-line'}
   <div class="task-card-single-line">
+    {#if compact}
+      <div class="static-task-card-container compact-matrix-row">
+        <div class="task-card-checkbox-wrapper">
+          <input type="checkbox" class={`task-card-checkbox priority-${task.priority}`}
+            checked={task.completed} on:click|stopPropagation={handleCheckboxClick} />
+        </div>
+        <div class="static-task-card-content matrix-title" role="button" tabindex="0"
+          title={task.content} on:click={linkToTask} on:keydown={linkToTask}>
+          {task.content}
+        </div>
+        <span class="matrix-project" title={task.hasProject() ? task.project.name : undefined}
+          aria-label={task.hasProject() ? `Project: ${task.project.name}` : undefined}>
+          {#if task.hasProject()}
+            <span class="project-color" style:background-color={task.project.color} />
+          {/if}
+        </span>
+        <div class="matrix-expand-wrapper">
+          <button class="task-card-button matrix-toggle" type="button"
+            aria-label={`Expand ${task.content}`} aria-expanded="false"
+            on:click={(event) => switchMode(event, 'multi-line')}>
+            <LucideIcon width="14" height="14" svgPath={'<path d="m6 9 6 6 6-6"/>'} ariaLabel="Expand task" />
+          </button>
+        </div>
+      </div>
+    {:else}
     <div class="static-task-card-container">
       <!-- Left Element: Checkbox -->
       <div class="static-task-card-left task-card-checkbox-wrapper">
@@ -303,11 +330,13 @@
         </button>
       </div>
     </div>
+    {/if}
   </div>
 {:else}
   <!-- mode = multi-line -->
   <div
     class="task-card-major-block"
+    class:compact-expanded={compact}
     role="button"
     tabindex="0"
     title={docPosition.filePath}
@@ -363,7 +392,7 @@
     </div>
   </div>
 
-  <div class="task-card-attribute-bottom-bar">
+  <div class="task-card-attribute-bottom-bar" class:compact-expanded={compact}>
     <div class="task-card-attribute-bottom-bar-left">
       <!-- Schedule/Duration/Due -->
       <Schedule
@@ -404,9 +433,16 @@
     <div class="task-card-attribute-bottom-bar-right">
       <button
         class="task-card-button mode-toggle-button"
+        type="button"
+        aria-label={`Collapse ${task.content}`}
+        aria-expanded="true"
         on:click={(event) => switchMode(event, 'single-line')}
       >
-        <ChevronsDownUp ariaLabel="Toggle Task Display Mode" />
+        {#if compact}
+          <LucideIcon width="14" height="14" svgPath={'<path d="m18 15-6-6-6 6"/>'} ariaLabel="Collapse task" />
+        {:else}
+          <ChevronsDownUp ariaLabel="Toggle Task Display Mode" />
+        {/if}
       </button>
     </div>
   </div>
@@ -437,6 +473,103 @@
     display: flex;
     align-items: center;
     width: 100%; /* Ensure it takes up all available space */
+  }
+
+  .static-task-card-container.compact-matrix-row {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) 10px 21px;
+    gap: 6px;
+    align-items: start;
+  }
+
+  .matrix-title {
+    min-width: 0;
+    padding: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  .matrix-title:hover {
+    color: var(--text-accent);
+  }
+
+  /* This grid supplies the spacing. Native checkbox margins (Blue Topaz
+     adds 2px at the bottom) would shift its center off the title axis. */
+  .compact-matrix-row input.task-card-checkbox {
+    margin: 0 !important;
+  }
+
+  .matrix-project,
+  .matrix-expand-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: calc(var(--line-height-normal) * var(--font-text-size));
+  }
+
+  .matrix-project .project-color {
+    margin: 0;
+  }
+
+  .compact-matrix-row .matrix-toggle {
+    width: 21px;
+    height: 21px;
+    min-width: 21px;
+    min-height: 21px;
+    border: none;
+    border-radius: 999px;
+    color: var(--text-muted);
+    background-color: transparent !important;
+  }
+
+  .compact-matrix-row .matrix-toggle:hover {
+    background-color: var(--background-modifier-hover) !important;
+    color: var(--text-normal);
+  }
+
+  /* Expanded query cards keep the same title, dot and control columns as
+     their compact neighbors. Reserve the 21px control and its 6px gap. */
+  .task-card-major-block.compact-expanded {
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: 6px;
+    margin: 0;
+    padding: 0;
+  }
+
+  .compact-expanded input.task-card-checkbox {
+    margin: 0 !important;
+  }
+
+  .compact-expanded .task-card-content-project-line {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 6px;
+    min-width: 0;
+    padding-right: 27px;
+    align-items: start;
+  }
+
+  .compact-expanded .task-card-content-project-line :global(.task-card-content) {
+    min-width: 0;
+    padding: 0;
+  }
+
+  .compact-expanded .project-wrapper {
+    height: calc(var(--line-height-normal) * var(--font-text-size));
+  }
+
+  .compact-expanded .task-card-project {
+    gap: 6px;
+  }
+
+  .compact-expanded .project-color {
+    margin: 0;
+  }
+
+  .compact-expanded .task-card-attribute-bottom-bar-right {
+    margin-right: 0;
   }
 
   .static-task-card-left {
@@ -598,7 +731,7 @@
 
   .task-card-labels {
     display: flex;
-    padding: 2px 0;
+    padding: 0;
     flex-wrap: nowrap; /* Prevents wrapping */
     overflow: scroll; /* Truncates any labels that don't fit */
     white-space: nowrap; /* Keeps labels on a single line */

@@ -10,7 +10,7 @@
 
 <div class="static-task-list">
     {#each taskList as taskItem}
-        <StaticTaskItem {taskItem} {plugin} />
+        <StaticTaskItem {taskItem} {plugin} compact={true} />
     {/each}
 </div>
 

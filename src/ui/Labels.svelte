@@ -196,7 +196,7 @@
 
 .task-card-labels {
   display: flex;
-  padding: 2px 0;
+  padding: 0;
   flex-wrap: nowrap; /* Prevents wrapping */
   overflow: scroll; /* Truncates any labels that don't fit */
   white-space: nowrap; /* Keeps labels on a single line */

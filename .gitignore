@@ -23,3 +23,12 @@ userData
 
 # Exclude macOS Finder (System Explorer) View States
 .DS_Store
+
+# Generated README capture frames and local review pages
+/demos/readme-showcase/raw/
+/demos/readme-showcase/retina/
+/demos/readme-showcase/preview/
+/demos/readme-showcase/before/
+/demos/readme-showcase/*.jpg
+/demos/readme-showcase/framed-video-still.png
+/demos/matrix-card-alignment/*.jpg

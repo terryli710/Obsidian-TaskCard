@@ -149,6 +149,19 @@ describe('TaskCard (smoke)', () => {
     expect(events[0].detail).toEqual({ mode: 'single-line' });
   });
 
+  test('expanded-card add and collapse controls stay together outside wrapping metadata', () => {
+    const { syncManager } = makeSyncManager({ content: 'Launch plan', labels: ['#design', '#launch'] });
+    const { container } = render(TaskCard, {
+      taskSyncManager: syncManager,
+      plugin: syncManager.plugin,
+      params: { mode: 'multi-line' }
+    });
+    const actions = container.querySelector('.task-card-attribute-bottom-bar-right')!;
+    expect(actions.querySelector('.task-card-add-attribute-button')).not.toBeNull();
+    expect(actions.querySelector('.mode-toggle-button')).not.toBeNull();
+    expect(container.querySelector('.task-card-attribute-bottom-bar-left')!.textContent).toContain('#design');
+  });
+
   test('checkbox click writes the completion back through the plugin', async () => {
     const { syncManager, plugin } = makeSyncManager({ content: 'Write tests' });
     const { container } = render(TaskCard, {
