@@ -11,6 +11,14 @@ import {
 } from '../src/editor/livePreviewConceal';
 
 describe('Live Preview conceal helpers', () => {
+  it('conceals real task fields without replacing literal syntax inside code or links', () => {
+    const line = '- [ ] Read `#TaskCard [due:: tomorrow]` and [[Note#Details|[due:: literal]]] #TaskCard [due:: 2026-10-11] ^tc-code01';
+    const fields = findInlineFieldSpans(line);
+    expect(fields.map(field => field.raw)).toEqual(['[due:: 2026-10-11]']);
+    expect(findIndicatorTagSpan(line, 'TaskCard')?.from).toBe(line.lastIndexOf('#TaskCard'));
+    expect(getTaskCardConcealPlan('- [ ] Read `#TaskCard [due:: tomorrow]`', 'TaskCard')).toBeNull();
+  });
+
   it('finds inline field spans on a canonical v2 line', () => {
     const line =
       '- [ ] Draft Q3 report #report #TaskCard [priority:: high] [due:: 2026-07-10] [scheduled:: 2026-07-11 09:00] [project:: Work] ^tc-4f2a1b';

@@ -9,6 +9,7 @@
  * SettingStore keeps its defaults (defaultMode: 'single-line', no projects).
  */
 import '@testing-library/jest-dom';
+import { App } from 'obsidian';
 
 import { DefaultSettings, SettingStore } from '../../src/settings';
 import { ObsidianTask } from '../../src/taskModule/task';
@@ -25,12 +26,16 @@ beforeAll(async () => {
 
 function makePluginStub() {
   return {
+    app: new App(),
     taskFormatter: {
       taskToMarkdown: jest.fn(() => '- [ ] formatted #TaskCard')
     },
     fileOperator: {
       updateFile: jest.fn(async () => undefined),
       getMarkdownBetweenLines: jest.fn(async () => ''),
+      // These smoke fixtures are top-level tasks; indentation is read from
+      // the source before write-back, while the formatter stays stubbed.
+      getLineFromFile: jest.fn(async () => '- [ ] fixture #TaskCard'),
       // write-time position verification reads the file; null -> the sync
       // manager trusts the cached render-time span
       getFileLines: jest.fn(async () => null)
@@ -74,6 +79,22 @@ function makeSyncManager(
 }
 
 describe('TaskCard (smoke)', () => {
+  test('a clipped live title opens on keyboard focus and closes when the card expands', async () => {
+    const content = 'Write the complete project proposal and review all of its milestones';
+    const { syncManager } = makeSyncManager({ content });
+    const { container } = render(TaskItem, {
+      taskSyncManager: syncManager, plugin: syncManager.plugin
+    });
+    const title = container.querySelector('.task-card-content')!;
+    Object.defineProperties(title, { clientWidth: { value: 120 }, scrollWidth: { value: 600 } });
+    const hitbox = container.querySelector('.obsidian-taskcard-hitbox')!;
+    await fireEvent.focusIn(hitbox);
+    expect(document.querySelector('[role="tooltip"]')).toHaveTextContent(content);
+    await fireEvent.keyDown(hitbox, { key: 'Enter' });
+    expect(container.querySelector('.task-card-major-block')).not.toBeNull();
+    expect(document.querySelector('[role="tooltip"]')).toBeNull();
+  });
+
   test('single-line mode renders checkbox, content and priority class', () => {
     const { syncManager } = makeSyncManager({
       content: 'Write tests',
@@ -104,7 +125,7 @@ describe('TaskCard (smoke)', () => {
     );
   });
 
-  test('multi-line mode renders content, description, duration and labels', () => {
+  test('multi-line mode renders content, description, duration and labels', async () => {
     const { syncManager } = makeSyncManager({
       content: 'Write tests',
       description: '- [ ] a\n- [x] b',
@@ -122,7 +143,7 @@ describe('TaskCard (smoke)', () => {
 
     expect(container.querySelector('.task-card-major-block')).not.toBeNull();
     expect(container.textContent).toContain('Write tests');
-    expect(container.querySelectorAll('li')).toHaveLength(2); // description list
+    await waitFor(() => expect(container.querySelectorAll('li')).toHaveLength(2));
     expect(container.querySelector('.duration-display')!.textContent).toContain(
       '1h 30m'
     );

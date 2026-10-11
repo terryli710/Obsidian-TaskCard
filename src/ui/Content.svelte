@@ -4,16 +4,21 @@
     import { TaskDisplayMode } from '../renderer/postProcessor';
     import { logger } from '../utils/log';
     import { ObsidianTask } from '../taskModule/task';
+    import TaskCardPlugin from '../index';
+    import { isMarkdownControl, taskMarkdown } from './taskMarkdown';
 
     export let interactive: boolean = true;
     export let taskSyncManager: ObsidianTaskSyncManager = undefined;
     export let taskItem: ObsidianTask = undefined;
+    export let plugin: TaskCardPlugin = undefined;
+    export let sourcePath: string = undefined;
 
     let content: string = interactive ? taskSyncManager.obsidianTask.content : taskItem.content;
     let isEditing = false;
     let inputElement: HTMLElement;
 
     async function enableEditMode(event: MouseEvent | KeyboardEvent) {
+        if (isMarkdownControl(event)) return;
         if (event instanceof KeyboardEvent) {
             if (event.key === 'Enter' || event.key === ' ') {
                 event.preventDefault();
@@ -73,7 +78,7 @@
     function focusAndSelect(node: HTMLElement) {
         node.focus();
         // select-all so typing replaces the whole title
-        window.getSelection()?.selectAllChildren(node);
+        node.ownerDocument.defaultView?.getSelection()?.selectAllChildren(node);
     }
 
     const dispatch = createEventDispatcher();
@@ -110,8 +115,9 @@
         on:click={interactive ? enableEditMode : null} 
         on:keydown={interactive ? enableEditMode : null}
         aria-label="Content"
+        use:taskMarkdown={{app: plugin?.app ?? taskSyncManager?.plugin?.app, markdown: content,
+          sourcePath: sourcePath ?? taskSyncManager?.taskMetadata?.sourcePath, inline: true}}
         >
-        {content}
     </div>
 {/if}
 

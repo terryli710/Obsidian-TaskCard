@@ -475,7 +475,8 @@ li.obsidian-taskcard,
   display: flex;
   flex-direction: row;
   align-items: center; /* Vertically center the checkbox and content */
-  flex-grow: 1; /* Take up all available space */
+  flex: 1 1 0; /* Reserve a visible title even in a narrow pane. */
+  min-width: 3em;
 }
 
 .task-card-single-line-right-container {
@@ -484,6 +485,102 @@ li.obsidian-taskcard,
   align-items: center; /* Vertically center the children */
   align-self: center;
   gap: 6px; /* chips carry no margins of their own (chip-polish) */
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: calc(100% - 3em);
+}
+
+.task-card-single-line-right-container > .single-line-progress,
+.task-card-single-line-right-container > .single-line-recurrence {
+  flex-shrink: 0;
+}
+
+.obsidian-taskcard .task-card-single-line-right-container .task-card-schedule-container {
+  flex-shrink: 1;
+  min-width: 2.6em; /* Keep the schedule icon and chip padding visible. */
+}
+
+.obsidian-taskcard .task-card-single-line-right-container .task-card-project {
+  flex-shrink: 1;
+  min-width: 0;
+}
+
+.obsidian-taskcard .task-card-single-line-right-container .task-card-project:has(.project-color) {
+  min-width: 20px; /* The fixed dot and its margins. */
+}
+
+.task-card-single-line-right-container .project-name-quiet.single-line {
+  min-width: 0;
+}
+
+/* One-line titles yield to the existing metadata, in live and query cards. */
+.task-card-markdown-inline,
+.task-card-markdown-inline > p {
+  display: inline;
+  margin: 0;
+  padding: 0;
+  font: inherit;
+  line-height: inherit;
+}
+
+/* Full Markdown belongs to the description; title embeds must fit a line. */
+.task-card-truncated-title .task-card-markdown img,
+.task-card-truncated-title .task-card-markdown .internal-embed {
+  max-height: 1em;
+  vertical-align: middle;
+  overflow: hidden;
+}
+
+.task-card-truncated-title .task-card-markdown .internal-embed {
+  display: inline-block;
+  max-height: 1lh;
+  vertical-align: top;
+  box-sizing: border-box;
+  max-width: 18em;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.obsidian-taskcard .task-card-single-line .task-card-truncated-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.obsidian-taskcard .task-card-single-line .static-task-card-middle {
+  min-width: 0;
+}
+
+.obsidian-taskcard .task-card-single-line .static-task-card-middle-right {
+  flex-shrink: 0;
+}
+
+/* A portal outside the scrolling note: theme colors, title typography. */
+body .task-card-title-tooltip {
+  position: fixed;
+  z-index: var(--layer-popover, 1000);
+  box-sizing: border-box;
+  padding: 14px 16px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 10px;
+  background: var(--background-primary);
+  color: var(--text-normal);
+  box-shadow: var(--shadow-s, 0 8px 24px rgba(0, 0, 0, 0.14));
+  overflow: auto;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  user-select: text;
+  cursor: text;
+}
+
+.task-card-title-tooltip-caption {
+  margin-top: 8px;
+  font-size: var(--font-ui-smaller);
+  font-weight: normal;
+  line-height: 1.4;
+  color: var(--text-muted);
 }
 
 .task-card-checkbox-wrapper {

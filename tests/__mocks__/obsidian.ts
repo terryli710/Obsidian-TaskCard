@@ -265,6 +265,19 @@ export class Component {
   }
 }
 
+// Native Markdown is an Obsidian boundary. Checklist markup here supports
+// component interaction tests; actual syntax and themes are verified in-vault.
+export class MarkdownRenderer {
+  static render = jest.fn(async (_app: App, markdown: string, el: HTMLElement, _sourcePath: string, _component: Component) => {
+    const parser = require('markdown-it')().use(require('markdown-it-task-lists'));
+    el.innerHTML = parser.render(markdown);
+  });
+}
+
+export class Keymap {
+  static isModEvent(event: MouseEvent) { return event.ctrlKey || event.metaKey; }
+}
+
 export class Plugin extends Component {
   app: App;
   manifest: PluginManifest;

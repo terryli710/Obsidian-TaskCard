@@ -1,18 +1,21 @@
 
+import { protectMarkdownSyntax } from './markdownSyntax';
+
 export function escapeRegExp(string: string) {
   return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
 }
 
 export function extractTags(text: string): [string[], string] {
+  const protectedSource = protectMarkdownSyntax(text);
   // Regular expression to detect valid tags based on the provided rules
   const tagRegex = /#([a-zA-Z_/-]+[a-zA-Z0-9_/-]*|[a-zA-Z_/-][a-zA-Z0-9_/-]+)/g;
-  let matches = text.match(tagRegex) || [];
+  let matches = protectedSource.text.match(tagRegex) || [];
   if (matches.length === 0) { return [[], text]; }
   // for the matches, get the label part (remove the #)
   let labels = matches.map((match) => match.substring(1));
 
   // Remove the tags from the content and then trim any consecutive spaces greater than 2
-  const remainingText = text
+  const remainingText = protectedSource.text
     .replace(
       /(\s?)#([a-zA-Z_/-]+[a-zA-Z0-9_/-]*|[a-zA-Z_/-][a-zA-Z0-9_/-]+)(\s?)/g,
       ' '
@@ -26,7 +29,7 @@ export function extractTags(text: string): [string[], string] {
     return '#' + cleanedLabel;
   });
 
-  return [labels, remainingText];
+  return [labels, protectedSource.restore(remainingText)];
 }
 
 /**

@@ -3,92 +3,73 @@
     import { tick } from 'svelte';
     import { DescriptionParser } from '../taskModule/description';
     import { ObsidianTask } from "../taskModule/task";
-    import { stripTaskSyntaxForDisplay } from '../taskModule/fieldSyntax';
+    import { descriptionMarkdownForDisplay, descriptionTaskLines } from '../taskModule/descriptionMarkdown';
     import { SettingStore } from '../settings';
     import { get } from 'svelte/store';
-
-    var md = require('markdown-it');
-    var taskLists = require('markdown-it-task-lists');
-    const mdParser = md().use(taskLists);
+    import TaskCardPlugin from '../index';
+    import { isMarkdownControl, taskMarkdown } from './taskMarkdown';
 
     export let interactive: boolean = true;
     export let taskSyncManager: ObsidianTaskSyncManager = undefined;
     export let taskItem: ObsidianTask = undefined;
     export let displayDescription: boolean;
+    export let plugin: TaskCardPlugin = undefined;
+    export let sourcePath: string = undefined;
+    export let showProgress = true;
 
     let description = interactive ? taskSyncManager.obsidianTask.description : taskItem.description;
     let inputElement: HTMLTextAreaElement;
     let descriptionProgress = DescriptionParser.progressOfDescription(description);
 
-    function renderDescriptionNode(node: HTMLElement, markdown: string) {
-        node.innerHTML = '';
-        if (!markdown || markdown.trim().length === 0) {
-            return;
-        }
-
-        // subtasks are stored as full task lines; show them without the
-        // indicator tag, inline fields and block id
-        const indicatorTag = get(SettingStore).parsingSettings.indicatorTag;
-        const displayMarkdown = markdown
-            .split('\n')
-            .map((line) => stripTaskSyntaxForDisplay(line, indicatorTag))
-            .join('\n');
-        const html = mdParser.render(displayMarkdown);
-        const doc = new DOMParser().parseFromString(html, 'text/html');
-
-        Array.from(doc.body.children).forEach((child) => {
-            node.appendChild(child.cloneNode(true));
-        });
-
-        let realLineNumber = 1;
-        node.querySelectorAll('li').forEach((liElement) => {
-            liElement.setAttribute('data-real-line', realLineNumber.toString());
+    function prepareSubtasks(node: HTMLElement) {
+        const taskLines = descriptionTaskLines(description);
+        const sourceItems = Array.from(node.querySelectorAll('li')).filter(li =>
+            !li.closest('.internal-embed, [class*="block-language-"], .dataview'));
+        const ownCheckbox = (li: HTMLElement) => Array.from(li.querySelectorAll<HTMLInputElement>(
+            '.task-list-item-checkbox')).find(el => el.closest('li') === li);
+        // Unknown postprocessors can add HTML checkboxes too. Never guess
+        // source ownership when the rendered/source task counts disagree.
+        const mappingValid = sourceItems.filter(li => ownCheckbox(li)).length === taskLines.length;
+        let taskIndex = 0;
+        sourceItems.forEach((liElement) => {
             liElement.style.color = 'var(--text-faint)';
 
             // the item's own checkbox: a direct child, or inside the <p> markdown-it
             // wraps loose-list items in; never a nested subtask's
-            const checkbox = Array.from(
-                liElement.querySelectorAll('.task-list-item-checkbox')
-            ).find((el) => el.closest('li') === liElement) as HTMLInputElement | undefined;
+            const checkbox = ownCheckbox(liElement);
             if (checkbox) {
+                // Fragment rendering has no data-line. Map native task items
+                // in document order to actual source list items, excluding
+                // code blocks and embedded notes on both sides.
+                const lineNumber = mappingValid ? taskLines[taskIndex++] : undefined;
                 // mirror Obsidian's native task markup; themes key checkbox
                 // styling off [data-task] (Cupertino masks checkboxes without it)
                 liElement.setAttribute('data-task', checkbox.checked ? 'x' : ' ');
-                checkbox.removeAttribute('disabled');
+                checkbox.disabled = !interactive || lineNumber === undefined;
                 checkbox.addEventListener('click', (evt) => {
-                    evt.stopPropagation();
-                    const lineNumber = Number(liElement.getAttribute('data-real-line'));
+                    // Own the source write; native preview delegation would
+                    // interpret these description-relative lines as note lines.
+                    evt.stopImmediatePropagation();
+                    if (!interactive || lineNumber === undefined) return;
                     const newDescription = description.split('\n').map((line, index) => {
-                        if (index !== lineNumber - 1) {
+                        if (index !== lineNumber) {
                             return line;
                         }
-                        if (line.includes('- [x]')) {
-                            return line.replace('- [x]', '- [ ]');
-                        }
-                        if (line.includes('- [ ]')) {
-                            return line.replace('- [ ]', '- [x]');
-                        }
-                        return line;
+                        return line.replace(/^((?:\s*>\s*)*\s*(?:[-*+]|\d+[.)])\s+\[).(\])/,
+                            (_, prefix, suffix) => `${prefix}${checkbox.checked ? 'x' : ' '}${suffix}`);
                     });
                     description = newDescription.join('\n');
                     void taskSyncManager.updateObsidianTaskAttribute('description', description);
-                });
+                }, true);
             }
-
-            realLineNumber++;
         });
     }
 
-    function appendDescription(node: HTMLElement, markdown: string) {
-        renderDescriptionNode(node, markdown);
-        return {
-            update(nextMarkdown: string) {
-                renderDescriptionNode(node, nextMarkdown);
-            }
-        };
-    }
+    $: displayMarkdown = descriptionMarkdownForDisplay(
+        description ?? '', get(SettingStore).parsingSettings.indicatorTag);
 
     async function enableEditMode(event: MouseEvent | KeyboardEvent) {
+        if (isMarkdownControl(event)) return;
         event.stopPropagation();
         if (event instanceof KeyboardEvent) {
             if (event.key === 'Enter' || event.key === ' ') {
@@ -163,7 +144,7 @@
 {#if displayDescription}
     <div class="task-card-description-wrapper">
         <!-- hidden while editing: the float would push the textarea down -->
-        {#if descriptionProgress[1] > 0 && !(interactive && taskSyncManager.getTaskCardStatus('descriptionStatus') === 'editing')}
+        {#if showProgress && descriptionProgress[1] > 0 && !(interactive && taskSyncManager.getTaskCardStatus('descriptionStatus') === 'editing')}
             <div
                 class="task-card-progress-row"
                 aria-label="Subtask progress"
@@ -199,7 +180,9 @@
                 tabindex="0"
                 on:click={interactive ? enableEditMode : null}
                 on:keydown={interactive ? enableEditMode : null}
-                use:appendDescription={description}
+                use:taskMarkdown={{app: plugin?.app ?? taskSyncManager?.plugin?.app,
+                  markdown: displayMarkdown, sourcePath: sourcePath ?? taskSyncManager?.taskMetadata?.sourcePath,
+                  onRendered: prepareSubtasks}}
                 aria-label="Description"
             >
             </div>

@@ -63,6 +63,15 @@ export class StaticTaskListRenderManager {
 
     getCodeBlockProcessor(): CodeBlockProcessor {
         const codeBlockProcessor: CodeBlockProcessor = async (source, el, ctx) => {
+          if (el.closest('[data-taskcard-markdown]')) {
+            // A query embedded in a task must not recursively query/render
+            // that same task. Keep its code readable inside the description.
+            const pre = el.ownerDocument.createElement('pre');
+            const code = pre.appendChild(el.ownerDocument.createElement('code'));
+            code.textContent = source;
+            el.replaceChildren(pre);
+            return;
+          }
           const blockLanguage = get(SettingStore).parsingSettings.blockLanguage;
           const processor = new QueryAndTaskListSvelteAdapter(this.plugin, blockLanguage, source, el, ctx);
           // let Obsidian drive load/unload so the Svelte component is destroyed

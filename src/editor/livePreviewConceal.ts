@@ -67,7 +67,7 @@ export function getTaskCardConcealPlan(
   lineText: string,
   indicatorTag: string
 ): TaskCardConcealPlan | null {
-  if (!isTaskCardTaskLine(lineText, indicatorTag)) return null;
+  if (!isTaskCardTaskLine(lineText, indicatorTag) || !findIndicatorTagSpan(lineText, indicatorTag)) return null;
 
   const candidateFields = findInlineFieldSpans(lineText).filter(
     (field) => field.canonicalKey && CONCEALED_FIELD_KEYS.has(field.canonicalKey)

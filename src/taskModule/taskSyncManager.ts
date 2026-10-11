@@ -2,7 +2,7 @@ import { MarkdownPostProcessorContext, MarkdownSectionInformation, Notice } from
 import { moment } from '../utils/obsidianMoment';
 import { ObsidianTask } from './task';
 import { advanceRecurringTask } from './recurrence';
-import { taskIdToken } from './fieldSyntax';
+import { extractBlockId, taskIdToken } from './fieldSyntax';
 import TaskCardPlugin from '..';
 import { logger } from '../utils/log';
 
@@ -125,11 +125,13 @@ export class ObsidianTaskSyncManager implements ObsidianTaskSyncProps {
     );
     if (!fileLines) return cached;
     const idToken = taskIdToken(id);
-    if (cached && fileLines[cached[0]]?.includes(idToken)) return cached;
+    const matchesId = (line: string | undefined): boolean =>
+      !!line && (extractBlockId(line).id === id || line.includes(idToken));
+    if (cached && matchesId(fileLines[cached[0]])) return cached;
 
     const matches: number[] = [];
     fileLines.forEach((line, index) => {
-      if (line.includes(idToken)) matches.push(index);
+      if (matchesId(line)) matches.push(index);
     });
     if (matches.length !== 1) return cached;
 
@@ -220,6 +222,14 @@ export class ObsidianTaskSyncManager implements ObsidianTaskSyncProps {
       this.announceLostTask();
       return true; // handled (nothing safe to write)
     }
+    const sourceLine = await this.plugin.fileOperator.getLineFromFile(
+      this.taskMetadata.sourcePath, span[0] + 1
+    );
+    if (sourceLine == null) {
+      this.announceLostTask();
+      return true;
+    }
+    const indent = sourceLine.match(/^[ \t]*/)[0];
     const origTask = this.obsidianTask.getCopy();
     this.obsidianTask.completed = true;
     this.obsidianTask.recurrence = null;
@@ -229,8 +239,8 @@ export class ObsidianTaskSyncManager implements ObsidianTaskSyncProps {
       origTask
     );
     if (syncMetadata) this.obsidianTask.metadata.syncMappings = syncMetadata;
-    const completedMarkdown = this.plugin.taskFormatter.taskToMarkdown(this.obsidianTask);
-    const nextMarkdown = this.plugin.taskFormatter.taskToMarkdown(nextTask);
+    const completedMarkdown = this.formatTaskWithIndent(this.obsidianTask, indent);
+    const nextMarkdown = this.formatTaskWithIndent(nextTask, indent);
     await this.plugin.fileOperator.updateFile(
       this.taskMetadata.sourcePath,
       `${completedMarkdown}\n${nextMarkdown}`,
@@ -250,6 +260,11 @@ export class ObsidianTaskSyncManager implements ObsidianTaskSyncProps {
     this.obsidianTask.clearTaskDisplayParams();
   }
 
+  private formatTaskWithIndent(task: ObsidianTask, indent: string): string {
+    return this.plugin.taskFormatter.taskToMarkdown(task)
+      .split('\n').map((line) => indent + line).join('\n');
+  }
+
   async updateTaskToFile(): Promise<void> {
     // resolve the span before formatting: formatting may mint a new id, and
     // the old id is what locates the task's current line
@@ -258,8 +273,15 @@ export class ObsidianTaskSyncManager implements ObsidianTaskSyncProps {
       this.announceLostTask();
       return;
     }
-    const markdownTask = this.plugin.taskFormatter.taskToMarkdown(
-      this.obsidianTask
+    const sourceLine = await this.plugin.fileOperator.getLineFromFile(
+      this.taskMetadata.sourcePath, span[0] + 1
+    );
+    if (sourceLine == null) {
+      this.announceLostTask();
+      return;
+    }
+    const markdownTask = this.formatTaskWithIndent(
+      this.obsidianTask, sourceLine.match(/^[ \t]*/)[0]
     );
     await this.plugin.fileOperator.updateFile(
       this.taskMetadata.sourcePath,

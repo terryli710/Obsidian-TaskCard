@@ -44,10 +44,10 @@ describe('isTaskList', () => {
     expect(isTaskList(ul)).toBe(true);
   });
 
-  it('should return false for UL elements without correct classes', () => {
+  it('recognizes Reading view lists without the editor-only bullet class', () => {
     const ul = document.createElement('ul');
     ul.classList.add('contains-task-list');
-    expect(isTaskList(ul)).toBe(false);
+    expect(isTaskList(ul)).toBe(true);
   });
 });
 

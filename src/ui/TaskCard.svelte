@@ -19,12 +19,15 @@
     import Recurrence from './Recurrence.svelte';
     import Repeat from '../components/icons/Repeat.svelte';
     import AddAttributePopover from './AddAttributePopover.svelte';
+    import { truncatedTitle } from './truncatedTitle';
+    import { taskMarkdown } from './taskMarkdown';
 
     export let taskSyncManager: ObsidianTaskSyncManager;
     export let plugin: TaskCardPlugin;
     export let params: TaskDisplayParams;
 
     let task: ObsidianTask = taskSyncManager.obsidianTask;
+    $: titleMarkdown = {app: plugin?.app, markdown: task.content, sourcePath: taskSyncManager.taskMetadata?.sourcePath, inline: true};
     let descriptionProgress = DescriptionParser.progressOfDescription(task.description);
 
     const dispatch = createEventDispatcher();
@@ -256,7 +259,7 @@
           on:click|stopPropagation={handleCheckboxClick}
         />
       </div>
-      <div class="task-card-content">{task.content}</div>
+      <div class="task-card-content task-card-truncated-title" use:taskMarkdown={titleMarkdown} use:truncatedTitle={titleMarkdown}></div>
     </div>
     <div class="task-card-single-line-right-container">
       {#if descriptionProgress[1] > 0 && !task.completed }

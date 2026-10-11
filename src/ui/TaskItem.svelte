@@ -9,6 +9,7 @@
     import { ObsidianTaskSyncManager } from "../taskModule/taskSyncManager";
     import { SettingStore } from "../settings";
     import { get } from "svelte/store";
+    import { isMarkdownControl } from './taskMarkdown';
 
     export let taskSyncManager: ObsidianTaskSyncManager;
     export let plugin: TaskCardPlugin;
@@ -36,6 +37,7 @@
 
 
     function handleSwitchMode(event: MouseEvent | KeyboardEvent | CustomEvent) {
+        if (isMarkdownControl(event)) return;
         if (event instanceof KeyboardEvent && (event.key !== 'Enter' && event.key !== ' ')) {
             return; // Only handle Enter or Space key
         }

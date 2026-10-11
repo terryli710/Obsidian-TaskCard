@@ -286,8 +286,10 @@ export default class TaskCardPlugin extends Plugin {
   }
 
   registerPostProcessors() {
+    const cardPostProcessor = this.taskCardRenderManager.getPostProcessor();
     this.registerMarkdownPostProcessor(
-      this.taskCardRenderManager.getPostProcessor()
+      cardPostProcessor,
+      cardPostProcessor.sortOrder
     );
 
   let taskCardMarkdownCodeBlockProcessor: CodeBlockProcessor;

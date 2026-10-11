@@ -128,6 +128,8 @@ editMode: false
 
 Everything you add through a card stays readable in your notes. Projects and dates use Dataview inline fields, labels are normal hashtags, and task identity uses Obsidian block IDs.
 
+Card titles and descriptions render Obsidian Markdown, including note links and aliases, emphasis, inline code, math, and embeds. Compact titles stay on one line; hover over a clipped title to read its full formatted text. Click a link to open its target, or edit the surrounding text to see the original Markdown.
+
 ```markdown
 - [ ] Book flights to Tokyo #travel #TaskCard [priority:: high] [due:: 2026-10-16] [project:: Japan Trip] ^tc-b3xr9d
 ```

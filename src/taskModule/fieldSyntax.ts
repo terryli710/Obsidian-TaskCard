@@ -1,5 +1,6 @@
 import { Priority, ScheduleDate, Duration } from './task';
 import { escapeRegExp } from '../utils/regexUtils';
+import { protectMarkdownSyntax } from '../utils/markdownSyntax';
 
 /**
  * TaskCard v2 on-disk syntax (docs/format-spec.md): visible Dataview inline
@@ -105,11 +106,14 @@ export interface InlineFieldSpan {
  * user-custom fields, …) are kept verbatim so a rewrite never drops them.
  */
 export function extractInlineFields(text: string): ExtractedFields {
+  const protectedSource = protectMarkdownSyntax(text);
   const known: Partial<Record<KnownFieldKey, string>> = {};
   const foreign: string[] = [];
 
   const consume = (source: string, pattern: RegExp): string =>
     source.replace(pattern, (raw, key: string, value: string) => {
+      value = protectedSource.restore(value);
+      raw = protectedSource.restore(raw);
       const canonical = normalizeFieldKey(key);
       if (canonical) {
         if (known[canonical] === undefined) known[canonical] = value.trim();
@@ -119,12 +123,13 @@ export function extractInlineFields(text: string): ExtractedFields {
       return ' ';
     });
 
-  let rest = consume(text, BRACKET_FIELD);
+  let rest = consume(protectedSource.text, BRACKET_FIELD);
   rest = consume(rest, PAREN_FIELD);
-  return { known, foreign, rest: rest.replace(/\s{2,}/g, ' ').trimEnd() };
+  return { known, foreign, rest: protectedSource.restore(rest.replace(/\s{2,}/g, ' ').trimEnd()) };
 }
 
 export function findInlineFieldSpans(text: string): InlineFieldSpan[] {
+  const protectedSource = protectMarkdownSyntax(text);
   const spans: InlineFieldSpan[] = [];
   const patterns = [BRACKET_FIELD, PAREN_FIELD];
 
@@ -132,6 +137,7 @@ export function findInlineFieldSpans(text: string): InlineFieldSpan[] {
     pattern.lastIndex = 0;
     let match: RegExpExecArray | null;
     while ((match = pattern.exec(text)) !== null) {
+      if (protectedSource.contains(match.index)) continue;
       spans.push({
         raw: match[0],
         key: match[1],
@@ -156,11 +162,14 @@ export function findIndicatorTagSpan(
   indicatorTag: string
 ): TextSpan | null {
   const pattern = new RegExp(
-    `#${escapeRegExp(indicatorTag)}(?![A-Za-z0-9_/-])`
+    `#${escapeRegExp(indicatorTag)}(?![A-Za-z0-9_/-])`, 'g'
   );
-  const match = pattern.exec(text);
-  if (!match || match.index === undefined) return null;
-  return { from: match.index, to: match.index + match[0].length };
+  const protectedSource = protectMarkdownSyntax(text);
+  let match: RegExpExecArray | null;
+  while ((match = pattern.exec(text))) {
+    if (!protectedSource.contains(match.index)) return { from: match.index, to: match.index + match[0].length };
+  }
+  return null;
 }
 
 export function findBlockIdSpan(
@@ -187,8 +196,8 @@ export function stripTaskSyntaxForDisplay(
 ): string {
   const { rest } = extractBlockId(line);
   const indent = rest.match(/^\s*/)[0];
-  const body = rest
-    .slice(indent.length)
+  const protectedSource = protectMarkdownSyntax(rest.slice(indent.length));
+  const body = protectedSource.text
     .replace(BRACKET_FIELD, ' ')
     .replace(PAREN_FIELD, ' ')
     .replace(
@@ -199,7 +208,7 @@ export function stripTaskSyntaxForDisplay(
   // a subtask that is nothing but syntax would collapse to "- [ ]", which
   // markdown renders as literal text with no checkbox; show it as written
   if (/^(?:[-*+]|\d+[.)])\s+\[.\]$/.test(display)) return line;
-  return indent + display;
+  return indent + protectedSource.restore(display);
 }
 
 /** Tasks-plugin emoji signifiers → canonical/foreign fields. */
@@ -252,11 +261,12 @@ export function extractEmojiFields(
   text: string,
   validateRecurrence?: (rule: string) => boolean
 ): ExtractedEmojiFields {
+  const protectedSource = protectMarkdownSyntax(text);
   const known: Partial<Record<KnownFieldKey, string>> = {};
   const foreign: string[] = [];
   let priority: Priority | null = null;
 
-  let rest = text.replace(EMOJI_DATE_FIELD, (_raw, emoji: string, date: string) => {
+  let rest = protectedSource.text.replace(EMOJI_DATE_FIELD, (_raw, emoji: string, date: string) => {
     const key = EMOJI_DATE_KEYS[emoji];
     if (key === 'start' || key === 'created' || key === 'cancelled') {
       foreign.push(`[${key}:: ${date}]`);
@@ -289,7 +299,7 @@ export function extractEmojiFields(
     known,
     priority,
     foreign,
-    rest: rest.replace(/\s{2,}/g, ' ').trimEnd()
+    rest: protectedSource.restore(rest.replace(/\s{2,}/g, ' ').trimEnd())
   };
 }
 

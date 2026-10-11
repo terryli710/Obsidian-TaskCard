@@ -1,7 +1,8 @@
 import type { TaskValidator } from '../taskModule/taskValidator';
 
 export function isTaskList(el: HTMLElement): boolean {
-  // ul, class contains: contains-task-list and has-list-bullet
+  // Reading view has contains-task-list; has-list-bullet is editor markup
+  // and is not present in the native Reading view DOM.
   if (!el) {
     return false;
   }
@@ -9,10 +10,7 @@ export function isTaskList(el: HTMLElement): boolean {
   if (el.tagName !== 'UL') {
     return false;
   }
-  return (
-    el.classList.contains('contains-task-list') &&
-    el.classList.contains('has-list-bullet')
-  );
+  return el.classList.contains('contains-task-list');
 }
 
 export function isTaskItemEl(

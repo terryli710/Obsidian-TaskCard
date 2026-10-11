@@ -23,20 +23,20 @@ function taskLi(): HTMLLIElement {
 }
 
 describe('isTaskList (class combinations)', () => {
-  it('requires BOTH task-list classes, not just one', () => {
+  it('requires the task-list class but accepts Reading view without has-list-bullet', () => {
     const onlyBullet = document.createElement('ul');
     onlyBullet.classList.add('has-list-bullet');
     expect(isTaskList(onlyBullet)).toBe(false);
 
     const onlyTaskList = document.createElement('ul');
     onlyTaskList.classList.add('contains-task-list');
-    expect(isTaskList(onlyTaskList)).toBe(false);
+    expect(isTaskList(onlyTaskList)).toBe(true);
 
     const none = document.createElement('ul');
     expect(isTaskList(none)).toBe(false);
   });
 
-  it('tolerates extra classes as long as both required ones are present', () => {
+  it('tolerates additional theme and editor classes', () => {
     const ul = document.createElement('ul');
     ul.classList.add(
       'markdown-rendered',

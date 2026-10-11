@@ -69,6 +69,19 @@ describe('parser/formatter round trip', () => {
     infoSpy.mockRestore();
   });
 
+  test('Markdown links and literal task syntax survive a card edit', () => {
+    const content = 'Read [[Note#Details|the plan]] and `[due:: 2026-10-11]  #literal 📅 2026-10-12` ^fu-ev008 >> waiting';
+    const source = `- [ ] ${content} #TaskCard [project:: ProjectX] ^tc-mdtest`;
+    const task = taskParser.parseAnyTaskMarkdown(source);
+    expect(task.content).toBe(content);
+    expect(task.labels).toEqual([]);
+    expect(task.hasDue()).toBe(false);
+    task.completed = true;
+    const written = taskFormatter.taskToMarkdown(task);
+    expect(written).toContain(content);
+    expect(taskParser.parseAnyTaskMarkdown(written).content).toBe(content);
+  });
+
   const roundTrip = (task: ObsidianTask): ObsidianTask =>
     taskParser.parseAnyTaskMarkdown(taskFormatter.taskToMarkdown(task));
 

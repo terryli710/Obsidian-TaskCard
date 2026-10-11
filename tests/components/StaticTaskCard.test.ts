@@ -30,7 +30,8 @@ test.each(['matrix', 'list'])('%s exposes the full compact title and expands/col
   const { task, plugin } = fixture();
   const { container } = render(presentation === 'matrix' ? Matrix : List, { taskList: [task], plugin });
   const title = container.querySelector('.static-task-card-content')!;
-  expect(title).toHaveAttribute('title', task.content);
+  expect(title).toHaveTextContent(task.content);
+  expect(title).not.toHaveAttribute('title');
   const expand = container.querySelector('button[aria-label^="Expand "]')!;
   expect(expand).toHaveAttribute('aria-expanded', 'false');
   expect(container.querySelector('.matrix-project')).toHaveAttribute('title', 'Japan Trip');
@@ -38,7 +39,7 @@ test.each(['matrix', 'list'])('%s exposes the full compact title and expands/col
   expect(container.querySelector('.task-card-content')!.textContent).toBe(task.content);
   expect(container.textContent).toContain('Review the details');
   await fireEvent.click(container.querySelector('button[aria-label^="Collapse "]')!);
-  expect(container.querySelector('.static-task-card-content')).toHaveAttribute('title', task.content);
+  expect(container.querySelector('.static-task-card-content')).toHaveTextContent(task.content);
   expect(plugin.fileOperator.updateFile).not.toHaveBeenCalled();
   expect(plugin.fileOperator.updateLineInFile).not.toHaveBeenCalled();
 });
@@ -51,7 +52,29 @@ test('query lists expand individual tasks while other rows stay compact', async 
   await fireEvent.click(container.querySelector('button[aria-label^="Expand "]')!);
   expect(container.querySelectorAll('.task-card-major-block')).toHaveLength(1);
   expect(container.querySelectorAll('.compact-matrix-row')).toHaveLength(1);
-  expect(container.querySelector('.static-task-card-content')).toHaveAttribute('title', other.content);
+  expect(container.querySelector('.static-task-card-content')).toHaveTextContent(other.content);
   await fireEvent.click(container.querySelector('button[aria-label^="Collapse "]')!);
   expect(container.querySelectorAll('.compact-matrix-row')).toHaveLength(2);
+});
+
+test('a clipped query title reveals the full title on hover and Escape only dismisses it', async () => {
+  jest.useFakeTimers();
+  try {
+    const { task, plugin } = fixture();
+    const { container } = render(List, { taskList: [task], plugin });
+    const title = container.querySelector('.static-task-card-content')!;
+    Object.defineProperties(title, { clientWidth: { value: 120 }, scrollWidth: { value: 600 } });
+    await fireEvent.mouseEnter(title);
+    jest.advanceTimersByTime(139);
+    expect(document.querySelector('[role="tooltip"]')).toBeNull();
+    jest.advanceTimersByTime(1);
+    expect(document.querySelector('[role="tooltip"]')).toHaveTextContent(task.content);
+    await fireEvent.keyDown(title, { key: 'Escape' });
+    expect(document.querySelector('[role="tooltip"]')).toBeNull();
+    expect(plugin.app.workspace.openLinkText).not.toHaveBeenCalled();
+    await fireEvent.click(title);
+    expect(plugin.app.workspace.openLinkText).toHaveBeenCalledTimes(1);
+  } finally {
+    jest.useRealTimers();
+  }
 });

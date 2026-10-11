@@ -1,5 +1,6 @@
 import { SettingStore } from '../settings';
 import { ObsidianTask } from './task';
+import { protectMarkdownSyntax } from '../utils/markdownSyntax';
 import {
   formatDurationValue,
   formatInlineField,
@@ -36,7 +37,10 @@ export class TaskFormatter {
    * Mutates the task so callers persist the same id that lands on disk.
    */
   ensureTaskId(task: ObsidianTask): string {
-    if (!isV2TaskId(task.id)) {
+    // Native block IDs supplied by another workflow are already durable.
+    // Only parser-confirmed source IDs bypass minting; new tasks and legacy
+    // hidden-span UUIDs still receive a tc- ID on their first write.
+    if (!isV2TaskId(task.id) && task.metadata?.sourceBlockId !== task.id) {
       task.id = mintTaskId();
     }
     return task.id;
@@ -59,7 +63,8 @@ export class TaskFormatter {
     const taskPrefix = `- [${task.completed ? 'x' : ' '}]`;
     const labelMarkdown = task.labels.join(' ');
     let line = `${taskPrefix} ${task.content} ${labelMarkdown} #${this.indicatorTag}`;
-    line = line.replace(/\s+/g, ' ').trimEnd();
+    const protectedContent = protectMarkdownSyntax(line);
+    line = protectedContent.restore(protectedContent.text.replace(/\s+/g, ' ').trimEnd());
 
     const fields: string[] = [];
 
@@ -96,7 +101,8 @@ export class TaskFormatter {
       line += ' ' + fields.join(' ');
     }
 
-    const idSuffix = isV2TaskId(task.id) ? ` ^${task.id}` : '';
+    const idSuffix = isV2TaskId(task.id) || task.metadata?.sourceBlockId === task.id
+      ? ` ^${task.id}` : '';
     return `${line}${idSuffix}`;
   }
 

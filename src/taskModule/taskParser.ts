@@ -14,6 +14,7 @@ import {
   extractBlockId,
   extractEmojiFields,
   extractInlineFields,
+  isV2TaskId,
   parseIsoScheduleValue,
   priorityWordToNumber
 } from './fieldSyntax';
@@ -248,7 +249,10 @@ export class TaskParser {
 
     // v2 identity: a trailing block id is the task's durable id
     const { id: blockId, rest: lineWithoutId } = extractBlockId(taskMarkdown);
-    if (blockId) task.id = blockId;
+    if (blockId) {
+      task.id = blockId;
+      if (!isV2TaskId(blockId)) task.metadata.sourceBlockId = blockId;
+    }
     taskMarkdown = lineWithoutId;
 
     // v2 attributes: Dataview inline fields ([key:: value] / (key:: value)),

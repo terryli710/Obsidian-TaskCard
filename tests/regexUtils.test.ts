@@ -19,6 +19,21 @@ describe('textUtils', () => {
   });
 
   describe('extractTags', () => {
+    it.each([
+      'Read [[Note#Details|the plan]]',
+      'Read [[#Details]] and [[Note#^block-id|block]]',
+      'Read [the plan](Note.md#Details) and https://example.com/#section',
+      'Read [Read **[the plan]**](Note.md#Details)',
+      'Read [a `]` label](Note.md#Details)',
+      'Keep `code with #literal` and ``code with ` #literal``',
+      'Keep %% hidden #literal %% and <!-- #literal -->',
+      'Keep \\#literal and <span title="#literal">text</span>'
+    ])('preserves hashes inside Markdown: %s', (markdown) => {
+      const [tags, content] = extractTags(`${markdown} #real #TaskCard`);
+      expect(tags).toEqual(['#real', '#TaskCard']);
+      expect(content).toBe(markdown);
+    });
+
     it('should extract valid tags from a text and return remaining content without tags', () => {
       const text = 'some content with   tags #tag1 #tag2 #tag3';
       const expectedTags = ['#tag1', '#tag2', '#tag3'];
