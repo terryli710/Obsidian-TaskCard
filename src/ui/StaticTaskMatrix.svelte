@@ -52,13 +52,13 @@
         <div class="category do">
             <div class="category-head">
                 <div class="category-title">Do</div>
-                <div class="category-count">{counts.do.completedTasks}/{counts.do.count}</div>
+                <div class="category-count" title="Completed tasks / tasks in this quadrant">{counts.do.completedTasks}/{counts.do.count}</div>
             </div>
             <div class="task-list">
                 <ul class="contain-task-list has-list-bullet">
                 {#each taskList as taskItem}
                     {#if categorizeTasks(taskItem) === "do"}
-                    <StaticTaskItem {taskItem} {plugin} compact={true} />
+                    <StaticTaskItem {taskItem} {plugin} compact={true} on:completionChange />
                     {/if}
                 {/each}
                 </ul>
@@ -67,13 +67,13 @@
         <div class="category plan">
             <div class="category-head">
                 <div class="category-title">Plan</div>
-                <div class="category-count">{counts.plan.completedTasks}/{counts.plan.count}</div>
+                <div class="category-count" title="Completed tasks / tasks in this quadrant">{counts.plan.completedTasks}/{counts.plan.count}</div>
             </div>
             <div class="task-list">
                 <ul class="contain-task-list has-list-bullet">
                 {#each taskList as taskItem}
                     {#if categorizeTasks(taskItem) === "plan"}
-                    <StaticTaskItem {taskItem} {plugin} compact={true} />
+                    <StaticTaskItem {taskItem} {plugin} compact={true} on:completionChange />
                     {/if}
                 {/each}
                 </ul>
@@ -82,13 +82,13 @@
         <div class="category delegate">
             <div class="category-head">
                 <div class="category-title">Delegate</div>
-                <div class="category-count">{counts.delegate.completedTasks}/{counts.delegate.count}</div>
+                <div class="category-count" title="Completed tasks / tasks in this quadrant">{counts.delegate.completedTasks}/{counts.delegate.count}</div>
             </div>
             <div class="task-list">
                 <ul class="contain-task-list has-list-bullet">
                 {#each taskList as taskItem}
                     {#if categorizeTasks(taskItem) === "delegate"}
-                    <StaticTaskItem {taskItem} {plugin} compact={true} />
+                    <StaticTaskItem {taskItem} {plugin} compact={true} on:completionChange />
                     {/if}
                 {/each}
                 </ul>
@@ -97,13 +97,13 @@
         <div class="category delete">
             <div class="category-head">
                 <div class="category-title">Delete</div>
-                <div class="category-count">{counts.delete.completedTasks}/{counts.delete.count}</div>
+                <div class="category-count" title="Completed tasks / tasks in this quadrant">{counts.delete.completedTasks}/{counts.delete.count}</div>
             </div>
             <div class="task-list">
                 <ul class="contain-task-list has-list-bullet">
                 {#each taskList as taskItem}
                     {#if categorizeTasks(taskItem) === "delete"}
-                    <StaticTaskItem {taskItem} {plugin} compact={true} />
+                    <StaticTaskItem {taskItem} {plugin} compact={true} on:completionChange />
                     {/if}
                 {/each}
                 </ul>
@@ -133,6 +133,12 @@
         background: none;
         border: none;
         border-radius: 0;
+    }
+
+    /* The query wrapper owns the gap above the footer divider. */
+    .category.delegate,
+    .category.delete {
+        padding-bottom: 0;
     }
 
     .category.do,

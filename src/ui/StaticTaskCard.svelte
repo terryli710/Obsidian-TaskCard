@@ -1,5 +1,6 @@
 <script lang="ts">
   import { Notice, OpenViewState, Platform, Workspace } from 'obsidian';
+  import { createEventDispatcher } from 'svelte';
   import ChevronsDownUp from '../components/icons/ChevronsDownUp.svelte';
   import ChevronsUpDown from '../components/icons/ChevronsUpDown.svelte';
   import {
@@ -23,10 +24,13 @@
   import { truncatedTitle } from './truncatedTitle';
   import { isMarkdownControl, taskMarkdown } from './taskMarkdown';
   import Description from './Description.svelte';
+  import QueryProject from './QueryProject.svelte';
 
   export let taskItem: PositionedObsidianTask;
   export let plugin: TaskCardPlugin;
   export let compact = false;
+
+  const dispatch = createEventDispatcher<{ completionChange: void }>();
 
   let taskDisplayParams: TaskDisplayParams = { mode: 'single-line' };
   let task = taskItem;
@@ -43,6 +47,7 @@
 
   function handleCheckboxClick() {
     task.completed = !task.completed;
+    dispatch('completionChange');
     toggleCompleteOfTask(task.completed, taskItem.docPosition);
   }
 
@@ -77,6 +82,7 @@
     const taskLine = await resolveTaskLine(docPosition);
     if (taskLine === null) {
       task.completed = !completed; // revert the optimistic checkbox flip
+      dispatch('completionChange');
       new Notice(
         'TaskCard: could not locate this task in its file, so it was not updated. The query results may be stale.'
       );
@@ -162,6 +168,16 @@
     );
   }
 
+  function openProjectSearch(event: CustomEvent<{ name: string }>) {
+    const escapedName = event.detail.name
+      .replace(/\\/g, '\\\\')
+      .replace(/"/g, '\\"');
+    // Same native search used by the project name on editable cards.
+    // @ts-ignore Obsidian core Search is an internal API.
+    plugin.app.internalPlugins.getPluginById('global-search')
+      .instance.openGlobalSearch(`task:"project:: ${escapedName}"`);
+  }
+
   const displaySchedule = task.hasSchedule();
   const displayDuration = task.hasDuration();
   const displayDue = task.hasDue();
@@ -182,10 +198,10 @@
         <div class="static-task-card-content matrix-title task-card-truncated-title" role="button" tabindex="0"
           use:taskMarkdown={titleMarkdown} use:truncatedTitle={titleMarkdown} on:click={linkToTask} on:keydown={linkToTask}>
         </div>
-        <span class="matrix-project" title={task.hasProject() ? task.project.name : undefined}
-          aria-label={task.hasProject() ? `Project: ${task.project.name}` : undefined}>
+        <span class="matrix-project">
           {#if task.hasProject()}
-            <span class="project-color" style:background-color={task.project.color} />
+            <QueryProject name={task.project.name} color={task.project.color}
+              on:projectopen={openProjectSearch} />
           {/if}
         </span>
         <div class="matrix-expand-wrapper">
@@ -433,10 +449,6 @@
     align-items: center;
     justify-content: center;
     height: calc(var(--line-height-normal) * var(--font-text-size));
-  }
-
-  .matrix-project .project-color {
-    margin: 0;
   }
 
   .compact-matrix-row .matrix-toggle {

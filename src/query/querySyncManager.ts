@@ -7,6 +7,13 @@ import { PositionedObsidianTask } from "../taskModule/task";
 import { logger } from "../utils/log";
 import { MultipleAttributeTaskQuery } from "./cache";
 
+import { normalizeListPresentation } from './listPresentation';
+import type { ListPresentation } from './listPresentation';
+
+function parsePresentationValue(value: string): unknown {
+    try { return JSON.parse(value); } catch { return value; }
+}
+
 export interface TaskQueryOptions {
     priorityOptions: number[];
     projectOptions: Project[];
@@ -44,6 +51,8 @@ export class QuerySyncManager {
     editMode: boolean = true;
     displayMode: QueryDisplayMode | null = null;
     options: TaskQueryOptions;
+    listPresentation: ListPresentation = normalizeListPresentation();
+    private pendingSave: Promise<void> | undefined;
     codeBlockMetadata: {
         sectionEl: HTMLElement;
         ctx: MarkdownPostProcessorContext;
@@ -87,6 +96,7 @@ export class QuerySyncManager {
     queryParser(source: string): MultipleAttributeTaskQuery {
         const lines = source.split('\n');
         this.displayMode = null;
+        this.listPresentation = normalizeListPresentation();
         const query: MultipleAttributeTaskQuery = {
             priorityQuery: [],
             projectQuery: [],
@@ -116,6 +126,10 @@ export class QuerySyncManager {
                 query.filePathQuery = value.replace(/['"]+/g, '');
             } else if (key === 'display') {
                 this.displayMode = parseQueryDisplayMode(value);
+            } else if (key === 'groupBy' || key === 'sortBy' || key === 'completedLast') {
+                this.listPresentation = normalizeListPresentation({
+                    ...this.listPresentation, [key]: parsePresentationValue(value)
+                });
             } else if (key === 'editMode') {
                 this.editMode = JSON.parse(value);
             }
@@ -202,6 +216,11 @@ export class QuerySyncManager {
             source += `display: ${JSON.stringify(this.displayMode)}\n`;
         }
 
+        const presentation = normalizeListPresentation(this.listPresentation);
+        if (presentation.groupBy !== 'none') source += `groupBy: ${JSON.stringify(presentation.groupBy)}\n`;
+        if (presentation.sortBy !== 'original') source += `sortBy: ${JSON.stringify(presentation.sortBy)}\n`;
+        if (presentation.completedLast) source += 'completedLast: true\n';
+
         if (this.editMode !== undefined && this.editMode !== null) {
             source += `editMode: ${JSON.stringify(this.editMode)}\n`;
         }
@@ -213,28 +232,36 @@ export class QuerySyncManager {
         return `\`\`\`${this.blockLanguage}\n${queryString}\n\`\`\``;
     }
 
-    updateTaskQueryToFile(taskQuery: MultipleAttributeTaskQuery, editMode: boolean = true) {
+    updateTaskQueryToFile(taskQuery: MultipleAttributeTaskQuery, editMode: boolean = true): Promise<void> {
         this.editMode = editMode;
         const filledQuery = this.setDefaultQueryValues(taskQuery);
-        const newQuery = this.formatCodeBlock(this.queryFormatter(filledQuery));
+        const querySource = this.queryFormatter(filledQuery);
+        const newQuery = this.formatCodeBlock(querySource);
         this.updateCodeBlockMetadata();
         if (this.codeBlockMetadata.lineStart === null || this.codeBlockMetadata.lineEnd === null) {
             logger.warn(`Unable to locate the taskcard query block in ${this.codeBlockMetadata.sourcePath}; query not saved.`);
             new Notice('TaskCard: unable to locate this query block in the file. The query was not saved — please re-open the note and try again.');
-            return;
+            return Promise.resolve();
         }
-        // Callers are Svelte event handlers, so this stays sync; a failed write
-        // still has to reach the user rather than vanishing as an unhandled
-        // rejection, matching the "not saved" Notice above.
-        this.plugin.fileOperator.updateFile(
-            this.codeBlockMetadata.sourcePath,
-            newQuery,
-            this.codeBlockMetadata.lineStart,
-            this.codeBlockMetadata.lineEnd + 1
-        ).catch((err) => {
-            logger.error(`Failed to write query block to ${this.codeBlockMetadata.sourcePath}: ${err}`);
+        // Svelte event handlers may ignore the returned promise. Report failed
+        // writes here so they still reach the user, matching the Notice above.
+        const path = this.codeBlockMetadata.sourcePath;
+        const lineStart = this.codeBlockMetadata.lineStart;
+        const lineEnd = this.codeBlockMetadata.lineEnd;
+        const write = async () => {
+            await this.plugin.fileOperator.updateFile(path, newQuery, lineStart, lineEnd + 1,
+                { language: this.blockLanguage, source: this.source });
+            this.source = querySource;
+        };
+        // A second control can change before the first save remounts the
+        // renderer. Keep writes in order and match the last saved source.
+        const result = (this.pendingSave ? this.pendingSave.then(write) : write()).catch(err => {
+            logger.error(`Failed to write query block to ${path}: ${err}`);
             new Notice('TaskCard: failed to save the query block. Please try again.');
         });
+        this.pendingSave = result;
+        void result.then(() => { if (this.pendingSave === result) this.pendingSave = undefined; });
+        return result;
     }
 
     updateCodeBlockMetadata() {

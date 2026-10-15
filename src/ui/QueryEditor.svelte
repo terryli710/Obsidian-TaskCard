@@ -16,6 +16,9 @@
     import Sugar from "sugar";
     import { filePathSuggest } from "../utils/filePathSuggester";
 
+    import QueryListControls from './QueryListControls.svelte';
+    import { normalizeListPresentation } from '../query/listPresentation';
+
     export let options: TaskQueryOptions;
     export let query: MultipleAttributeTaskQuery = {
         priorityQuery: [],
@@ -27,6 +30,8 @@
     };
     export let querySyncManager: QuerySyncManager;
     export let paths: string[] = [];
+
+    let presentation = normalizeListPresentation(querySyncManager.listPresentation);
 
     let startDate = query.scheduleDateTimeQuery[0] ? new Date(query.scheduleDateTimeQuery[0]) : null;
     let endDate = query.scheduleDateTimeQuery[1] ? new Date(query.scheduleDateTimeQuery[1]) : null;
@@ -51,6 +56,7 @@
         }
         // switch to save mode
         querySyncManager.displayMode = displayMode;
+        querySyncManager.listPresentation = presentation;
         querySyncManager.updateTaskQueryToFile(query, false);
     }
 
@@ -64,6 +70,8 @@
             filePathQuery: '',
         };
         querySyncManager.displayMode = null;
+        presentation = normalizeListPresentation();
+        querySyncManager.listPresentation = presentation;
         querySyncManager.updateTaskQueryToFile(query);
     }
         
@@ -176,6 +184,7 @@
     <div class="query-editor-header">
         <span class="query-editor-header-label">Query</span>
     </div>
+    <h4 class="section-title">Filters</h4>
     <FixedOptionsMultiSelect
         title="Completed"
         description="Include completed or uncompleted tasks"
@@ -208,6 +217,7 @@
         on:selected={(evt) => handleSelection(evt, 'label')} 
     />
 
+    <h4 class="section-title">Scope</h4>
     <div class="tc-query-row">
         <div class="tc-query-info">
             <div class="tc-query-name">Schedule date</div>
@@ -269,6 +279,7 @@
         </div>
     </div>
 
+    <h4 class="section-title">View</h4>
     <FixedOptionsSelect
         title="Display"
         description="How results are shown"
@@ -276,6 +287,13 @@
         initialChoice={displayMode}
         on:selected={handleDisplaySelection}
     />
+
+    {#if displayMode === 'list'}
+        <div class="list-organization-row">
+            <div class="organization-title">List organization</div>
+            <QueryListControls {presentation} on:change={event => presentation = event.detail} />
+        </div>
+    {/if}
 
     <div class="query-footer">
         <button type="button" class="reset-button" on:click={resetQuery}>Reset</button>
@@ -286,6 +304,30 @@
 
 
 <style>
+    .section-title {
+        margin: 22px 2px 3px;
+        padding: 0;
+        font-size: 11px;
+        line-height: 1.5;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+    }
+
+    .query-editor-header + .section-title { margin-top: 8px; }
+    .list-organization-row { border: 0; padding: 8px 2px 16px; }
+    .organization-title { color: var(--text-normal); font-size: var(--font-ui-small); margin-bottom: 10px; }
+    .list-organization-row :global(.organize-controls) {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px 20px;
+        padding: 0;
+    }
+    .list-organization-row :global(.organize-controls > label:not(.done-option)) { flex-direction: column; align-items: stretch; gap: 5px; }
+    .list-organization-row :global(.organize-controls select) { width: 100%; max-width: none; }
+    .list-organization-row :global(.organize-controls .done-option) { margin: 0; grid-column: 1 / -1; }
+
     .query-editor {
         display: flex;
         flex-direction: column;
@@ -313,7 +355,7 @@
         align-items: flex-start;
         justify-content: space-between;
         gap: 16px;
-        padding: 9px 2px;
+        padding: 11px 2px;
         min-width: 0;
     }
 
@@ -462,5 +504,10 @@
         background: var(--interactive-accent);
         border-color: var(--interactive-accent);
         color: var(--text-on-accent);
+    }
+    @media (max-width: 500px) {
+        .query-editor :global(.tc-query-row) { flex-wrap: wrap; gap: 8px; }
+        .query-editor :global(.tc-query-control) { flex: 1 1 100%; justify-content: flex-start; }
+        .query-editor :global(.tc-query-control-stacked) { align-items: flex-start; }
     }
 </style>

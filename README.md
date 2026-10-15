@@ -100,6 +100,21 @@ editMode: false
 
 Queries and the matrix need [Dataview](https://github.com/blacksmithgu/obsidian-dataview). Individual cards work without it.
 
+Click **Edit** beneath a query to open its **Filters**, **Scope**, and **View** settings. For a list, **List organization** contains **Group by** for project or importance headings, and **Sort by** for original order, importance, due date, or task title. **Completed last** moves finished tasks to the end of each group. Click **Save** to apply these choices and return to the task view. The query remembers them without changing source task order. Existing queries keep their original flat list.
+
+You can also set the options in the code block:
+
+````markdown
+```taskcard
+groupBy: "project"
+sortBy: "priority"
+completedLast: true
+editMode: false
+```
+````
+
+`groupBy` accepts `none`, `project`, or `priority`. `sortBy` accepts `original`, `priority`, `due`, or `title`. Undated tasks follow dated tasks when sorting by due date; equal keys keep their original order.
+
 <details>
 <summary>Watch: gather tasks with the visual query editor</summary>
 

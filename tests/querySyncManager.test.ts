@@ -381,3 +381,31 @@ describe('QuerySyncManager.getOptions', () => {
     expect(manager.options.labelOptions).toEqual(['#new-label']);
   });
 });
+
+
+describe('list organization serialization', () => {
+  it('preserves the selected presentation separately from task filters across save and Edit', () => {
+    const manager = makeManager('groupBy: project\nsortBy: \"due\"\ncompletedLast: true\neditMode: false');
+    expect((manager as any).listPresentation).toEqual({ groupBy: 'project', sortBy: 'due', completedLast: true });
+    expect(manager.taskQuery).not.toHaveProperty('groupBy');
+    const source = manager.queryFormatter(manager.taskQuery);
+    expect(source).toContain('groupBy: \"project\"');
+    expect((makeManager(source) as any).listPresentation).toEqual((manager as any).listPresentation);
+    manager.toEditMode();
+    const saved = (manager.plugin.fileOperator.updateFile as jest.Mock).mock.calls[0][1];
+    expect(saved).toContain('sortBy: \"due\"');
+    expect(saved).toContain('editMode: true');
+  });
+  it('keeps older queries flat and omits default presentation fields', () => {
+    const manager = makeManager('priority: [1]');
+    expect((manager as any).listPresentation).toEqual({ groupBy: 'none', sortBy: 'original', completedLast: false });
+    expect(manager.queryFormatter(manager.taskQuery)).not.toMatch(/groupBy:|sortBy:|completedLast:/);
+  });
+  it('normalizes malformed options without breaking rendering and clears stale values on reparse', () => {
+    const manager = makeManager('groupBy: {broken\nsortBy: [\ncompletedLast: \"true\"');
+    expect((manager as any).listPresentation).toEqual({ groupBy: 'none', sortBy: 'original', completedLast: false });
+    manager.queryParser('groupBy: priority\nsortBy: title\ncompletedLast: true');
+    manager.queryParser('file: work.md');
+    expect((manager as any).listPresentation).toEqual({ groupBy: 'none', sortBy: 'original', completedLast: false });
+  });
+});

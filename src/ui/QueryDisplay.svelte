@@ -5,12 +5,22 @@
     import StaticTaskList from "./StaticTaskList.svelte";
     import StaticTaskMatrix from "./StaticTaskMatrix.svelte";
 
+    import { normalizeListPresentation } from '../query/listPresentation';
+
     export let taskList: PositionedObsidianTask[];
     export let plugin: TaskCardPlugin;
     export let querySyncManager: QuerySyncManager;
     export let displayMode: string = "list";
 
+    const presentation = normalizeListPresentation(querySyncManager.listPresentation);
+
     const cacheInitialized = plugin.cache.taskCache.status.initialized;
+    $: completedTaskCount = taskList.filter(task => task.completed).length;
+
+    function refreshCompletionCounts() {
+        // Completion changes and reversions refresh query and quadrant summaries.
+        taskList = taskList;
+    }
 
 
     function toEditMode() {
@@ -20,7 +30,13 @@
 
 </script>
 
-<ul class="contain-task-list has-list-bullet">
+<ul class="query-results contain-task-list has-list-bullet">
+    {#if cacheInitialized}
+        <div class="query-header">
+            <span class="query-header-label">Tasks</span>
+            <span class="query-count" title="Tasks shown / indexed TaskCard tasks in this vault">{taskList.length} shown / {plugin.cache.taskCache.getLength()} in vault</span>
+        </div>
+    {/if}
     {#if !cacheInitialized}
         <div class="error-page">
             <h2>Tasks Not Fully Indexed in Obsidian TaskCard</h2>
@@ -34,14 +50,10 @@
             <p>Tasks Not Fully Indexed. Please make sure that the <a href="https://github.com/blacksmithgu/obsidian-dataview" target="_blank" rel="noopener noreferrer">dataview</a> plugin is also enabled in Obsidian. This is necessary for this feature to work properly</p>
         </div>
     {:else if taskList.length > 0}
-        <div class="query-header">
-            <span class="query-header-label">Tasks</span>
-            <span class="query-count">{taskList.length} / {querySyncManager.plugin.cache.taskCache.getLength()}</span>
-        </div>
         {#if displayMode === "matrix"}
-            <StaticTaskMatrix {taskList} {plugin} />
+            <StaticTaskMatrix {taskList} {plugin} on:completionChange={refreshCompletionCounts} />
         {:else}
-            <StaticTaskList {taskList} {plugin} />
+            <StaticTaskList {taskList} {plugin} {presentation} on:completionChange={refreshCompletionCounts} />
         {/if}
     {:else}
         <div class="error-page">
@@ -51,11 +63,15 @@
     {/if}
 </ul>
 <div class="query-footer">
-    <span class="query-count">{taskList.length} / {querySyncManager.plugin.cache.taskCache.getLength()} tasks</span>
+    <span class="query-count" title="Completed tasks / tasks shown in this query">{completedTaskCount} / {taskList.length} done</span>
     <button class="edit-link" on:click={toEditMode}>Edit</button>
 </div>
 
 <style>
+    .query-results {
+        margin-bottom: 0;
+    }
+
     .query-header {
         display: flex;
         align-items: baseline;
@@ -81,9 +97,9 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        margin-top: 2px;
-        padding: 6px 2px 0;
-        border-top: 1px solid var(--background-modifier-border);
+        margin-top: 0;
+        padding: 13px 2px 0;
+        border-top: none;
     }
 
     .edit-link {

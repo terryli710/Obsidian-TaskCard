@@ -175,12 +175,14 @@ export class ObsidianTaskSyncManager implements ObsidianTaskSyncProps {
       this.announceLostTask();
       return;
     }
+    const commitDisplayState = this.plugin.taskCardRenderManager?.prepareTaskWrite(this, markdownTask);
     await this.plugin.fileOperator.updateFile(
       this.taskMetadata.sourcePath,
       markdownTask,
       span[0],
       span[1]
     );
+    commitDisplayState?.();
   }
 
   async updateObsidianTaskAttribute(key: string, value: any): Promise<void> {
@@ -241,12 +243,14 @@ export class ObsidianTaskSyncManager implements ObsidianTaskSyncProps {
     if (syncMetadata) this.obsidianTask.metadata.syncMappings = syncMetadata;
     const completedMarkdown = this.formatTaskWithIndent(this.obsidianTask, indent);
     const nextMarkdown = this.formatTaskWithIndent(nextTask, indent);
+    const commitDisplayState = this.plugin.taskCardRenderManager?.prepareTaskWrite(this, `${completedMarkdown}\n${nextMarkdown}`);
     await this.plugin.fileOperator.updateFile(
       this.taskMetadata.sourcePath,
       `${completedMarkdown}\n${nextMarkdown}`,
       span[0],
       span[1]
     );
+    commitDisplayState?.();
     await this.plugin.storeSyncMappings(this.obsidianTask.id, syncMetadata);
     return true;
   }
@@ -254,10 +258,12 @@ export class ObsidianTaskSyncManager implements ObsidianTaskSyncProps {
   // v2: per-task display state is ephemeral UI state, never written to notes
   updateObsidianTaskDisplayParams(key: string, value: any): void {
     this.obsidianTask.setTaskDisplayParams(key, value);
+    this.plugin.taskCardRenderManager?.rememberTaskDisplayParams(this);
   }
 
   clearObsidianTaskDisplayParams(): void {
     this.obsidianTask.clearTaskDisplayParams();
+    this.plugin.taskCardRenderManager?.rememberTaskDisplayParams(this);
   }
 
   private formatTaskWithIndent(task: ObsidianTask, indent: string): string {
@@ -283,12 +289,16 @@ export class ObsidianTaskSyncManager implements ObsidianTaskSyncProps {
     const markdownTask = this.formatTaskWithIndent(
       this.obsidianTask, sourceLine.match(/^[ \t]*/)[0]
     );
+    // Formatting may mint the first durable ID. Capture UI state while the
+    // old section is attached, then move it under that ID after saving.
+    const commitDisplayState = this.plugin.taskCardRenderManager?.prepareTaskWrite(this, markdownTask);
     await this.plugin.fileOperator.updateFile(
       this.taskMetadata.sourcePath,
       markdownTask,
       span[0],
       span[1]
     );
+    commitDisplayState?.();
   }
 
   isValidStatus(key: keyof TaskCardStatus, status: string): boolean {
@@ -319,12 +329,14 @@ export class ObsidianTaskSyncManager implements ObsidianTaskSyncProps {
       this.announceLostTask();
       return;
     }
+    const commitDisplayState = this.plugin.taskCardRenderManager?.prepareTaskWrite(this, '');
     await this.plugin.fileOperator.updateFile(
       this.taskMetadata.sourcePath,
       '',
       span[0],
       span[1]
     );
+    commitDisplayState?.();
 
     this.plugin.externalAPIManager?.deleteTask(this.obsidianTask);
     await this.plugin.removeSyncMappings(this.obsidianTask.id);

@@ -152,6 +152,7 @@ describe('QuickAddTaskModal', () => {
     const view: any = new (MarkdownView as any)();
     view.file = target;
     view.editor = fakeEditor;
+    view.getMode = () => 'source';
     leaf.view = view;
     (app.workspace as any).activeLeaf = leaf;
     (app.workspace as any).getActiveFile = () => target;
@@ -169,5 +170,35 @@ describe('QuickAddTaskModal', () => {
     expect(editorLines[0]).toBe('Hello world');
     expect(editorLines[1]).toMatch(/^- \[ \] Review PR #code #TaskCard \^tc-[a-z0-9]{6}$/);
     expect(fakeEditor.setCursor).toHaveBeenCalledWith({ line: 1, ch: editorLines[1].length });
+  });
+
+  it('appends to the current note in Reading view without editing its stale hidden buffer', async () => {
+    const app = new App();
+    const plugin = makePluginStub();
+    const currentSource = '# Current note\n\nSaved card edits.\n';
+    const target = (app.vault as any).__setFile('note.md', currentSource);
+    let hiddenBuffer = 'Outdated note before the card edits';
+    const view: any = new (MarkdownView as any)();
+    view.file = target;
+    view.getMode = () => 'preview';
+    view.editor = {
+      getCursor: () => ({ line: 0, ch: 0 }),
+      getLine: () => hiddenBuffer,
+      replaceRange: (text: string) => { hiddenBuffer += text; },
+      setCursor: () => {}
+    };
+    const leaf: any = new (WorkspaceLeaf as any)();
+    leaf.view = view;
+    (app.workspace as any).activeLeaf = leaf;
+    (app.workspace as any).getActiveFile = () => target;
+    const modal = new QuickAddTaskModal(app as any, plugin as any) as any;
+    modal.open();
+    modal.inputEl.value = 'Added from preview #code';
+    modal.inputEl.dispatchEvent(new Event('input'));
+    await modal.submit();
+    expect((app.vault as any).__getContent('note.md')).toMatch(
+      /^# Current note\n\nSaved card edits\.\n- \[ \] Added from preview #code #TaskCard \^tc-[a-z0-9]{6}\n$/
+    );
+    expect(hiddenBuffer).toBe('Outdated note before the card edits');
   });
 });

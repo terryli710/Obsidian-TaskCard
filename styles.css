@@ -115,6 +115,11 @@ li.task-list-item.obsidian-taskcard-mount-pending {
   visibility: hidden;
 }
 
+/* A saved card's previous visuals hold the space until its replacement mounts. */
+li.obsidian-taskcard-render-placeholder + li.task-list-item.obsidian-taskcard-mount-pending {
+  display: none;
+}
+
 .obsidian-taskcard-live {
   margin: 0;
   margin-inline-start: 0;

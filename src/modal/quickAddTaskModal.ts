@@ -371,7 +371,9 @@ export class QuickAddTaskModal extends Modal {
       MarkdownView
     );
     const editor = activeView?.editor;
-    if (!activeView || !editor || activeView.file?.path !== target.path) {
+    // Reading view retains a hidden editor that can still contain old source.
+    // Only a visible editing view owns the cursor insertion path.
+    if (!activeView || activeView.getMode() !== 'source' || !editor || activeView.file?.path !== target.path) {
       return false;
     }
 

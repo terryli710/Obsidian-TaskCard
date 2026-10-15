@@ -1,4 +1,6 @@
 import { App, TFile } from 'obsidian';
+import { replaceQueryBlock } from '../query/queryBlock';
+import type { QueryBlockMatch } from '../query/queryBlock';
 import TaskCardPlugin from '..';
 
 export class FileOperator {
@@ -74,9 +76,15 @@ export class FileOperator {
     filePath: string,
     newContent: string,
     lineStart: number,
-    lineEnd: number
+    lineEnd: number,
+    expectedBlock?: QueryBlockMatch
   ): Promise<void> {
     const file = this.getMarkdownFile(filePath);
+    if (expectedBlock) {
+      if (!file) throw new Error("Query file not found.");
+      await this.app.vault.process(file, content => replaceQueryBlock(content, newContent, lineStart, expectedBlock));
+      return;
+    }
     if (!file) return;
     const fileLines = await this.getFileLines(filePath);
     if (fileLines == null) return;

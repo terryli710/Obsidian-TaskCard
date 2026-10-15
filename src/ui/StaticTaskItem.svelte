@@ -14,6 +14,7 @@
         taskItem={taskItem}
         plugin={plugin}
         {compact}
+        on:completionChange
     />
 </li>
 

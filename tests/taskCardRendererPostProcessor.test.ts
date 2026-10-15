@@ -81,6 +81,7 @@ function makePlugin(sectionMarkdown: string | null) {
 
 function makeCtx(overrides?: Partial<any>) {
   return {
+    docId: 'preview-one',
     sourcePath: 'notes/tasks.md',
     getSectionInfo: jest.fn(() => ({
       text: SECTION_MD,
@@ -134,9 +135,41 @@ describe('Reading view tasks in weekly-plan lists', () => {
     (app.vault as any).__setFile(sourcePath, '# Week\n\n' + markdown + '\n\nAfter the list.');
     const ctx = makeCtx({
       sourcePath,
-      getSectionInfo: () => ({ text: markdown, lineStart: 2, lineEnd: 10 })
+      getSectionInfo: () => ({ text: '# Week\n\n' + markdown + '\n\nAfter the list.', lineStart: 2, lineEnd: 10 })
     });
     return { sectionDiv, plugin, ctx, app };
+  }
+
+  function sourceSection(source: string, lineStart = 0, lineEnd = source.split('\n').length - 1) {
+    const lines = source.split('\n');
+    const taskLines = lines.slice(lineStart, lineEnd + 1)
+      .map((text, index) => ({ text, index })).filter(line => line.text.startsWith('- [ ]'));
+    const { sectionDiv, items } = buildSection(taskLines.map(line => line.text));
+    items.forEach((item, index) => {
+      item.dataset.line = String(taskLines[index].index);
+      const checkbox = document.createElement('input');
+      checkbox.className = 'task-list-item-checkbox';
+      item.prepend(checkbox);
+      const tag = document.createElement('a');
+      tag.className = 'tag';
+      tag.textContent = '#TaskCard';
+      item.appendChild(tag);
+    });
+    const ctx = makeCtx({
+      sourcePath: 'weekly.md',
+      getSectionInfo: () => ({ text: source, lineStart, lineEnd })
+    });
+    return { sectionDiv, ctx };
+  }
+
+  function mountVisuals(tasks: ReturnType<TaskCardRenderManager['constructTaskSync']>) {
+    for (const sync of tasks) {
+      const card = document.createElement('li');
+      card.className = `obsidian-taskcard-live mode-${sync.obsidianTask.metadata.taskDisplayParams?.mode ?? 'multi-line'}`;
+      card.textContent = sync.obsidianTask.content;
+      sync.taskItemEl.before(card);
+      sync.taskItemEl.classList.add('obsidian-taskcard-source-hidden');
+    }
   }
 
   it('mounts nested tagged tasks without taking over their plain or untagged parents', async () => {
@@ -172,6 +205,7 @@ describe('Reading view tasks in weekly-plan lists', () => {
     first.appendChild(childList);
     const source = markdown.replace('\t\tA detail', '\t\t- [ ] Tagged subtask #TaskCard');
     (plugin.app.vault as any).__setFile('weekly.md', '# Week\n\n' + source);
+    ctx.getSectionInfo = () => ({ text: '# Week\n\n' + source, lineStart: 2, lineEnd: 10 });
     const tasks = await new TaskCardRenderManager(plugin).constructTaskSync(sectionDiv, ctx);
     expect(tasks.map((sync) => sync.obsidianTask.id)).toEqual(['fu-first', 'fu-second', 'fu-third']);
     expect(tasks[0].obsidianTask.description).toBe('- [ ] Tagged subtask #TaskCard');
@@ -212,9 +246,226 @@ describe('Reading view tasks in weekly-plan lists', () => {
     expect(tasks).toHaveLength(3);
     expect(tasks.every((sync) => sectionDiv.contains(sync.taskItemEl))).toBe(true);
   });
+
+  it('renders the source snapshot belonging to the section, even if the vault has changed', async () => {
+    const { sectionDiv, plugin, ctx, app } = setup();
+    (app.vault as any).__setFile('weekly.md', '# A newer, unrelated document');
+    const tasks = await new TaskCardRenderManager(plugin).constructTaskSync(sectionDiv, ctx);
+    expect(tasks.map(sync => sync.obsidianTask.content)).toEqual(['First task', 'Second task', 'Third task']);
+    expect(tasks[0].taskMetadata.lineStartInSection).toBe(3);
+  });
+
+  it('keeps expanded cards expanded when the section is replaced after a save', async () => {
+    const { sectionDiv, plugin, ctx } = setup();
+    const preview = document.createElement('div');
+    preview.className = 'markdown-preview-view';
+    preview.appendChild(sectionDiv);
+    const manager = new TaskCardRenderManager(plugin);
+    plugin.taskCardRenderManager = manager;
+    const tasks = await manager.constructTaskSync(sectionDiv, ctx);
+    new ObsidianTaskSyncManager(plugin, tasks[0]).updateObsidianTaskDisplayParams('mode', 'multi-line');
+    new ObsidianTaskSyncManager(plugin, tasks[1]).updateObsidianTaskDisplayParams('mode', 'single-line');
+
+    const replacement = sectionDiv.cloneNode(true) as HTMLElement;
+    preview.replaceChildren(replacement);
+    const refreshed = await manager.constructTaskSync(replacement, ctx);
+    expect(refreshed[0].obsidianTask.metadata.taskDisplayParams).toEqual({ mode: 'multi-line' });
+    expect(refreshed[1].obsidianTask.metadata.taskDisplayParams).toEqual({ mode: 'single-line' });
+
+    const otherPreview = document.createElement('div');
+    otherPreview.className = 'markdown-preview-view';
+    const otherSection = sectionDiv.cloneNode(true) as HTMLElement;
+    otherPreview.appendChild(otherSection);
+    const otherPane = await manager.constructTaskSync(otherSection, ctx);
+    expect(otherPane[0].obsidianTask.metadata.taskDisplayParams?.mode).toBeUndefined();
+    const otherFile = await manager.constructTaskSync(replacement, { ...ctx, sourcePath: 'other.md' });
+    expect(otherFile[0].obsidianTask.metadata.taskDisplayParams?.mode).toBeUndefined();
+    new ObsidianTaskSyncManager(plugin, refreshed[0]).clearObsidianTaskDisplayParams();
+    const cleared = await manager.constructTaskSync(replacement, ctx);
+    expect(cleared[0].obsidianTask.metadata.taskDisplayParams?.mode).toBeUndefined();
+  });
+
+  it('keeps the previous card visuals visible until their replacements mount after a write', async () => {
+    const { sectionDiv, plugin, ctx } = setup();
+    const preview = document.createElement('div');
+    preview.className = 'markdown-preview-view';
+    preview.appendChild(sectionDiv);
+    const manager = new TaskCardRenderManager(plugin);
+    plugin.taskCardRenderManager = manager;
+    const tasks = await manager.constructTaskSync(sectionDiv, ctx);
+    // Model the mounted card/source siblings; the adapter is stubbed in this
+    // suite. Real Svelte card interaction is covered by the native smoke test.
+    for (const sync of tasks) {
+      const card = document.createElement('li');
+      card.className = 'obsidian-taskcard-live mode-multi-line';
+      card.textContent = sync.obsidianTask.content;
+      sync.taskItemEl.before(card);
+      sync.taskItemEl.classList.add('obsidian-taskcard-source-hidden');
+    }
+    await new ObsidianTaskSyncManager(plugin, tasks[0]).updateObsidianTaskAttribute('completed', true);
+    const otherPaneSection = setup().sectionDiv;
+    const otherPanePending = manager.getPostProcessor()(otherPaneSection, { ...ctx, docId: 'other-preview' });
+    expect(otherPaneSection.querySelector('.obsidian-taskcard-render-placeholder')).toBeNull();
+    await otherPanePending;
+    const replacement = setup().sectionDiv;
+    // Obsidian supplies a new context for the same document and starts its
+    // processors while the replacement section is still detached.
+    const pending = manager.getPostProcessor()(replacement, { ...ctx });
+    try {
+      expect(Array.from(replacement.querySelectorAll('.obsidian-taskcard-render-placeholder'))
+        .map(card => card.textContent)).toEqual(['First task', 'Second task', 'Third task']);
+    } finally {
+      preview.replaceChildren(replacement);
+      await pending;
+    }
+    expect(replacement.querySelector('.obsidian-taskcard-render-placeholder')).toBeNull();
+  });
+
+  it('preserves distinct idless siblings when a save changes their source positions', async () => {
+    const { plugin, app } = setup();
+    const source = '- [ ] Saved task #TaskCard ^tc-saved1\n- [ ] New task #TaskCard\n- [ ] New task #TaskCard';
+    (app.vault as any).__setFile('weekly.md', source);
+    const { sectionDiv, ctx } = sourceSection(source);
+    const preview = document.createElement('div');
+    preview.className = 'markdown-preview-view';
+    preview.appendChild(sectionDiv);
+    const manager = new TaskCardRenderManager(plugin);
+    plugin.taskCardRenderManager = manager;
+    const tasks = manager.constructTaskSync(sectionDiv, ctx);
+    new ObsidianTaskSyncManager(plugin, tasks[1]).updateObsidianTaskDisplayParams('mode', 'multi-line');
+    new ObsidianTaskSyncManager(plugin, tasks[2]).updateObsidianTaskDisplayParams('mode', 'single-line');
+    mountVisuals(tasks);
+    await new ObsidianTaskSyncManager(plugin, tasks[0]).updateObsidianTaskAttribute('description', 'Inserted detail');
+    const saved = (app.vault as any).__getContent('weekly.md');
+    const replacement = sourceSection(saved);
+    const pending = manager.getPostProcessor()(replacement.sectionDiv, replacement.ctx);
+    try {
+      const snapshots = replacement.sectionDiv.querySelectorAll('.obsidian-taskcard-render-placeholder');
+      expect(Array.from(snapshots).map(card => card.textContent)).toEqual(['Saved task', 'New task', 'New task']);
+      expect(snapshots[1].classList.contains('mode-multi-line')).toBe(true);
+      expect(snapshots[2].classList.contains('mode-single-line')).toBe(true);
+    } finally {
+      preview.replaceChildren(replacement.sectionDiv);
+      await pending;
+    }
+    const refreshed = replacement.ctx.addChild.mock.calls.map(([child]) => child.taskSync);
+    expect(refreshed[1].obsidianTask.id).not.toBe(tasks[1].obsidianTask.id);
+    expect(refreshed[1].obsidianTask.metadata.taskDisplayParams?.mode).toBe('multi-line');
+    expect(refreshed[2].obsidianTask.metadata.taskDisplayParams?.mode).toBe('single-line');
+    const newTask = new ObsidianTaskSyncManager(plugin, refreshed[1]);
+    await newTask.updateObsidianTaskAttribute('content', 'Renamed new task');
+    const afterFirstWrite = sourceSection((app.vault as any).__getContent('weekly.md'));
+    preview.replaceChildren(afterFirstWrite.sectionDiv);
+    const withId = manager.constructTaskSync(afterFirstWrite.sectionDiv, afterFirstWrite.ctx);
+    expect(withId[1].obsidianTask.id).toMatch(/^tc-/);
+    expect(withId[1].obsidianTask.metadata.taskDisplayParams?.mode).toBe('multi-line');
+    expect(withId[2].obsidianTask.metadata.taskDisplayParams?.mode).toBe('single-line');
+  });
+
+  it('retains pending visuals for overlapping saves in separate sections of one document', async () => {
+    const { plugin } = setup();
+    const source = '- [ ] First section #TaskCard ^tc-first1\n\nDivider\n\n- [ ] Second section #TaskCard ^tc-second1';
+    const first = sourceSection(source, 0, 0);
+    const second = sourceSection(source, 4, 4);
+    const preview = document.createElement('div');
+    preview.className = 'markdown-preview-view';
+    preview.append(first.sectionDiv, second.sectionDiv);
+    const manager = new TaskCardRenderManager(plugin);
+    const tasks = [manager.constructTaskSync(first.sectionDiv, first.ctx)[0],
+      manager.constructTaskSync(second.sectionDiv, second.ctx)[0]];
+    mountVisuals(tasks);
+    manager.prepareTaskWrite(tasks[0]);
+    manager.prepareTaskWrite(tasks[1]);
+    const replacements = [sourceSection(source, 0, 0), sourceSection(source, 4, 4)];
+    const pending = replacements.map(section => manager.getPostProcessor()(section.sectionDiv, section.ctx));
+    try {
+      expect(replacements.map(section => section.sectionDiv.querySelector('.obsidian-taskcard-render-placeholder')?.textContent))
+        .toEqual(['First section', 'Second section']);
+    } finally {
+      preview.replaceChildren(...replacements.map(section => section.sectionDiv));
+      await Promise.all(pending);
+    }
+  });
+
+  it('leaves idless display state at its actual position when a file write rejects', async () => {
+    const { plugin, app } = setup();
+    const source = '- [ ] Saved task #TaskCard ^tc-saved1\n- [ ] New task #TaskCard\n- [ ] Other task #TaskCard ^tc-other1';
+    (app.vault as any).__setFile('weekly.md', source);
+    const section = sourceSection(source);
+    const preview = document.createElement('div');
+    preview.className = 'markdown-preview-view';
+    preview.appendChild(section.sectionDiv);
+    const manager = new TaskCardRenderManager(plugin);
+    plugin.taskCardRenderManager = manager;
+    const tasks = manager.constructTaskSync(section.sectionDiv, section.ctx);
+    new ObsidianTaskSyncManager(plugin, tasks[1]).updateObsidianTaskDisplayParams('mode', 'multi-line');
+    const failedWrite = jest.spyOn(plugin.fileOperator, 'updateFile').mockRejectedValueOnce(new Error('Disk write rejected'));
+    await expect(new ObsidianTaskSyncManager(plugin, tasks[0]).updateObsidianTaskAttribute('description', 'Inserted detail'))
+      .rejects.toThrow('Disk write rejected');
+    failedWrite.mockRestore();
+    await new ObsidianTaskSyncManager(plugin, tasks[2]).updateObsidianTaskAttribute('content', 'Other task renamed');
+    const replacement = sourceSection((app.vault as any).__getContent('weekly.md'));
+    preview.replaceChildren(replacement.sectionDiv);
+    const refreshed = manager.constructTaskSync(replacement.sectionDiv, replacement.ctx);
+    expect(refreshed[1].obsidianTask.metadata.taskDisplayParams?.mode).toBe('multi-line');
+  });
+
+  it('keeps surviving cards visible and in their modes when another card is deleted', async () => {
+    const { plugin, app } = setup();
+    plugin.removeSyncMappings = async () => {};
+    const source = '- [ ] Deleted task #TaskCard ^tc-deleted1\n    Deleted detail\n- [ ] Surviving task #TaskCard ^tc-surviving1\n- [ ] New sibling #TaskCard';
+    (app.vault as any).__setFile('weekly.md', source);
+    const section = sourceSection(source);
+    const preview = document.createElement('div');
+    preview.className = 'markdown-preview-view';
+    preview.appendChild(section.sectionDiv);
+    const manager = new TaskCardRenderManager(plugin);
+    plugin.taskCardRenderManager = manager;
+    const tasks = manager.constructTaskSync(section.sectionDiv, section.ctx);
+    new ObsidianTaskSyncManager(plugin, tasks[1]).updateObsidianTaskDisplayParams('mode', 'multi-line');
+    new ObsidianTaskSyncManager(plugin, tasks[2]).updateObsidianTaskDisplayParams('mode', 'single-line');
+    mountVisuals(tasks);
+    await new ObsidianTaskSyncManager(plugin, tasks[0]).deleteTask();
+    const saved = (app.vault as any).__getContent('weekly.md');
+    expect(saved).toBe('\n- [ ] Surviving task #TaskCard ^tc-surviving1\n- [ ] New sibling #TaskCard');
+    const replacement = sourceSection(saved);
+    const pending = manager.getPostProcessor()(replacement.sectionDiv, replacement.ctx);
+    try {
+      expect(Array.from(replacement.sectionDiv.querySelectorAll('.obsidian-taskcard-render-placeholder'))
+        .map(card => card.textContent)).toEqual(['Surviving task', 'New sibling']);
+    } finally {
+      preview.replaceChildren(replacement.sectionDiv);
+      await pending;
+    }
+    const refreshed = replacement.ctx.addChild.mock.calls.map(([child]) => child.taskSync);
+    expect(refreshed[0].obsidianTask.metadata.taskDisplayParams?.mode).toBe('multi-line');
+    expect(refreshed[1].obsidianTask.metadata.taskDisplayParams?.mode).toBe('single-line');
+  });
 });
 
 describe('TaskCardRenderManager post processor (anti-blink hide)', () => {
+  it('finishes mounting in the next animation frame without waiting on a file read', async () => {
+    jest.useFakeTimers();
+    const originalRaf = window.requestAnimationFrame;
+    const frames: FrameRequestCallback[] = [];
+    window.requestAnimationFrame = callback => { frames.push(callback); return frames.length; };
+    const { sectionDiv } = buildSection(['task one', 'task two']);
+    const ctx = makeCtx();
+    const manager = new TaskCardRenderManager(makePlugin(SECTION_MD));
+    const pending = manager.getPostProcessor()(sectionDiv, ctx);
+    try {
+      frames.forEach(frame => frame(16));
+      await Promise.resolve();
+      expect(ctx.addChild.mock.calls.map(([child]) => child.taskSync.obsidianTask.content))
+        .toEqual(['- [ ] task one #TaskCard', '- [ ] task two #TaskCard']);
+    } finally {
+      await jest.runAllTimersAsync();
+      await pending;
+      window.requestAnimationFrame = originalRaf;
+      jest.useRealTimers();
+    }
+  });
+
   it('hides task items synchronously, before any await', () => {
     const { sectionDiv, items } = buildSection(['task one', 'task two']);
     const manager = new TaskCardRenderManager(makePlugin(SECTION_MD));
@@ -251,15 +502,16 @@ describe('TaskCardRenderManager post processor (anti-blink hide)', () => {
     }
   });
 
-  it('un-hides all items when the section markdown cannot be read', async () => {
+  it('mounts from the renderer source even when the vault file cannot be read', async () => {
     const { sectionDiv, items } = buildSection(['task one', 'task two']);
     const ctx = makeCtx();
     const manager = new TaskCardRenderManager(makePlugin(null));
     await manager.getPostProcessor()(sectionDiv, ctx);
 
-    expect(ctx.addChild).not.toHaveBeenCalled();
+    expect(ctx.addChild.mock.calls.map(([child]) => child.taskSync.obsidianTask.content))
+      .toEqual(['- [ ] task one #TaskCard', '- [ ] task two #TaskCard']);
     for (const item of items) {
-      expect(item.classList.contains(PENDING_CLS)).toBe(false);
+      expect(item.classList.contains(PENDING_CLS)).toBe(true);
     }
   });
 
