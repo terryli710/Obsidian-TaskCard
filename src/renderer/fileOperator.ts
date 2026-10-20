@@ -3,6 +3,13 @@ import { replaceQueryBlock } from '../query/queryBlock';
 import type { QueryBlockMatch } from '../query/queryBlock';
 import TaskCardPlugin from '..';
 
+export class FileWriteConflict extends Error {}
+
+export interface FileSourceExpectation {
+  source: string;
+  resolveSpan?: (lines: string[]) => [number, number] | null;
+}
+
 export class FileOperator {
   app: App;
   plugin: TaskCardPlugin;
@@ -55,7 +62,7 @@ export class FileOperator {
   // a disk read when stale). The render path must stay off disk I/O: a disk
   // read yields to the event loop long enough for the browser to paint the
   // raw section HTML, which is the visible "blink" when a card re-renders
-  // after its own write-back. Write paths keep vault.read for freshness.
+  // after its own write-back. Writes use vault.process for atomic read-modify-write.
   async getFileContentForDisplay(filePath: string): Promise<string | null> {
     const file = this.getMarkdownFile(filePath);
     if (!file) return null;
@@ -77,7 +84,8 @@ export class FileOperator {
     newContent: string,
     lineStart: number,
     lineEnd: number,
-    expectedBlock?: QueryBlockMatch
+    expectedBlock?: QueryBlockMatch,
+    expectedSource?: FileSourceExpectation
   ): Promise<void> {
     const file = this.getMarkdownFile(filePath);
     if (expectedBlock) {
@@ -85,22 +93,39 @@ export class FileOperator {
       await this.app.vault.process(file, content => replaceQueryBlock(content, newContent, lineStart, expectedBlock));
       return;
     }
-    if (!file) return;
-    const fileLines = await this.getFileLines(filePath);
-    if (fileLines == null) return;
-    const newFileLines: string[] = [...fileLines];
-    newFileLines.splice(lineStart, lineEnd - lineStart, newContent);
-    await this.app.vault.modify(file, newFileLines.join('\n'));
+    if (!file) {
+      if (expectedSource) throw new FileWriteConflict('Task file not found.');
+      return;
+    }
+    await this.app.vault.process(file, content => {
+      const lines = content.split('\n');
+      const span = expectedSource?.resolveSpan
+        ? expectedSource.resolveSpan(lines) : [lineStart, lineEnd];
+      if (!span || (expectedSource &&
+          lines.slice(span[0], span[1]).join('\n') !== expectedSource.source)) {
+        throw new FileWriteConflict('Task source changed before saving.');
+      }
+      lines.splice(span[0], span[1] - span[0], newContent);
+      return lines.join('\n');
+    });
   }
 
-  async updateLineInFile(filePath: string, lineNumber: number, newContent: string): Promise<void> {
+  async updateLineInFile(
+    filePath: string, lineNumber: number, newContent: string, expectedSource?: string
+  ): Promise<void> {
     const file = this.getMarkdownFile(filePath);
-    if (!file) return;
-    const fileLines = await this.getFileLines(filePath);
-    if (fileLines == null) return;
-    const newFileLines: string[] = [...fileLines];
-    newFileLines[lineNumber - 1] = newContent;
-    await this.app.vault.modify(file, newFileLines.join('\n'));
+    if (!file) {
+      if (expectedSource !== undefined) throw new FileWriteConflict('Task file not found.');
+      return;
+    }
+    await this.app.vault.process(file, content => {
+      const lines = content.split('\n');
+      if (expectedSource !== undefined && lines[lineNumber - 1] !== expectedSource) {
+        throw new FileWriteConflict('Task source changed before saving.');
+      }
+      lines[lineNumber - 1] = newContent;
+      return lines.join('\n');
+    });
   }
 
   getAllFilesAndFolders(): string[] {

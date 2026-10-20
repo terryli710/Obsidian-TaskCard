@@ -52,6 +52,10 @@ Add `#TaskCard` to an ordinary Markdown task:
 
 Switch to **Reading view** to see the card. Click it to expand, and click the checkbox when it's done. You can change the indicator tag in Task Card's settings.
 
+Native unordered and ordered task lists also work inside quotes and callouts. Card edits preserve the list prefix and custom checkbox character; checking or unchecking a card writes `x` or a space. Tags match without regard to case and support nested paths, numeric-leading names, and Unicode symbols such as emoji.
+
+Nested tags work too: with `TaskCard` as the indicator, `#TaskCard/work` and `#TaskCard/work/urgent` render as cards and keep their full tags when edited.
+
 <details>
 <summary>Watch: create your first card</summary>
 

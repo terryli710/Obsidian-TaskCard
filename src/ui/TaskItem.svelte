@@ -38,7 +38,7 @@
 
     function handleSwitchMode(event: MouseEvent | KeyboardEvent | CustomEvent) {
         if (isMarkdownControl(event)) return;
-        if (event instanceof KeyboardEvent && (event.key !== 'Enter' && event.key !== ' ')) {
+        if ('key' in event && (event.key !== 'Enter' && event.key !== ' ')) {
             return; // Only handle Enter or Space key
         }
         

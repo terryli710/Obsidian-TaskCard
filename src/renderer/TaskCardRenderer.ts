@@ -14,6 +14,7 @@
   import { countFormattedDescriptionLines, ObsidianTaskSyncProps } from '../taskModule/taskSyncManager';
   import type { TaskDisplayParams } from './postProcessor';
   import { extractBlockId } from '../taskModule/fieldSyntax';
+  import { markdownSourceContext } from '../utils/markdownSourceContext';
   
   export interface TaskItemData {
     // HTML information about the TaskItem
@@ -108,9 +109,16 @@
     // Same detection as constructTaskSync, but fully synchronous (pure DOM
     // inspection) so it can run before any paint-eligible boundary.
     private getTaskItems(section: HTMLElement): HTMLElement[] {
-      if (!isTaskList(section)) return [];
+      if (!section) return [];
+      // Obsidian emits native task lists directly, or inside quote/callout
+      // sections. Other rendered containers may belong to another processor.
+      const quotedTaskList = section.matches('blockquote, .callout') &&
+        section.querySelector('ul.contains-task-list, ol.contains-task-list');
+      if (!isTaskList(section) && !quotedTaskList) return [];
       const items = Array.from(section.querySelectorAll<HTMLElement>('li'))
         .filter((item) =>
+          isTaskList(item.parentElement) &&
+          !item.closest('[data-taskcard-markdown], .internal-embed, [class*="block-language-"], .dataview') &&
           !item.classList.contains('obsidian-taskcard-live') &&
           !item.classList.contains('obsidian-taskcard-source-hidden') &&
           this.taskItemFilter(item)
@@ -260,6 +268,7 @@
       // Reading the vault here adds an async paint gap and can pair newer source
       // text with older DOM positions. Finish construction/mounting synchronously.
       const sourceLines = mdSectionInfo.text.split('\n');
+      const sourceContext = markdownSourceContext(sourceLines);
       const mdSectionContent = sourceLines
         .slice(mdSectionInfo.lineStart, mdSectionInfo.lineEnd + 1).join('\n');
       const sectionLines = mdSectionContent.split('\n');
@@ -277,7 +286,8 @@
           const index = Array.from(parentList.children).indexOf(taskItemEl);
           const { startLine: lineStartInSection, endLine: lineEndsInSection } =
             getLineNumbersOfListItem(parentList, index, mdSectionContent);
-          if (!this.plugin.taskValidator.isTaskCardTaskMarkdown(sectionLines[lineStartInSection])) return [];
+          if (!sourceContext.taskLines.has(mdSectionInfo.lineStart + lineStartInSection) ||
+              !this.plugin.taskValidator.isTaskCardTaskMarkdown(sectionLines[lineStartInSection])) return [];
           // v2: attributes live visibly on the source line — parse the source,
           // never the rendered DOM (which Dataview and themes may transform)
           const obsidianTask = this.plugin.taskParser.parseAnyTaskFromFileLines(

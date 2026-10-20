@@ -98,6 +98,20 @@ describe('AttributeSuggester v2 key stage', () => {
     ).toBe(true);
   });
 
+  it.each(['#TaskCard/subtype', '#TaskCard/work/urgent'])(
+    'offers attributes on tasks tagged %s', (tag) => {
+      const line = `- [ ] Draft ${tag} [`;
+      expect(suggester.buildSuggestions(line, line.length).map(s => s.displayText)).toContain('due');
+    }
+  );
+
+  it.each(['#TaskCardish', '#TaskCard-other', '`#TaskCard/subtype`'])(
+    'does not offer attributes for %s', (tag) => {
+      const line = `- [ ] Draft ${tag} [`;
+      expect(suggester.buildSuggestions(line, line.length)).toEqual([]);
+    }
+  );
+
   it('does not trigger the key popup inside a wikilink', () => {
     const line = '- [ ] Review [[Project Plan #TaskCard';
     const cursorPos = line.indexOf('Project Plan') + 'Project Plan'.length;

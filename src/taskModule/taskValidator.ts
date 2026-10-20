@@ -1,12 +1,14 @@
 import { SettingStore } from '../settings';
-import { escapeRegExp } from '../utils/regexUtils';
+import { escapeRegExp, hasIndicatorTag } from '../utils/regexUtils';
 import { ObsidianTask } from './task';
 import { camelToKebab } from '../utils/stringCaseConverter';
+import { parseTaskLine } from '../utils/taskLine';
+import { protectMarkdownSyntax } from '../utils/markdownSyntax';
 
 export type SpanElements = Record<keyof ObsidianTask, HTMLElement>;
 
 export function isMarkdownTaskLine(taskMarkdown: string): boolean {
-  return /^\s*- \[[^\]]\]\s/.test(taskMarkdown);
+  return typeof taskMarkdown === 'string' && parseTaskLine(taskMarkdown) !== null;
 }
 
 export function isTaskCardTaskLine(
@@ -15,10 +17,7 @@ export function isTaskCardTaskLine(
 ): boolean {
   if (typeof taskMarkdown !== 'string') return false;
   if (!isMarkdownTaskLine(taskMarkdown)) return false;
-  const tagPattern = new RegExp(
-    `#${escapeRegExp(indicatorTag)}(?![A-Za-z0-9_/-])`
-  );
-  return tagPattern.test(taskMarkdown.split('\n', 1)[0]);
+  return hasIndicatorTag(taskMarkdown.split('\n', 1)[0], indicatorTag);
 }
 
 export class TaskValidator {
@@ -54,8 +53,7 @@ export class TaskValidator {
   private hasIndicatorTag(contentPart: string, indicatorTag: string | null = null): boolean {
     if (typeof contentPart !== 'string') return false;
     if (indicatorTag === null) { indicatorTag = this.indicatorTag; }
-    const indicatorTagPattern = new RegExp(`#${escapeRegExp(indicatorTag)}`);
-    return indicatorTagPattern.test(contentPart);
+    return hasIndicatorTag(contentPart, indicatorTag);
   }
 
   isMarkdownTask(taskMarkdown: string): boolean {
@@ -66,7 +64,7 @@ export class TaskValidator {
    * v2 detection: any markdown task line carrying the indicator tag is a
    * TaskCard task, whatever dialect its attributes are written in (v2 fields,
    * Tasks emoji, legacy `%%*` / hidden span). The tag must be a whole tag
-   * token, not a prefix of a longer tag.
+   * token or an ancestor of a nested tag, not a prefix of an unrelated tag.
    */
   isTaskCardTaskMarkdown(taskMarkdown: string, indicatorTag: string | null = null): boolean {
     return isTaskCardTaskLine(
@@ -84,11 +82,15 @@ export class TaskValidator {
   hasLegacyNotation(taskMarkdown: string): boolean {
     if (typeof taskMarkdown !== 'string') return false;
     const line = taskMarkdown.split('\n', 1)[0];
-    if (this.hasSpanElement(line)) return true;
     const legacyAttrPattern = new RegExp(
       `${this.startingNotation}.*?${this.endingNotation}`
     );
-    return legacyAttrPattern.test(line);
+    return [this.spanElementPattern, legacyAttrPattern].some(pattern => {
+      return [...line.matchAll(new RegExp(pattern.source, 'g'))].some(match => {
+        const withoutCandidate = line.slice(0, match.index) + ' '.repeat(match[0].length) + line.slice(match.index + match[0].length);
+        return !protectMarkdownSyntax(withoutCandidate).contains(match.index);
+      });
+    });
   }
 
   private getAttributePattern(): RegExp {
@@ -231,7 +233,7 @@ export class TaskValidator {
     // Loop through each tag element to see if it contains the indicator tag
     for (const tagElement of tagElements) {
       if (ownOnly && !ownedByItem(tagElement, taskElement)) continue;
-      if (tagElement.textContent?.includes(`#${this.indicatorTag}`)) {
+      if (hasIndicatorTag(tagElement.textContent || '', this.indicatorTag)) {
         return true; // Found the indicator tag, so return true
       }
     }

@@ -12,6 +12,7 @@ jest.mock('obsidian-dataview', () => ({ getAPI: jest.fn() }));
 import { getAPI } from 'obsidian-dataview';
 import { PositionedTaskCache } from '../src/query/cache';
 import { ObsidianTask } from '../src/taskModule/task';
+import { isTaskCardTaskLine } from '../src/taskModule/taskValidator';
 
 const mockGetAPI = getAPI as unknown as jest.Mock;
 
@@ -86,6 +87,18 @@ describe('PositionedTaskCache', () => {
   });
 
   describe('parseQueryResult', () => {
+    it('indexes descendant tags using the real task classifier and skips lookalikes', async () => {
+      const { cache, plugin } = makeCache();
+      plugin.taskValidator.isTaskCardTaskMarkdown.mockImplementation(
+        (line: string) => isTaskCardTaskLine(line, 'TaskCard')
+      );
+      const tasks = await cache.parseQueryResult({ values: [
+        dataviewTask({ text: 'nested #TaskCard/work/urgent' }),
+        dataviewTask({ text: 'unrelated #TaskCard-other' })
+      ] } as any);
+      expect(tasks).toHaveLength(1);
+      expect(plugin.fileOperator.getFileLines).toHaveBeenCalledTimes(1);
+    });
     it('converts dataview rows into positioned tasks', async () => {
       const { cache, plugin } = makeCache();
       const row = dataviewTask();
@@ -152,6 +165,30 @@ describe('PositionedTaskCache', () => {
       expect(tasks).toHaveLength(1);
     });
 
+    it('skips missing source files without aborting valid rows', async () => {
+      const { cache, plugin } = makeCache();
+      plugin.fileOperator.getFileLines.mockResolvedValueOnce(null).mockResolvedValueOnce(FILE_LINES);
+      const tasks = await cache.parseQueryResult({ values: [
+        dataviewTask({ path: 'deleted.md' }), dataviewTask()
+      ] } as any);
+      expect(tasks).toHaveLength(1);
+      expect(tasks[0].docPosition.filePath).toBe('work/tasks.md');
+    });
+
+    it('rejects stale task positions inside fenced examples or no-longer-tagged source', async () => {
+      const { cache, plugin } = makeCache();
+      plugin.taskValidator.isTaskCardTaskMarkdown.mockImplementation(
+        (line: string) => isTaskCardTaskLine(line, 'TaskCard')
+      );
+      plugin.fileOperator.getFileLines.mockResolvedValueOnce([
+        '```md', '- [ ] Literal #TaskCard', '```'
+      ]).mockResolvedValueOnce(['- [ ] Tag removed']);
+      const tasks = await cache.parseQueryResult({ values: [
+        dataviewTask({ startLine: 1 }), dataviewTask({ startLine: 0 })
+      ] } as any);
+      expect(tasks).toEqual([]);
+    });
+
     it('returns [] for an empty query result', async () => {
       const { cache } = makeCache();
       expect(await cache.parseQueryResult({ values: [] } as any)).toEqual([]);
@@ -166,7 +203,7 @@ describe('PositionedTaskCache', () => {
       await cache.initializeAndRefreshAllTasks();
 
       expect(api.tryQuery).toHaveBeenCalledWith(
-        'TASK FROM #TaskCard WHERE contains(text, "#TaskCard")'
+        'TASK FROM #TaskCard WHERE contains(lower(text), "#taskcard")'
       );
       expect(cache.getLength()).toBe(1);
       expect(cache.status.initialized).toBe(true);
@@ -196,7 +233,7 @@ describe('PositionedTaskCache', () => {
       await cache.refreshTasksByFileList(['work/tasks.md', 'notes/b.md']);
 
       expect(api.tryQuery).toHaveBeenCalledWith(
-        'TASK FROM #TaskCard AND ("work/tasks" OR "notes/b") WHERE contains(text, "#TaskCard")'
+        'TASK FROM #TaskCard AND ("work/tasks" OR "notes/b") WHERE contains(lower(text), "#taskcard")'
       );
       expect(cache.getLength()).toBe(1);
     });

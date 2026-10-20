@@ -7,6 +7,7 @@ import {
   formatDurationValue
 } from '../taskModule/fieldSyntax';
 import { parseRecurrenceRule } from '../taskModule/recurrence';
+import { isTaskCardTaskLine } from '../taskModule/taskValidator';
 import {
   SuggestFieldKey,
   SuggestInformation,
@@ -430,10 +431,7 @@ export class AttributeSuggester {
   }
 
   private isTaskCardTaskLine(lineText: string): boolean {
-    if (!/^\s*- \[[^\]]\]\s/.test(lineText)) return false;
-    return new RegExp(`#${escapeForRegex(this.indicatorTag)}(?![A-Za-z0-9_/-])`).test(
-      lineText
-    );
+    return isTaskCardTaskLine(lineText, this.indicatorTag);
   }
 
   private parseDateQuery(
@@ -505,10 +503,6 @@ function isSubsequence(query: string, candidate: string): boolean {
     if (idx === query.length) return true;
   }
   return idx === query.length;
-}
-
-function escapeForRegex(text: string): string {
-  return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 function isInsideCodeSpan(lineText: string, cursorPos: number): boolean {

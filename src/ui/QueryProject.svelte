@@ -247,7 +247,7 @@
     position: relative;
     display: block;
     width: 24px;
-    height: calc(var(--line-height-normal) * var(--font-text-size));
+    height: calc(var(--line-height-normal) * var(--font-preferred-size, var(--font-text-size)));
     min-height: 24px;
   }
   .query-project-button {

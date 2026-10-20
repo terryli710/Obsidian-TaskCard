@@ -66,6 +66,13 @@ describe('recurrence module', () => {
         '- [ ] step one\n- [ ] step two\n- plain note'
       );
     });
+
+    it('resets actual descendants while preserving fenced checkbox examples', () => {
+      const description = '- [X] actual step\n\n```md\n- [x] literal checkbox\n```';
+      expect(resetDescriptionCheckboxes(description)).toBe(
+        '- [ ] actual step\n\n```md\n- [x] literal checkbox\n```'
+      );
+    });
   });
 
   describe('advanceRecurringTask', () => {
@@ -226,6 +233,19 @@ describe('stripRecurrenceFromLine', () => {
     ).toBe('- [x] Water the plants #TaskCard [scheduled:: 2026-07-06] ^tc-abc123');
   });
 
+  it('removes real recurrence fields while retaining literal examples in code and links', () => {
+    const line = '- [x] Read `[repeat:: literal]` and [guide](https://example.com/[repeat::literal]) #TaskCard [repeat:: every week] ^tc-abc123';
+    expect(stripRecurrenceFromLine(line)).toBe(
+      '- [x] Read `[repeat:: literal]` and [guide](https://example.com/[repeat::literal]) #TaskCard ^tc-abc123'
+    );
+  });
+
+  it('removes parenthesized recurrence aliases without changing other fields', () => {
+    expect(stripRecurrenceFromLine('- [x] Read #TaskCard (recurrence:: every week) [due:: 2026-07-06] ^tc-abc123')).toBe(
+      '- [x] Read #TaskCard [due:: 2026-07-06] ^tc-abc123'
+    );
+  });
+
   it('nulls a legacy v1 hidden-span recurrence', () => {
     expect(
       stripRecurrenceFromLine(
@@ -233,6 +253,18 @@ describe('stripRecurrenceFromLine', () => {
       )
     ).toBe(
       '- [x] Water plants #TaskCard<span style="display:none">{"id":"u-1","recurrence":null}</span> .'
+    );
+  });
+
+  it.each([
+    '`{"recurrence":"every day"}`',
+    '`<span style="display:none">{"recurrence":"every day"}</span>`',
+    '[guide](https://example.com/<span style="display:none">{"recurrence":"every day"}</span>)'
+  ])('nulls only real legacy recurrence while preserving %s', literal => {
+    const real = '<span style="display:none">{"id":"u-1","recurrence":"every week"}</span>';
+    const line = '- [x] Read ' + literal + ' #TaskCard' + real + ' .';
+    expect(stripRecurrenceFromLine(line)).toBe(
+      '- [x] Read ' + literal + ' #TaskCard<span style="display:none">{"id":"u-1","recurrence":null}</span> .'
     );
   });
 
@@ -279,6 +311,234 @@ describe('completeRecurringTaskInFile (query-block completion path)', () => {
       recurrence: 'every week',
       schedule: { isRecurring: false, date: '2026-07-06', string: '2026-07-06' }
     });
+
+  const sourceTask = (source: string, id = 'tc-source') => {
+    const task = makeTask();
+    task.id = id;
+    task.metadata.sourceMarkdown = source;
+    return task;
+  };
+
+  it.each(['* [ ] ', '+ [ ] ', '  12) [/]  ', '> - [X] ', '> > 2. [?] '])(
+    'keeps the native prefix %j on both completed and next instances', async prefix => {
+      const line = prefix + 'Water the plants #TaskCard [scheduled:: 2026-07-06] [repeat:: every week] ^tc-source';
+      const task = sourceTask(line);
+      vault.__setFile(FILE_PATH, line);
+      await expect(completeRecurringTaskInFile(plugin, task, FILE_PATH, 0)).resolves.toBe(true);
+      const lines = vault.__getContent(FILE_PATH).split('\n');
+      const status = prefix.indexOf('[') + 1;
+      expect(lines[0]).toBe(prefix.slice(0, status) + 'x' + prefix.slice(status + 1) +
+        'Water the plants #TaskCard [scheduled:: 2026-07-06] ^tc-source');
+      expect(lines[1].startsWith(prefix.slice(0, status) + ' ' + prefix.slice(status + 1))).toBe(true);
+      expect(lines[1]).toContain('[scheduled:: 2026-07-13] [repeat:: every week]');
+      expect(lines[1]).not.toContain('^tc-source');
+    }
+  );
+
+  it('keeps the original description with the completed task and inserts reset descendants after it', async () => {
+    const source = ['+ [ ] Water the plants #TaskCard [repeat:: every week] ^tc-source',
+      '  + [X] fill the can', '  keep this note'].join('\n');
+    const task = sourceTask(source);
+    const sibling = '* [ ] untouched sibling #TaskCard';
+    vault.__setFile(FILE_PATH, source + '\n' + sibling);
+    await completeRecurringTaskInFile(plugin, task, FILE_PATH, 0);
+    const lines = vault.__getContent(FILE_PATH).split('\n');
+    expect(lines).toHaveLength(7);
+    expect(lines.slice(0, 3)).toEqual([
+      '+ [x] Water the plants #TaskCard ^tc-source', '  + [X] fill the can', '  keep this note'
+    ]);
+    expect(lines[3]).toMatch(/^\+ \[ \] Water the plants .*\[repeat:: every week\] \^tc-/);
+    expect(lines.slice(4)).toEqual(['  + [ ] fill the can', '  keep this note', sibling]);
+  });
+
+  it('preserves quoted description source and resets alternative child markers', async () => {
+    const source = ['> > 2. [?] Water the plants #TaskCard [repeat:: every week] ^tc-source',
+      '> >     1) [X] fill the can', '> >     + [x] mist the ferns'].join('\n');
+    vault.__setFile(FILE_PATH, source);
+    await completeRecurringTaskInFile(plugin, sourceTask(source), FILE_PATH, 0);
+    const lines = vault.__getContent(FILE_PATH).split('\n');
+    expect(lines.slice(1, 3)).toEqual(['> >     1) [X] fill the can', '> >     + [x] mist the ferns']);
+    expect(lines[3]).toMatch(/^> > 2\. \[ \] Water the plants/);
+    expect(lines.slice(4)).toEqual(['> >     1) [ ] fill the can', '> >     + [ ] mist the ferns']);
+  });
+
+  it('copies fenced description examples literally while resetting real descendants', async () => {
+    const description = ['    ```md', '    - [x] literal checkbox', '    ```', '    + [X] actual step'];
+    const source = ['- [ ] Water the plants #TaskCard [repeat:: every week] ^tc-source', ...description].join('\n');
+    vault.__setFile(FILE_PATH, source);
+    await completeRecurringTaskInFile(plugin, sourceTask(source), FILE_PATH, 0);
+    const lines = vault.__getContent(FILE_PATH).split('\n');
+    expect(lines.slice(1, 5)).toEqual(description);
+    expect(lines.slice(6)).toEqual(['    ```md', '    - [x] literal checkbox', '    ```', '    + [ ] actual step']);
+  });
+
+  it('relocates a unique persisted task rather than completing the cached row', async () => {
+    const line = '- [ ] Water the plants #TaskCard [repeat:: every week] ^tc-source';
+    const different = '- [ ] Different #TaskCard ^tc-other';
+    vault.__setFile(FILE_PATH, ['# inserted', different, line, 'tail'].join('\n'));
+    await completeRecurringTaskInFile(plugin, sourceTask(line), FILE_PATH, 1);
+    const lines = vault.__getContent(FILE_PATH).split('\n');
+    expect(lines[1]).toBe(different);
+    expect(lines[2]).toBe('- [x] Water the plants #TaskCard ^tc-source');
+    expect(lines[4]).toBe('tail');
+  });
+
+  it('relocates the task inside the atomic callback after a concurrent move', async () => {
+    const source = '- [ ] Water the plants #TaskCard [repeat:: every week] ^tc-source\n    - [X] fill the can';
+    const file = vault.__setFile(FILE_PATH, source + '\ntail');
+    const process = vault.process.bind(vault);
+    vault.process = async (_file, transform) => {
+      await vault.modify(file, '# concurrent heading\n' + vault.__getContent(FILE_PATH));
+      return process(file, transform);
+    };
+    await expect(completeRecurringTaskInFile(plugin, sourceTask(source), FILE_PATH, 0)).resolves.toBe(true);
+    const lines = vault.__getContent(FILE_PATH).split('\n');
+    expect(lines[0]).toBe('# concurrent heading');
+    expect(lines[1]).toBe('- [x] Water the plants #TaskCard ^tc-source');
+    expect(lines[2]).toBe('    - [X] fill the can');
+    expect(lines[4]).toBe('    - [ ] fill the can');
+    expect(lines[5]).toBe('tail');
+  });
+
+  it.each(['title', 'description', 'description extent', 'duplicate identity'])(
+    'rejects a concurrent %s edit without changing the external source', async change => {
+      const source = '- [ ] Water the plants #TaskCard [repeat:: every week] ^tc-source\n    - [x] fill the can';
+      const file = vault.__setFile(FILE_PATH, source + '\ntail');
+      const concurrent = change === 'title' ? source.replace('Water the plants', 'Externally renamed') + '\ntail'
+        : change === 'description' ? source.replace('fill the can', 'external description') + '\ntail'
+        : change === 'description extent' ? source + '\n    external new detail\ntail'
+        : source + '\n' + source + '\ntail';
+      const process = vault.process.bind(vault);
+      vault.process = async (_file, transform) => {
+        await vault.modify(file, concurrent);
+        return process(file, transform);
+      };
+      await expect(completeRecurringTaskInFile(plugin, sourceTask(source), FILE_PATH, 0)).rejects.toThrow();
+      expect(vault.__getContent(FILE_PATH)).toBe(concurrent);
+    }
+  );
+
+  it.each(['missing identity', 'duplicate identity', 'changed snapshot', 'missing file'])(
+    'rejects %s instead of falling back to the cached row', async scenario => {
+      const source = '- [ ] Water the plants #TaskCard [repeat:: every week] ^tc-source';
+      const current = scenario === 'missing identity' ? '- [ ] Different #TaskCard ^tc-other'
+        : scenario === 'duplicate identity' ? source + '\n' + source
+        : source.replace('Water the plants', 'Changed');
+      if (scenario !== 'missing file') vault.__setFile(FILE_PATH, current);
+      await expect(completeRecurringTaskInFile(plugin, sourceTask(source), FILE_PATH, 0)).rejects.toThrow();
+      if (scenario !== 'missing file') expect(vault.__getContent(FILE_PATH)).toBe(current);
+    }
+  );
+
+  it.each(['changed', 'duplicate'])(
+    'refuses an ID-less %s source snapshot', async scenario => {
+      const source = '- [ ] Water the plants #TaskCard [repeat:: every week]';
+      const current = scenario === 'changed' ? source.replace('Water the plants', 'Different') : source + '\n' + source;
+      vault.__setFile(FILE_PATH, current);
+      await expect(completeRecurringTaskInFile(plugin, sourceTask(source, 'ephemeral-uuid'), FILE_PATH, 0)).rejects.toThrow();
+      expect(vault.__getContent(FILE_PATH)).toBe(current);
+    }
+  );
+
+  it('refuses an ID-less task without an original snapshot', async () => {
+    const current = '- [ ] Different #TaskCard [repeat:: every week]';
+    vault.__setFile(FILE_PATH, current);
+    await expect(completeRecurringTaskInFile(plugin, makeTask(), FILE_PATH, 0)).rejects.toThrow();
+    expect(vault.__getContent(FILE_PATH)).toBe(current);
+  });
+
+  it('refuses a source span with a multiline comment instead of inserting inside the comment', async () => {
+    const task = makeTask();
+    task.id = 'legacy-source';
+    const current = '- [ ] Water the plants #TaskCard<span style="display:none">{"id":"legacy-source","recurrence":"every week"}</span> %% open comment\ncontinued comment\n%%';
+    vault.__setFile(FILE_PATH, current);
+    await expect(completeRecurringTaskInFile(plugin, task, FILE_PATH, 0)).rejects.toThrow();
+    expect(vault.__getContent(FILE_PATH)).toBe(current);
+  });
+
+  it('refuses a description span with a multiline comment during recurrence insertion', async () => {
+    const source = '- [ ] Water the plants #TaskCard [repeat:: every week] ^tc-source\n    %% note\n    hidden details\n    %%';
+    vault.__setFile(FILE_PATH, source);
+    await expect(completeRecurringTaskInFile(plugin, sourceTask(source), FILE_PATH, 0)).rejects.toThrow();
+    expect(vault.__getContent(FILE_PATH)).toBe(source);
+  });
+
+  it('keeps a short-indented sibling outside a long ordered task description', async () => {
+    const source = '123. [ ] Water the plants #TaskCard [repeat:: every week] ^tc-source\n     - [x] child';
+    const sibling = '  - [ ] sibling #TaskCard';
+    vault.__setFile(FILE_PATH, source + '\n' + sibling);
+    await completeRecurringTaskInFile(plugin, sourceTask(source), FILE_PATH, 0);
+    const lines = vault.__getContent(FILE_PATH).split('\n');
+    expect(lines).toHaveLength(5);
+    expect(lines[1]).toBe('     - [x] child');
+    expect(lines[2]).toMatch(/^123\. \[ \] Water the plants/);
+    expect(lines[3]).toBe('     - [ ] child');
+    expect(lines[4]).toBe(sibling);
+  });
+
+  it('relocates an ID-less unique exact snapshot after a source move', async () => {
+    const source = '- [ ] Water the plants #TaskCard [repeat:: every week]\n    - [x] fill the can';
+    vault.__setFile(FILE_PATH, 'new heading\n' + source + '\ntail');
+    await completeRecurringTaskInFile(plugin, sourceTask(source, 'ephemeral-uuid'), FILE_PATH, 0);
+    expect(vault.__getContent(FILE_PATH).split('\n').slice(0, 3)).toEqual([
+      'new heading', '- [x] Water the plants #TaskCard', '    - [x] fill the can'
+    ]);
+  });
+
+  it.each(['metadata', 'snapshot'])(
+    'resolves a native block ID from %s without requiring a tc ID', async identitySource => {
+      const source = '- [ ] Water the plants #TaskCard [repeat:: every week] ^native-id';
+      const task = sourceTask(source, 'ephemeral-uuid');
+      if (identitySource === 'metadata') {
+        delete task.metadata.sourceMarkdown;
+        task.metadata.sourceBlockId = 'native-id';
+      }
+      vault.__setFile(FILE_PATH, 'heading\n' + source);
+      await completeRecurringTaskInFile(plugin, task, FILE_PATH, 0);
+      expect(vault.__getContent(FILE_PATH).split('\n')[1]).toBe('- [x] Water the plants #TaskCard ^native-id');
+    }
+  );
+
+  it('finds unique legacy JSON identity when a constructed task has no snapshot', async () => {
+    const source = '- [ ] Water the plants #TaskCard<span style="display:none">{"id":"legacy-source","recurrence":"every week"}</span> .';
+    const task = makeTask();
+    task.id = 'legacy-source';
+    vault.__setFile(FILE_PATH, 'heading\n' + source);
+    await completeRecurringTaskInFile(plugin, task, FILE_PATH, 0);
+    expect(vault.__getContent(FILE_PATH).split('\n')[1]).toBe(
+      '- [x] Water the plants #TaskCard<span style="display:none">{"id":"legacy-source","recurrence":null}</span> .'
+    );
+  });
+
+  it('refuses duplicate persisted legacy IDs even when only one has the original text', async () => {
+    const source = '- [ ] Water the plants #TaskCard<span style="display:none">{"id":"legacy-source","recurrence":"every week"}</span> .';
+    const current = source + '\n' + source.replace('Water the plants', 'Different title');
+    const task = sourceTask(source, 'legacy-source');
+    vault.__setFile(FILE_PATH, current);
+    await expect(completeRecurringTaskInFile(plugin, task, FILE_PATH, 0)).rejects.toThrow();
+    expect(vault.__getContent(FILE_PATH)).toBe(current);
+  });
+
+  it('refuses a missing legacy identity even when another task quotes that ID in code', async () => {
+    const task = makeTask();
+    task.id = 'legacy-source';
+    const literal = '- [ ] Read `<span style="display:none">{"id":"legacy-source","recurrence":"every week"}</span>` #TaskCard';
+    vault.__setFile(FILE_PATH, literal);
+    await expect(completeRecurringTaskInFile(plugin, task, FILE_PATH, 0)).rejects.toThrow();
+    expect(vault.__getContent(FILE_PATH)).toBe(literal);
+  });
+
+  it('ignores quoted legacy IDs while resolving one real hidden-span identity', async () => {
+    const task = makeTask();
+    task.id = 'legacy-source';
+    const literal = '- [ ] Read `<span style="display:none">{"id":"legacy-source","recurrence":"every week"}</span>` #TaskCard';
+    const actual = '- [ ] Water the plants #TaskCard<span style="display:none">{"id":"legacy-source","recurrence":"every week"}</span> .';
+    vault.__setFile(FILE_PATH, literal + '\n' + actual);
+    await expect(completeRecurringTaskInFile(plugin, task, FILE_PATH, 0)).resolves.toBe(true);
+    const lines = vault.__getContent(FILE_PATH).split('\n');
+    expect(lines[0]).toBe(literal);
+    expect(lines[1]).toBe('- [x] Water the plants #TaskCard<span style="display:none">{"id":"legacy-source","recurrence":null}</span> .');
+  });
 
   it('completes the clicked line in place and inserts the next instance below', async () => {
     const task = makeTask();

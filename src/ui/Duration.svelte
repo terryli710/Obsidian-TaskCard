@@ -71,7 +71,7 @@
   }
 
   async function enableDurationEditMode(event: KeyboardEvent | MouseEvent) {
-      if (event instanceof KeyboardEvent) {
+      if ('key' in event) {
           if (event.key != 'Enter') {
               return;
           }
@@ -136,7 +136,7 @@
   }
 
   function finishDurationEditing(event: KeyboardEvent | MouseEvent) {
-    if (event instanceof MouseEvent) {
+    if (!('key' in event)) {
         return;
     }
 

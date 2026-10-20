@@ -234,6 +234,300 @@ describe('ObsidianTaskSyncManager', () => {
     });
   });
 
+  describe('atomic identity and source protection', () => {
+    beforeEach(() => {
+      vault.process = async (file: any, transform: (source: string) => string) => {
+        const result = transform(vault.__getContent(file.path));
+        vault.__setFile(file.path, result);
+        return result;
+      };
+    });
+
+    it.each(['missing', 'duplicate'])('refuses a %s persisted ID even at a cached position', async (kind) => {
+      const { manager } = makeManager(alphaTask, 0, 1);
+      const changed = kind === 'missing'
+        ? fileLines.join('\n').replace(alphaLine, '- [ ] Different #TaskCard ^tc-other1')
+        : fileLines.join('\n') + '\n' + alphaLine;
+      vault.__setFile(FILE_PATH, changed);
+      await expect(manager.resolveDocLineStartEnd()).resolves.toBeNull();
+      await manager.updateMarkdownTaskToFile('- [x] overwrite');
+      await manager.deleteTask();
+      expect(vault.__getContent(FILE_PATH)).toBe(changed);
+      expect(plugin.externalAPIManager.deleteTask).not.toHaveBeenCalled();
+    });
+
+    it('keeps both simultaneous completions on different tasks', async () => {
+      const a = makeManager(alphaTask, 0, 1).manager;
+      const b = makeManager(betaTask, 1, 4).manager;
+      await Promise.all([a.updateObsidianTaskAttribute('completed', true), b.updateObsidianTaskAttribute('completed', true)]);
+      const lines = vault.__getContent(FILE_PATH).split('\n');
+      expect(lines[2]).toContain('- [x] Alpha task');
+      expect(lines[3]).toContain('- [x] Beta task');
+    });
+
+    it('relocates again inside the atomic callback after a concurrent insertion', async () => {
+      const { manager } = makeManager(alphaTask, 0, 1);
+      const process = vault.process;
+      vault.process = async (file: any, transform: any) => {
+        vault.__setFile(FILE_PATH, 'inserted\n' + vault.__getContent(FILE_PATH));
+        return process(file, transform);
+      };
+      await manager.updateMarkdownTaskToFile('- [x] replaced #TaskCard');
+      expect(vault.__getContent(FILE_PATH)).toBe(['inserted', ...fileLines.slice(0, 2), '- [x] replaced #TaskCard', ...fileLines.slice(3)].join('\n'));
+    });
+
+    it.each(['edit', 'delete', 'duplicate'])('rejects a concurrent %s at commit without committing display state', async (kind) => {
+      const { manager } = makeManager(alphaTask, 0, 1);
+      const commit = jest.fn();
+      plugin.taskCardRenderManager = { prepareTaskWrite: jest.fn(() => commit) };
+      const changed = kind === 'edit'
+        ? fileLines.join('\n').replace('Alpha task', 'User edited task')
+        : kind === 'delete' ? fileLines.filter(line => line !== alphaLine).join('\n')
+        : fileLines.join('\n') + '\n' + alphaLine;
+      const process = vault.process;
+      vault.process = async (file: any, transform: any) => {
+        vault.__setFile(FILE_PATH, changed);
+        return process(file, transform);
+      };
+      await manager.updateTaskToFile();
+      expect(vault.__getContent(FILE_PATH)).toBe(changed);
+      expect(commit).not.toHaveBeenCalled();
+    });
+
+    it('rejects a stale rendered snapshot even when its durable ID still exists', async () => {
+      alphaTask.metadata.sourceMarkdown = alphaLine;
+      const { manager } = makeManager(alphaTask, 0, 1);
+      const changed = fileLines.join('\n').replace('Alpha task', 'User edited task');
+      vault.__setFile(FILE_PATH, changed);
+      await manager.updateTaskToFile();
+      expect(vault.__getContent(FILE_PATH)).toBe(changed);
+    });
+
+    it('keeps the original legacy identity after a failed migration save', async () => {
+      const raw = '- [ ] Legacy #TaskCard <span class="task-card-data" style="display:none">{"id":"legacy-id"}</span>';
+      const task = new ObsidianTask({ id: 'legacy-id', content: 'Legacy', metadata: { sourceMarkdown: raw } });
+      vault.__setFile(FILE_PATH, ['# Projects', '', raw, 'tail'].join('\n'));
+      const { manager } = makeManager(task, 0, 1);
+      const process = vault.process;
+      vault.process = async (file: any, transform: any) => {
+        vault.__setFile(FILE_PATH, vault.__getContent(FILE_PATH) + '\n' + raw);
+        return process(file, transform);
+      };
+      await manager.updateTaskToFile();
+      vault.process = process;
+      const duplicate = vault.__getContent(FILE_PATH);
+      await manager.updateTaskToFile();
+      expect(vault.__getContent(FILE_PATH)).toBe(duplicate);
+    });
+
+    it('rejects an added description before save instead of combining stale and current descriptions', async () => {
+      betaTask.metadata.sourceMarkdown = betaMarkdown;
+      const { manager } = makeManager(betaTask, 1, 4);
+      const changed = fileLines.join('\n').replace('    step two', '    step two\n    added by user');
+      vault.__setFile(FILE_PATH, changed);
+      betaTask.description = 'replacement';
+      await manager.updateTaskToFile();
+      expect(vault.__getContent(FILE_PATH)).toBe(changed);
+    });
+
+    it('refuses a first save when its ID-less source has been removed', async () => {
+      const raw = '- [ ] New task #TaskCard';
+      const task = new ObsidianTask({ content: 'New task', metadata: { sourceMarkdown: raw } });
+      const { manager } = makeManager(task, 0, 1);
+      vault.__setFile(FILE_PATH, '# Projects');
+      await manager.updateTaskToFile();
+      expect(vault.__getContent(FILE_PATH)).toBe('# Projects');
+    });
+
+    it('does not double-indent a formatter result that preserves the source prefix', async () => {
+      const raw = '  - [ ] Alpha task #TaskCard ^tc-alpha1';
+      const task = new ObsidianTask({ id: 'tc-alpha1', content: 'Alpha task', metadata: {
+        sourceMarkdown: raw, sourceTaskPrefix: '  - [ ] '
+      } });
+      vault.__setFile(FILE_PATH, ['# Projects', '', raw, 'tail'].join('\n'));
+      plugin.taskFormatter = { taskToMarkdown: () => '  - [x] Alpha task #TaskCard ^tc-alpha1' };
+      const { manager } = makeManager(task, 0, 1);
+      await manager.updateTaskToFile();
+      expect(vault.__getContent(FILE_PATH)).toBe('# Projects\n\n  - [x] Alpha task #TaskCard ^tc-alpha1\ntail');
+    });
+
+    it('refreshes the saved baseline through repeated custom-status toggles without mutating shared metadata', async () => {
+      const raw = '- [-] Alpha task #TaskCard ^tc-alpha1\n    detail';
+      const metadata = { sourceMarkdown: raw, sourceTaskPrefix: '- [-] ', sourceTaskStatus: '-',
+        sourceTaskCompleted: false, sourceDescription: 'detail', sourceDescriptionMarkdown: '    detail' };
+      const task = new ObsidianTask({ id: 'tc-alpha1', content: 'Alpha task', description: 'detail', metadata });
+      vault.__setFile(FILE_PATH, ['# Projects', '', raw, 'tail'].join('\n'));
+      const { manager } = makeManager(task, 0, 2);
+      for (const completed of [true, false, true]) {
+        await manager.updateObsidianTaskAttribute('completed', completed);
+        const status = completed ? 'x' : ' ';
+        const source = vault.__getContent(FILE_PATH).split('\n').slice(2, 4).join('\n');
+        expect(source).toContain(`- [${status}] Alpha task`);
+        expect(task.metadata.sourceMarkdown).toBe(source);
+        expect(task.metadata.sourceTaskPrefix).toBe(`- [${status}] `);
+        expect(task.metadata.sourceTaskStatus).toBe(status);
+        expect(task.metadata.sourceTaskCompleted).toBe(completed);
+        expect(task.metadata.sourceDescription).toBe('detail');
+        expect(task.metadata.sourceDescriptionMarkdown).toBe('    detail');
+      }
+      expect(metadata.sourceMarkdown).toBe(raw);
+      expect(metadata.sourceTaskStatus).toBe('-');
+    });
+
+    it('rejects newly appended quoted description text', async () => {
+      const raw = '> - [ ] Quoted task #TaskCard ^tc-quote1\n>     old detail';
+      const task = new ObsidianTask({ id: 'tc-quote1', content: 'Quoted task', description: 'old detail',
+        metadata: { sourceMarkdown: raw, sourceTaskPrefix: '> - [ ] ' } });
+      const { manager } = makeManager(task, 0, 2);
+      const changed = '# Projects\n\n' + raw + '\n>     user addition\ntail';
+      vault.__setFile(FILE_PATH, changed);
+      await manager.updateTaskToFile();
+      expect(vault.__getContent(FILE_PATH)).toBe(changed);
+    });
+
+    it.each([
+      '- [ ] Different #TaskCard ^tc-alpha10',
+      'A paragraph with the old block ID ^tc-alpha1'
+    ])('refuses a nonmatching source identity: %s', async (replacement) => {
+      const task = new ObsidianTask({ id: 'tc-alpha1', content: 'Alpha task' });
+      const { manager } = makeManager(task, 0, 1);
+      const changed = '# Projects\n\n' + replacement + '\ntail';
+      vault.__setFile(FILE_PATH, changed);
+      await manager.updateTaskToFile();
+      expect(vault.__getContent(FILE_PATH)).toBe(changed);
+    });
+
+    it('allows the first save of an unchanged task without a persisted ID', async () => {
+      const raw = '- [ ] New task #TaskCard';
+      const task = new ObsidianTask({ content: 'New task', metadata: { sourceMarkdown: raw } });
+      vault.__setFile(FILE_PATH, ['# Projects', '', raw, 'tail'].join('\n'));
+      const { manager } = makeManager(task, 0, 1);
+      task.content = 'Edited new task';
+      await manager.updateTaskToFile();
+      expect(vault.__getContent(FILE_PATH)).toMatch(/Edited new task #TaskCard \^tc-[a-z0-9]{6}\ntail$/);
+    });
+  });
+
+  describe('final write review regressions', () => {
+    it.each(['fence', 'comment', 'frontmatter'])('refuses a rendered task moved inside %s', async kind => {
+      alphaTask.metadata.sourceMarkdown = alphaLine;
+      const { manager } = makeManager(alphaTask, 0, 1);
+      const current = kind === 'fence' ? '```md\n' + alphaLine + '\n```'
+        : kind === 'comment' ? '%%\n' + alphaLine + '\n%%'
+        : '---\n' + alphaLine + '\n---';
+      vault.__setFile(FILE_PATH, current);
+      await manager.updateObsidianTaskAttribute('completed', true);
+      expect(vault.__getContent(FILE_PATH)).toBe(current);
+      expect(alphaTask.completed).toBe(false);
+      expect(plugin.externalAPIManager.updateTask).not.toHaveBeenCalled();
+      expect(plugin.storeSyncMappings).not.toHaveBeenCalled();
+    });
+
+    it('rolls back the shared task after a refused source edit and skips external side effects', async () => {
+      alphaTask.metadata.sourceMarkdown = alphaLine;
+      const { manager } = makeManager(alphaTask, 0, 1);
+      const current = fileLines.join('\n').replace('Alpha task', 'User edit');
+      vault.__setFile(FILE_PATH, current);
+      await manager.updateObsidianTaskAttribute('completed', true);
+      expect(manager.obsidianTask).toBe(alphaTask);
+      expect(alphaTask.completed).toBe(false);
+      expect(alphaTask.completionDate).toBeNull();
+      expect(vault.__getContent(FILE_PATH)).toBe(current);
+      expect(plugin.externalAPIManager.updateTask).not.toHaveBeenCalled();
+      expect(plugin.storeSyncMappings).not.toHaveBeenCalled();
+    });
+
+    it.each([false, true])('rolls back completion on a write error (recurring=%s)', async recurring => {
+      if (recurring) alphaTask.recurrence = 'every week';
+      const originalId = alphaTask.id;
+      const { manager } = makeManager(alphaTask, 0, 1);
+      jest.spyOn(plugin.fileOperator, 'updateFile').mockRejectedValue(new Error('disk unavailable'));
+      await expect(manager.updateObsidianTaskAttribute('completed', true)).resolves.toBeUndefined();
+      expect(manager.obsidianTask).toBe(alphaTask);
+      expect(alphaTask.completed).toBe(false);
+      expect(alphaTask.id).toBe(originalId);
+      expect(alphaTask.recurrence).toBe(recurring ? 'every week' : null);
+      expect(plugin.externalAPIManager.updateTask).not.toHaveBeenCalled();
+      expect(plugin.storeSyncMappings).not.toHaveBeenCalled();
+    });
+
+    it('syncs only after the corresponding saved note and serializes rapid attribute updates', async () => {
+      const { manager } = makeManager(alphaTask, 0, 1);
+      const observed: string[] = [];
+      plugin.externalAPIManager.updateTask.mockImplementation(async (task: ObsidianTask) => {
+        observed.push(task.content);
+        expect(vault.__getContent(FILE_PATH)).toContain(task.content);
+        return undefined;
+      });
+      await Promise.all([
+        manager.updateObsidianTaskAttribute('content', 'First edit'),
+        manager.updateObsidianTaskAttribute('content', 'Second edit')
+      ]);
+      expect(observed).toEqual(['First edit', 'Second edit']);
+      expect(vault.__getContent(FILE_PATH)).toContain('Second edit');
+    });
+
+    it.each([false, true])('rejects context changed inside the atomic callback and restores recurrence=%s', async recurring => {
+      if (recurring) alphaTask.recurrence = 'every week';
+      alphaTask.metadata.sourceMarkdown = alphaLine;
+      const { manager } = makeManager(alphaTask, 0, 1);
+      const current = '```md\n' + alphaLine + '\n```';
+      vault.process = async (_file: any, transform: (source: string) => string) => {
+        vault.__setFile(FILE_PATH, current);
+        return transform(current);
+      };
+      await manager.updateObsidianTaskAttribute('completed', true);
+      expect(vault.__getContent(FILE_PATH)).toBe(current);
+      expect(alphaTask.completed).toBe(false);
+      expect(alphaTask.recurrence).toBe(recurring ? 'every week' : null);
+      expect(plugin.externalAPIManager.updateTask).not.toHaveBeenCalled();
+      expect(plugin.storeSyncMappings).not.toHaveBeenCalled();
+    });
+
+    it('refuses an unchanged ID-less task at a cached line that is now inside a fence', async () => {
+      const raw = '- [ ] ID-less #TaskCard';
+      const task = new ObsidianTask({ content: 'ID-less', metadata: { sourceMarkdown: raw } });
+      const { manager } = makeManager(task, 0, 1);
+      const current = '```md\n\n' + raw + '\n```';
+      vault.__setFile(FILE_PATH, current);
+      await manager.updateObsidianTaskAttribute('completed', true);
+      expect(vault.__getContent(FILE_PATH)).toBe(current);
+      expect(task.completed).toBe(false);
+      expect(plugin.externalAPIManager.updateTask).not.toHaveBeenCalled();
+    });
+
+    it('refuses a task whose description intersects a multiline comment', async () => {
+      const raw = alphaLine + '\n    %% comment\n    hidden\n    %%';
+      alphaTask.metadata.sourceMarkdown = raw;
+      const { manager } = makeManager(alphaTask, 0, 4);
+      const current = '# Projects\n\n' + raw;
+      vault.__setFile(FILE_PATH, current);
+      await manager.updateObsidianTaskAttribute('completed', true);
+      expect(vault.__getContent(FILE_PATH)).toBe(current);
+      expect(alphaTask.completed).toBe(false);
+    });
+
+    it('relocates a legitimate hidden-span legacy task', async () => {
+      const raw = '- [ ] Legacy #TaskCard <span style="display:none">{"id":"legacy-id"}</span>';
+      const task = new ObsidianTask({ id: 'legacy-id', content: 'Legacy', metadata: { sourceMarkdown: raw } });
+      const { manager } = makeManager(task, 0, 1);
+      vault.__setFile(FILE_PATH, '# Projects\n\nnew paragraph\n\n' + raw);
+      await manager.updateObsidianTaskAttribute('completed', true);
+      expect(vault.__getContent(FILE_PATH)).toMatch(/^# Projects\n\nnew paragraph\n\n- \[x\] Legacy/);
+      expect(task.completed).toBe(true);
+    });
+
+    it('does not resolve a legacy ID quoted inside code', async () => {
+      const task = new ObsidianTask({ id: 'legacy-id', content: 'Legacy' });
+      const { manager } = makeManager(task, 0, 1);
+      const current = '# Projects\n\n- [ ] Example `{"id":"legacy-id"}` #TaskCard';
+      vault.__setFile(FILE_PATH, current);
+      await manager.updateObsidianTaskAttribute('completed', true);
+      expect(vault.__getContent(FILE_PATH)).toBe(current);
+      expect(task.completed).toBe(false);
+    });
+  });
+
   describe('getMarkdownTaskFromFile', () => {
     it('returns exactly the task line for a task without description', async () => {
       const { manager } = makeManager(alphaTask, 0, 1);
@@ -612,16 +906,13 @@ describe('TaskParser.determineDescriptionLineNumber (description line-span count
     ).toBe(1);
   });
 
-  it('counts non-indented plain text as description (documented rule 5b)', () => {
-    // Only blank lines and same-or-less-indented *tasks* terminate the
-    // description; a plain unindented paragraph right under the task is
-    // counted as description.
+  it('does not consume a following unindented paragraph', () => {
     expect(
       parser.determineDescriptionLineNumber([
         '- [ ] task line',
         'plain unindented text'
       ])
-    ).toBe(1);
+    ).toBe(0);
   });
 });
 

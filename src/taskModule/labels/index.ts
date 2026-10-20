@@ -1,5 +1,8 @@
 import { logger } from '../../utils/log';
 import { toCamelCase } from '../../utils/stringCaseConverter';
+import { TAG_CHAR, tagPattern } from '../../utils/regexUtils';
+
+const nativeTagCharacter = new RegExp(`^${TAG_CHAR}$`, 'u');
 
 export class LabelModule {
   private labels: string[];
@@ -10,19 +13,15 @@ export class LabelModule {
 
   // Check if a label is valid based on Obsidian's rules
   public isValidLabel(label: string): boolean {
-    // The label should not be empty
-    if (!label) return false;
-    // The label should contain at least one non-numerical character
-    if (!/[A-Za-z_\-/]/.test(label)) return false;
-    // The label should not contain spaces
-    if (/\s/.test(label)) return false;
-    return true;
+    if (!label || /^[0-9]+$/.test(label)) return false;
+    const token = `#${label}`;
+    return tagPattern().exec(token)?.[0] === token;
   }
 
   // Validate and possibly format a label
   public validateLabel(label: string): string {
     // Remove symbols not accepted in a label, replace with space
-    label = label.replace(/[^A-Za-z0-9_\-/\s]/g, ' ');
+    label = label.replace(/\S/gu, character => nativeTagCharacter.test(character) ? character : ' ');
     // Trim consecutive spaces to one, trim start and end spaces
     label = label.replace(/\s+/g, ' ').trim();
     // Convert to camelCase if not strict
@@ -50,7 +49,7 @@ export class LabelModule {
   }
 
   private pushLabel(label: string): void {
-    if (!this.labels.includes(label)) {
+    if (!this.labels.some(existing => existing.toLowerCase() === label.toLowerCase())) {
       this.labels.push(label);
     }
   }
@@ -80,7 +79,7 @@ export class LabelModule {
     strict: boolean = true
   ): void {
     oldLabel = oldLabel.replace(/^#+/, ''); // Remove leading "#"
-    const index = this.labels.indexOf(oldLabel);
+    const index = this.labels.findIndex(label => label.toLowerCase() === oldLabel.toLowerCase());
     if (index === -1) throw new Error('Label not found');
 
     newLabel = newLabel.replace(/^#+/, ''); // Remove leading "#"
@@ -93,18 +92,28 @@ export class LabelModule {
         if (!this.isValidLabel(validLabel)) {
           logger.error('Invalid new label format');
         } else {
-          this.labels[index] = validLabel;
+          this.replaceLabel(index, validLabel);
         }
       }
     } else {
-      this.labels[index] = newLabel;
+      this.replaceLabel(index, newLabel);
+    }
+  }
+
+  private replaceLabel(index: number, label: string): void {
+    const duplicate = this.labels.some((existing, existingIndex) =>
+      existingIndex !== index && existing.toLowerCase() === label.toLowerCase());
+    if (duplicate) {
+      this.labels.splice(index, 1);
+    } else {
+      this.labels[index] = label;
     }
   }
 
   // Delete a label from the labels list
   public deleteLabel(label: string): void {
     label = label.replace(/^#+/, ''); // Remove leading "#"
-    const index = this.labels.indexOf(label);
+    const index = this.labels.findIndex(existing => existing.toLowerCase() === label.toLowerCase());
     if (index === -1) throw new Error('Label not found');
     this.labels.splice(index, 1);
   }

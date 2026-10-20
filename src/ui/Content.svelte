@@ -19,14 +19,14 @@
 
     async function enableEditMode(event: MouseEvent | KeyboardEvent) {
         if (isMarkdownControl(event)) return;
-        if (event instanceof KeyboardEvent) {
+        if ('key' in event) {
             if (event.key === 'Enter' || event.key === ' ') {
                 event.preventDefault();
                 isEditing = true;
                 await tick();
                 focusAndSelect(inputElement);
             }
-        } else if (event instanceof MouseEvent) {
+        } else {
             isEditing = true;
             await tick();
             focusAndSelect(inputElement);
@@ -72,7 +72,7 @@
         // plain text, flattened to one line
         event.preventDefault();
         const text = (event.clipboardData?.getData('text/plain') ?? '').replace(/\s*\r?\n\s*/g, ' ');
-        document.execCommand?.('insertText', false, text);
+        inputElement.ownerDocument.execCommand?.('insertText', false, text);
     }
 
     function focusAndSelect(node: HTMLElement) {

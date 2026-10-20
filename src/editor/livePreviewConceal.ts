@@ -12,6 +12,7 @@ import {
   type KnownFieldKey
 } from '../taskModule/fieldSyntax';
 import { isTaskCardTaskLine } from '../taskModule/taskValidator';
+import { markdownSourceContext } from '../utils/markdownSourceContext';
 
 const FIELD_ICONS: Partial<Record<KnownFieldKey, string>> = {
   due: 'calendar-x',
@@ -67,7 +68,7 @@ export function getTaskCardConcealPlan(
   lineText: string,
   indicatorTag: string
 ): TaskCardConcealPlan | null {
-  if (!isTaskCardTaskLine(lineText, indicatorTag) || !findIndicatorTagSpan(lineText, indicatorTag)) return null;
+  if (!isTaskCardTaskLine(lineText, indicatorTag)) return null;
 
   const candidateFields = findInlineFieldSpans(lineText).filter(
     (field) => field.canonicalKey && CONCEALED_FIELD_KEYS.has(field.canonicalKey)
@@ -258,11 +259,16 @@ function collectLineDecorationSpans(
 export function buildDecorationsForLines(
   lines: readonly { text: string; from: number }[],
   indicatorTag: string,
-  selectionRanges: readonly { from: number; to: number }[] = []
+  selectionRanges: readonly { from: number; to: number }[] = [],
+  sourceLines: readonly { text: string; from: number }[] = lines
 ): DecorationSet {
   const spans: DecorationSpan[] = [];
+  const context = markdownSourceContext(sourceLines.map(line => line.text));
+  const eligible = new Map(sourceLines.map((line, index) => [line.from, index]));
   for (const line of lines) {
-    spans.push(...collectLineDecorationSpans(line.text, line.from, indicatorTag, selectionRanges));
+    const index = eligible.get(line.from);
+    if (index === undefined || !context.taskLines.has(index)) continue;
+    spans.push(...collectLineDecorationSpans(context.maskedLines[index], line.from, indicatorTag, selectionRanges));
   }
   spans.sort((a, b) => a.from - b.from);
 
@@ -303,7 +309,14 @@ function buildDecorations(view: EditorView): DecorationSet {
     }
   }
 
-  return buildDecorationsForLines(lines, indicatorTag, selectionRanges);
+  // Visible ranges can begin inside a fence/comment. Always derive block
+  // context from the complete document before decorating the viewport.
+  const sourceLines: { text: string; from: number }[] = [];
+  for (let number = 1; number <= view.state.doc.lines; number++) {
+    const line = view.state.doc.line(number);
+    sourceLines.push({ text: line.text, from: line.from });
+  }
+  return buildDecorationsForLines(lines, indicatorTag, selectionRanges, sourceLines);
 }
 
 /**

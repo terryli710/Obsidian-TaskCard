@@ -59,7 +59,7 @@
   }
 
   async function enableScheduleEditMode(event: KeyboardEvent | MouseEvent) {
-    if (event instanceof KeyboardEvent) {
+    if ('key' in event) {
       if (event.key != 'Enter') {
         return;
       }
@@ -125,7 +125,7 @@
   }
 
   function finishScheduleEditing(event: KeyboardEvent | MouseEvent) {
-    if (event instanceof MouseEvent) {
+    if (!('key' in event)) {
         return;
     }
 
@@ -187,17 +187,19 @@
 
   function adjustWidthForInput(node: HTMLInputElement) {
     // Create a temporary element to measure the text width
-    const tempElement = document.createElement('span');
-    tempElement.style.font = window.getComputedStyle(node, null).getPropertyValue('font');
-    tempElement.style.padding = window.getComputedStyle(node, null).getPropertyValue('padding');
+    const ownerDocument = node.ownerDocument;
+    const style = ownerDocument.defaultView?.getComputedStyle(node);
+    const tempElement = ownerDocument.createElement('span');
+    tempElement.style.font = style?.getPropertyValue('font') ?? '';
+    tempElement.style.padding = style?.getPropertyValue('padding') ?? '';
     tempElement.style.position = 'absolute';
     tempElement.style.left = '-9999px';
     tempElement.innerHTML = node.value.replace(/ /g, '&nbsp;');
-    document.body.appendChild(tempElement);
+    ownerDocument.body.appendChild(tempElement);
 
     // Get the width of the temporary element
     const newWidth = tempElement.getBoundingClientRect().width * 1.15 ;
-    document.body.removeChild(tempElement);
+    ownerDocument.body.removeChild(tempElement);
 
     // Set the new width to the input element, considering min and max width
     const minWidth = 75; // Set your minimum width

@@ -411,3 +411,35 @@ describe('TaskDatabase', () => {
     });
   });
 });
+
+describe('native label query semantics', () => {
+  const db = new TaskDatabase();
+  beforeAll(() => {
+    const tasks = [
+      makeTask({ id: 'exact', content: 'Exact label', labels: ['#Work'] }),
+      makeTask({ id: 'nested', content: 'Nested label', labels: ['#WORK/Review/项目🐱'] }),
+      makeTask({ id: 'bare', content: 'Bare stored name', labels: ['work/review'] }),
+      makeTask({ id: 'hyphen', content: 'Hyphen lookalike', labels: ['#work-other'] }),
+      makeTask({ id: 'suffix', content: 'Suffix lookalike', labels: ['#workshop'] }),
+      makeTask({ id: 'unicode', content: 'Native symbol', labels: ['#研究🐱/École'] })
+    ];
+    db.bulkStore(tasks.map(task => ({ id: task.id, item: task })));
+  });
+
+  test.each(['#work', 'WORK', '#WoRk'])('query %j matches exact and descendant labels without lookalikes', query => {
+    expect(ids(db.queryTasksByMultipleAttributes({ labelQuery: [query] }))).toEqual(['bare', 'exact', 'nested']);
+  });
+  test('a descendant query matches its own subtree rather than its ancestors', () => {
+    expect(ids(db.queryTasksByMultipleAttributes({ labelQuery: ['#work/REVIEW'] }))).toEqual(['bare', 'nested']);
+  });
+  test('matches Unicode and symbol labels case-insensitively', () => {
+    expect(ids(db.queryTasksByMultipleAttributes({ labelQuery: ['研究🐱/éCOLE'] }))).toEqual(['unicode']);
+    expect(ids(db.queryTasksByMultipleAttributes({ labelQuery: ['#研究🐱'] }))).toEqual(['unicode']);
+  });
+  test('retains ANY-of behavior for native and ordinary labels', () => {
+    expect(ids(db.queryTasksByMultipleAttributes({ labelQuery: ['#研究🐱', 'WORK'] }))).toEqual(['bare', 'exact', 'nested', 'unicode']);
+  });
+  test('an empty normalized label does not select tasks', () => {
+    expect(db.queryTasksByMultipleAttributes({ labelQuery: ['#'] })).toEqual([]);
+  });
+});

@@ -52,6 +52,13 @@ export interface TaskProperties {
     syncMappings?: SyncMappings;
     /** raw `[key:: value]` strings TaskCard doesn't understand, preserved on rewrite */
     foreignFields?: string[];
+    /** Source identity/concurrency and Markdown presentation, never written as fields. */
+    sourceMarkdown?: string;
+    sourceTaskPrefix?: string;
+    sourceTaskStatus?: string;
+    sourceTaskCompleted?: boolean;
+    sourceDescription?: string;
+    sourceDescriptionMarkdown?: string;
     [key: string]: any;
   };
 }
@@ -80,6 +87,12 @@ export class ObsidianTask implements TaskProperties {
     taskDisplayParams?: TaskDisplayParams | null;
     syncMappings?: SyncMappings | null;
     foreignFields?: string[];
+    sourceMarkdown?: string;
+    sourceTaskPrefix?: string;
+    sourceTaskStatus?: string;
+    sourceTaskCompleted?: boolean;
+    sourceDescription?: string;
+    sourceDescriptionMarkdown?: string;
     [key: string]: any;
   };
   
@@ -121,7 +134,7 @@ export class ObsidianTask implements TaskProperties {
       duration: this.duration,
       recurrence: this.recurrence,
       completionDate: this.completionDate,
-      metadata: this.metadata,
+      metadata: { ...this.metadata },
     });
   }
 

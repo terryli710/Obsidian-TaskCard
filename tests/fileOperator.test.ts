@@ -274,6 +274,43 @@ describe('FileOperator', () => {
     });
   });
 
+  describe('atomic writes', () => {
+    beforeEach(() => {
+      // Model the host guarantee: callback and commit have no await gap.
+      vault.process = async (file: any, transform: (source: string) => string) => {
+        const result = transform(vault.__getContent(file.path));
+        vault.__setFile(file.path, result);
+        return result;
+      };
+    });
+
+    it('preserves simultaneous updates to different lines', async () => {
+      await Promise.all([
+        fileOperator.updateFile(FILE_PATH, '- [x] first task #TaskCard', 1, 2),
+        fileOperator.updateLineInFile(FILE_PATH, 4, '- [x] middle task #TaskCard')
+      ]);
+      const lines = vault.__getContent(FILE_PATH).split('\n');
+      expect(lines[1]).toBe('- [x] first task #TaskCard');
+      expect(lines[3]).toBe('- [x] middle task #TaskCard');
+    });
+
+    it('preserves Properties and appended text changed just before a write', async () => {
+      const changed = DOC.replace('# Header', 'property: changed') + '\nsynced append';
+      const originalModify = vault.modify.bind(vault);
+      vault.modify = async (file: any, data: string) => {
+        vault.__setFile(FILE_PATH, changed);
+        return originalModify(file, data);
+      };
+      const process = vault.process;
+      vault.process = async (file: any, transform: any) => {
+        vault.__setFile(FILE_PATH, changed);
+        return process(file, transform);
+      };
+      await fileOperator.updateFile(FILE_PATH, '- [x] first task #TaskCard', 1, 2);
+      expect(vault.__getContent(FILE_PATH)).toBe(changed.replace('- [ ] first task', '- [x] first task'));
+    });
+  });
+
   describe('getAllFilesAndFolders', () => {
     it('lists markdown files plus every intermediate folder', () => {
       const freshApp = new App();

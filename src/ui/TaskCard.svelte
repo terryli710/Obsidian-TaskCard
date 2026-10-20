@@ -83,11 +83,16 @@
       refreshView();
     }
 
-    function handleCheckboxClick() {
+    async function handleCheckboxClick(event: MouseEvent) {
+      const checkbox = event.currentTarget as HTMLInputElement;
       // don't pre-mutate the shared task object: the sync manager diffs the
       // task against its pre-edit copy (external sync) and the recurring-
       // completion path needs the not-yet-completed state
-      void updateTaskAttribute('completed', !task.completed);
+      try {
+        await updateTaskAttribute('completed', !task.completed);
+      } finally {
+        checkbox.checked = taskSyncManager.obsidianTask.completed;
+      }
     }
 
     function showPriorityMenu(event) {

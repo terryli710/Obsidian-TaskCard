@@ -19,6 +19,8 @@ import {
   priorityWordToNumber
 } from './fieldSyntax';
 import { parseScheduleInput } from './temporal';
+import { parseTaskLine, countTaskDescriptionLines } from '../utils/taskLine';
+import { protectMarkdownSyntax } from '../utils/markdownSyntax';
 
 const V1_HIDDEN_SPAN = /<span( class="[^"]+")? style="display:none">\{.*\}<\/span>/;
 
@@ -162,6 +164,14 @@ export class TaskParser {
 
   parseTaskMarkdown(taskMarkdown: string, noticeFunc: (msg: string) => void = null): ObsidianTask {
     const task: ObsidianTask = new ObsidianTask();
+    const sourceMarkdown = taskMarkdown;
+    const sourcePrefix = parseTaskLine(taskMarkdown);
+    if (sourcePrefix) {
+      task.metadata.sourceTaskPrefix = sourcePrefix.prefix;
+      task.metadata.sourceTaskStatus = sourcePrefix.status;
+      task.metadata.sourceTaskCompleted = /^[xX]$/.test(sourcePrefix.status);
+    }
+    task.metadata.sourceMarkdown = sourceMarkdown;
     const errors: string[] = [];
   
     const tryParseAttribute = (
@@ -235,6 +245,11 @@ export class TaskParser {
       // process multi-line task - has description
       let lines = taskMarkdown.split('\n');
       let descLines = lines.slice(1);
+      const quotePrefix = sourcePrefix?.prefix.match(/^[ \t]*(?:>[ \t]*)+/)?.[0];
+      if (quotePrefix) {
+        const quoteDepth = (quotePrefix.match(/>/g) ?? []).length;
+        descLines = descLines.map(line => line.replace(new RegExp(`^[ \\t]*(?:>[ \\t]?){${quoteDepth}}`), ''));
+      }
       // Convert tabs to spaces
       descLines = descLines.map(convertLeadingTabsToSpaces);
 
@@ -244,6 +259,8 @@ export class TaskParser {
       }
       // logger.debug(`Multi-line task: ${descLines.join('\n')}`);
       task.description = descLines.join('\n');
+      task.metadata.sourceDescription = task.description;
+      task.metadata.sourceDescriptionMarkdown = lines.slice(1).join('\n');
       taskMarkdown = lines[0]; // The first line
     }
 
@@ -274,31 +291,27 @@ export class TaskParser {
     }
 
     // Splitting the content and the attributes
-    const contentEndIndex = taskMarkdown.indexOf(this.markdownStartingNotation);
-    const markdownTaskContent =
-      contentEndIndex !== -1
-        ? taskMarkdown.slice(0, contentEndIndex).trim()
-        : taskMarkdown.trim();
-
-    const contentWithLabels = markdownTaskContent.slice(5).trim();
-    task.completed = markdownTaskContent.startsWith('- [x]'); // TODO: currently only supports x
+    const attributeRegexText = `${escapeRegExp(this.markdownStartingNotation)}(.*?)${escapeRegExp(this.markdownEndingNotation)}`;
+    const attributesPattern = new RegExp(attributeRegexText, 'g');
+    const protectedSource = protectMarkdownSyntax(taskMarkdown, {
+      legacyNotation: { start: this.markdownStartingNotation, end: this.markdownEndingNotation }
+    });
+    const matches = [...protectedSource.text.matchAll(attributesPattern)]
+      .map(match => [protectedSource.restore(match[0]), protectedSource.restore(match[1])]);
+    const withoutAttributes = protectedSource.restore(protectedSource.text.replace(attributesPattern, ' '));
+    const contentWithLabels = (parseTaskLine(withoutAttributes)?.body ?? withoutAttributes).trim();
+    task.completed = sourcePrefix ? /^[xX]$/.test(sourcePrefix.status) : false;
 
     // Extracting labels from the content line
     const [contentLabels, remainingContent] = extractTags(contentWithLabels);
     task.content = remainingContent;
-    task.labels = contentLabels.filter((label) => label !== `#${this.indicatorTag}`);
+    task.labels = contentLabels.filter((label) => label.toLowerCase() !== `#${this.indicatorTag}`.toLowerCase());
 
     if (emojiFields.priority !== null) {
       task.priority = emojiFields.priority;
     }
 
     // Parsing attributes
-    const attributesString = taskMarkdown.slice(contentEndIndex);
-    const attributeRegexText = `${escapeRegExp(this.markdownStartingNotation)}(.*?)${escapeRegExp(this.markdownEndingNotation)}`;
-    const attributesPattern = new RegExp(attributeRegexText, 'g');
-
-    const matches = [...attributesString.matchAll(attributesPattern)];
-
     let parsedAttributeNames: string[] = [];
 
     for (const match of matches) {
@@ -444,7 +457,8 @@ export class TaskParser {
     noticeFunc: (msg: string) => void = null
   ): ObsidianTask {
     const firstLine = taskMarkdown.split('\n', 1)[0];
-    if (V1_HIDDEN_SPAN.test(firstLine)) {
+    const span = V1_HIDDEN_SPAN.exec(firstLine);
+    if (span && !protectMarkdownSyntax(firstLine.slice(0, span.index) + ' '.repeat(span[0].length) + firstLine.slice(span.index + span[0].length)).contains(span.index)) {
       return this.parseFormattedTaskMarkdown(taskMarkdown);
     }
     return this.parseTaskMarkdown(taskMarkdown, noticeFunc);
@@ -458,6 +472,8 @@ export class TaskParser {
 
   parseFormattedTaskMarkdown(taskMarkdown: string): ObsidianTask {
     const task: ObsidianTask = new ObsidianTask();
+    const sourceMarkdown = taskMarkdown;
+    const sourcePrefix = parseTaskLine(taskMarkdown);
 
     // Utility function to convert leading tabs in a line to spaces
     const convertLeadingTabsToSpaces = (line: string): string => {
@@ -508,26 +524,26 @@ export class TaskParser {
     }
     
     // Global regex to capture task part, content, labels, and metadata
-    const regex = new RegExp(`- \\[(.)\\] (.+?)(?:\\s*<span style="display:none">({.+})<\\/span>)`);
-    const match = taskMarkdown.trim().match(regex);
+    const regex = /(.+?)\s*<span(?: class="[^"]+")? style="display:none">({.+})<\/span>/;
+    const match = (sourcePrefix?.body ?? taskMarkdown).match(regex);
     
-    if (!match || !match[1] || !match[2] || !match[3]) {
+    if (!match || !match[1] || !match[2]) {
       logger.warn(`Failed to parse task: ${taskMarkdown}`);
       return task;
     }
   
     // Extracting completion status
-    task.completed = match[1] !== ' ';
+    task.completed = sourcePrefix ? /^[xX]$/.test(sourcePrefix.status) : false;
   
     // Extracting content
-    task.content = match[2].trim();
+    task.content = match[1].trim();
 
-    const contentWithLabels = match[2].trim();
+    const contentWithLabels = match[1].trim();
   
     // Extracting labels from the content line
     const [contentLabels, remainingContent] = extractTags(contentWithLabels);
     task.content = remainingContent;
-    task.labels = contentLabels.filter((label) => label !== `#${this.indicatorTag}`);
+    task.labels = contentLabels.filter((label) => label.toLowerCase() !== `#${this.indicatorTag}`.toLowerCase());
   
     // Helper function to parse JSON attributes
     function parseJSONAttribute<T>(attributeValue: any, attributeName: string, fallbackValue: T | null): T | null {
@@ -540,7 +556,7 @@ export class TaskParser {
     }
   
     // Extracting and parsing the JSON attributes
-    const metadata = JSON.parse(match[3]);
+    const metadata = JSON.parse(match[2]);
     if (!metadata) {
       logger.warn(`Failed to parse metadata: ${match[3]}`);
       return task;
@@ -560,6 +576,12 @@ export class TaskParser {
     task.duration = parseJSONAttribute(metadata['duration'], 'duration', null);
     task.recurrence = parseJSONAttribute(metadata['recurrence'], 'recurrence', null);
     task.metadata = parseJSONAttribute(metadata['metadata'], 'metadata', {});
+    task.metadata.sourceMarkdown = sourceMarkdown;
+    if (sourcePrefix) {
+      task.metadata.sourceTaskPrefix = sourcePrefix.prefix;
+      task.metadata.sourceTaskStatus = sourcePrefix.status;
+      task.metadata.sourceTaskCompleted = /^[xX]$/.test(sourcePrefix.status);
+    }
 
     // Optional attributes
     task.parent = parseJSONAttribute(metadata['parent'], 'parent', null); // Or a default parent
@@ -591,36 +613,7 @@ export class TaskParser {
    * 6. The function stops iterating when it encounters a line that is not a description and returns the number of lines iterated.
    */
   determineDescriptionLineNumber(lines: string[]): number {
-    // Regular expression to match a task line
-    const taskRegex = /^\s*- \[.\]/;
-    // Check if the first line is a task
-    if (!taskRegex.test(lines[0])) {
-      return 0;
-    }
-
-    // Determine the indentation level of the task
-    const taskIndentation = lines[0].match(/^\s*/)[0].length;
-
-    let descriptionLineCount = 0;
-
-    // Loop through the lines to find the description
-    for (let i = 1; i < lines.length; i++) {
-      const line = lines[i];
-
-      // Check if the line is not purely space or empty
-      if (line.trim() === '') {
-        break;
-      }
-
-      // Check if the line is another task with the same or less indentation
-      if (taskRegex.test(line) && line.match(/^\s*/)[0].length <= taskIndentation) {
-        break;
-      }
-
-      // If the line passes the above checks, it is a description
-      descriptionLineCount++;
-    }
-    return descriptionLineCount;
+    return countTaskDescriptionLines(lines);
   }
 
 

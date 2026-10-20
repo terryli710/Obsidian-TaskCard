@@ -141,7 +141,7 @@ describe('ObsidianTask', () => {
       expect(copy.id).toBe('copy-id');
     });
 
-    it('should be a shallow copy: nested objects are shared (current behavior)', () => {
+    it('shares semantic children but gives source metadata an independent container', () => {
       const task = new ObsidianTask({
         labels: ['#shared'],
         project: { id: 'p-1', name: 'Proj' },
@@ -150,7 +150,8 @@ describe('ObsidianTask', () => {
       const copy = task.getCopy();
       expect(copy.labels).toBe(task.labels);
       expect(copy.project).toBe(task.project);
-      expect(copy.metadata).toBe(task.metadata);
+      expect(copy.metadata).not.toBe(task.metadata);
+      expect(copy.metadata.nested).toBe(task.metadata.nested);
     });
   });
 

@@ -23,6 +23,13 @@ describe('stripTaskSyntaxForDisplay', () => {
     );
   });
 
+  it('keeps Unicode tag names and descendants intact', () => {
+    const line = '- [ ] Draft #TaskCard工作 #TaskCard/工作 #TaskCard';
+    expect(stripTaskSyntaxForDisplay(line, 'TaskCard')).toBe(
+      '- [ ] Draft #TaskCard工作 #TaskCard/工作'
+    );
+  });
+
   it('leaves a syntax-only subtask as written so it keeps its checkbox', () => {
     const line = '- [ ] #TaskCard [due:: 2026-10-08] ^tc-x1y2z3';
     expect(stripTaskSyntaxForDisplay(line, 'TaskCard')).toBe(line);

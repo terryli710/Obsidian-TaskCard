@@ -148,7 +148,7 @@ export default class TaskCardPlugin extends Plugin {
     (type, file, oldPath?) => { 
       // update cache tasks
       this.cache.taskCache
-        .refreshTasksByFileList([file.path])
+        .refreshTasksByFileList([file.path], type === 'rename' && oldPath ? [oldPath] : [])
         .catch((err) =>
           logger.error(`Failed to refresh task cache for ${file.path}: ${err}`)
         );

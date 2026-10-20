@@ -1,6 +1,8 @@
 import { SettingStore } from '../settings';
 import { ObsidianTask } from './task';
 import { protectMarkdownSyntax } from '../utils/markdownSyntax';
+import { hasIndicatorTag } from '../utils/regexUtils';
+import { parseTaskLine, markdownColumn } from '../utils/taskLine';
 import {
   formatDurationValue,
   formatInlineField,
@@ -60,9 +62,16 @@ export class TaskFormatter {
       this.ensureTaskId(task);
     }
 
-    const taskPrefix = `- [${task.completed ? 'x' : ' '}]`;
+    const source = parseTaskLine(task.metadata?.sourceTaskPrefix ?? '');
+    const status = source && task.completed === task.metadata?.sourceTaskCompleted
+      ? source.status : task.completed ? 'x' : ' ';
+    const taskPrefix = source
+      ? source.prefix.slice(0, source.statusOffset) + status + source.prefix.slice(source.statusOffset + 1)
+      : `- [${status}] `;
     const labelMarkdown = task.labels.join(' ');
-    let line = `${taskPrefix} ${task.content} ${labelMarkdown} #${this.indicatorTag}`;
+    const indicatorMarkdown = task.labels.some((label) => hasIndicatorTag(label, this.indicatorTag))
+      ? '' : ` #${this.indicatorTag}`;
+    let line = `${task.content} ${labelMarkdown}${indicatorMarkdown}`;
     const protectedContent = protectMarkdownSyntax(line);
     line = protectedContent.restore(protectedContent.text.replace(/\s+/g, ' ').trimEnd());
 
@@ -103,7 +112,7 @@ export class TaskFormatter {
 
     const idSuffix = isV2TaskId(task.id) || task.metadata?.sourceBlockId === task.id
       ? ` ^${task.id}` : '';
-    return `${line}${idSuffix}`;
+    return `${taskPrefix}${line.trimStart()}${idSuffix}`;
   }
 
   taskToMarkdown(task: ObsidianTask): string {
@@ -112,7 +121,16 @@ export class TaskFormatter {
     // Add description
     if (task.description.length > 0) {
       // for each line, add 4 spaces
-      taskMarkdown += `\n    ${task.description.replace(/\n/g, '\n    ')}`;
+      if (task.description === task.metadata?.sourceDescription && typeof task.metadata?.sourceDescriptionMarkdown === 'string') {
+        taskMarkdown += '\n' + task.metadata.sourceDescriptionMarkdown;
+      } else {
+        const sourcePrefix = task.metadata?.sourceTaskPrefix ?? '';
+        const container = sourcePrefix.match(/^[ \t]*(?:>[ \t]*)*/)?.[0] ?? '';
+        const listPrefix = sourcePrefix.slice(container.length).match(/^(?:[-*+]|\d+[.)])[ \t]+/)?.[0] ?? '- ';
+        const containerColumn = markdownColumn(container);
+        const continuation = container + ' '.repeat(Math.max(4, markdownColumn(listPrefix, containerColumn) - containerColumn));
+        taskMarkdown += `\n${continuation}${task.description.replace(/\n/g, '\n' + continuation)}`;
+      }
     }
 
     return taskMarkdown;

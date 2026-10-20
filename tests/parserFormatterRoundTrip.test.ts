@@ -85,6 +85,25 @@ describe('parser/formatter round trip', () => {
   const roundTrip = (task: ObsidianTask): ObsidianTask =>
     taskParser.parseAnyTaskMarkdown(taskFormatter.taskToMarkdown(task));
 
+  it.each([
+    '#TaskCard/work/urgent', '#TaskCard/wörk', '#TaskCard/工作', '#TaskCard/work/工作'
+  ])(
+    'preserves %s on edit without adding a parent tag', (tag) => {
+      const source = `- [ ] Draft ${tag} #writing [priority:: high] ^tc-nested`;
+      const task = taskParser.parseAnyTaskMarkdown(source);
+      expect(task.labels).toEqual([tag, '#writing']);
+      expect(task.content).toBe('Draft');
+      task.content = 'Revised draft';
+      const written = taskFormatter.taskToMarkdown(task);
+      expect(written).toContain(tag);
+      expect(written).not.toMatch(/#TaskCard(?=\s|$)/);
+      const reparsed = taskParser.parseAnyTaskMarkdown(written);
+      expect(reparsed.labels).toEqual(task.labels);
+      expect(reparsed.content).toBe('Revised draft');
+      expect(reparsed.id).toBe('tc-nested');
+    }
+  );
+
   const normalizeDate = (sd) =>
     sd ? { date: sd.date, time: sd.time ?? null } : null;
   const normalizeDuration = (d) =>
@@ -289,7 +308,8 @@ describe('parser/formatter round trip', () => {
       );
       expect(parsed.order).toBe(0);
       expect(parsed.sectionID).toBe('');
-      expect(parsed.metadata).toEqual({});
+      expect(parsed.metadata.filePath).toBeUndefined();
+      expect(parsed.metadata.sourceMarkdown).toContain('Meta task');
     });
 
     it('should round-trip foreign fields verbatim', () => {

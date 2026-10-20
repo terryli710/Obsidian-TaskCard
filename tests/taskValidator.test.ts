@@ -202,6 +202,18 @@ describe('TaskValidator', () => {
       mockElement.querySelector('a.tag').textContent = '#other';
       expect(taskValidator.isValidTaskElement(mockElement)).toBe(false);
     });
+
+    it.each([
+      ['#TaskCard/subtype', true],
+      ['#TaskCard/work/urgent', true],
+      ['#TaskCardish', false],
+      ['#TaskCard-other', false],
+      ['#other/TaskCard', false]
+    ])('classifies rendered tag %s consistently with source', (tag, expected) => {
+      const element = createMockTaskElementWithSingleSpan(false);
+      element.querySelector('a.tag').textContent = tag as string;
+      expect(taskValidator.isValidTaskElement(element)).toBe(expected);
+    });
   });
 
   describe('isTaskCardTaskMarkdown (v2 detection)', () => {
@@ -210,6 +222,10 @@ describe('TaskValidator', () => {
       '- [x] done tagged task #TaskCard ^tc-abc123',
       '- [ ] fielded task #TaskCard [due:: 2026-07-10] ^tc-abc123',
       '- [ ] emoji task #TaskCard 📅 2026-07-10',
+      '- [ ] nested tag #TaskCard/subtype',
+      '- [ ] accented nested tag #TaskCard/wörk',
+      '- [ ] Chinese nested tag #TaskCard/工作',
+      '- [ ] deeper tag #TaskCard/work/urgent [priority:: high]',
       '  - [ ] indented tagged task #TaskCard'
     ])('accepts %s', (line) => {
       expect(taskValidator.isTaskCardTaskMarkdown(line)).toBe(true);
@@ -218,10 +234,21 @@ describe('TaskValidator', () => {
     it.each([
       '- [ ] untagged task',
       '- [ ] longer tag #TaskCardX',
+      '- [ ] different tag #TaskCard-other',
+      '- [ ] different tag #TaskCard_other',
+      '- [ ] different tag #TaskCard工作',
+      '- [ ] literal `#TaskCard/subtype`',
       'not a task at all #TaskCard',
       '- plain list item #TaskCard'
     ])('rejects %s', (line) => {
       expect(taskValidator.isTaskCardTaskMarkdown(line)).toBe(false);
+    });
+
+    it('supports a nested indicator without matching its siblings', () => {
+      expect(taskValidator.isTaskCardTaskMarkdown('- [ ] task #task/work', 'task/work')).toBe(true);
+      expect(taskValidator.isTaskCardTaskMarkdown('- [ ] task #task/work/urgent', 'task/work')).toBe(true);
+      expect(taskValidator.isTaskCardTaskMarkdown('- [ ] task #task/workshop', 'task/work')).toBe(false);
+      expect(taskValidator.isTaskCardTaskMarkdown('- [ ] task #task/home', 'task/work')).toBe(false);
     });
 
     it('matches a custom indicator tag containing a regex metacharacter, without double-escaping', () => {

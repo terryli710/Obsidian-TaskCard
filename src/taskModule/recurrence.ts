@@ -1,9 +1,13 @@
 import { RRule } from 'rrule';
 import { moment } from '../utils/obsidianMoment';
 import { ObsidianTask, ScheduleDate } from './task';
-import { mintTaskId } from './fieldSyntax';
+import { extractBlockId, findInlineFieldSpans, isV2TaskId, mintTaskId, hasTaskIdentity } from './fieldSyntax';
 import type TaskCardPlugin from '..';
 import { logger } from '../utils/log';
+import { countTaskDescriptionLines, parseTaskLine } from '../utils/taskLine';
+import { FileWriteConflict } from '../renderer/fileOperator';
+import { markdownSourceContext } from '../utils/markdownSourceContext';
+import { protectMarkdownSyntax } from '../utils/markdownSyntax';
 
 /**
  * Recurrence support. Rules use the Tasks-plugin grammar (rrule natural
@@ -71,8 +75,16 @@ function shiftScheduleDate(sd: ScheduleDate, deltaDays: number): ScheduleDate {
 }
 
 /** Uncheck any completed subtask checkboxes in a description block. */
-export function resetDescriptionCheckboxes(description: string): string {
-  return description.replace(/^(\s*- )\[[xX]\]/gm, '$1[ ]');
+export function resetDescriptionCheckboxes(description: string, parentLine?: string): string {
+  const lines = description.split('\n');
+  const offset = parentLine === undefined ? 0 : 1;
+  const context = markdownSourceContext(parentLine === undefined ? lines : [parentLine, ...lines]);
+  return lines.map((line, index) => {
+    if (!context.taskLines.has(index + offset)) return line;
+    const parsed = parseTaskLine(line);
+    return parsed && /^[xX]$/.test(parsed.status)
+      ? line.slice(0, parsed.statusOffset) + ' ' + line.slice(parsed.statusOffset + 1) : line;
+  }).join('\n');
 }
 
 /**
@@ -132,17 +144,71 @@ export function advanceRecurringTask(task: ObsidianTask): ObsidianTask | null {
   return nextTask;
 }
 
-/**
- * Remove the recurrence rule from a formatted task line — either syntax:
- * the v2 `[repeat:: ...]` inline field or the legacy v1 hidden-span JSON
- * (`"recurrence":"..."`). Used on the completed copy of a recurring task so
- * that unchecking and re-checking it cannot spawn further instances; the rule
- * lives on in the freshly inserted next instance.
+/** Actual legacy metadata spans, excluding quoted code/link/comment examples. */
+function legacyMetadataSpans(line: string) {
+  return [...line.matchAll(/<span(?: class="[^"]+")? style="display:none">\{.*?\}<\/span>/g)]
+    .filter(match => {
+      const offset = match.index!;
+      // Ignore the span's own HTML delimiters when asking whether an outer
+      // code/link/comment range protects it. Keep their original geometry.
+      const surrounding = line.slice(0, offset) + ' '.repeat(match[0].length) + line.slice(offset + match[0].length);
+      return !protectMarkdownSyntax(surrounding).contains(offset);
+    });
+}
+
+/** Remove real recurrence metadata from the completed copy, keeping the
+ * rule on the next instance so rechecking the original cannot spawn twice.
  */
 export function stripRecurrenceFromLine(line: string): string {
-  return line
-    .replace(/\s*\[repeat::[^\]]*\]/, '')
-    .replace(/"recurrence":"(?:[^"\\]|\\.)*"/, '"recurrence":null');
+  const fields = findInlineFieldSpans(line).filter(field => field.canonicalKey === 'repeat');
+  const bodyOffset = parseTaskLine(line)?.bodyOffset ?? 0;
+  for (const field of fields.reverse()) {
+    let from = field.from;
+    while (from > bodyOffset && /[ \t]/.test(line[from - 1])) from--;
+    line = line.slice(0, from) + line.slice(field.to);
+  }
+  for (const span of legacyMetadataSpans(line).reverse()) {
+    const replacement = span[0].replace(/"recurrence":"(?:[^"\\]|\\.)*"/, '"recurrence":null');
+    line = line.slice(0, span.index!) + replacement + line.slice(span.index! + span[0].length);
+  }
+  return line;
+}
+
+interface RecurringTaskSource {
+  blockId: string | null;
+  legacyId: string;
+  snapshot: string | null;
+}
+
+/** Resolve identity before comparing content, so a duplicate persisted ID
+ * cannot become unambiguous merely because one copy has changed its text.
+ */
+function resolveRecurringTaskSpan(
+  lines: string[], source: RecurringTaskSource, expectedSource?: string
+): [number, number] | null {
+  const context = markdownSourceContext(lines);
+  const candidates = [...context.taskLines];
+  const blockAt = (start: number): [number, number] =>
+    [start, start + 1 + countTaskDescriptionLines(lines, start)];
+  const textAt = (start: number) => {
+    const [from, to] = blockAt(start);
+    return lines.slice(from, to).join('\n');
+  };
+  const matches = candidates.filter(index => source.blockId
+    ? hasTaskIdentity(lines[index], source.blockId)
+    : source.legacyId
+      ? hasTaskIdentity(lines[index], source.legacyId)
+      : source.snapshot !== null && textAt(index) === source.snapshot);
+  if (matches.length !== 1) return null;
+  const start = matches[0];
+  const span = blockAt(start);
+  for (let index = span[0]; index < span[1]; index++) {
+    if (context.unsafeRewriteLines.has(index)) return null;
+  }
+  const current = textAt(start);
+  if ((source.snapshot !== null && current !== source.snapshot) ||
+      (expectedSource !== undefined && current !== expectedSource)) return null;
+  return span;
 }
 
 /**
@@ -150,31 +216,62 @@ export function stripRecurrenceFromLine(line: string): string {
  * query-block card, which edits lines instead of going through a sync
  * manager): the current line is marked done in place (keeping the checked
  * task where the user clicked it, minus its recurrence rule) and the next
- * instance is inserted on the line below. Returns false when the task could
- * not be advanced (the caller should fall back to a plain completion toggle).
+ * instance is inserted after its complete description. Returns false only
+ * when the rule cannot advance. Lost/changed/ambiguous source throws because
+ * a caller's plain-toggle fallback would otherwise write to a stale row.
  */
 export async function completeRecurringTaskInFile(
   plugin: TaskCardPlugin,
   task: ObsidianTask,
   filePath: string,
-  lineStart: number
+  _lineStart: number
 ): Promise<boolean> {
+  if (!parseRecurrenceRule(task.recurrence)) return false;
+  const lines = await plugin.fileOperator.getFileLines(filePath);
+  if (!lines) throw new FileWriteConflict('The recurring task file no longer exists.');
+  const snapshot = typeof task.metadata?.sourceMarkdown === 'string'
+    ? task.metadata.sourceMarkdown : null;
+  const source: RecurringTaskSource = {
+    blockId: isV2TaskId(task.id) ? task.id : task.metadata?.sourceBlockId ||
+      (snapshot === null ? null : extractBlockId(snapshot.split('\n')[0]).id),
+    legacyId: snapshot === null || hasTaskIdentity(snapshot.split('\n')[0], task.id) ? task.id : '',
+    snapshot
+  };
+  const span = resolveRecurringTaskSpan(lines, source);
+  if (!span) throw new FileWriteConflict('The recurring task source changed or could not be located uniquely.');
+  const original = lines.slice(span[0], span[1]);
+  const expectedSource = original.join('\n');
+  const line = original[0];
+  const prefix = parseTaskLine(line);
+  if (!prefix) throw new FileWriteConflict('The recurring task source is no longer a task.');
   const nextTask = advanceRecurringTask(task);
   if (!nextTask) return false;
-  const line = await plugin.fileOperator.getLineFromFile(
-    filePath,
-    lineStart + 1
-  );
-  if (!line) return false;
-  const completedLine = stripRecurrenceFromLine(
-    line.replace(/- \[[^\]]\]/, '- [x]')
-  );
-  const nextMarkdown = plugin.taskFormatter.taskToMarkdown(nextTask);
+  const completedLine = stripRecurrenceFromLine(line.slice(0, prefix.statusOffset) + 'x' + line.slice(prefix.statusOffset + 1));
+  const uncheckedPrefix = prefix.prefix.slice(0, prefix.statusOffset) + ' ' + prefix.prefix.slice(prefix.statusOffset + 1);
+  nextTask.metadata = {
+    ...nextTask.metadata,
+    sourceTaskPrefix: uncheckedPrefix,
+    sourceTaskStatus: ' ',
+    sourceTaskCompleted: false
+  };
+  const formattedNext = plugin.taskFormatter.taskToLine(nextTask);
+  const nextPrefix = parseTaskLine(formattedNext);
+  if (!nextPrefix) throw new Error('The next recurring instance could not be formatted as a task.');
+  const nextLine = uncheckedPrefix + nextPrefix.body;
+  const description = original.slice(1).join('\n');
+  const completedMarkdown = [completedLine, ...original.slice(1)].join('\n');
+  const nextMarkdown = description
+    ? nextLine + '\n' + resetDescriptionCheckboxes(description, line) : nextLine;
   await plugin.fileOperator.updateFile(
     filePath,
-    `${completedLine}\n${nextMarkdown}`,
-    lineStart,
-    lineStart + 1
+    `${completedMarkdown}\n${nextMarkdown}`,
+    span[0],
+    span[1],
+    undefined,
+    {
+      source: expectedSource,
+      resolveSpan: latest => resolveRecurringTaskSpan(latest, source, expectedSource)
+    }
   );
   return true;
 }

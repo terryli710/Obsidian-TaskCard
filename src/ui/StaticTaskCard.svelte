@@ -19,8 +19,10 @@
   import Recurrence from './Recurrence.svelte';
   import Repeat from '../components/icons/Repeat.svelte';
   import LucideIcon from '../components/icons/LucideIcon.svelte';
-  import { completeRecurringTaskInFile } from '../taskModule/recurrence';
-  import { taskIdToken } from '../taskModule/fieldSyntax';
+  import { completeRecurringTaskInFile, stripRecurrenceFromLine } from '../taskModule/recurrence';
+  import { hasTaskIdentity } from '../taskModule/fieldSyntax';
+  import { countTaskDescriptionLines, parseTaskLine } from '../utils/taskLine';
+  import { markdownSourceContext } from '../utils/markdownSourceContext';
   import { truncatedTitle } from './truncatedTitle';
   import { isMarkdownControl, taskMarkdown } from './taskMarkdown';
   import Description from './Description.svelte';
@@ -45,34 +47,58 @@
 
   labelModule.setLabels(task.labels);
 
-  function handleCheckboxClick() {
-    task.completed = !task.completed;
+  let savingCompletion = false;
+
+  async function handleCheckboxClick(event: MouseEvent) {
+    if (savingCompletion) {
+      event.preventDefault();
+      return;
+    }
+    savingCompletion = true;
+    const previousCompleted = task.completed;
+    task.completed = !previousCompleted;
     dispatch('completionChange');
-    toggleCompleteOfTask(task.completed, taskItem.docPosition);
+    try {
+      await toggleCompleteOfTask(task.completed, taskItem.docPosition);
+    } catch {
+      task.completed = previousCompleted;
+      dispatch('completionChange');
+      new Notice(
+        'TaskCard: could not safely update this task because its source changed or could not be uniquely located. Refresh the query and try again.'
+      );
+    } finally {
+      savingCompletion = false;
+    }
   }
 
-  // The docPosition snapshot goes stale when lines shift after the query ran
-  // (known-issues #4): trust the cached line only while it still carries the
-  // task's id token (v2 block id / legacy hidden-span id), otherwise search
-  // the file for it.
-  async function resolveTaskLine(docPosition: DocPosition): Promise<number | null> {
+  // The same resolver runs before reading the source and inside vault.process.
+  // Saved IDs must remain unique; an unregistered row requires its exact source
+  // snapshot at the cached position instead of a task-looking replacement row.
+  function resolveTaskLineInFile(fileLines: string[]): number | null {
+    const context = markdownSourceContext(fileLines);
+    const safeTask = (index: number) => context.taskLines.has(index) &&
+      !Array.from({ length: 1 + countTaskDescriptionLines(fileLines, index) }, (_, offset) => index + offset)
+        .some(line => context.unsafeRewriteLines.has(line));
     const cachedLine = docPosition.start.line;
-    if (!task.id) return cachedLine;
-    const fileLines = await plugin.fileOperator.getFileLines(
-      docPosition.filePath
-    );
-    if (!fileLines) return null;
-    const idToken = taskIdToken(task.id);
-    if (fileLines[cachedLine]?.includes(idToken)) return cachedLine;
+    const sourceLine = task.metadata?.sourceMarkdown?.split('\n')[0];
+    const id = task.metadata?.sourceBlockId ?? task.id;
+    const hasIdentity = (line: string) => hasTaskIdentity(line, id);
+    if (sourceLine !== undefined && !hasIdentity(sourceLine)) {
+      return safeTask(cachedLine) && parseTaskLine(sourceLine) && fileLines[cachedLine] === sourceLine
+        ? cachedLine : null;
+    }
+    if (!id) return null;
     const matches: number[] = [];
     fileLines.forEach((line, index) => {
-      if (line.includes(idToken)) matches.push(index);
+      if (context.taskLines.has(index) && hasIdentity(line)) matches.push(index);
     });
-    if (matches.length === 1) return matches[0];
-    if (matches.length > 1) return null;
-    // id not on disk yet (task not registered with a block id): trust the
-    // cached line while it still looks like a task line
-    return /^\s*- \[.\]/.test(fileLines[cachedLine] ?? '') ? cachedLine : null;
+    if (matches.length !== 1 || !safeTask(matches[0])) return null;
+    return sourceLine === undefined || fileLines[matches[0]] === sourceLine ? matches[0] : null;
+  }
+
+  async function resolveTaskLine(docPosition: DocPosition): Promise<number | null> {
+    const fileLines = await plugin.fileOperator.getFileLines(docPosition.filePath);
+    return fileLines ? resolveTaskLineInFile(fileLines) : null;
   }
 
   async function toggleCompleteOfTask(
@@ -80,25 +106,26 @@
     docPosition: DocPosition
   ) {
     const taskLine = await resolveTaskLine(docPosition);
-    if (taskLine === null) {
-      task.completed = !completed; // revert the optimistic checkbox flip
-      dispatch('completionChange');
-      new Notice(
-        'TaskCard: could not locate this task in its file, so it was not updated. The query results may be stale.'
-      );
-      return;
-    }
+    if (taskLine === null) throw new Error('Task source could not be uniquely located.');
 
-    // Completing a recurring task inserts the next instance above the line
+    // The original completes in place; its rule moves to the next instance.
     if (completed && task.hasRecurrence()) {
-      const handled = await completeRecurringTaskInFile(
-        plugin,
-        task,
-        docPosition.filePath,
-        taskLine
-      );
-      if (handled) return;
-      // fall through to a plain toggle when the rule cannot be advanced
+      const lines = await plugin.fileOperator.getFileLines(docPosition.filePath);
+      const currentLine = lines && resolveTaskLineInFile(lines);
+      if (currentLine == null) throw new Error('Recurring source changed.');
+      const source = lines.slice(currentLine, currentLine + 1 + countTaskDescriptionLines(lines, currentLine)).join('\n');
+      const recurringTask = task.getCopy();
+      recurringTask.metadata = { ...task.metadata, sourceMarkdown: task.metadata?.sourceMarkdown ?? source };
+      const handled = await completeRecurringTaskInFile(plugin, recurringTask, docPosition.filePath, currentLine);
+      if (handled) {
+        const sourceLines = recurringTask.metadata.sourceMarkdown.split('\n');
+        const parsed = parseTaskLine(sourceLines[0]);
+        sourceLines[0] = stripRecurrenceFromLine(sourceLines[0].slice(0, parsed.statusOffset) + 'x' + sourceLines[0].slice(parsed.statusOffset + 1));
+        task.recurrence = null;
+        rememberSavedSource(sourceLines.join('\n'));
+        return;
+      }
+      // Fall through only when the recurrence rule cannot advance.
     }
 
     // Get the line from the file
@@ -106,20 +133,48 @@
       docPosition.filePath,
       taskLine + 1
     );
-    if (line === null) return;
+    if (line === null) throw new Error('Task source is missing.');
 
     // Determine the symbol to use based on the 'completed' flag
     const symbol = completed ? 'x' : ' ';
 
-    // Use a regular expression to find the task's current completion symbol and replace it
-    const updatedLine = line.replace(/- \[[^\]]\]/, `- [${symbol}]`);
+    // Change only the status character, retaining native list/quote syntax.
+    const parsedLine = parseTaskLine(line);
+    if (!parsedLine) throw new Error('Task source is no longer a task.');
+    const updatedLine = line.slice(0, parsedLine.statusOffset) + symbol +
+      line.slice(parsedLine.statusOffset + 1);
 
-    // Update the line in the file
-    plugin.fileOperator.updateLineInFile(
+    await plugin.fileOperator.updateFile(
       docPosition.filePath,
+      updatedLine,
+      taskLine,
       taskLine + 1,
-      updatedLine
+      undefined,
+      {
+        source: line,
+        resolveSpan(fileLines) {
+          const currentLine = resolveTaskLineInFile(fileLines);
+          return currentLine === null ? null : [currentLine, currentLine + 1];
+        }
+      }
     );
+    const sourceLines = task.metadata?.sourceMarkdown?.split('\n') ?? [line];
+    sourceLines[0] = updatedLine;
+    rememberSavedSource(sourceLines.join('\n'));
+  }
+
+  function rememberSavedSource(source: string) {
+    const lines = source.split('\n');
+    const parsed = parseTaskLine(lines[0]);
+    task.metadata = {
+      ...task.metadata,
+      sourceMarkdown: source,
+      sourceTaskPrefix: parsed?.prefix,
+      sourceTaskStatus: parsed?.status,
+      sourceTaskCompleted: parsed ? /^[xX]$/.test(parsed.status) : undefined,
+      sourceDescription: task.description,
+      sourceDescriptionMarkdown: lines.slice(1).join('\n')
+    };
   }
 
   function switchMode(
@@ -407,7 +462,7 @@
   .static-task-card-content {
     padding-left: 0.25em;
     padding-right: 0.25em;
-    font-size: var(--font-text-size);
+    font-size: var(--font-preferred-size, var(--font-text-size));
     flex-grow: 1; /* Make it take up all available space */
   }
 
@@ -448,7 +503,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    height: calc(var(--line-height-normal) * var(--font-text-size));
+    height: calc(var(--line-height-normal) * var(--font-preferred-size, var(--font-text-size)));
   }
 
   .compact-matrix-row .matrix-toggle {
@@ -495,7 +550,7 @@
   }
 
   .compact-expanded .project-wrapper {
-    height: calc(var(--line-height-normal) * var(--font-text-size));
+    height: calc(var(--line-height-normal) * var(--font-preferred-size, var(--font-text-size)));
   }
 
   .compact-expanded .task-card-project {

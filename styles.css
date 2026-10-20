@@ -61,7 +61,7 @@
 .obsidian-taskcard {
   background-color: var(--background-primary);
   color: var(--text-normal);
-  font-size: var(--font-text-size);
+  font-size: var(--font-preferred-size, var(--font-text-size));
   font-family: var(--font-text);
   line-height: var(--line-height-normal);
   border-radius: var(--radius-m);
@@ -616,7 +616,7 @@ body .task-card-title-tooltip {
   flex-grow: 0.98;
   padding-left: 0.25em;
   padding-right: 0.25em;
-  font-size: var(--font-text-size);
+  font-size: var(--font-preferred-size, var(--font-text-size));
 }
 
 .task-card-menu-button.mode-multi-line {
@@ -627,7 +627,7 @@ body .task-card-title-tooltip {
      note font (not the button's smaller UI font) so the icon centers on
      the same axis as the content text line */
   align-self: start;
-  height: calc(var(--line-height-normal) * var(--font-text-size));
+  height: calc(var(--line-height-normal) * var(--font-preferred-size, var(--font-text-size)));
   /* same box as .task-card-button (the bottom-bar shrink toggle), flush
      against the card's padding edge, so both right-corner icons sit on
      one vertical axis */

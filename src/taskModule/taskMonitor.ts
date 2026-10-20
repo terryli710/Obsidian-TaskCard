@@ -2,7 +2,9 @@ import { App, MarkdownView, TFile, Vault } from 'obsidian';
 import TaskCardPlugin from '..';
 import { Notice } from 'obsidian';
 import { logger } from '../utils/log';
-import { escapeRegExp } from '../utils/regexUtils';
+import { indicatorTagPattern } from '../utils/regexUtils';
+import { protectMarkdownSyntax } from '../utils/markdownSyntax';
+import { markdownSourceContext } from '../utils/markdownSourceContext';
 import { Project } from './project';
 import { SettingStore } from '../settings';
 import { ObsidianTask } from './task';
@@ -85,7 +87,6 @@ export class TaskMonitor {
     if (taskDetails.length === 0) return;
     for (const taskDetail of taskDetails) {
       const originalLine = lines[taskDetail.startLine];
-      const indent = originalLine.match(/^\s*/)[0];
       const isLegacy = this.plugin.taskValidator.hasLegacyNotation(originalLine);
       const isForeignDialect =
         !isLegacy && TASKS_EMOJI_SIGNIFIER.test(originalLine);
@@ -101,7 +102,7 @@ export class TaskMonitor {
         updatedLines[taskDetail.startLine] = appendBlockId(originalLine, task.id);
       } else {
         updatedLines[taskDetail.startLine] =
-          indent + this.plugin.taskFormatter.taskToLine(task);
+          this.plugin.taskFormatter.taskToLine(task);
       }
 
       if (isNewTask) {
@@ -112,7 +113,7 @@ export class TaskMonitor {
       }
       await this.plugin.storeSyncMappings(task.id, task.metadata.syncMappings);
     }
-    await this.updateFileWithNewLines(file, updatedLines);
+    await this.updateFileWithNewLines(file, updatedLines, lines);
   }
 
   /**
@@ -131,13 +132,14 @@ export class TaskMonitor {
       // to land silently drops the others' mappings. Collect, then persist
       // sequentially once the file's lines are known.
       const pendingMappings: { id: string; mappings: SyncMappings }[] = [];
-      const updatedLines = lines.map((line) => {
-        if (!this.plugin.taskValidator.isTaskCardTaskMarkdown(line)) return line;
+      const context = markdownSourceContext(lines);
+      const updatedLines = lines.map((line, index) => {
+        if (!context.taskLines.has(index) || context.unsafeRewriteLines.has(index) ||
+            !this.plugin.taskValidator.isTaskCardTaskMarkdown(context.maskedLines[index])) return line;
         if (!this.plugin.taskValidator.hasLegacyNotation(line)) return line;
         const task = this.plugin.taskParser.parseAnyTaskMarkdown(line);
         if (!task || task.content.length === 0) return line;
-        const indent = line.match(/^\s*/)[0];
-        const newLine = indent + this.plugin.taskFormatter.taskToLine(task);
+        const newLine = this.plugin.taskFormatter.taskToLine(task);
         pendingMappings.push({ id: task.id, mappings: task.metadata.syncMappings });
         migratedCount++;
         fileChanged = true;
@@ -147,7 +149,7 @@ export class TaskMonitor {
         await this.plugin.storeSyncMappings(id, mappings);
       }
       if (fileChanged) {
-        await this.updateFileWithNewLines(file, updatedLines);
+        await this.updateFileWithNewLines(file, updatedLines, lines);
       }
     }
     return migratedCount;
@@ -198,10 +200,12 @@ export class TaskMonitor {
 
   detectTasksFromLines(lines: string[]): TaskDetail[] {
     const taskDetails: TaskDetail[] = [];
+    const context = markdownSourceContext(lines);
     let lineIndex = 0;
 
     for (const line of lines) {
-      if (this.lineNeedsFormatting(line)) {
+      if (context.taskLines.has(lineIndex) && !context.unsafeRewriteLines.has(lineIndex) &&
+          this.lineNeedsFormatting(context.maskedLines[lineIndex])) {
         // Count how many lines are in the description
         const followingLines = lines.slice(lineIndex + 1);
         const descriptionLineCount = this.countDescriptionLines(line, followingLines);
@@ -268,7 +272,7 @@ export class TaskMonitor {
     const lines = await this.getLinesFromFile(file);
     if (!lines) return;
     const updatedLines: string[] = this.changeIndicatorTagsForLines(lines, newIndicatorTag, oldIndicatorTag);
-    await this.updateFileWithNewLines(file, updatedLines);
+    await this.updateFileWithNewLines(file, updatedLines, lines);
   }
 
   async changeProjectForFile(file: TFile, newProject, oldProject) {
@@ -276,25 +280,31 @@ export class TaskMonitor {
     const lines = await this.getLinesFromFile(file);
     if (!lines) return;
     const updatedLines: string[] = this.changeProjectForLines(lines, newProject, oldProject);
-    await this.updateFileWithNewLines(file, updatedLines);
+    await this.updateFileWithNewLines(file, updatedLines, lines);
   }
 
   changeIndicatorTagsForLines(lines: string[], newIndicatorTag, oldIndicatorTag): string[] {
-    return lines.map((line, index) => this.changeIndicatorTagForLine(line, newIndicatorTag, oldIndicatorTag));
+    const context = markdownSourceContext(lines);
+    return lines.map((line, index) => context.taskLines.has(index) &&
+      this.plugin.taskValidator.isTaskCardTaskMarkdown(context.maskedLines[index], oldIndicatorTag)
+      ? this.changeIndicatorTagForLine(line, newIndicatorTag, oldIndicatorTag, context.maskedLines[index]) : line);
   }
 
   changeProjectForLines(lines: string[], newProject, oldProject): string[] {
-    return lines.map((line, index) => this.changeProjectForLine(line, newProject, oldProject));
+    const context = markdownSourceContext(lines);
+    return lines.map((line, index) => context.taskLines.has(index) && !context.unsafeRewriteLines.has(index) &&
+      this.plugin.taskValidator.isTaskCardTaskMarkdown(context.maskedLines[index])
+      ? this.changeProjectForLine(line, newProject, oldProject) : line);
   }
 
-  changeIndicatorTagForLine(line: string, newIndicatorTag, oldIndicatorTag) {
+  changeIndicatorTagForLine(line: string, newIndicatorTag, oldIndicatorTag, visibleLine = line) {
     if (this.plugin.taskValidator.isTaskCardTaskMarkdown(line, oldIndicatorTag)) {
-      // replace only the tag token (#old not followed by another tag char),
-      // never a plain-text occurrence of the tag name inside the content
-      const tagRegex = new RegExp(
-        `#${escapeRegExp(oldIndicatorTag)}(?![A-Za-z0-9_/-])`
-      );
-      line = line.replace(tagRegex, `#${newIndicatorTag}`);
+      // Rename every real indicator prefix, preserving descendant suffixes
+      // and literal tag examples inside code, links, and comments.
+      const protectedSource = protectMarkdownSyntax(visibleLine);
+      line = line.replace(indicatorTagPattern(oldIndicatorTag, true), (match, offset) =>
+        !protectedSource.contains(offset) && visibleLine.slice(offset, offset + match.length) === match
+          ? `#${newIndicatorTag}` : match);
     }
     return line;
   }
@@ -311,8 +321,7 @@ export class TaskMonitor {
           (task.project.id && task.project.id === oldProject.id));
       if (!matches) return line;
       task.project = newProject;
-      const indent = line.match(/^\s*/)[0];
-      return indent + this.plugin.taskFormatter.taskToLine(task);
+      return this.plugin.taskFormatter.taskToLine(task);
     }
     return line;
   }
@@ -321,12 +330,14 @@ export class TaskMonitor {
     return await this.plugin.fileOperator.getFileLines(file.path);
   }
 
-  async updateFileWithNewLines(file: TFile, updatedLines: string[]) {
+  async updateFileWithNewLines(file: TFile, updatedLines: string[], originalLines: string[]) {
     await this.plugin.fileOperator.updateFile(
       file.path,
       updatedLines.join('\n'),
       0,
-      updatedLines.length
+      originalLines.length,
+      undefined,
+      { source: originalLines.join('\n') }
     );
   }
 }

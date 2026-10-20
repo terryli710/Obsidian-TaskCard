@@ -167,6 +167,50 @@ describe('TaskMonitor', () => {
     });
   });
 
+  describe('Markdown source context', () => {
+    const literalLines = [
+      '---', 'example: |', '  - [ ] YAML #TaskCard', '---',
+      '```markdown', '- [ ] backticks #TaskCard', '```',
+      '~~~markdown', '- [ ] tildes #TaskCard', '~~~',
+      '%%', '- [ ] comment #TaskCard', '%%'
+    ];
+
+    it('never registers task-shaped YAML, fenced examples, or multiline comments', async () => {
+      const source = literalLines.join('\n');
+      const file = vault.__setFile(FILE_PATH, source);
+      await monitor.monitorFileToFormatTasks(file);
+      expect(vault.__getContent(FILE_PATH)).toBe(source);
+      expect(monitor.detectTasksFromLines(literalLines)).toEqual([]);
+    });
+
+    it('renames only source tasks outside literal contexts, preserving descendant suffixes', () => {
+      const source = [...literalLines, '- [ ] real #TaskCard/work'];
+      expect(monitor.changeIndicatorTagsForLines(source, 'task', 'TaskCard')).toEqual([
+        ...literalLines, '- [ ] real #task/work'
+      ]);
+    });
+
+    it('ignores indicator tags in an open multiline comment on a real task line', () => {
+      expect(monitor.detectTasksFromLines([
+        '- [ ] plain %% #TaskCard', 'still hidden', '%%'
+      ])).toEqual([]);
+    });
+
+    it('renames only visible tag occurrences when a comment crosses source lines', () => {
+      const lines = ['- [ ] real #TaskCard/work %% literal #TaskCard', 'hidden #TaskCard', '%%'];
+      expect(monitor.changeIndicatorTagsForLines(lines, 'task', 'TaskCard')).toEqual([
+        '- [ ] real #task/work %% literal #TaskCard', 'hidden #TaskCard', '%%'
+      ]);
+    });
+
+    it('keeps a real task with a multiline comment unchanged during line normalization', async () => {
+      const source = '- [ ] real #TaskCard %% multiline note\nhidden #literal\n%%';
+      const file = vault.__setFile(FILE_PATH, source);
+      await monitor.monitorFileToFormatTasks(file);
+      expect(vault.__getContent(FILE_PATH)).toBe(source);
+    });
+  });
+
   describe('parseTaskWithLines', () => {
     it('parses a valid unformatted task and applies the default project', () => {
       const task = monitor.parseTaskWithLines([
@@ -243,6 +287,13 @@ describe('TaskMonitor', () => {
       expect(updated).not.toContain('#TaskCard');
     });
 
+    it('renames descendant tags while preserving suffixes and literal Markdown', () => {
+      const line = '- [ ] Read `#TaskCard` #TaskCard/work #TaskCard/work/urgent #TaskCard-other ^tc-retag';
+      expect(monitor.changeIndicatorTagForLine(line, 'task', 'TaskCard')).toBe(
+        '- [ ] Read `#TaskCard` #task/work #task/work/urgent #TaskCard-other ^tc-retag'
+      );
+    });
+
     it('does not rename a longer tag that merely starts with the old tag', () => {
       const line = '- [ ] other #TaskCardX task #TaskCard <span style="display:none">{"id":"x"}</span>';
       const updated = monitor.changeIndicatorTagForLine(
@@ -290,6 +341,18 @@ describe('TaskMonitor', () => {
   });
 
   describe('monitorFileToFormatTasks', () => {
+    it('refuses a stale registration snapshot instead of erasing a concurrent note edit', async () => {
+      const source = '---\nproject: before\n---\n- [ ] register #TaskCard';
+      const file = vault.__setFile(FILE_PATH, source);
+      const concurrent = source.replace('before', 'after') + '\nexternal sync text';
+      plugin.externalAPIManager.createTask.mockImplementation(async () => {
+        await vault.modify(file, concurrent);
+        return undefined;
+      });
+      await expect(monitor.monitorFileToFormatTasks(file)).rejects.toThrow();
+      expect(vault.__getContent(FILE_PATH)).toBe(concurrent);
+    });
+
     it('formats an unformatted task in place, preserving surroundings and description', async () => {
       const file: TFile = vault.__setFile(
         FILE_PATH,

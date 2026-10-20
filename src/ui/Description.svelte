@@ -71,7 +71,7 @@
     async function enableEditMode(event: MouseEvent | KeyboardEvent) {
         if (isMarkdownControl(event)) return;
         event.stopPropagation();
-        if (event instanceof KeyboardEvent) {
+        if ('key' in event) {
             if (event.key === 'Enter' || event.key === ' ') {
                 event.preventDefault();
                 taskSyncManager.taskCardStatus.descriptionStatus = 'editing';
@@ -79,7 +79,7 @@
                 focusAndSelect(inputElement);
                 adjustHeightForTextArea();
             }
-        } else if (event instanceof MouseEvent) {
+        } else {
             taskSyncManager.taskCardStatus.descriptionStatus = 'editing';
             await tick();
             focusAndSelect(inputElement);

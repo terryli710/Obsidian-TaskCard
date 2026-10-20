@@ -39,11 +39,11 @@
   // every path that mounts the popup. Capture phase, so a click swallowed by
   // another widget's stopPropagation still dismisses it.
   function dismissOnOutsideInteraction(node: HTMLElement) {
+    const ownerDocument = node.ownerDocument;
     const onDocumentMousedown = (event: MouseEvent) => {
-      const target = event.target;
+      const path = event.composedPath();
       if (
-        target instanceof Node &&
-        (node.contains(target) || projectWrapper?.contains(target))
+        path.includes(node) || (projectWrapper && path.includes(projectWrapper))
       ) {
         return;
       }
@@ -52,12 +52,12 @@
     const onDocumentKeydown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') closeProjectPopup();
     };
-    document.addEventListener('mousedown', onDocumentMousedown, true);
-    document.addEventListener('keydown', onDocumentKeydown, true);
+    ownerDocument.addEventListener('mousedown', onDocumentMousedown, true);
+    ownerDocument.addEventListener('keydown', onDocumentKeydown, true);
     return {
       destroy() {
-        document.removeEventListener('mousedown', onDocumentMousedown, true);
-        document.removeEventListener('keydown', onDocumentKeydown, true);
+        ownerDocument.removeEventListener('mousedown', onDocumentMousedown, true);
+        ownerDocument.removeEventListener('keydown', onDocumentKeydown, true);
       }
     };
   }
@@ -82,8 +82,9 @@
       const firstOption = projectPopup.firstChild as HTMLDivElement;
       if (firstOption) {
         const height = firstOption.offsetHeight;
-        const padding = parseFloat(getComputedStyle(projectPopup).paddingTop);
-        const margin = parseFloat(getComputedStyle(projectPopup).marginBottom);
+        const style = projectPopup.ownerDocument.defaultView?.getComputedStyle(projectPopup);
+        const padding = parseFloat(style?.paddingTop || '0');
+        const margin = parseFloat(style?.marginBottom || '0');
         const totalHeight = height + padding + margin;
         projectWrapper.style.height = `${totalHeight}px`;
       }
@@ -94,10 +95,10 @@
 
   function isSelectEvent(evt: MouseEvent | KeyboardEvent) {
     // return if it's mouse single click or keyboard "Enter" key press
-    if (evt instanceof MouseEvent) {
-      return evt.button === 0;
+    if (evt.type === 'click') {
+      return (evt as MouseEvent).button === 0;
     }
-    return evt instanceof KeyboardEvent && (evt.key === "Enter" || evt.key === " ");
+    return evt.type === 'keydown' && ((evt as KeyboardEvent).key === "Enter" || (evt as KeyboardEvent).key === " ");
   }
 
   function searchProject(evt: MouseEvent | KeyboardEvent, projectName: string) {

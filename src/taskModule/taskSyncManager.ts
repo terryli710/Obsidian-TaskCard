@@ -2,9 +2,12 @@ import { MarkdownPostProcessorContext, MarkdownSectionInformation, Notice } from
 import { moment } from '../utils/obsidianMoment';
 import { ObsidianTask } from './task';
 import { advanceRecurringTask } from './recurrence';
-import { extractBlockId, taskIdToken } from './fieldSyntax';
+import { hasTaskIdentity } from './fieldSyntax';
 import TaskCardPlugin from '..';
 import { logger } from '../utils/log';
+import { FileWriteConflict, FileSourceExpectation } from '../renderer/fileOperator';
+import { countTaskDescriptionLines, parseTaskLine } from '../utils/taskLine';
+import { markdownSourceContext } from '../utils/markdownSourceContext';
 
 
 type TaskCardStatus = {
@@ -31,23 +34,11 @@ export interface ObsidianTaskSyncProps {
   };
 }
 
-// Extent of a formatted task's description as written by TaskFormatter:
-// consecutive lines indented deeper than the task line. Deliberately narrower
-// than TaskParser.determineDescriptionLineNumber, which also counts unindented
-// plain text (known-issues #2) — over-spanning here would splice user content.
+// Keep write spans aligned with the parser, including quoted continuations.
 export function countFormattedDescriptionLines(
-  fileLines: string[],
-  taskLineIndex: number
+  fileLines: string[], taskLineIndex: number
 ): number {
-  const taskIndent = fileLines[taskLineIndex].match(/^\s*/)[0].length;
-  let count = 0;
-  for (let i = taskLineIndex + 1; i < fileLines.length; i++) {
-    const line = fileLines[i];
-    if (line.trim() === '') break;
-    if (line.match(/^\s*/)[0].length <= taskIndent) break;
-    count++;
-  }
-  return count;
+  return countTaskDescriptionLines(fileLines, taskLineIndex);
 }
 
 export class ObsidianTaskSyncManager implements ObsidianTaskSyncProps {
@@ -63,6 +54,9 @@ export class ObsidianTaskSyncManager implements ObsidianTaskSyncProps {
     lineEndsInSection: number | null;
   };
   public plugin: TaskCardPlugin;
+  private sourceMarkdown: string | null;
+  private sourceTaskId: string;
+  private attributeWrites: Promise<void> = Promise.resolve();
 
   constructor(plugin: TaskCardPlugin, props?: Partial<ObsidianTaskSyncProps>) {
     // this.markdownTask = props?.markdownTask || null;
@@ -85,6 +79,15 @@ export class ObsidianTaskSyncManager implements ObsidianTaskSyncProps {
       lineEndsInSection: null
     };
     this.plugin = plugin;
+    this.sourceTaskId = this.obsidianTask.id;
+    const info = this.taskMetadata.mdSectionInfo;
+    const start = this.taskMetadata.lineStartInSection;
+    const end = this.taskMetadata.lineEndsInSection;
+    this.sourceMarkdown = this.obsidianTask.metadata?.sourceMarkdown ?? (
+      info && start != null && end != null
+        ? info.text.split('\n').slice(info.lineStart + start, info.lineStart + end).join('\n')
+        : null
+    );
   }
 
   refreshMetadata(): void {
@@ -110,39 +113,102 @@ export class ObsidianTaskSyncManager implements ObsidianTaskSyncProps {
     ];
   }
 
-  // Task identity is line/position based (known-issues #4), so the cached span
-  // goes stale whenever lines shift between render and write. Only trust it
-  // when the task's id token (v2 block id, or the legacy hidden-span id) is
-  // still on the cached start line; otherwise search the file for the id and
-  // shift the span to the task's current location. Falls back to the cached
-  // span when the id cannot be located unambiguously.
+  // A durable ID must be unique even when it still occupies the cached line.
+  // An ID-less first save needs an exact render snapshot at the cached span.
+  private resolveSpan(
+    lines: string[], cached: [number, number] | null, id: string,
+    source: string | null
+  ): [number, number] | null {
+    const context = markdownSourceContext(lines);
+    const safeSpan = (start: number, end: number) => context.taskLines.has(start) &&
+      !Array.from({ length: end - start }, (_, offset) => start + offset)
+        .some(index => context.unsafeRewriteLines.has(index));
+    const sourceLines = source?.split('\n');
+    const firstLine = sourceLines?.[0];
+    const sameDescriptionExtent = (start: number) => lines[start] !== undefined &&
+      (sourceLines == null || countFormattedDescriptionLines(lines, start) ===
+        countFormattedDescriptionLines(sourceLines, 0));
+    const matchesId = (line: string) => hasTaskIdentity(line, id);
+    const sourceHasId = firstLine != null && matchesId(firstLine);
+    if (source !== null && !sourceHasId) {
+      if (!cached || !parseTaskLine(firstLine)) return null;
+      const end = cached[0] + source.split('\n').length;
+      return safeSpan(cached[0], end) && sameDescriptionExtent(cached[0]) && lines.slice(cached[0], end).join('\n') === source
+        ? [cached[0], end] : null;
+    }
+    if (!id) return null;
+    const matches: number[] = [];
+    lines.forEach((line, index) => {
+      if (context.taskLines.has(index) && matchesId(line)) matches.push(index);
+    });
+    if (matches.length !== 1) return null;
+    const start = matches[0];
+    if (!parseTaskLine(lines[start]) || !sameDescriptionExtent(start)) return null;
+    const length = source !== null ? source.split('\n').length
+      : cached ? cached[1] - cached[0] : 1 + countFormattedDescriptionLines(lines, start);
+    return safeSpan(start, start + length) ? [start, start + length] : null;
+  }
+
   async resolveDocLineStartEnd(): Promise<[number, number] | null> {
     const cached = this.getDocLineStartEnd();
-    const id = this.obsidianTask.id;
-    if (!id) return cached;
-    const fileLines = await this.plugin.fileOperator.getFileLines(
-      this.taskMetadata.sourcePath
-    );
-    if (!fileLines) return cached;
-    const idToken = taskIdToken(id);
-    const matchesId = (line: string | undefined): boolean =>
-      !!line && (extractBlockId(line).id === id || line.includes(idToken));
-    if (cached && matchesId(fileLines[cached[0]])) return cached;
+    const lines = await this.plugin.fileOperator.getFileLines(this.taskMetadata.sourcePath);
+    return lines ? this.resolveSpan(lines, cached, this.sourceTaskId, this.sourceMarkdown) : null;
+  }
 
-    const matches: number[] = [];
-    fileLines.forEach((line, index) => {
-      if (matchesId(line)) matches.push(index);
-    });
-    if (matches.length !== 1) return cached;
-
-    const start = matches[0];
-    if (cached) {
-      logger.info(
-        `Task ${id} moved from line ${cached[0]} to ${start} in ${this.taskMetadata.sourcePath}; relocating write span.`
-      );
-      return [start, start + (cached[1] - cached[0])];
+  private async prepareWrite(): Promise<{
+    span: [number, number]; expected: FileSourceExpectation;
+  } | null> {
+    const cached = this.getDocLineStartEnd();
+    const id = this.sourceTaskId;
+    const lines = await this.plugin.fileOperator.getFileLines(this.taskMetadata.sourcePath);
+    const span = lines && this.resolveSpan(lines, cached, id, this.sourceMarkdown);
+    if (!span) {
+      this.announceLostTask();
+      return null;
     }
-    return [start, start + 1 + countFormattedDescriptionLines(fileLines, start)];
+    const source = this.sourceMarkdown ?? lines.slice(span[0], span[1]).join('\n');
+    if (lines.slice(span[0], span[1]).join('\n') !== source) {
+      this.announceLostTask();
+      return null;
+    }
+    return { span, expected: {
+      source,
+      resolveSpan: latest => this.resolveSpan(latest, cached, id, source)
+    } };
+  }
+
+  private async writePrepared(
+    markdown: string,
+    target: { span: [number, number]; expected: FileSourceExpectation },
+    savedTaskMarkdown = markdown
+  ): Promise<boolean> {
+    const savedDescription = this.obsidianTask.description;
+    const commitDisplayState = this.plugin.taskCardRenderManager?.prepareTaskWrite(this, markdown);
+    try {
+      await this.plugin.fileOperator.updateFile(
+        this.taskMetadata.sourcePath, markdown, target.span[0], target.span[1],
+        undefined, target.expected
+      );
+    } catch (error) {
+      if (!(error instanceof FileWriteConflict)) throw error;
+      this.announceLostTask();
+      return false;
+    }
+    this.sourceMarkdown = savedTaskMarkdown;
+    this.sourceTaskId = this.obsidianTask.id;
+    const savedLines = savedTaskMarkdown.split('\n');
+    const prefix = parseTaskLine(savedLines[0]);
+    this.obsidianTask.metadata = {
+      ...this.obsidianTask.metadata,
+      sourceMarkdown: savedTaskMarkdown,
+      sourceTaskPrefix: prefix?.prefix,
+      sourceTaskStatus: prefix?.status,
+      sourceTaskCompleted: prefix ? /^[xX]$/.test(prefix.status) : undefined,
+      sourceDescription: savedDescription,
+      sourceDescriptionMarkdown: savedLines.slice(1).join('\n')
+    };
+    commitDisplayState?.();
+    return true;
   }
 
   private announceLostTask(): void {
@@ -170,41 +236,46 @@ export class ObsidianTaskSyncManager implements ObsidianTaskSyncProps {
   }
 
   async updateMarkdownTaskToFile(markdownTask: string): Promise<void> {
-    const span = await this.resolveDocLineStartEnd();
-    if (!span) {
-      this.announceLostTask();
-      return;
-    }
-    const commitDisplayState = this.plugin.taskCardRenderManager?.prepareTaskWrite(this, markdownTask);
-    await this.plugin.fileOperator.updateFile(
-      this.taskMetadata.sourcePath,
-      markdownTask,
-      span[0],
-      span[1]
-    );
-    commitDisplayState?.();
+    const target = await this.prepareWrite();
+    if (target) await this.writePrepared(markdownTask, target);
   }
 
-  async updateObsidianTaskAttribute(key: string, value: any): Promise<void> {
+  updateObsidianTaskAttribute(key: string, value: any): Promise<void> {
+    const operation = this.attributeWrites.then(() => this.saveAttribute(key, value));
+    // Keep later user actions usable even when a disk or sync operation fails.
+    this.attributeWrites = operation.catch(() => undefined);
+    return operation;
+  }
+
+  private async syncSavedTask(original: ObsidianTask): Promise<void> {
+    const syncMetadata = await this.plugin.externalAPIManager?.updateTask(
+      this.obsidianTask.getCopy(), original
+    );
+    if (syncMetadata) this.obsidianTask.metadata.syncMappings = syncMetadata;
+    await this.plugin.storeSyncMappings(this.obsidianTask.id, syncMetadata);
+  }
+
+  private async saveAttribute(key: string, value: any): Promise<void> {
     if (key === 'completed' && value === true && this.obsidianTask.hasRecurrence()) {
       const handled = await this.completeRecurringTask();
       if (handled) return;
-      // fall through to a plain completion when the rule cannot be advanced
     }
-    const origTask = this.obsidianTask.getCopy();
+    const original = this.obsidianTask.getCopy();
     this.obsidianTask[key] = value;
     if (key === 'completed') {
-      this.obsidianTask.completionDate = value
-        ? moment().format('YYYY-MM-DD')
-        : null;
+      this.obsidianTask.completionDate = value ? moment().format('YYYY-MM-DD') : null;
     }
-    const newTask = this.obsidianTask.getCopy();
-    logger.info(`successfully set ${key} to ${value}`);
-    const syncMetadata = await this.plugin.externalAPIManager?.updateTask(newTask, origTask);
-    if (syncMetadata) this.obsidianTask.metadata.syncMappings = syncMetadata;
-    await this.updateTaskToFile();
-    // the write may have minted the task's durable id — store mappings under it
-    await this.plugin.storeSyncMappings(this.obsidianTask.id, syncMetadata);
+    try {
+      if (!await this.updateTaskToFile()) {
+        Object.assign(this.obsidianTask, original);
+        return;
+      }
+    } catch (error) {
+      Object.assign(this.obsidianTask, original);
+      this.announceLostTask();
+      return;
+    }
+    await this.syncSavedTask(original);
   }
 
   // Completing a recurring task checks the clicked line in place and inserts
@@ -217,41 +288,28 @@ export class ObsidianTaskSyncManager implements ObsidianTaskSyncProps {
   private async completeRecurringTask(): Promise<boolean> {
     const nextTask = advanceRecurringTask(this.obsidianTask);
     if (!nextTask) return false;
-    // resolve the span before formatting: formatting may mint a new id, and
-    // the old id is what locates the task's current line
-    const span = await this.resolveDocLineStartEnd();
-    if (!span) {
-      this.announceLostTask();
-      return true; // handled (nothing safe to write)
-    }
-    const sourceLine = await this.plugin.fileOperator.getLineFromFile(
-      this.taskMetadata.sourcePath, span[0] + 1
-    );
-    if (sourceLine == null) {
-      this.announceLostTask();
-      return true;
-    }
-    const indent = sourceLine.match(/^[ \t]*/)[0];
+    const target = await this.prepareWrite();
+    if (!target) return true;
+    const indent = target.expected.source.match(/^[ \t]*/)[0];
     const origTask = this.obsidianTask.getCopy();
     this.obsidianTask.completed = true;
     this.obsidianTask.recurrence = null;
     this.obsidianTask.completionDate = moment().format('YYYY-MM-DD');
-    const syncMetadata = await this.plugin.externalAPIManager?.updateTask(
-      this.obsidianTask.getCopy(),
-      origTask
-    );
-    if (syncMetadata) this.obsidianTask.metadata.syncMappings = syncMetadata;
-    const completedMarkdown = this.formatTaskWithIndent(this.obsidianTask, indent);
-    const nextMarkdown = this.formatTaskWithIndent(nextTask, indent);
-    const commitDisplayState = this.plugin.taskCardRenderManager?.prepareTaskWrite(this, `${completedMarkdown}\n${nextMarkdown}`);
-    await this.plugin.fileOperator.updateFile(
-      this.taskMetadata.sourcePath,
-      `${completedMarkdown}\n${nextMarkdown}`,
-      span[0],
-      span[1]
-    );
-    commitDisplayState?.();
-    await this.plugin.storeSyncMappings(this.obsidianTask.id, syncMetadata);
+    try {
+      const completedMarkdown = this.formatTaskWithIndent(this.obsidianTask, indent);
+      const nextMarkdown = this.formatTaskWithIndent(nextTask, indent);
+      if (!await this.writePrepared(
+        `${completedMarkdown}\n${nextMarkdown}`, target, completedMarkdown
+      )) {
+        Object.assign(this.obsidianTask, origTask);
+        return true;
+      }
+    } catch (error) {
+      Object.assign(this.obsidianTask, origTask);
+      this.announceLostTask();
+      return true;
+    }
+    await this.syncSavedTask(origTask);
     return true;
   }
 
@@ -267,38 +325,18 @@ export class ObsidianTaskSyncManager implements ObsidianTaskSyncProps {
   }
 
   private formatTaskWithIndent(task: ObsidianTask, indent: string): string {
-    return this.plugin.taskFormatter.taskToMarkdown(task)
-      .split('\n').map((line) => indent + line).join('\n');
+    const markdown = this.plugin.taskFormatter.taskToMarkdown(task);
+    return task.metadata?.sourceTaskPrefix != null ? markdown
+      : markdown.split('\n').map((line) => indent + line).join('\n');
   }
 
-  async updateTaskToFile(): Promise<void> {
-    // resolve the span before formatting: formatting may mint a new id, and
-    // the old id is what locates the task's current line
-    const span = await this.resolveDocLineStartEnd();
-    if (!span) {
-      this.announceLostTask();
-      return;
-    }
-    const sourceLine = await this.plugin.fileOperator.getLineFromFile(
-      this.taskMetadata.sourcePath, span[0] + 1
-    );
-    if (sourceLine == null) {
-      this.announceLostTask();
-      return;
-    }
+  async updateTaskToFile(): Promise<boolean> {
+    const target = await this.prepareWrite();
+    if (!target) return false;
     const markdownTask = this.formatTaskWithIndent(
-      this.obsidianTask, sourceLine.match(/^[ \t]*/)[0]
+      this.obsidianTask, target.expected.source.match(/^[ \t]*/)[0]
     );
-    // Formatting may mint the first durable ID. Capture UI state while the
-    // old section is attached, then move it under that ID after saving.
-    const commitDisplayState = this.plugin.taskCardRenderManager?.prepareTaskWrite(this, markdownTask);
-    await this.plugin.fileOperator.updateFile(
-      this.taskMetadata.sourcePath,
-      markdownTask,
-      span[0],
-      span[1]
-    );
-    commitDisplayState?.();
+    return await this.writePrepared(markdownTask, target);
   }
 
   isValidStatus(key: keyof TaskCardStatus, status: string): boolean {
@@ -324,19 +362,8 @@ export class ObsidianTaskSyncManager implements ObsidianTaskSyncProps {
   }
 
   async deleteTask(): Promise<void> {
-    const span = await this.resolveDocLineStartEnd();
-    if (!span) {
-      this.announceLostTask();
-      return;
-    }
-    const commitDisplayState = this.plugin.taskCardRenderManager?.prepareTaskWrite(this, '');
-    await this.plugin.fileOperator.updateFile(
-      this.taskMetadata.sourcePath,
-      '',
-      span[0],
-      span[1]
-    );
-    commitDisplayState?.();
+    const target = await this.prepareWrite();
+    if (!target || !await this.writePrepared('', target)) return;
 
     this.plugin.externalAPIManager?.deleteTask(this.obsidianTask);
     await this.plugin.removeSyncMappings(this.obsidianTask.id);

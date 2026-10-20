@@ -6,6 +6,7 @@ import { normalizePath } from 'obsidian';
 import { logger } from '../utils/log';
 import { SettingStore } from '../settings';
 import Sugar from 'sugar';
+import { markdownSourceContext } from '../utils/markdownSourceContext';
 
 
 import { IndexedMapDatabase, LogicalOperator } from './indexMapDatabase';
@@ -44,6 +45,7 @@ export class PositionedTaskCache {
     database: TaskDatabase;
     private plugin: TaskCardPlugin;
     indicatorTag: string;
+    private fileRefreshGenerations = new Map<string, symbol>();
     status: {
       initialized: boolean
       refreshTimeStamp: number
@@ -109,18 +111,38 @@ export class PositionedTaskCache {
         logger.error("Error fetching dataview API:", err);
         return [];
       }
-      let query = `TASK FROM #${this.indicatorTag} WHERE contains(text, "#${this.indicatorTag}")`;
+      let query = `TASK FROM #${this.indicatorTag} WHERE contains(lower(text), "#${this.indicatorTag.toLowerCase()}")`;
       const queryResult: QueryResult = await dataviewAPI.tryQuery(query);
       return this.parseQueryResult(queryResult);
     }
 
-    async refreshTasksByFileList(fileList: string[]) {
-      const taskList = await this.fetchTasksFromFileList(fileList);
-      this.database.refreshTasksByFileList(fileList, taskList.map(task => ({ id: task.id, item: task })));
-      this.updateStatus(taskList.length);
+    async refreshTasksByFileList(fileList: string[], removedFilePaths: string[] = []) {
+      const affectedPaths = [...new Set([...fileList, ...removedFilePaths])];
+      const generation = Symbol();
+      affectedPaths.forEach(path => this.fileRefreshGenerations.set(path, generation));
+      // Dataview can move the page before updating each nested task.path.
+      // Only the one-file rename event provides an unambiguous path alias.
+      const aliases = fileList.length === 1 && removedFilePaths.length === 1
+        ? new Map([[removedFilePaths[0], fileList[0]]]) : undefined;
+      try {
+        const taskList = await this.fetchTasksFromFileList(fileList, aliases);
+        // A newer refresh owns only its affected paths. An older batch may
+        // still commit unrelated files, but must not revive a renamed path.
+        const currentPaths = affectedPaths.filter(path =>
+          this.fileRefreshGenerations.get(path) === generation);
+        if (currentPaths.length === 0) return;
+        const current = new Set(currentPaths);
+        const tasks = taskList.filter(task => current.has(task.docPosition.filePath));
+        this.database.refreshTasksByFileList(currentPaths, tasks.map(task => ({ id: task.id, item: task })));
+        this.updateStatus(tasks.length);
+      } finally {
+        affectedPaths.forEach(path => {
+          if (this.fileRefreshGenerations.get(path) === generation) this.fileRefreshGenerations.delete(path);
+        });
+      }
     }
     
-    private async fetchTasksFromFileList(fileList?: string[]): Promise<PositionedTaskProperties[]> {
+    private async fetchTasksFromFileList(fileList?: string[], aliases?: ReadonlyMap<string, string>): Promise<PositionedTaskProperties[]> {
       let dataviewAPI;
       try {
         dataviewAPI = await this.getDataviewAPI();
@@ -135,11 +157,11 @@ export class PositionedTaskCache {
         fromClause += ` AND (${filePathsQuery})`;
       }
       
-      const query = `TASK FROM ${fromClause} WHERE contains(text, "#${this.indicatorTag}")`;
+      const query = `TASK FROM ${fromClause} WHERE contains(lower(text), "#${this.indicatorTag.toLowerCase()}")`;
       // logger.debug(`fetchTasksFromFileList: ${query}`);
       const queryResult: QueryResult = await dataviewAPI.tryQuery(query);
       
-      return this.parseQueryResult(queryResult);
+      return this.parseQueryResult(queryResult, aliases);
     }
     
     
@@ -151,18 +173,26 @@ export class PositionedTaskCache {
       };
     }
 
-    async parseQueryResult(queryResult: QueryResult): Promise<PositionedTaskProperties[]> {
+    async parseQueryResult(queryResult: QueryResult, aliases?: ReadonlyMap<string, string>): Promise<PositionedTaskProperties[]> {
         const positionedTasks: PositionedTaskProperties[] = [];
+        const sources = new Map<string, { lines: string[]; taskLines: Set<number> } | null>();
         for (const task of queryResult.values) {
-            const filePath = task.path;
+            const filePath = aliases?.get(task.path) ?? task.path;
             const startPosition: TextPosition = { line: task.position.start.line, col: task.position.start.col };
             const endPosition: TextPosition = { line: task.position.end.line, col: task.position.end.col };
             const originalText = `- [${task.status}] ` + task.text;
             const docPosition = { filePath: filePath, start: startPosition, end: endPosition }
             // v2: any tagged task counts, whatever dialect it is written in
             if (!this.plugin.taskValidator.isTaskCardTaskMarkdown(originalText)) { continue; }
-            const lines = (await this.plugin.fileOperator.getFileLines(filePath)).slice(task.position.start.line);
-            const obsidianTask = this.plugin.taskParser.parseAnyTaskFromFileLines(lines);
+            if (!sources.has(filePath)) {
+              const lines = await this.plugin.fileOperator.getFileLines(filePath);
+              sources.set(filePath, lines ? { lines, taskLines: markdownSourceContext(lines).taskLines } : null);
+            }
+            const source = sources.get(filePath);
+            const startLine = task.position.start.line;
+            if (!source || !source.taskLines.has(startLine) ||
+                !this.plugin.taskValidator.isTaskCardTaskMarkdown(source.lines[startLine])) continue;
+            const obsidianTask = this.plugin.taskParser.parseAnyTaskFromFileLines(source.lines.slice(startLine));
             // if content failed to parse, then this task is meaningless, we will skip it
             if (obsidianTask.content.length === 0) { continue; }
             this.plugin.hydrateSyncMappings(obsidianTask);
@@ -210,12 +240,17 @@ export class TaskDatabase extends IndexedMapDatabase<PositionedTaskProperties> {
     // doubled slashes, or decomposed Unicode. Vault paths never do, and the
     // filter below is a prefix match, so normalize before comparing.
     const filePathPrefix = filePathQuery ? normalizePath(filePathQuery) : '';
+    const normalizeLabel = (label: string) => label.replace(/^#+/, '').toLowerCase();
+    const labelPrefixes = (labelQuery ?? []).map(normalizeLabel).filter(Boolean);
     const expression = {
       operator: 'AND' as LogicalOperator,
       operands: [
         task => priorityQuery && priorityQuery.length > 0 ? priorityQuery.includes(task.priority) : true,
         task => projectQuery && projectQuery.length > 0 ? projectQuery.includes(task.project.name) : true,
-        task => labelQuery && labelQuery.length > 0 ? labelQuery.some(label => task.labels.includes(label)) : true,
+        task => labelQuery && labelQuery.length > 0 ? labelPrefixes.some(prefix => task.labels.some(label => {
+          const normalizedLabel = normalizeLabel(label);
+          return normalizedLabel === prefix || normalizedLabel.startsWith(`${prefix}/`);
+        })) : true,
         task => completedQuery && completedQuery.length > 0 ? completedQuery.includes(task.completed) : true,
         task => {
           // Case 3: If both start and end are empty strings, return true for all tasks

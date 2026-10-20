@@ -1,6 +1,7 @@
 import { Priority, ScheduleDate, Duration } from './task';
-import { escapeRegExp } from '../utils/regexUtils';
+import { exactIndicatorTagPattern } from '../utils/regexUtils';
 import { protectMarkdownSyntax } from '../utils/markdownSyntax';
+import { parseTaskLine } from '../utils/taskLine';
 
 /**
  * TaskCard v2 on-disk syntax (docs/format-spec.md): visible Dataview inline
@@ -73,6 +74,25 @@ export function extractBlockId(line: string): {
   const match = line.match(BLOCK_ID_AT_END);
   if (!match) return { id: null, rest: line };
   return { id: match[1], rest: line.slice(0, match.index).trimEnd() };
+}
+
+/** Match a persisted identity on a real task line, never a literal example. */
+export function hasTaskIdentity(line: string, id: string): boolean {
+  if (!id || !parseTaskLine(line)) return false;
+  const block = findBlockIdSpan(line);
+  if (block?.id === id && !protectMarkdownSyntax(line).contains(block.from)) return true;
+  for (const span of line.matchAll(/<span\b([^>]*)>([\s\S]*?)<\/span>/gi)) {
+    const style = span[1].match(/\bstyle\s*=\s*(["'])(.*?)\1/i)?.[2];
+    if (!style || !/(?:^|;)\s*display\s*:\s*none\s*(?:;|$)/i.test(style)) continue;
+    const offset = span.index!;
+    const surrounding = line.slice(0, offset) + ' '.repeat(span[0].length) + line.slice(offset + span[0].length);
+    if (protectMarkdownSyntax(surrounding).contains(offset)) continue;
+    try {
+      const metadata = JSON.parse(span[2]);
+      if (metadata && typeof metadata === 'object' && metadata.id === id) return true;
+    } catch { /* Malformed legacy data cannot establish identity. */ }
+  }
+  return false;
 }
 
 export function appendBlockId(line: string, id: string): string {
@@ -161,9 +181,7 @@ export function findIndicatorTagSpan(
   text: string,
   indicatorTag: string
 ): TextSpan | null {
-  const pattern = new RegExp(
-    `#${escapeRegExp(indicatorTag)}(?![A-Za-z0-9_/-])`, 'g'
-  );
+  const pattern = exactIndicatorTagPattern(indicatorTag);
   const protectedSource = protectMarkdownSyntax(text);
   let match: RegExpExecArray | null;
   while ((match = pattern.exec(text))) {
@@ -196,14 +214,13 @@ export function stripTaskSyntaxForDisplay(
 ): string {
   const { rest } = extractBlockId(line);
   const indent = rest.match(/^\s*/)[0];
-  const protectedSource = protectMarkdownSyntax(rest.slice(indent.length));
+  const originalProtection = protectMarkdownSyntax(rest);
+  const withoutIndicator = rest.replace(exactIndicatorTagPattern(indicatorTag), (tag, offset) =>
+    originalProtection.contains(offset) ? tag : ' ');
+  const protectedSource = protectMarkdownSyntax(withoutIndicator.slice(indent.length));
   const body = protectedSource.text
     .replace(BRACKET_FIELD, ' ')
-    .replace(PAREN_FIELD, ' ')
-    .replace(
-      new RegExp(`(^|\\s)#${escapeRegExp(indicatorTag)}(?![A-Za-z0-9_/-])`, 'g'),
-      ' '
-    );
+    .replace(PAREN_FIELD, ' ');
   const display = body.replace(/\s{2,}/g, ' ').trimEnd();
   // a subtask that is nothing but syntax would collapse to "- [ ]", which
   // markdown renders as literal text with no checkbox; show it as written

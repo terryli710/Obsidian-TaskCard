@@ -47,10 +47,10 @@ describe('isTaskList (class combinations)', () => {
     expect(isTaskList(ul)).toBe(true);
   });
 
-  it('rejects an OL even with the right classes (UL only)', () => {
+  it('recognizes native ordered task lists', () => {
     const ol = document.createElement('ol');
     ol.classList.add('contains-task-list', 'has-list-bullet');
-    expect(isTaskList(ol as unknown as HTMLElement)).toBe(false);
+    expect(isTaskList(ol as unknown as HTMLElement)).toBe(true);
   });
 });
 

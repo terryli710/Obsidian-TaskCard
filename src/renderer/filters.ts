@@ -7,7 +7,7 @@ export function isTaskList(el: HTMLElement): boolean {
     return false;
   }
   // logger.debug(`isTaskList: el - ${el.innerHTML}, el.tagName - ${el.tagName}, el.classList - ${JSON.stringify(el.classList)}`)
-  if (el.tagName !== 'UL') {
+  if (el.tagName !== 'UL' && el.tagName !== 'OL') {
     return false;
   }
   return el.classList.contains('contains-task-list');

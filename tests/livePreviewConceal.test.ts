@@ -53,6 +53,22 @@ describe('Live Preview conceal helpers', () => {
     expect(getTaskCardConcealPlan(line, 'TaskCard')).toBeNull();
   });
 
+  it('styles nested-tag task metadata while keeping the full nested tag visible', () => {
+    const line = '- [ ] Draft #TaskCard/work/urgent [priority:: high] [due:: 2026-10-21] ^tc-nested';
+    const plan = getTaskCardConcealPlan(line, 'TaskCard');
+    expect(plan).not.toBeNull();
+    expect(plan!.priorityClass).toBe('taskcard-lp-priority-2');
+    expect(plan!.fields.map(field => field.key)).toEqual(['due']);
+    expect(plan!.indicatorTag).toBeNull();
+    expect(line.slice(plan!.blockId!.from, plan!.blockId!.to)).toBe('^tc-nested');
+  });
+
+  it('does not conceal the indicator prefix inside a Unicode label', () => {
+    const line = '- [ ] Draft #TaskCard工作 #TaskCard/工作 [due:: 2026-10-21]';
+    expect(findIndicatorTagSpan(line, 'TaskCard')).toBeNull();
+    expect(getTaskCardConcealPlan(line, 'TaskCard')!.indicatorTag).toBeNull();
+  });
+
   it('builds the expected conceal plan for quiet-inline rendering', () => {
     const line =
       '- [ ] Draft Q3 report #report #TaskCard [priority:: high] [due:: 2026-07-10] [scheduled:: 2026-07-11 09:00] [duration:: 30m] [project:: Work] ^tc-4f2a1b';
@@ -114,6 +130,43 @@ describe('Live Preview conceal helpers', () => {
 });
 
 describe('buildDecorationsForLines (real RangeSetBuilder path)', () => {
+  const linesFrom = (source: string) => {
+    let from = 0;
+    return source.split('\n').map(text => {
+      const line = { text, from };
+      from += text.length + 1;
+      return line;
+    });
+  };
+
+  it.each([
+    ['frontmatter', ['---', 'example: |', '  - [ ] example #TaskCard [due:: tomorrow]', '---']],
+    ['backticks', ['```md', '- [ ] example #TaskCard [due:: tomorrow]', '```']],
+    ['tildes', ['~~~md', '- [ ] example #TaskCard [due:: tomorrow]', '~~~']],
+    ['comment', ['%% opening', '- [ ] example #TaskCard [due:: tomorrow]', 'closing %%']],
+    ['quoted fence', ['> [!note]', '> ```md', '> - [ ] example #TaskCard [due:: tomorrow]', '> ```']]
+  ])('leaves literal task syntax visible in %s', (_name, source) => {
+    expect(buildDecorationsForLines(linesFrom((source as string[]).join('\n')), 'TaskCard').size).toBe(0);
+  });
+
+  it('resumes concealment after a closed fence or comment', () => {
+    const task = '- [ ] example #TaskCard [due:: 2026-10-21] ^tc-example';
+    const source = ['```', task, '```', '%%', task, '%%', task].join('\n');
+    expect(buildDecorationsForLines(linesFrom(source), 'TaskCard').size).toBe(3);
+  });
+
+  it('derives context from outside the viewport and retains source offsets after comments', () => {
+    const source = linesFrom('~~~\n- [ ] literal #TaskCard [due:: tomorrow]\n~~~\n- [ ] real 🔥 %% hidden %% #TaskCard [due:: tomorrow]');
+    expect(buildDecorationsForLines([source[1]], 'TaskCard', [], source).size).toBe(0);
+    const result = buildDecorationsForLines([source[3]], 'TaskCard', [], source);
+    const ranges: Array<[number, number]> = [];
+    result.between(0, source[3].from + source[3].text.length, (from, to) => { ranges.push([from, to]); });
+    expect(ranges).toEqual([
+      [source[3].from + source[3].text.indexOf('#TaskCard'), source[3].from + source[3].text.indexOf('#TaskCard') + 9],
+      [source[3].from + source[3].text.indexOf('[due::'), source[3].from + source[3].text.length]
+    ]);
+  });
+
   it('documents the ordering bug: naive per-loop insertion order throws', () => {
     // Reproduces the pre-fix buildDecorations shape — fields added first
     // (ascending), then hiddenFields/indicatorTag/blockId in a second loop.

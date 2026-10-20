@@ -22,24 +22,46 @@ function inlineLinkRanges(source: string) {
     if (source[i] === '\\') { i++; continue; }
     if (source[i] !== '[') continue;
     const labelEnd = closingDelimiter(i, '[', ']', true);
-    if (labelEnd < 0 || source[labelEnd + 1] !== '(') continue;
-    const destinationEnd = closingDelimiter(labelEnd + 1, '(', ')');
-    if (destinationEnd < 0) continue;
-    ranges.push({ from: source[i - 1] === '!' ? i - 1 : i, to: destinationEnd + 1 });
+    if (labelEnd < 0) continue;
+    // Inline fields remain metadata; other bracket labels may be shortcut,
+    // collapsed or full reference links. Their label text stays in place even
+    // when the corresponding definition lives elsewhere in the note.
+    const label = source.slice(i + 1, labelEnd);
+    const footnote = source[i - 1] === '^';
+    const explicitLink = source[labelEnd + 1] === '(' || source[labelEnd + 1] === '[';
+    if (!footnote && !explicitLink &&
+        (/^[A-Za-z][A-Za-z0-9_-]*::/.test(label) || label.trim().length <= 1)) continue;
+    let destinationEnd = labelEnd;
+    if (source[labelEnd + 1] === '(') {
+      destinationEnd = closingDelimiter(labelEnd + 1, '(', ')');
+      if (destinationEnd < 0) continue;
+    } else if (source[labelEnd + 1] === '[') {
+      const referenceEnd = closingDelimiter(labelEnd + 1, '[', ']');
+      if (referenceEnd >= 0) destinationEnd = referenceEnd;
+    }
+    ranges.push({ from: /[!^]/.test(source[i - 1] ?? '') ? i - 1 : i, to: destinationEnd + 1 });
     i = destinationEnd;
   }
   return ranges;
 }
 
-export function protectMarkdownSyntax(source: string) {
+export function protectMarkdownSyntax(source: string, options: {
+  legacyNotation?: { start: string; end: string };
+} = {}) {
   const fragments: string[] = [];
   const ranges: Array<{ from: number; to: number }> = [];
   let prefix = '\uE000';
   while (source.includes(prefix)) prefix += '\uE000';
   // Backtick delimiters must have the same length. Link destinations support
   // parentheses, wikilinks include aliases/anchors, and escapes are literal.
-  const protectedSyntax = /\\[\s\S]|(?<!`)(`+)(?!`)[\s\S]*?(?<!`)\1(?!`)|!?\[\[(?:\\.|[^\]])*\]\]|%%[\s\S]*?%%|<!--[\s\S]*?-->|<[^>\n]+>|https?:\/\/[^\s<>\])]+|(?<!\$)\$(?!\$)(?:\\.|[^$\n])+\$(?!\$)/g;
-  const candidates = [...source.matchAll(protectedSyntax)].map(match => ({ from: match.index!, to: match.index! + match[0].length }));
+  const protectedSyntax = /\\[\s\S]|(?<!`)(`+)(?!`)[\s\S]*?(?<!`)\1(?!`)|!?\[\[(?:\\.|[^\]])*\]\]|%%[\s\S]*?%%|<!--[\s\S]*?-->|<[^>\n]+>|https?:\/\/[^\s<>\])]+|(?<!\$)\$\$(?!\$)(?:\\.|[^$]|\$(?!\$))*?\$\$(?!\$)|(?<!\$)\$(?!\$)(?:\\.|[^$\n])+\$(?!\$)|==(?=\S)(?:\\.|[^\n])*?\S==/g;
+  const candidates = [...source.matchAll(protectedSyntax)]
+    .filter(match => {
+      const legacy = options.legacyNotation;
+      return !legacy?.start || !legacy.end ||
+        !match[0].startsWith(legacy.start) || !match[0].endsWith(legacy.end);
+    })
+    .map(match => ({ from: match.index!, to: match.index! + match[0].length }));
   candidates.push(...inlineLinkRanges(source));
   candidates.sort((a, b) => a.from - b.from || b.to - a.to);
   let text = '';

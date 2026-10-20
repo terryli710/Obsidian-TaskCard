@@ -96,9 +96,10 @@
   }
 
   function dismissOnOutsideInteraction(node: HTMLElement) {
+    const ownerDocument = node.ownerDocument;
     const onDocumentMousedown = (event: MouseEvent) => {
-      const target = event.target;
-      if (target instanceof Node && node.contains(target)) {
+      const path = event.composedPath();
+      if (path.includes(node)) {
         return;
       }
       closePopover();
@@ -108,12 +109,12 @@
         closePopover();
       }
     };
-    document.addEventListener('mousedown', onDocumentMousedown, true);
-    document.addEventListener('keydown', onDocumentKeydown, true);
+    ownerDocument.addEventListener('mousedown', onDocumentMousedown, true);
+    ownerDocument.addEventListener('keydown', onDocumentKeydown, true);
     return {
       destroy() {
-        document.removeEventListener('mousedown', onDocumentMousedown, true);
-        document.removeEventListener('keydown', onDocumentKeydown, true);
+        ownerDocument.removeEventListener('mousedown', onDocumentMousedown, true);
+        ownerDocument.removeEventListener('keydown', onDocumentKeydown, true);
       }
     };
   }

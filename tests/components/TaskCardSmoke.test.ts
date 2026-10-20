@@ -9,7 +9,9 @@
  * SettingStore keeps its defaults (defaultMode: 'single-line', no projects).
  */
 import '@testing-library/jest-dom';
-import { App } from 'obsidian';
+import { App, Notice } from 'obsidian';
+import { FileOperator } from '../../src/renderer/fileOperator';
+import { TaskFormatter } from '../../src/taskModule/taskFormatter';
 
 import { DefaultSettings, SettingStore } from '../../src/settings';
 import { ObsidianTask } from '../../src/taskModule/task';
@@ -25,28 +27,19 @@ beforeAll(async () => {
 });
 
 function makePluginStub() {
-  return {
+  const plugin: any = {
     app: new App(),
-    taskFormatter: {
-      taskToMarkdown: jest.fn(() => '- [ ] formatted #TaskCard')
-    },
-    fileOperator: {
-      updateFile: jest.fn(async () => undefined),
-      getMarkdownBetweenLines: jest.fn(async () => ''),
-      // These smoke fixtures are top-level tasks; indentation is read from
-      // the source before write-back, while the formatter stays stubbed.
-      getLineFromFile: jest.fn(async () => '- [ ] fixture #TaskCard'),
-      // write-time position verification reads the file; null -> the sync
-      // manager trusts the cached render-time span
-      getFileLines: jest.fn(async () => null)
-    },
+    taskFormatter: new TaskFormatter(SettingStore),
     externalAPIManager: {
       updateTask: jest.fn(async () => undefined),
       deleteTask: jest.fn()
     },
     storeSyncMappings: jest.fn(async () => undefined),
     removeSyncMappings: jest.fn(async () => undefined)
-  } as any;
+  };
+  plugin.fileOperator = new FileOperator(plugin, plugin.app);
+  jest.spyOn(plugin.fileOperator, 'updateFile');
+  return plugin;
 }
 
 function makeTaskMetadata() {
@@ -58,7 +51,7 @@ function makeTaskMetadata() {
     sourcePath: 'notes/test.md',
     mdSectionInfo: null,
     lineStartInSection: 1,
-    lineEndsInSection: 1
+    lineEndsInSection: 2
   };
 }
 
@@ -67,13 +60,18 @@ function makeSyncManager(
   plugin = makePluginStub()
 ) {
   const task = new ObsidianTask(taskProps);
+  if (plugin.app.vault.__getContent('notes/test.md') === undefined) {
+    const source = plugin.taskFormatter.taskToMarkdown(task);
+    task.metadata.sourceMarkdown = source;
+    plugin.app.vault.__setFile('notes/test.md', '# Header\n' + source);
+  }
   const taskItemEl = document.createElement('div');
   taskItemEl.innerHTML =
     '<input class="task-list-item-checkbox" data-line="2" type="checkbox">';
   const syncManager = new ObsidianTaskSyncManager(plugin, {
     obsidianTask: task,
     taskItemEl,
-    taskMetadata: makeTaskMetadata() as any
+    taskMetadata: { ...makeTaskMetadata(), lineEndsInSection: 1 + (task.metadata.sourceMarkdown?.split('\n').length ?? 1) } as any
   });
   return { task, plugin, syncManager };
 }
@@ -184,7 +182,14 @@ describe('TaskCard (smoke)', () => {
   });
 
   test('checkbox click writes the completion back through the plugin', async () => {
-    const { syncManager, plugin } = makeSyncManager({ content: 'Write tests' });
+    const raw = '- [ ] Write tests #TaskCard ^tc-smoke1';
+    const plugin = makePluginStub();
+    plugin.fileOperator = new FileOperator(plugin, plugin.app);
+    plugin.taskFormatter = new TaskFormatter(SettingStore);
+    plugin.app.vault.__setFile('notes/test.md', '# Header\n' + raw + '\nTail');
+    const { syncManager } = makeSyncManager({ id: 'tc-smoke1', content: 'Write tests',
+      metadata: { sourceMarkdown: raw } }, plugin);
+    syncManager.taskMetadata.lineEndsInSection = 2;
     const { container } = render(TaskCard, {
       props: {
         taskSyncManager: syncManager,
@@ -197,14 +202,33 @@ describe('TaskCard (smoke)', () => {
 
     await waitFor(() => {
       expect(plugin.externalAPIManager.updateTask).toHaveBeenCalledTimes(1);
-      expect(plugin.fileOperator.updateFile).toHaveBeenCalledWith(
-        'notes/test.md',
-        '- [ ] formatted #TaskCard',
-        1, // lineStartInSection + section lineStart
-        1
+      expect(plugin.app.vault.__getContent('notes/test.md')).toMatch(
+        /^# Header\n- \[x\] Write tests .*\^tc-smoke1\nTail$/
       );
     });
     expect(syncManager.obsidianTask.completed).toBe(true);
+  });
+
+  test.each(['changed source', 'disk failure'])('checkbox rolls back on %s without publishing sync', async failure => {
+    const raw = '- [ ] Write tests #TaskCard ^tc-smoke1';
+    const plugin = makePluginStub();
+    plugin.fileOperator = new FileOperator(plugin, plugin.app);
+    plugin.taskFormatter = new TaskFormatter(SettingStore);
+    const current = failure === 'changed source' ? raw.replace('Write tests', 'User edit') : raw;
+    plugin.app.vault.__setFile('notes/test.md', '# Header\n' + current);
+    if (failure === 'disk failure') plugin.app.vault.process = async () => { throw new Error('disk unavailable'); };
+    const { syncManager } = makeSyncManager({ id: 'tc-smoke1', content: 'Write tests', metadata: { sourceMarkdown: raw } }, plugin);
+    syncManager.taskMetadata.lineEndsInSection = 2;
+    const { container } = render(TaskCard, { props: { taskSyncManager: syncManager, plugin, params: { mode: 'single-line' } } });
+    const noticesBefore = (Notice as any).__notices.length;
+    const checkbox = container.querySelector('input.task-card-checkbox')!;
+    await fireEvent.click(checkbox);
+    await waitFor(() => expect((Notice as any).__notices.length).toBeGreaterThan(noticesBefore));
+    await waitFor(() => expect(checkbox).not.toBeChecked());
+    expect(syncManager.obsidianTask.completed).toBe(false);
+    expect(plugin.app.vault.__getContent('notes/test.md')).toBe('# Header\n' + current);
+    expect(plugin.externalAPIManager.updateTask).not.toHaveBeenCalled();
+    expect(plugin.storeSyncMappings).not.toHaveBeenCalled();
   });
 
   // Reset SettingStore for tests below that need projects; keeps the "no

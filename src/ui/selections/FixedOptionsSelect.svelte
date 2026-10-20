@@ -20,8 +20,8 @@
 
     function isValidEvent(evt: MouseEvent | KeyboardEvent) {
         // return true if evt is mouse single click or keyboard "Enter" key press
-        if (evt instanceof MouseEvent) { return evt.button === 0; }
-        return evt instanceof KeyboardEvent && (evt.key === 'Enter' || evt.key === ' ');
+        if (evt.type === 'click') { return (evt as MouseEvent).button === 0; }
+        return evt.type === 'keydown' && ((evt as KeyboardEvent).key === 'Enter' || (evt as KeyboardEvent).key === ' ');
     }
 
     // Function to select a tag

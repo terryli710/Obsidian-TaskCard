@@ -400,8 +400,11 @@ describe('Reading view tasks in weekly-plan lists', () => {
     const tasks = manager.constructTaskSync(section.sectionDiv, section.ctx);
     new ObsidianTaskSyncManager(plugin, tasks[1]).updateObsidianTaskDisplayParams('mode', 'multi-line');
     const failedWrite = jest.spyOn(plugin.fileOperator, 'updateFile').mockRejectedValueOnce(new Error('Disk write rejected'));
-    await expect(new ObsidianTaskSyncManager(plugin, tasks[0]).updateObsidianTaskAttribute('description', 'Inserted detail'))
-      .rejects.toThrow('Disk write rejected');
+    const rejectedSync = new ObsidianTaskSyncManager(plugin, tasks[0]);
+    await expect(rejectedSync.updateObsidianTaskAttribute('description', 'Inserted detail'))
+      .resolves.toBeUndefined();
+    expect(rejectedSync.obsidianTask.description).toBe('');
+    expect((app.vault as any).__getContent('weekly.md')).toBe(source);
     failedWrite.mockRestore();
     await new ObsidianTaskSyncManager(plugin, tasks[2]).updateObsidianTaskAttribute('content', 'Other task renamed');
     const replacement = sourceSection((app.vault as any).__getContent('weekly.md'));
@@ -542,5 +545,90 @@ describe('TaskCardRenderManager post processor (anti-blink hide)', () => {
 
     expect(ctx.addChild).not.toHaveBeenCalled();
     expect(p.classList.contains(PENDING_CLS)).toBe(false);
+  });
+});
+
+describe('native ordered and quoted Reading sections', () => {
+  const taskHTML = (line: number, text: string) => `<li class="task-list-item" data-line="${line}"><input class="task-list-item-checkbox" type="checkbox"><a class="tag">#TaskCard</a> ${text}</li>`;
+  const unordered = (items: string) => `<ul class="contains-task-list">${items}</ul>`;
+  const callout = (content: string) => `<div class="callout" data-callout="note"><div class="callout-title">Note</div><div class="callout-content">${content}</div></div>`;
+
+  function setupNative(source: string, html: string) {
+    const app = new App();
+    const settings = writable(JSON.parse(JSON.stringify(DefaultSettings)));
+    const plugin: any = {
+      app,
+      taskValidator: new TaskValidator(settings),
+      taskParser: new TaskParser(settings, new ProjectModule()),
+      taskFormatter: new TaskFormatter(settings),
+      hydrateSyncMappings: () => {}, storeSyncMappings: async () => {}
+    };
+    plugin.fileOperator = new FileOperator(plugin, app);
+    const fullSource = `# Before\n\n${source}\n\nAfter.`;
+    (app.vault as any).__setFile('native.md', fullSource);
+    const sectionDiv = document.createElement('div');
+    sectionDiv.innerHTML = html;
+    const ctx = makeCtx({ sourcePath: 'native.md', getSectionInfo: () => ({
+      text: fullSource, lineStart: 2, lineEnd: 2 + source.split('\n').length - 1
+    }) });
+    const manager = new TaskCardRenderManager(plugin);
+    plugin.taskCardRenderManager = manager;
+    return { app, plugin, manager, sectionDiv, ctx, fullSource };
+  }
+
+  it.each([
+    ['ordered', '7) [/] Ordered task #TaskCard ^tc-order01', `<ol class="contains-task-list" start="7">${taskHTML(0, 'Ordered task')}</ol>`, 0, 'Ordered task'],
+    ['blockquote', '> + [/] Quoted task #TaskCard ^tc-quote01', `<blockquote>${unordered(taskHTML(0, 'Quoted task'))}</blockquote>`, 0, 'Quoted task'],
+    ['callout', '> [!note]\n> - [?] Callout task #TaskCard ^tc-callout1', callout(unordered(taskHTML(1, 'Callout task'))), 1, 'Callout task']
+  ])('mounts a native %s task and edits its precise source prefix', async (_kind, source, html, line, content) => {
+    const { app, plugin, manager, sectionDiv, ctx, fullSource } = setupNative(source as string, html as string);
+    await manager.getPostProcessor()(sectionDiv, ctx);
+    expect(ctx.addChild).toHaveBeenCalledTimes(1);
+    const taskSync = ctx.addChild.mock.calls[0][0].taskSync;
+    expect(taskSync.obsidianTask.content).toBe(content);
+    expect(taskSync.taskMetadata.lineStartInSection).toBe(line);
+    expect(taskSync.taskMetadata.lineEndsInSection).toBe(Number(line) + 1);
+    await new ObsidianTaskSyncManager(plugin, taskSync).updateObsidianTaskAttribute('content', 'Updated task');
+    expect((app.vault as any).__getContent('native.md')).toBe(fullSource.replace(content as string, 'Updated task'));
+  });
+
+  it('keeps a tagged parent as the owner of nested tagged quote subtasks', () => {
+    const source = '> - [ ] Parent #TaskCard ^tc-parent1\n>     - [ ] Child #TaskCard ^tc-child01';
+    const html = `<blockquote>${unordered(`<li class="task-list-item" data-line="0"><input class="task-list-item-checkbox"><a class="tag">#TaskCard</a> Parent${unordered(taskHTML(1, 'Child'))}</li>`)}</blockquote>`;
+    const { manager, sectionDiv, ctx } = setupNative(source, html);
+    const tasks = manager.constructTaskSync(sectionDiv, ctx);
+    expect(tasks).toHaveLength(1);
+    expect(tasks[0].obsidianTask.content).toBe('Parent');
+    expect(tasks[0].taskMetadata.lineEndsInSection).toBe(2);
+  });
+
+  it('mounts a nested quoted task without taking over its plain parent', () => {
+    const source = '> - Plain parent\n>   - [ ] Child #TaskCard ^tc-child01';
+    const html = `<blockquote>${unordered(`<li>Plain parent${unordered(taskHTML(1, 'Child'))}</li>`)}</blockquote>`;
+    const { manager, sectionDiv, ctx } = setupNative(source, html);
+    const tasks = manager.constructTaskSync(sectionDiv, ctx);
+    expect(tasks).toHaveLength(1);
+    expect(tasks[0].obsidianTask.content).toBe('Child');
+    expect(tasks[0].taskMetadata.lineStartInSection).toBe(1);
+  });
+
+  it('requires a native data-line for tasks inside quote wrappers', () => {
+    const { manager, sectionDiv, ctx } = setupNative('> - [ ] Task #TaskCard', `<blockquote>${unordered(taskHTML(0, 'Task').replace(' data-line="0"', ''))}</blockquote>`);
+    expect(manager.constructTaskSync(sectionDiv, ctx)).toEqual([]);
+  });
+
+  it.each(['data-taskcard-markdown', 'class="internal-embed"', 'class="block-language-dataview"'])('does not traverse task markup owned by %s', attr => {
+    const { manager, sectionDiv, ctx } = setupNative('> - [ ] Task #TaskCard', `<blockquote><div ${attr}>${unordered(taskHTML(0, 'Task'))}</div></blockquote>`);
+    expect(manager.constructTaskSync(sectionDiv, ctx)).toEqual([]);
+  });
+
+  it('does not scan generic sections containing unrelated task markup', () => {
+    const { manager, sectionDiv, ctx } = setupNative('- [ ] Task #TaskCard', `<div>${unordered(taskHTML(0, 'Task'))}</div>`);
+    expect(manager.constructTaskSync(sectionDiv, ctx)).toEqual([]);
+  });
+
+  it('rejects postprocessed task markup whose source position is inside a quote fence', () => {
+    const { manager, sectionDiv, ctx } = setupNative('> ```md\n> - [ ] Literal #TaskCard\n> ```', `<blockquote>${unordered(taskHTML(1, 'Literal'))}</blockquote>`);
+    expect(manager.constructTaskSync(sectionDiv, ctx)).toEqual([]);
   });
 });

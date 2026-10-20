@@ -44,7 +44,7 @@
   }
 
   async function enableRecurrenceEditMode(event: KeyboardEvent | MouseEvent) {
-    if (event instanceof KeyboardEvent) {
+    if ('key' in event) {
       if (event.key != 'Enter') {
         return;
       }
@@ -103,7 +103,7 @@
   }
 
   function finishRecurrenceEditing(event: KeyboardEvent | MouseEvent) {
-    if (event instanceof MouseEvent) {
+    if (!('key' in event)) {
       return;
     }
 
