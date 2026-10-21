@@ -3,8 +3,15 @@ import { TaskParser } from '../src/taskModule/taskParser';
 import { TaskFormatter } from '../src/taskModule/taskFormatter';
 import { TaskValidator } from '../src/taskModule/taskValidator';
 import { ProjectModule } from '../src/taskModule/project';
-import { extractTags, hasIndicatorTag } from '../src/utils/regexUtils';
+import {
+  exactIndicatorTagPattern,
+  extractTags,
+  hasIndicatorTag,
+  indicatorTagPattern,
+  tagPattern
+} from '../src/utils/regexUtils';
 import { findIndicatorTagSpan, stripTaskSyntaxForDisplay } from '../src/taskModule/fieldSyntax';
+import { getTaskCardConcealPlan } from '../src/editor/livePreviewConceal';
 
 const settings: any = writable({ parsingSettings: { indicatorTag: 'TaskCard', markdownSuffix: " .", markdownStartingNotation: '%%*', markdownEndingNotation: '*%%' } });
 const parser = new TaskParser(settings, new ProjectModule());
@@ -89,4 +96,75 @@ test('uses tab stops when determining description ownership', () => {
   const task = parser.parseAnyTaskMarkdown('-\t[ ] Parent #TaskCard ^tc-parent\n    - [ ] child');
   task.description = '- [ ] renamed';
   expect(formatter.taskToMarkdown(task)).toBe('-\t[ ] Parent #TaskCard ^tc-parent\n    - [ ] renamed');
+});
+
+describe('tag handling without RegExp constructor lookbehind support', () => {
+  let constructorSpy: jest.SpyInstance;
+
+  beforeEach(() => {
+    const NativeRegExp = globalThis.RegExp;
+    constructorSpy = jest.spyOn(globalThis, 'RegExp').mockImplementation((pattern, flags) => {
+      const source = typeof pattern === 'string' ? pattern : pattern.source;
+      if (source.includes('(?<=') || source.includes('(?<!')) {
+        throw new SyntaxError('Lookbehind assertions are not supported');
+      }
+      return new NativeRegExp(pattern, flags);
+    });
+  });
+
+  afterEach(() => constructorSpy.mockRestore());
+
+  test('extracts adjacent and Unicode tags without changing tag-removal whitespace', () => {
+    const source = 'Keep  #任务/🔥 #TASKCARD/work  next\n#last \tend #a#b word#TaskCard ##TaskCard #123';
+
+    expect(extractTags(source)).toEqual([
+      ['#任务/🔥', '#TASKCARD/work', '#last', '#a'],
+      'Keep    next \tend #b word#TaskCard ##TaskCard #123'
+    ]);
+  });
+
+  test.each([' ', '\n'])('preserves tag-removal spacing after an invalid boundary separated by %j', separator => {
+    expect(extractTags(`word#invalid${separator}#real end`)).toEqual([
+      ['#real'],
+      'word#invalid end'
+    ]);
+  });
+
+  test('preserves protected occurrences when the same tag is extracted elsewhere', () => {
+    const protectedText = 'Keep `#real` %% #real %% [#real](Note.md#real)';
+
+    expect(extractTags(`${protectedText} #real #任务/🔥`)).toEqual([
+      ['#real', '#任务/🔥'],
+      protectedText
+    ]);
+  });
+
+  test('keeps candidate offsets at the hash and validates indicator token boundaries', () => {
+    const candidate = '[#TASKCARD/工作/🔥]';
+    const tagMatch = tagPattern().exec(candidate);
+    const indicatorMatch = indicatorTagPattern('TaskCard').exec(candidate);
+    const exactMatch = exactIndicatorTagPattern('TaskCard').exec('[#tAsKcArD]');
+    expect([tagMatch?.[0], tagMatch?.index]).toEqual(['#TASKCARD/工作/🔥', 1]);
+    expect([indicatorMatch?.[0], indicatorMatch?.index]).toEqual(['#TASKCARD', 1]);
+    expect([exactMatch?.[0], exactMatch?.index]).toEqual(['#tAsKcArD', 1]);
+
+    const unrelated = 'word#TaskCard ##TaskCard #before#TaskCard #TaskCard🔥 `#TaskCard` [#TaskCard](Note.md)';
+    expect(hasIndicatorTag(unrelated, 'TaskCard')).toBe(false);
+    expect(hasIndicatorTag(`${unrelated} #tAsKcArD/工作/🔥`, 'TaskCard')).toBe(true);
+    // A bracket is a tag boundary, while a complete shortcut link stays protected.
+    expect(hasIndicatorTag('[#TaskCard]', 'TaskCard')).toBe(false);
+  });
+
+  test('conceals only the exact unprotected indicator and preserves nested tags in display', () => {
+    const line = '  - [ ] Read `#TaskCard  literal` word#TaskCard ##TaskCard #TaskCard/工作 [#TASKCARD] #taskcard [priority:: high] ^tc-lookbehind';
+    const span = { from: 84, to: 93 };
+
+    expect(findIndicatorTagSpan(line, 'TaskCard')).toEqual(span);
+    const plan = getTaskCardConcealPlan(line, 'TaskCard');
+    expect(plan?.indicatorTag).toEqual(span);
+    expect(plan?.priorityClass).toBe('taskcard-lp-priority-2');
+    expect(stripTaskSyntaxForDisplay(line, 'TaskCard')).toBe(
+      '  - [ ] Read `#TaskCard  literal` word#TaskCard ##TaskCard #TaskCard/工作 [#TASKCARD]'
+    );
+  });
 });

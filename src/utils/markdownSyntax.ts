@@ -2,6 +2,26 @@
  * separates literal/link syntax from task fields; Obsidian renders Markdown.
  * Placeholders also retain spaces inside code while task fields normalize.
  */
+function* wholeDelimiterMatches(source: string, pattern: RegExp) {
+  const anchored = new RegExp(pattern.source, pattern.flags.replace('g', 'y'));
+  for (let index = 0; index < source.length;) {
+    const delimiter = source[index];
+    if ((delimiter === '`' || delimiter === '$') && source[index - 1] === delimiter) {
+      // Skip partial runs before matching to avoid retrying every suffix.
+      index++;
+      continue;
+    }
+    anchored.lastIndex = index;
+    const match = anchored.exec(source);
+    if (match) {
+      yield match;
+      index = anchored.lastIndex;
+    } else {
+      index++;
+    }
+  }
+}
+
 function inlineLinkRanges(source: string) {
   const ranges: Array<{ from: number; to: number }> = [];
   function closingDelimiter(from: number, open: string, close: string, codeInLabel = false) {
@@ -10,7 +30,7 @@ function inlineLinkRanges(source: string) {
       if (source[i] === '\n') return -1;
       if (source[i] === '\\') { i++; continue; }
       if (codeInLabel && source[i] === '`') {
-        const code = source.slice(i).match(/^(`+)(?!`)[^\n]*?(?<!`)\1(?!`)/);
+        const code = source.slice(i).match(/^(`+)(?!`)[^\n]*?[^`\n]\1(?!`)/);
         if (code) { i += code[0].length - 1; continue; }
       }
       if (source[i] === open) depth++;
@@ -54,8 +74,8 @@ export function protectMarkdownSyntax(source: string, options: {
   while (source.includes(prefix)) prefix += '\uE000';
   // Backtick delimiters must have the same length. Link destinations support
   // parentheses, wikilinks include aliases/anchors, and escapes are literal.
-  const protectedSyntax = /\\[\s\S]|(?<!`)(`+)(?!`)[\s\S]*?(?<!`)\1(?!`)|!?\[\[(?:\\.|[^\]])*\]\]|%%[\s\S]*?%%|<!--[\s\S]*?-->|<[^>\n]+>|https?:\/\/[^\s<>\])]+|(?<!\$)\$\$(?!\$)(?:\\.|[^$]|\$(?!\$))*?\$\$(?!\$)|(?<!\$)\$(?!\$)(?:\\.|[^$\n])+\$(?!\$)|==(?=\S)(?:\\.|[^\n])*?\S==/g;
-  const candidates = [...source.matchAll(protectedSyntax)]
+  const protectedSyntax = /\\[\s\S]|(`+)(?!`)[\s\S]*?[^`]\1(?!`)|!?\[\[(?:\\.|[^\]])*\]\]|%%[\s\S]*?%%|<!--[\s\S]*?-->|<[^>\n]+>|https?:\/\/[^\s<>\])]+|\$\$(?!\$)(?:\\.|[^$]|\$(?!\$))*?\$\$(?!\$)|\$(?!\$)(?:\\.|[^$\n])+\$(?!\$)|==(?=\S)(?:\\.|[^\n])*?\S==/g;
+  const candidates = [...wholeDelimiterMatches(source, protectedSyntax)]
     .filter(match => {
       const legacy = options.legacyNotation;
       return !legacy?.start || !legacy.end ||
@@ -91,10 +111,19 @@ export function protectMarkdownSyntax(source: string, options: {
 export function protectCodeFields(source: string) {
   let marker = '\uE002';
   while (source.includes(marker)) marker += '\uE002';
+  const codeSyntax = /\\[\s\S]|(`+)(?!`)[\s\S]*?[^`]\1(?!`)/g;
+  let markdown = '';
+  let cursor = 0;
+  for (const match of wholeDelimiterMatches(source, codeSyntax)) {
+    const fragment = match[0];
+    markdown += source.slice(cursor, match.index) +
+      (fragment.startsWith('`') && !fragment.includes('\n')
+        ? fragment.replace(/::/g, marker) : fragment);
+    cursor = match.index + fragment.length;
+  }
+  markdown += source.slice(cursor);
   return {
-    markdown: source.replace(/\\[\s\S]|(?<!`)(`+)(?!`)[\s\S]*?(?<!`)\1(?!`)/g,
-      fragment => fragment.startsWith('`') && !fragment.includes('\n')
-        ? fragment.replace(/::/g, marker) : fragment),
+    markdown,
     restore(host: HTMLElement) {
       for (const code of host.querySelectorAll('code')) {
         const walker = host.ownerDocument.createTreeWalker(code, 4 /* SHOW_TEXT */);

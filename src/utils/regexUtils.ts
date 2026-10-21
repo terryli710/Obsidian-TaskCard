@@ -9,22 +9,29 @@ export function escapeRegExp(string: string) {
 // punctuation ranges and ASCII delimiters terminate a tag. Keep this shared
 // across extraction, indicator matching and exact-token concealment.
 export const TAG_CHAR = `[^\\u2000-\\u206F\\u2E00-\\u2E7F'!"#$%&()*+,.:;<=>?@^\u0060{|}~\\[\\]\\\\\\s]`;
-const TAG_START = '(?<![^\\s\\[])';
 
-export function tagPattern(): RegExp {
-  return new RegExp(`${TAG_START}#${TAG_CHAR}+`, 'gu');
+/** Check a candidate's boundary against its original source. */
+export function isTagStart(text: string, index: number): boolean {
+  const previous = text[index - 1];
+  return index === 0 || previous === '[' || /\s/.test(previous);
 }
 
-/** Match an indicator prefix only at an exact tag or descendant boundary. */
+// These patterns return candidates starting at '#', preserving source offsets.
+// Contextual callers must also check isTagStart against the original source.
+export function tagPattern(): RegExp {
+  return new RegExp(`#${TAG_CHAR}+`, 'gu');
+}
+
+/** Match an indicator candidate ending at an exact tag or descendant boundary. */
 export function indicatorTagPattern(indicatorTag: string, global = false): RegExp {
   return new RegExp(
-    `${TAG_START}#${escapeRegExp(indicatorTag)}(?=/|(?!${TAG_CHAR}))`,
+    `#${escapeRegExp(indicatorTag)}(?=/|(?!${TAG_CHAR}))`,
     global ? 'giu' : 'iu'
   );
 }
 
 export function exactIndicatorTagPattern(indicatorTag: string): RegExp {
-  return new RegExp(`${TAG_START}#${escapeRegExp(indicatorTag)}(?!${TAG_CHAR})`, 'giu');
+  return new RegExp(`#${escapeRegExp(indicatorTag)}(?!${TAG_CHAR})`, 'giu');
 }
 
 /** Match the indicator itself or a descendant tag, outside literal Markdown. */
@@ -32,25 +39,37 @@ export function hasIndicatorTag(text: string, indicatorTag: string): boolean {
   if (!indicatorTag) return false;
   const protectedSource = protectMarkdownSyntax(text);
   return [...text.matchAll(indicatorTagPattern(indicatorTag, true))]
-    .some(match => !protectedSource.contains(match.index!));
+    .some(match => isTagStart(text, match.index) && !protectedSource.contains(match.index));
 }
 
 export function extractTags(text: string): [string[], string] {
   const protectedSource = protectMarkdownSyntax(text);
   const matches = [...text.matchAll(tagPattern())]
-    .filter(match => !protectedSource.contains(match.index!) && !/^#[0-9]+$/.test(match[0]));
+    .filter(match => isTagStart(text, match.index) &&
+      !protectedSource.contains(match.index) && !/^#[0-9]+$/.test(match[0]));
   if (matches.length === 0) { return [[], text]; }
   const labels = matches.map(match => match[0]);
 
-  // Remove the tags from the content and then trim any consecutive spaces greater than 2
+  // Preserve surrounding whitespace while removing only real unprotected tags.
   const validTags = new Set(labels);
-  const remainingText = text
-    .replace(new RegExp(`(\\s?)${TAG_START}#${TAG_CHAR}+(\\s?)`, 'gu'), (match, _before, _after, offset) => {
-      return validTags.has(match.trim()) && !protectedSource.contains(offset + match.indexOf('#')) ? ' ' : match;
-    })
-    .trim();
+  const removalPattern = new RegExp(`(\\s?)#${TAG_CHAR}+(\\s?)`, 'gu');
+  let remainingText = '';
+  let cursor = 0;
+  let match: RegExpExecArray | null;
+  while ((match = removalPattern.exec(text)) !== null) {
+    const hashIndex = match.index + match[0].indexOf('#');
+    if (!isTagStart(text, hashIndex)) {
+      // Invalid candidates must not consume separators before the next tag.
+      removalPattern.lastIndex = match.index + 1;
+      continue;
+    }
+    const removeTag = validTags.has(match[0].trim()) && !protectedSource.contains(hashIndex);
+    remainingText += text.slice(cursor, match.index) + (removeTag ? ' ' : match[0]);
+    cursor = removalPattern.lastIndex;
+  }
+  remainingText += text.slice(cursor);
 
-  return [labels, remainingText];
+  return [labels, remainingText.trim()];
 }
 
 /**

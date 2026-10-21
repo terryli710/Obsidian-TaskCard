@@ -6,18 +6,21 @@ import { readFileSync } from 'node:fs';
 import tseslint from 'typescript-eslint';
 import obsidianmd from 'eslint-plugin-obsidianmd';
 
-// The directory only ever sees the public snapshot, so lint exactly that set:
-// anything release-exclude.txt strips is dev-only and would inflate local
-// counts with findings no reviewer can see. Reading the list here keeps the
-// two from drifting apart.
-const releaseExcluded = readFileSync(
-  new URL('./scripts/release-exclude.txt', import.meta.url),
-  'utf8'
-)
-  .split('\n')
-  .map((l) => l.trim())
-  .filter((l) => l && !l.startsWith('#'))
-  .map((p) => (p.endsWith('/') ? `${p}**` : p));
+// Honor private dev exclusions locally. Public snapshots already omit those
+// files and the private release list, so they need no additional ignores.
+let releaseExcluded = [];
+try {
+  releaseExcluded = readFileSync(
+    new URL('./scripts/release-exclude.txt', import.meta.url),
+    'utf8'
+  )
+    .split('\n')
+    .map((l) => l.trim())
+    .filter((l) => l && !l.startsWith('#'))
+    .map((p) => (p.endsWith('/') ? `${p}**` : p));
+} catch (error) {
+  if (error.code !== 'ENOENT') throw error;
+}
 
 export default tseslint.config(
   {

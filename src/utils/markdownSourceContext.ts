@@ -46,7 +46,7 @@ export function markdownSourceContext(lines: readonly string[]) {
       // Code spans belong to one Markdown inline block. A stray backtick in
       // an earlier paragraph must not consume a later comment delimiter.
       const block = inlineBlocks.find(range => range.from <= i && i < range.to);
-      const inline = block && source.slice(i, block.to).match(/^(`+)(?!`)[\s\S]*?(?<!`)\1(?!`)/);
+      const inline = block && source.slice(i, block.to).match(/^(`+)(?!`)[\s\S]*?[^`]\1(?!`)/);
       if (inline) { masked += inline[0]; i += inline[0].length; continue; }
     }
     const close = source.startsWith('%%', i) ? '%%' : source.startsWith('<!--', i) ? '-->' : null;

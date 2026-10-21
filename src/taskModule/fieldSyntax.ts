@@ -1,5 +1,5 @@
 import { Priority, ScheduleDate, Duration } from './task';
-import { exactIndicatorTagPattern } from '../utils/regexUtils';
+import { exactIndicatorTagPattern, isTagStart } from '../utils/regexUtils';
 import { protectMarkdownSyntax } from '../utils/markdownSyntax';
 import { parseTaskLine } from '../utils/taskLine';
 
@@ -185,7 +185,9 @@ export function findIndicatorTagSpan(
   const protectedSource = protectMarkdownSyntax(text);
   let match: RegExpExecArray | null;
   while ((match = pattern.exec(text))) {
-    if (!protectedSource.contains(match.index)) return { from: match.index, to: match.index + match[0].length };
+    if (isTagStart(text, match.index) && !protectedSource.contains(match.index)) {
+      return { from: match.index, to: match.index + match[0].length };
+    }
   }
   return null;
 }
@@ -215,8 +217,8 @@ export function stripTaskSyntaxForDisplay(
   const { rest } = extractBlockId(line);
   const indent = rest.match(/^\s*/)[0];
   const originalProtection = protectMarkdownSyntax(rest);
-  const withoutIndicator = rest.replace(exactIndicatorTagPattern(indicatorTag), (tag, offset) =>
-    originalProtection.contains(offset) ? tag : ' ');
+  const withoutIndicator = rest.replace(exactIndicatorTagPattern(indicatorTag), (tag: string, offset: number) =>
+    !isTagStart(rest, offset) || originalProtection.contains(offset) ? tag : ' ');
   const protectedSource = protectMarkdownSyntax(withoutIndicator.slice(indent.length));
   const body = protectedSource.text
     .replace(BRACKET_FIELD, ' ')

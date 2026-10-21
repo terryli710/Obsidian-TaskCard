@@ -2,7 +2,7 @@ import { App, MarkdownView, TFile, Vault } from 'obsidian';
 import TaskCardPlugin from '..';
 import { Notice } from 'obsidian';
 import { logger } from '../utils/log';
-import { indicatorTagPattern } from '../utils/regexUtils';
+import { indicatorTagPattern, isTagStart } from '../utils/regexUtils';
 import { protectMarkdownSyntax } from '../utils/markdownSyntax';
 import { markdownSourceContext } from '../utils/markdownSourceContext';
 import { Project } from './project';
@@ -302,8 +302,9 @@ export class TaskMonitor {
       // Rename every real indicator prefix, preserving descendant suffixes
       // and literal tag examples inside code, links, and comments.
       const protectedSource = protectMarkdownSyntax(visibleLine);
-      line = line.replace(indicatorTagPattern(oldIndicatorTag, true), (match, offset) =>
-        !protectedSource.contains(offset) && visibleLine.slice(offset, offset + match.length) === match
+      line = line.replace(indicatorTagPattern(oldIndicatorTag, true), (match: string, offset: number) =>
+        isTagStart(line, offset) && !protectedSource.contains(offset) &&
+          visibleLine.slice(offset, offset + match.length) === match
           ? `#${newIndicatorTag}` : match);
     }
     return line;
